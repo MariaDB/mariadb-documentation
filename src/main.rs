@@ -16,7 +16,7 @@ use axum::{
 use url_to_path::url_to_path;
 use tokio::fs::File;
 
-const BASE_PATH: &str = "../html/";
+const BASE_PATH: &str = "../mariadb_archive/";
 
 #[tokio::main]
 async fn main() {
