@@ -1,3 +1,4 @@
+mod url_to_path;
 use std::{
     ffi::OsStr,
     path::{Path, PathBuf},
@@ -12,7 +13,7 @@ use axum::{
     routing::get,
     Router, Server,
 };
-use mariadb_url::url_to_path;
+use url_to_path::url_to_path;
 use tokio::fs::File;
 
 const BASE_PATH: &str = "../html/";
