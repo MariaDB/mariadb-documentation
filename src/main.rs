@@ -13,18 +13,23 @@ use axum::{
     routing::get,
     Router, Server,
 };
-use url_to_path::url_to_path;
 use tokio::fs::File;
+use url_to_path::url_to_path;
 
 const BASE_PATH: &str = "../mariadb_archive/";
 
 #[tokio::main]
 async fn main() {
-    let app = Router::new().route("/*url", get(req));
+    let app = Router::new().route("/", get(root)).route("/*url", get(req));
     let addr = "0.0.0.0:7032".parse().unwrap();
     let server = Server::bind(&addr).serve(app.into_make_service());
-    println!("Listening on {addr}");
+    println!("Listening on http://localhost:7032/");
     server.await.unwrap();
+}
+
+#[debug_handler]
+async fn root() -> Result<Response, StatusCode> {
+    req(extract::Path("/kb/en".to_owned())).await
 }
 
 #[debug_handler]
