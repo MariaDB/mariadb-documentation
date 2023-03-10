@@ -4,7 +4,7 @@ pub struct ScrapeClient {
     inner: blocking::Client,
 }
 pub struct ScrapeResult {
-    pub html: String,
+    pub content: Vec<u8>,
     pub file_extension: Option<String>,
     pub directed_url: String,
 }
@@ -27,7 +27,7 @@ impl ScrapeClient {
         let result = ScrapeResult {
             directed_url: response.url().to_string(),
             file_extension: get_file_extension(&response).map(str::to_owned),
-            html: response.text()?,
+            content: response.bytes()?.to_vec(),
         };
         Ok(result)
     }

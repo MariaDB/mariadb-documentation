@@ -25,26 +25,28 @@ pub trait Crawler: Sized {
                 continue;
             }
             let path = PathBuf::from(BASE_PATH).join(url_to_path(&next_url));
-            let html = match read_if_ignore(&self, &path) {
-                Some(html) => html,
+            let content = match read_if_ignore(&self, &path) {
+                Some(content) => content,
                 None => match client.get(&next_url) {
-                    Ok(result) => result.html,
+                    Ok(result) => result.content,
                     Err(_err) => continue,
                 },
             };
             fs::create_dir_all(path.parent().unwrap_or_else(|| panic!("{path:?}")))?;
-            fs::write(&path, &html)?;
-            let urls = scrape::scrape_urls(&html);
-            queue.extend(urls);
+            fs::write(&path, &content)?;
+            if let Ok(text) = String::from_utf8(content) {
+                let urls = scrape::scrape_urls(&text);
+                queue.extend(urls);
+            }
         }
 
         Ok(())
     }
 }
 
-pub fn read_if_ignore<C: Crawler>(crawler: &C, path: &Path) -> Option<String> {
+pub fn read_if_ignore<C: Crawler>(crawler: &C, path: &Path) -> Option<Vec<u8>> {
     if !crawler.ignore_existing_files() {
         return None;
     }
-    fs::read_to_string(path).ok()
+    fs::read(path).ok()
 }
