@@ -2,4 +2,7 @@
 
 ### Dependencies
 toml
+
 pdfkit
+
+requests
