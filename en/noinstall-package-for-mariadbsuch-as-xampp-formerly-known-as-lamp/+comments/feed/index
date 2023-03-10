@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: noinstall package for MariaDB(such as XAMPP, formerly known as LAMP)</title><link>https://mariadb.com/kb/en/noinstall-package-for-mariadbsuch-as-xampp-formerly-known-as-lamp/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/noinstall-package-for-mariadbsuch-as-xampp-formerly-known-as-lamp/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 19:57:24 +0000</lastBuildDate><item><title>Re: noinstall package for MariaDB(such as XAMPP, formerly known as LAMP)</title><link>https://mariadb.com/kb/en/noinstall-package-for-mariadbsuch-as-xampp-formerly-known-as-lamp/+comments/501</link><description>&lt;p&gt;Thank you for the answers.&lt;/p&gt;
+&lt;p&gt;Regarding &lt;a href="http://wpn-xm.org/"&gt;http://wpn-xm.org/&lt;/a&gt;, it works only on Windows  :(&lt;/p&gt;
+&lt;p&gt;I shall try downloading binary tar.gz files and replace the mysql binary files.&lt;/p&gt;
+&lt;p&gt;BTW, I also signed-up the maria-discuss mailing list.
+It is just great. I got help almost immediately.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Vineet Deodhar</dc:creator><guid>https://mariadb.com/kb/en/noinstall-package-for-mariadbsuch-as-xampp-formerly-known-as-lamp/+comments/501</guid></item><item><title>Re: query problems </title><link>https://mariadb.com/kb/en/noinstall-package-for-mariadbsuch-as-xampp-formerly-known-as-lamp/+comments/495</link><description>&lt;p&gt;You have 4 different problems in your query. &lt;/p&gt;
+&lt;p&gt;The one that you are stuck at now is that you surrounded column names with single quote marks. You need to either remove them at all, or to replace them with back ticks:&lt;/p&gt;
+&lt;pre&gt;
+create table if not exists addresslist( 
+`id` int not null auto_increment, 
+`firstname` varchar not null, 
+`lastname` varchar not null, 
+`city` varchar not null, 
+`state` char(2), 
+`country` text default 'usa', 
+`zip` text(10) not null 
+primary key (id) );
+&lt;/pre&gt;
+&lt;p&gt;Then you will start getting another syntax error:&lt;/p&gt;
+&lt;pre&gt;
+near 'not null, 
+`lastname` varchar not null, 
+`city` varchar not null, 
+`state` char('
+&lt;/pre&gt;
+&lt;p&gt;It will be happening because VARCHAR requires a length parameter, so you will need to replace all varchar with something like varchar(64), or whatever length you need:&lt;/p&gt;
+&lt;pre&gt;
+create table if not exists addresslist( 
+`id` int not null auto_increment, 
+`firstname` varchar(64) not null, 
+`lastname` varchar(64) not null, 
+`city` varchar(64) not null, 
+`state` char(2), 
+`country` text default 'usa', 
+`zip` text(10) not null 
+primary key (id) );
+&lt;/pre&gt;
+&lt;p&gt;Then there will be error &lt;/p&gt;
+&lt;pre&gt;
+BLOB/TEXT column 'country' can't have a default value
+&lt;/pre&gt;
+&lt;p&gt;which is rather self-explanatory: you need to remove the default value from the text column:&lt;/p&gt;
+&lt;pre&gt;
+create table if not exists addresslist( 
+`id` int not null auto_increment, 
+`firstname` varchar(64) not null, 
+`lastname` varchar(64) not null, 
+`city` varchar(64) not null, 
+`state` char(2), 
+`country` text, 
+`zip` text(10) not null 
+primary key (id) );
+&lt;/pre&gt;
+&lt;p&gt;Now you will have a syntax error again:&lt;/p&gt;
+&lt;pre&gt;
+near '(id) )'
+&lt;/pre&gt;
+&lt;p&gt;which is caused by a missing comma before primary key definition. Fix it, and your query will work:&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; create table if not exists addresslist( 
+    -&amp;gt; `id` int not null auto_increment, 
+    -&amp;gt; `firstname` varchar(64) not null, 
+    -&amp;gt; `lastname` varchar(64) not null, 
+    -&amp;gt; `city` varchar(64) not null, 
+    -&amp;gt; `state` char(2), 
+    -&amp;gt; `country` text, 
+    -&amp;gt; `zip` text(10) not null, 
+    -&amp;gt; primary key (id) );
+Query OK, 0 rows affected (0.03 sec)
+&lt;/pre&gt;
+&lt;p&gt;P.S. Please next time try to choose an appropriate category or topic for your question, this one has nothing to do with noinstall packages.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Elena Stepanova</dc:creator><guid>https://mariadb.com/kb/en/noinstall-package-for-mariadbsuch-as-xampp-formerly-known-as-lamp/+comments/495</guid></item><item><title>query problems </title><link>https://mariadb.com/kb/en/noinstall-package-for-mariadbsuch-as-xampp-formerly-known-as-lamp/+comments/493</link><description>&lt;p&gt; I developed a query create a table on my Server version: 10.0.1-MariaDB-mariadb1precise-log with the following query:"create table if not exists addresslist(
+'id'  int  not null auto_increment,
+'firstname'  varchar not null ,
+ 'lastname' varchar not null,
+ 'city'   varchar  not null,
+'state' char(2) ,
+'country' text default 'usa',
+'zip' text(10)  not null
+primary key (id)
+)";&lt;/p&gt;
+&lt;p&gt;I get the following error message:&lt;/p&gt;
+&lt;p&gt;Query error: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''id'  int  not null auto_increment,
+'firstname'  varchar not null ,
+ 'lastname' ' at line 2&lt;/p&gt;
+&lt;p&gt;Would please explain my mistake. I've tried debug this in several different ways.
+Thanks  Ralph Kessel kesselr1@mchsi.com&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ralph Kessel</dc:creator><guid>https://mariadb.com/kb/en/noinstall-package-for-mariadbsuch-as-xampp-formerly-known-as-lamp/+comments/493</guid></item><item><title>Re: noinstall package for MariaDB(such as XAMPP, formerly known as LAMP)</title><link>https://mariadb.com/kb/en/noinstall-package-for-mariadbsuch-as-xampp-formerly-known-as-lamp/+comments/471</link><description>&lt;p&gt;XAMPP doesn't have support for MariaDB, so why not try an alternative like &lt;a href="http://wpn-xm.org/"&gt;http://wpn-xm.org/&lt;/a&gt; ? &lt;/p&gt;
+&lt;p&gt;Hope this helps!&lt;/p&gt;
+&lt;p&gt;cheers,
+-colin&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">colin charles</dc:creator><guid>https://mariadb.com/kb/en/noinstall-package-for-mariadbsuch-as-xampp-formerly-known-as-lamp/+comments/471</guid></item><item><title>Re: noinstall package for MariaDB(such as XAMPP, formerly known as LAMP)</title><link>https://mariadb.com/kb/en/noinstall-package-for-mariadbsuch-as-xampp-formerly-known-as-lamp/+comments/467</link><description>&lt;p&gt;It's probably the case that no one who's seen the question knows or is familiar with XAMPP.&lt;/p&gt;
+&lt;p&gt;Try the maria-discuss mailing list:&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://launchpad.net/~maria-discuss"&gt;http://launchpad.net/~maria-discuss&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Bartholomew</dc:creator><guid>https://mariadb.com/kb/en/noinstall-package-for-mariadbsuch-as-xampp-formerly-known-as-lamp/+comments/467</guid></item><item><title>Re: noinstall package for MariaDB(such as XAMPP, formerly known as LAMP)</title><link>https://mariadb.com/kb/en/noinstall-package-for-mariadbsuch-as-xampp-formerly-known-as-lamp/+comments/450</link><description>&lt;p&gt;hmmm.  maybe this place is not monitored by anybody.
+Is there any other place where I may post my question?&lt;/p&gt;
+&lt;p&gt;Thanks,&lt;/p&gt;
+&lt;p&gt;Vineet&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Vineet Deodhar</dc:creator><guid>https://mariadb.com/kb/en/noinstall-package-for-mariadbsuch-as-xampp-formerly-known-as-lamp/+comments/450</guid></item></channel></rss>

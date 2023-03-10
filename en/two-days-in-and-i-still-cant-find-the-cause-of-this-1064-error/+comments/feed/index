@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Two days in, and I still can't find the cause of this 1064 error.</title><link>https://mariadb.com/kb/en/two-days-in-and-i-still-cant-find-the-cause-of-this-1064-error/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/two-days-in-and-i-still-cant-find-the-cause-of-this-1064-error/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 20:16:44 +0000</lastBuildDate><item><title>Re: Two days in, and I still can't find the cause of this 1064 error.</title><link>https://mariadb.com/kb/en/two-days-in-and-i-still-cant-find-the-cause-of-this-1064-error/+comments/2690</link><description>&lt;p&gt;You can take a look at some alternatives at &lt;a href="/kb/en/graphical-and-enhanced-clients/"&gt;Graphical and Enhanced Clients&lt;/a&gt;. If this is a HeidiSQL issue, please &lt;a href="/kb/en/reporting-bugs/"&gt;report it as a bug&lt;/a&gt; - it seems a strangely trivial issue, so perhaps there's something else being missed that others can pick up when they try recreate it.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/two-days-in-and-i-still-cant-find-the-cause-of-this-1064-error/+comments/2690</guid></item><item><title>Re: Two days in, and I still can't find the cause of this 1064 error.</title><link>https://mariadb.com/kb/en/two-days-in-and-i-still-cant-find-the-cause-of-this-1064-error/+comments/2689</link><description>&lt;p&gt;Thanks for checking this and for responding.&lt;/p&gt;
+&lt;p&gt;I'm using the HeidiSQL 9.3.0.4984 that came as part of the &lt;a href="/kb/en/mariadb-10028-release-notes/"&gt;MariaDB 10.0.28&lt;/a&gt; download.  &lt;/p&gt;
+&lt;p&gt;I have not used the comand line, and would sooner do what I need to with a non-procedure succession of stand-alone queries (and some intermediary tables) in HeidiSQL (or some comparable client) than use the command line.  In my limited DB experience, I've used only Oracle SQL Developer and TOAD for Oracle.  Do you have any recommendations for free or low-cost HeidiSQL alternatives for MariaDB?  I'll google about that, but value first-person recommendations.&lt;/p&gt;
+&lt;p&gt;Thanks again!&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Paul Dineen</dc:creator><guid>https://mariadb.com/kb/en/two-days-in-and-i-still-cant-find-the-cause-of-this-1064-error/+comments/2689</guid></item><item><title>Re: Two days in, and I still can't find the cause of this 1064 error.</title><link>https://mariadb.com/kb/en/two-days-in-and-i-still-cant-find-the-cause-of-this-1064-error/+comments/2688</link><description>&lt;p&gt;The sample code you provided works fine (see below). What client are you using? If you try create the procedure from the command line mysql client and it works, then the problem likely sits with the other client.&lt;/p&gt;
+&lt;pre class="fixed"&gt;mysql [localhost] {msandbox} (test) &amp;gt; delimiter //
+mysql [localhost] {msandbox} (test) &amp;gt; 
+mysql [localhost] {msandbox} (test) &amp;gt; -- simple query to test with
+mysql [localhost] {msandbox} (test) &amp;gt; --
+mysql [localhost] {msandbox} (test) &amp;gt; select 1, 2 from dual //
++---+---+
+| 1 | 2 |
++---+---+
+| 1 | 2 |
++---+---+
+1 row in set (0.00 sec)
+
+mysql [localhost] {msandbox} (test) &amp;gt; 
+mysql [localhost] {msandbox} (test) &amp;gt; -- ********************************************************
+mysql [localhost] {msandbox} (test) &amp;gt; -- precedure without &amp;#34;begin&amp;#34; and &amp;#34;end&amp;#34; compiles and runs ok
+mysql [localhost] {msandbox} (test) &amp;gt; -- ********************************************************
+mysql [localhost] {msandbox} (test) &amp;gt; --
+mysql [localhost] {msandbox} (test) &amp;gt; create procedure do_leafs_debug()
+    -&amp;gt; select 3, 4 from dual;
+    -&amp;gt; //
+Query OK, 0 rows affected (0.01 sec)
+
+mysql [localhost] {msandbox} (test) &amp;gt; 
+mysql [localhost] {msandbox} (test) &amp;gt; 
+mysql [localhost] {msandbox} (test) &amp;gt; call do_leafs_debug() //  -- runs fine
++---+---+
+| 3 | 4 |
++---+---+
+| 3 | 4 |
++---+---+
+1 row in set (0.00 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+mysql [localhost] {msandbox} (test) &amp;gt; drop procedure do_leafs_debug //
+Query OK, 0 rows affected (0.02 sec)
+
+mysql [localhost] {msandbox} (test) &amp;gt; 
+mysql [localhost] {msandbox} (test) &amp;gt; -- ******************************************
+mysql [localhost] {msandbox} (test) &amp;gt; -- just adding &amp;#34;begin&amp;#34; and &amp;#34;end&amp;#34; gives error:
+mysql [localhost] {msandbox} (test) &amp;gt; -- ******************************************
+mysql [localhost] {msandbox} (test) &amp;gt; --
+mysql [localhost] {msandbox} (test) &amp;gt; create procedure do_leafs_debug()
+    -&amp;gt; begin
+    -&amp;gt; select 5, 6 from dual;
+    -&amp;gt; end
+    -&amp;gt; //
+Query OK, 0 rows affected (0.02 sec)
+
+mysql [localhost] {msandbox} (test) &amp;gt; 
+mysql [localhost] {msandbox} (test) &amp;gt; 
+mysql [localhost] {msandbox} (test) &amp;gt; -- also error with &amp;#34;;&amp;#34; after &amp;#34;end&amp;#34;:
+mysql [localhost] {msandbox} (test) &amp;gt; --
+mysql [localhost] {msandbox} (test) &amp;gt; create procedure do_leafs_debug()
+    -&amp;gt; begin
+    -&amp;gt; select 7, 8 from dual;
+    -&amp;gt; end;
+    -&amp;gt; //
+ERROR 1304 (42000): PROCEDURE do_leafs_debug already exists
+mysql [localhost] {msandbox} (test) &amp;gt; 
+mysql [localhost] {msandbox} (test) &amp;gt; 
+mysql [localhost] {msandbox} (test) &amp;gt; delimiter ;
+mysql [localhost] {msandbox} (test) &amp;gt; 
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/two-days-in-and-i-still-cant-find-the-cause-of-this-1064-error/+comments/2688</guid></item><item><title>Re: Two days in, and I still can't find the cause of this 1064 error.</title><link>https://mariadb.com/kb/en/two-days-in-and-i-still-cant-find-the-cause-of-this-1064-error/+comments/2680</link><description>&lt;p&gt;Thanks, Brian.  I appreciate your taking the time to report those problems.  &lt;/p&gt;
+&lt;p&gt;I'm still having trouble, but I don't want to post my code with those fixes (and further changes) for others to do the work for me.  Instead, I now post a boiled-down case that shows the 1064 error in a simple case, where I haven't been able to see what the error is.  Specifically, if I simply add begin/end to the procedure body then it switches to giving the error.  It's probably something simple, but I just don't see it.  Thanks again.&lt;/p&gt;
+&lt;pre class="fixed"&gt;delimiter //
+
+-- simple query to test with
+--
+select 1, 2 from dual //
+
+-- ********************************************************
+-- precedure without &amp;#34;begin&amp;#34; and &amp;#34;end&amp;#34; compiles and runs ok
+-- ********************************************************
+--
+create procedure do_leafs_debug()
+select 3, 4 from dual;
+//
+
+
+call do_leafs_debug() //  -- runs fine
+drop procedure do_leafs_debug //
+
+-- ******************************************
+-- just adding &amp;#34;begin&amp;#34; and &amp;#34;end&amp;#34; gives error:
+-- ******************************************
+--
+create procedure do_leafs_debug()
+begin
+select 5, 6 from dual;
+end
+//
+
+
+-- also error with &amp;#34;;&amp;#34; after &amp;#34;end&amp;#34;:
+--
+create procedure do_leafs_debug()
+begin
+select 7, 8 from dual;
+end;
+//
+
+
+delimiter ;
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Paul Dineen</dc:creator><guid>https://mariadb.com/kb/en/two-days-in-and-i-still-cant-find-the-cause-of-this-1064-error/+comments/2680</guid></item><item><title>Re: Two days in, and I still can't find the cause of this 1064 error.</title><link>https://mariadb.com/kb/en/two-days-in-and-i-still-cant-find-the-cause-of-this-1064-error/+comments/2677</link><description>&lt;p&gt;You have several errors in the actual code.&lt;/p&gt;
+&lt;pre class="fixed"&gt;done = false;
+&lt;/pre&gt;&lt;p&gt;Missing SET before done&lt;/p&gt;
+&lt;pre class="fixed"&gt;fetch cur_leafs into category, leaf_match;
+&lt;/pre&gt;&lt;p&gt;category and leaf_match are not defined&lt;/p&gt;
+&lt;pre class="fixed"&gt;insert into report values (false, category,
+    select sum(amount) from WFChkData where regexp_instr(description, leaf_regexp));
+&lt;/pre&gt;&lt;p&gt;is an invalid statement.  it could be rewritten as an insert select like:&lt;/p&gt;
+&lt;pre class="fixed"&gt;insert into report
+    select false, category, sum(amount) from WFChkData where regexp_instr(description, leaf_regexp);&lt;/pre&gt;&lt;p&gt;You also spelled delimiter wrong on the final line.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Brian Evans</dc:creator><guid>https://mariadb.com/kb/en/two-days-in-and-i-still-cant-find-the-cause-of-this-1064-error/+comments/2677</guid></item></channel></rss>

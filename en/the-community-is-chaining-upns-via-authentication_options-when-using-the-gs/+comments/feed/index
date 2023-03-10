@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Is chaining UPNs via "authentication_options" when using the GSSAPI Plugin considered safe?</title><link>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 14:54:25 +0000</lastBuildDate><item><title>Re: Is chaining UPNs via "authentication_options" when using the GSSAPI Plugin considered safe?</title><link>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4885</link><description>&lt;p&gt;I will drop a few qualified comments next when I feel better from Corona.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Michael -O</dc:creator><guid>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4885</guid></item><item><title>Re: Is chaining UPNs via "authentication_options" when using the GSSAPI Plugin considered safe?</title><link>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4884</link><description>&lt;p&gt;Hi Vlad, I just checked your updates in the JIRA ticket. I think the proposed solution covers my needs perfectly and will make the switch over to MariaDB possible. Also the suggested prefixes GROUP and SID make sense and implementing it that way would pull Unix users in as well. Thanks for your support!&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jo_ku_ Kunde</dc:creator><guid>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4884</guid></item><item><title>Re: Is chaining UPNs via "authentication_options" when using the GSSAPI Plugin considered safe?</title><link>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4878</link><description>&lt;p&gt;Hi Michael-O and Johannes, I updated  &lt;a href="https://jira.mariadb.org/browse/MDEV-23959"&gt;https://jira.mariadb.org/browse/MDEV-23959&lt;/a&gt;, group and SID support on Windows, with details.  Feel free to discuss comment in the JIRA ticket.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Vladislav Vaintroub</dc:creator><guid>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4878</guid></item><item><title>Re: Is chaining UPNs via "authentication_options" when using the GSSAPI Plugin considered safe?</title><link>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4869</link><description>&lt;p&gt;Hi Michael,
+I see, but again, given the first request was concerned about migration from Oracle Windows auth plugin, I assume the importance of Windows here is higher. &lt;/p&gt;
+&lt;p&gt;It is not that I mind having some AD option for Unixen, SID or not-SID, but it seems to be entering an uncharted territory with unknown effort to be spent . See, for the most part, on Unixen this plugin currently is just plain GSSAPI, and apart from get_default_principal_name(), there are even no krb5_ functions in there.&lt;/p&gt;
+&lt;p&gt;So, it operates on in the Unix plugin, is 
+  gss_cred_id_t cred, gss_ctx_id_t ctxt and gss_name_t client_name
+Those are initialized whenever the handshake is finished.&lt;/p&gt;
+&lt;p&gt;I presume there is something in ctxt that can be extracted in some way, but I'm not really sure how :) And once it is extracted, I did not find any krb5_pac function that would allow to iterate over SIDs. If it would require parsing like JAASLounge is doing it, this would be a larger effort. I did not find any OSS C++ code that can be reused, I'm sure SAMBA will be doing something like that, somewhere, but I'm unfamiliar with their code either.&lt;/p&gt;
+&lt;p&gt;If  that is important, you can create a JIRA ticket asking for supporting AD SID on Unix , nd we can discuss it there. Larger discussions on KB are rather seldom, JIRA can be a better place.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Vladislav Vaintroub</dc:creator><guid>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4869</guid></item><item><title>Re: Is chaining UPNs via "authentication_options" when using the GSSAPI Plugin considered safe?</title><link>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4852</link><description>&lt;p&gt;Hi Vlad,&lt;/p&gt;
+&lt;p&gt;I was involved in the analysis for/with Johannes.&lt;/p&gt;
+&lt;div style="margin-left:2em"&gt;&lt;p&gt; although SIDs might be less natural for application than group names, it is easy to figure out that string is a SID.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;Microsoft's approach is to test for 'S-'  prefix.&lt;/p&gt;
+&lt;div style="margin-left:2em"&gt;&lt;p&gt; Now on Unixen, groups could be handled as an ActiveDirectory specific extension, for boxes than join Windows domain. The pure MIT kerberos KDC has no groups, an no LDAP, to my knowlegde. &lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;Correct. But I don't see to add any configure/compile time option for this. It could be simply a module option "use PAC groups" or similar. If the attribute name value is present, read it otherwise fail the authnz.&lt;/p&gt;
+&lt;div style="margin-left:2em"&gt;&lt;p&gt; This is something I'm a little less familiar with, and might need some more time.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;I will happily support and can provide plenty PAC data privately if necessary.&lt;/p&gt;
+&lt;div style="margin-left:2em"&gt;&lt;p&gt;  SID-only option seems a little user-unfriendly.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;There is no other option on Unix. Consider that this is not for users, but for admins. From my point of view, I see little difference because in our huge (and likely others) environment our groups are DOMAIN\cryptic-very-long-name vs. S-1-5-21-&amp;lt;group-sid&amp;gt;-&amp;lt;rid&amp;gt;. I treat them as opaque strings because I don't memorize the 100 gorups I have anyway. See also here a justification why SIDs are better than names in large environments [1].&lt;/p&gt;
+&lt;p&gt;What one could do is to map SIDs to app specific friendly names like I do in Java [1], but that would require more code in MariaDB and I don't see a need for now.&lt;/p&gt;
+&lt;p&gt;[1] &lt;a href="http://tomcatspnegoad.sourceforge.net/realms.html#Using_Security_Groups_from_Active_Directory"&gt;http://tomcatspnegoad.sourceforge.net/realms.html#Using_Security_Groups_from_Active_Directory&lt;/a&gt;.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Michael -O</dc:creator><guid>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4852</guid></item><item><title>Re: Is chaining UPNs via "authentication_options" when using the GSSAPI Plugin considered safe?</title><link>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4851</link><description>&lt;p&gt;Thanks a lot for this information, this is helpful. I think supporting both SIDs and names on Windows is a relatively easy thing, and natural on Windows. although SIDs might be less natural for application than group names, it is easy to figure out that string is a SID.&lt;/p&gt;
+&lt;p&gt;Now on Unixen, groups could be handled as an ActiveDirectory specific extension, for boxes than join Windows domain. The pure MIT kerberos KDC has no groups, an no LDAP, to my knowlegde.  This is something I'm a little less familiar with, and might need some more time. SID-only option seems a little user-unfriendly.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Vladislav Vaintroub</dc:creator><guid>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4851</guid></item><item><title>Re: Is chaining UPNs via "authentication_options" when using the GSSAPI Plugin considered safe?</title><link>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4849</link><description>&lt;p&gt;Hi Vlad,&lt;/p&gt;
+&lt;p&gt;yes, we'd like to use AD groups to authorize Kerberos-authenticated users. I will split my elaboration for SSPI and GSS-API because they need to be treated differently, but both can make use of AD groups out of the box with some effort.&lt;/p&gt;
+&lt;p&gt;SSPI: I believe the best spot is here [1]. When the username does not match, retrieve all AD groups of the user via Windows API and match a string representation of it against the auth_string provided in a loop. You'll know even better where to look for sure.&lt;/p&gt;
+&lt;p&gt;GSS-API: Luckily, all Kerberos tickets from AD contain full group memberships embedded in the PAC data. MIT Kerberos offers to extract name attributes [2] after the context has been established. It will already break up the PAC data structure in sub blobs for you and make it available (sample code is in mod_gssapi for the retrieval). You will need to parse this structure [3] which is available via the 'urn:mspac:logon-info"' attribute (see src/lib/krb5/krb/pac.c). A complete Java impl can be found here [4] for reference.&lt;/p&gt;
+&lt;p&gt;With that both worlds can easily make use of the same AD groups.&lt;/p&gt;
+&lt;p&gt;A word on group name formats: As you can see PAC data provides the group SIDs only which need to be converted/formatted to its string representation 'S-1-...'. Windows API provides various output formats. I would highly recommend, for consistency reasons, to make it configurable on Windows (SSPI) what the group name format is: downlevel name or SID.
+This would make it consistent on both platforms to use.
+We use SIDs exclusively in our Java webapps.&lt;/p&gt;
+&lt;p&gt;Many thanks in advance!&lt;/p&gt;
+&lt;p&gt;Best regards,&lt;/p&gt;
+&lt;p&gt;Johannes&lt;/p&gt;
+&lt;p&gt;[1] &lt;a href="https://github.com/MariaDB/server/blob/cccfa9dcfe2c161779824c01a84edfa64fc4378a/plugin/auth_gssapi/sspi_server.cc#L265-L271"&gt;https://github.com/MariaDB/server/blob/cccfa9dcfe2c161779824c01a84edfa64fc4378a/plugin/auth_gssapi/sspi_server.cc#L265-L271&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;[2] &lt;a href="https://web.mit.edu/kerberos/krb5-latest/doc/appdev/gssapi.html#name-attributes"&gt;https://web.mit.edu/kerberos/krb5-latest/doc/appdev/gssapi.html#name-attributes&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;[3] &lt;a href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-pac/69e86ccc-85e3-41b9-b514-7d969cd0ed73"&gt;https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-pac/69e86ccc-85e3-41b9-b514-7d969cd0ed73&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;[4] &lt;a href="https://github.com/cbsit/JaasLounge"&gt;https://github.com/cbsit/JaasLounge&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jo_ku_ Kunde</dc:creator><guid>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4849</guid></item><item><title>Re: Is chaining UPNs via "authentication_options" when using the GSSAPI Plugin considered safe?</title><link>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4848</link><description>&lt;p&gt;Hi Sergei,&lt;/p&gt;
+&lt;p&gt;thank your very much for the confirmation. The code fragment is spot on.&lt;/p&gt;
+&lt;p&gt;Best regards,&lt;/p&gt;
+&lt;p&gt;Johannes&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jo_ku_ Kunde</dc:creator><guid>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4848</guid></item><item><title>Re: Is chaining UPNs via "authentication_options" when using the GSSAPI Plugin considered safe?</title><link>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4847</link><description>&lt;p&gt;yes, authentication information and privileges are stored in mysql.global_priv, while mysql.user is supposed to provide backward-compatible representation of the authentication info for older applications. It can correctly represent authentication info in the backward-compatible way only when the account uses backward compatible authentication.&lt;/p&gt;
+&lt;p&gt;The magic happens in sql_acl.cc indeed, in the function acl_authenticate():&lt;/p&gt;
+&lt;pre class="fixed"&gt;    for (mpvio.curr_auth= mpvio.status != MPVIO_EXT::RESTART;
+         res != CR_OK &amp;amp;&amp;amp; mpvio.curr_auth &amp;lt; acl_user-&amp;gt;nauth;
+         mpvio.curr_auth++)
+    {
+      thd-&amp;gt;clear_error();
+      mpvio.status= MPVIO_EXT::RESTART;
+      res= do_auth_once(thd, &amp;amp;acl_user-&amp;gt;auth[mpvio.curr_auth].plugin, &amp;amp;mpvio);
+    }
+&lt;/pre&gt;&lt;p&gt;that is the server tries all specified authentications until one of them succeeds of the list runs out.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Golubchik</dc:creator><guid>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4847</guid></item><item><title>Re: Is chaining UPNs via "authentication_options" when using the GSSAPI Plugin considered safe?</title><link>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4846</link><description>&lt;p&gt;I created &lt;a href="https://jira.mariadb.org/browse/MDEV-23959"&gt;MDEV-23959&lt;/a&gt; to track "support groups in GSSAPI plugin on Windows".&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Vladislav Vaintroub</dc:creator><guid>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4846</guid></item><item><title>Re: Is chaining UPNs via "authentication_options" when using the GSSAPI Plugin considered safe?</title><link>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4845</link><description>&lt;p&gt;Do you want GSSAPI to support group names on Windows on server side? I think this is a no brainer for implementation, and that it is a good feature, even if not portable outside of Windows.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Vladislav Vaintroub</dc:creator><guid>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4845</guid></item><item><title>Re: Is chaining UPNs via "authentication_options" when using the GSSAPI Plugin considered safe?</title><link>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4838</link><description>&lt;p&gt;Hi folks,&lt;/p&gt;
+&lt;p&gt;I made a little progress on that one. The permission object containing the required user information is stored in the form of a JSON object in the table "mysql.global_priv" within a field named "Priv" [1]. Starting with MariaDB v10.4 "mysql.user" has been replaced with "mysql.global_priv" and "mysql.user" now is just a database view and not a regular table at all (I was not aware of that fact, under MySQL v5.7.28 it is a table) [2][3]. The last "authentication_option" from the create user statement is stored under the key "authentication_string" in the mentioned JSON object, which is why this one is returned in the column "authentication_string" when querying the "user" view. The content of the "Priv" field to the above shown create user statement looks as follows:&lt;/p&gt;
+&lt;p&gt;{
+   "access":0,
+   "version_id":100505,
+   "plugin":"gssapi",
+   "authentication_string":"username_3@MY_DOMAIN",
+   "auth_or":[
+      {
+         "plugin":"gssapi",
+         "authentication_string":"username_1@MY_DOMAIN"
+      },
+      {
+         "plugin":"gssapi",
+         "authentication_string":"username_2@MY_DOMAIN"
+      },
+      {&lt;/p&gt;
+&lt;p&gt;      }
+   ],
+   "password_last_changed":1602144036
+}&lt;/p&gt;
+&lt;p&gt;Anyway, I'm still interested in any feedback from the community.&lt;/p&gt;
+&lt;p&gt;Best regards
+Johannes&lt;/p&gt;
+&lt;p&gt;[1] &lt;a href="https://mariadb.com/kb/en/mysqlglobal_priv-table/"&gt;https://mariadb.com/kb/en/mysqlglobal_priv-table/&lt;/a&gt;
+[2] &lt;a href="https://mariadb.com/kb/en/mysqluser-table/"&gt;https://mariadb.com/kb/en/mysqluser-table/&lt;/a&gt;
+[3] &lt;a href="https://dev.mysql.com/doc/refman/5.7/en/connection-access.html"&gt;https://dev.mysql.com/doc/refman/5.7/en/connection-access.html&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jo_ku_ Kunde</dc:creator><guid>https://mariadb.com/kb/en/the-community-is-chaining-upns-via-authentication_options-when-using-the-gs/+comments/4838</guid></item></channel></rss>

@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Introduction to State Snapshot Transfers (SSTs) - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Introduction to State Snapshot Transfers (SSTs)" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/introduction-to-state-snapshot-transfers-ssts/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="In an SST, the cluster provisions nodes by transferring a full data copy from one node to another." />
+
+    <meta name="description" content="In an SST, the cluster provisions nodes by transferring a full data copy from one node to another." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/introduction-to-state-snapshot-transfers-ssts/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/introduction-to-state-snapshot-transfers-ssts/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/replication-cluster-multi-master/">High Availability &amp; Performance Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/galera-cluster/">MariaDB Galera Cluster</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/state-snapshot-transfers-ssts-in-galera-cluster/">State Snapshot Transfers (SSTs) in Galera Cluster</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/introduction-to-state-snapshot-transfers-ssts/">Introduction to State Snapshot Transfers (SSTs)</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/introduction-to-state-snapshot-transfers-ssts/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/introduction-to-state-snapshot-transfers-ssts/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/introduction-to-state-snapshot-transfers-ssts/+flag"
+                data-flag-url="/kb/en/introduction-to-state-snapshot-transfers-ssts/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/introduction-to-state-snapshot-transfers-ssts/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2018-12-21 00:26">4 years, 2 months ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2022-10-17 11:58">4 months, 3 weeks ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/introduction-to-state-snapshot-transfers-ssts/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/introduction-to-state-snapshot-transfers-ssts/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/introduction-to-state-snapshot-transfers-ssts/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/introduction-to-state-snapshot-transfers-ssts/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Introduction to State Snapshot Transfers (SSTs)</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#types-of-ssts" title="Types of SSTs">Types of SSTs</a></li>
+
+    <li class=""><a href="#sst-methods" title="SST Methods">SST Methods</a>    <ol class="toc">
+
+        <li class=""><a href="#mariabackup" title="mariabackup">mariabackup</a></li>
+
+        <li class=""><a href="#rsync-rsync_wan" title="rsync / rsync_wan">rsync / rsync_wan</a></li>
+
+        <li class=""><a href="#mysqldump" title="mysqldump">mysqldump</a></li>
+
+        <li class=""><a href="#xtrabackup-v2" title="xtrabackup-v2">xtrabackup-v2</a></li>
+
+        <li class=""><a href="#xtrabackup" title="xtrabackup">xtrabackup</a>    </ol>
+</li>
+
+    <li class=""><a href="#authentication" title="Authentication">Authentication</a></li>
+
+    <li class=""><a href="#ssts-and-systemd" title="SSTs and Systemd">SSTs and Systemd</a></li>
+
+    <li class=""><a href="#sst-failure" title="SST Failure">SST Failure</a></li>
+
+    <li class=""><a href="#ssts-and-data-at-rest-encryption" title="SSTs and Data at Rest Encryption">SSTs and Data at Rest Encryption</a></li>
+
+    <li class=""><a href="#minimal-cluster-size" title="Minimal Cluster Size">Minimal Cluster Size</a></li>
+
+    <li class=""><a href="#manual-ssts" title="Manual SSTs">Manual SSTs</a></li>
+
+    <li class=""><a href="#known-issues" title="Known Issues">Known Issues</a>    <ol class="toc">
+
+        <li class=""><a href="#mysqld_multi" title="mysqld_multi">mysqld_multi</a>    </ol>
+</li>
+
+    <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
+</li>
+</div>
+<p>In a State Snapshot Transfer (SST), the cluster provisions nodes by transferring a full data copy from one node to another. When a new node joins the cluster, the new node initiates a State Snapshot Transfer to synchronize its data with a node that is already part of the cluster.</p>
+<h2 class="anchored_heading" id="types-of-ssts">Types of SSTs</h2>
+<p>There are two conceptually different ways to transfer a state from one MariaDB server to another:</p>
+<ol start="1"><li><strong>Logical</strong>
+</li></ol>
+<p>The only SST method of this type is the <code>mysqldump</code> SST method, which actually uses the <code><a href="/kb/en/mysqldump/">mysqldump</a></code> utility to get a logical dump of the donor. This SST method requires the joiner node to be fully initialized and ready to accept connections before the transfer. This method is, by definition, blocking, in that it blocks the donor node from modifying its own state for the duration of the transfer. It is also the slowest of all, and that might be an issue in a cluster with a lot of load.</p>
+<ol start="2"><li><strong>Physical</strong> 
+</li></ol>
+<p>SST methods of this type physically copy the data files from the donor node to the joiner node. This requires that the joiner node is initialized after the transfer. The <code><a href="/kb/en/mariabackup-sst-method/">mariabackup</a></code> SST method and a few other SST methods fall into this category. These SST methods are much faster than the <code>mysqldump</code> SST method, but they have certain limitations. For example, they can be used only on server startup and the joiner node must be configured very similarly to the donor node (e.g. <a href="/kb/en/innodb-system-variables/#innodb_file_per_table">innodb_file_per_table</a> should be the same and so on). Some of the SST methods in this category are non-blocking on the donor node, meaning that the donor node is still able to process queries while donating the SST (e.g. the <code><a href="/kb/en/mariabackup-sst-method/">mariabackup</a></code> SST method is non-blocking). </p>
+<h2 class="anchored_heading" id="sst-methods">SST Methods</h2>
+<p>SST methods are supported via a scriptable interface. New SST methods could potentially be developed by creating new SST scripts. The scripts usually have names of the form <code>wsrep_sst_&lt;method&gt;</code> where <code>&lt;method&gt;</code> is one of the SST methods listed below.</p>
+<p>You can choose your SST method by setting the <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_method">wsrep_sst_method</a></code> system variable. It can be changed dynamically with <code><a href="/kb/en/set/#global-session">SET GLOBAL</a></code> on the node that you intend to be a SST donor. For example:</p>
+<pre class="fixed"><span class="k">SET</span> <span class="k">GLOBAL</span> <span class="n">wsrep_sst_method</span><span class="o">=</span><span class="s1">&#39;mariabackup&#39;</span><span class="p">;</span>
+</pre><p>It can also be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up a node:</p>
+<pre class="fixed">[mariadb]
+...
+wsrep_sst_method = mariabackup
+</pre><p>For an SST to work properly, the donor and joiner node must use the same SST method. Therefore, it is recommended to set <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_method">wsrep_sst_method</a></code> to the same value on all nodes, since any node will usually be a donor or joiner node at some point.</p>
+<p>MariaDB Galera Cluster comes with the following built-in SST methods:</p>
+<h3 class="anchored_heading" id="mariabackup">mariabackup</h3>
+<p>This SST method uses the <a href="/kb/en/backup-restore-and-import-clients-mariadb-backup/">Mariabackup</a> utility for performing SSTs. It is one of the two non-locking methods. This is the recommended SST method if you require the ability to run queries on the donor node during the SST. Note that if you use the <code>mariabackup</code> SST method, then you also need to have <code>socat</code> installed on the server. This is needed to stream the backup from the donor to the joiner. This is a limitation inherited from the <code>xtrabackup-v2</code> SST method.</p>
+<p>This SST method supports <a href="/kb/en/gtid/">GTID</a>.</p>
+<p>This SST method supports <a href="/kb/en/data-at-rest-encryption/">Data at Rest Encryption</a>.</p>
+<p>This SST method is available from <a href="/kb/en/mariadb-10126-release-notes/">MariaDB 10.1.26</a> and <a href="/kb/en/mariadb-10210-release-notes/">MariaDB 10.2.10</a>.</p>
+<p>With this SST method, it is impossible to upgrade the cluster between some major versions; see <a href="https://jira.mariadb.org/browse/MDEV-27437">MDEV-27437</a>.</p>
+<p>See <a href="/kb/en/mariabackup-sst-method/">mariabackup SST method</a> for more information.</p>
+<h3 class="anchored_heading" id="rsync-rsync_wan">rsync / rsync_wan</h3>
+<p><code>rsync</code> is the default method. This method uses the <code><a href="http://www.samba.org/rsync/">rsync</a></code> utility to create a snapshot of the donor node. <code>rsync</code> should be available by default on all modern Linux distributions. The donor node is blocked with a read lock during the SST. This is the fastest SST method, especially for large datasets since it copies binary data. Because of that, this is the recommended SST method if you do not need to allow the donor node to execute queries during the SST.</p>
+<p>The <code>rsync</code> method runs <code>rsync</code> in <code>--whole-file</code> mode, assuming that nodes are connected by fast local network links so that the default delta transfer mode would consume more processing time than it may save on data transfer bandwidth. When having a distributed cluster with slow links between nodes, the <code>rsync_wan</code> method runs <code>rsync</code> in the default delta transfer mode, which may reduce data transfer time substantially when an older datadir state is already present on the joiner node. Both methods are actually implemented by the same script, <code>wsrep_sst_rsync_wan</code> is just a symlink to the <code>wsrep_sst_rsync</code> script and the actual <code>rsync</code> mode to use is determined by the name the script was called by.</p>
+<p>This SST method supports <a href="/kb/en/gtid/">GTID</a>.</p>
+<p>This SST method supports <a href="/kb/en/data-at-rest-encryption/">Data at Rest Encryption</a>.</p>
+<p>The rsync SST method does not support tables created with the <a href="/kb/en/create-table/#data-directoryindex-directory">DATA DIRECTORY or INDEX DIRECTORY</a> clause. Use the <a href="/kb/en/mariabackup-sst-method/">mariabackup</a> SST method as an alternative to support this feature.</p>
+<p>Use of this SST method <strong>could result in data corruption</strong> when using 
+<a href="/kb/en/innodb-system-variables/#innodb_use_native_aio">innodb_use_native_aio</a> (the default) if the donor is older than <a href="/kb/en/mariadb-10335-release-notes/">MariaDB 10.3.35</a>, <a href="/kb/en/mariadb-10425-release-notes/">MariaDB 10.4.25</a>, <a href="/kb/en/mariadb-10516-release-notes/">MariaDB 10.5.16</a>, <a href="/kb/en/mariadb-1068-release-notes/">MariaDB 10.6.8</a>, or <a href="/kb/en/mariadb-1074-release-notes/">MariaDB 10.7.4</a>; see <a href="https://jira.mariadb.org/browse/MDEV-25975">MDEV-25975</a>. Starting with those donor versions, <code>wsrep_sst_method=rsync</code> is a reliable way to upgrade the cluster to a newer major version.</p>
+<p>As of <a href="/kb/en/mariadb-10136-release-notes/">MariaDB 10.1.36</a>, <a href="/kb/en/mariadb-10218-release-notes/">MariaDB 10.2.18</a>, and <a href="/kb/en/mariadb-10310-release-notes/">MariaDB 10.3.10</a>, <code><a href="https://www.stunnel.org">stunnel</a></code> can be used to encrypt data over the wire. Be sure to have <code>stunnel</code> installed. You will also need to generate certificates and keys. See <a href="https://www.stunnel.org/howto.html">the stunnel documentation</a> for information on how to do that. Once you have the keys, you will need to add the <code>tkey</code> and <code>tcert</code> options to the <code>[sst]</code> option group in your MariaDB configuration file, such as:</p>
+<pre class="fixed">[sst]
+tkey = /etc/my.cnf.d/certificates/client-key.pem
+tcert = /etc/my.cnf.d/certificates/client-cert.pem
+</pre><p>You also need to run the certificate directory through <code><a href="https://www.openssl.org/docs/man1.1.0/apps/rehash.html">openssl rehash</a></code>.</p>
+<h3 class="anchored_heading" id="mysqldump">mysqldump</h3>
+<p>This SST method runs <a href="/kb/en/mysqldump/">mysqldump</a> on the donor node and pipes
+the output to the <a href="/kb/en/mysql-client/">mysql</a> client connected to the joiner node. The <code>mysqldump</code> SST method
+needs a username/password pair set in the <a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_auth">wsrep_sst_auth</a> variable in order to get the dump. The donor node is blocked with a read lock during the SST. This is the slowest SST method.</p>
+<p>This SST method supports <a href="/kb/en/gtid/">GTID</a>.</p>
+<p>This SST method supports <a href="/kb/en/data-at-rest-encryption/">Data at Rest Encryption</a>.</p>
+<h3 class="anchored_heading" id="xtrabackup-v2">xtrabackup-v2</h3>
+<div class="cstm-style greenbox"><p>In <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> and later, <a href="/kb/en/mariabackup/">Mariabackup</a> is the recommended backup method to use instead of Percona XtraBackup.</p>
+</div><div class="cstm-style redbox"><p>In <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a>, Percona XtraBackup is <strong>not supported</strong>. See <a href="/kb/en/percona-xtrabackup-overview/#compatibility-with-mariadb">Percona XtraBackup Overview: Compatibility with MariaDB</a> for more information.</p>
+</div><div class="cstm-style redbox"><p>In <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> and <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a>, Percona XtraBackup is only <strong>partially supported</strong>. See <a href="/kb/en/percona-xtrabackup-overview/#compatibility-with-mariadb">Percona XtraBackup Overview: Compatibility with MariaDB</a> for more information.</p>
+</div>
+<p>This SST method uses the <a href="/kb/en/backup-restore-and-import-clients-percona-xtrabackup/">Percona XtraBackup</a> utility for performing SSTs. It is one of the two non-blocking methods. Note that if you use the <code>xtrabackup-v2</code> SST method, you also need to have <code>socat</code> installed on the server. Since Percona XtraBackup is a third party product, this SST method requires an additional installation some additional configuration. Please refer to <a href="http://www.percona.com/doc/percona-xtradb-cluster/5.7/manual/xtrabackup_sst.html">Percona's xtrabackup SST documentation</a> for information from the vendor.</p>
+<p>This SST method does <strong>not</strong> support <a href="/kb/en/gtid/">GTID</a>.</p>
+<p>This SST method does <strong>not</strong> support <a href="/kb/en/data-at-rest-encryption/">Data at Rest Encryption</a>.</p>
+<p>This SST method is available from MariaDB Galera Cluster 5.5.37 and MariaDB Galera Cluster 10.0.10.</p>
+<p>See <a href="/kb/en/xtrabackup-v2-sst-method/">xtrabackup-v2 SST method</a> for more information.</p>
+<h3 class="anchored_heading" id="xtrabackup">xtrabackup</h3>
+<div class="cstm-style greenbox"><p>In <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> and later, <a href="/kb/en/mariabackup/">Mariabackup</a> is the recommended backup method to use instead of Percona XtraBackup.</p>
+</div><div class="cstm-style redbox"><p>In <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a>, Percona XtraBackup is <strong>not supported</strong>. See <a href="/kb/en/percona-xtrabackup-overview/#compatibility-with-mariadb">Percona XtraBackup Overview: Compatibility with MariaDB</a> for more information.</p>
+</div><div class="cstm-style redbox"><p>In <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> and <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a>, Percona XtraBackup is only <strong>partially supported</strong>. See <a href="/kb/en/percona-xtrabackup-overview/#compatibility-with-mariadb">Percona XtraBackup Overview: Compatibility with MariaDB</a> for more information.</p>
+</div>
+<p>This SST method is an older SST method that uses the <a href="/kb/en/backup-restore-and-import-clients-percona-xtrabackup/">Percona XtraBackup</a> utility for performing SSTs. The <code>xtrabackup-v2</code> SST method should be used instead of the <code>xtrabackup</code> SST method starting from <a href="/kb/en/mariadb-5533-release-notes/">MariaDB 5.5.33</a>.</p>
+<p>This SST method does <strong>not</strong> support <a href="/kb/en/gtid/">GTID</a>.</p>
+<p>This SST method does <strong>not</strong> support <a href="/kb/en/data-at-rest-encryption/">Data at Rest Encryption</a>.</p>
+<h2 class="anchored_heading" id="authentication">Authentication</h2>
+<p>All SST methods except <code>rsync</code> require authentication via username and password. You can tell the client what username and password to use by setting the <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_auth">wsrep_sst_auth</a></code> system variable. It can be changed dynamically with <code><a href="/kb/en/set/#global-session">SET GLOBAL</a></code> on the node that you intend to be a SST donor. For example:</p>
+<pre class="fixed"><span class="k">SET</span> <span class="k">GLOBAL</span> <span class="n">wsrep_sst_auth</span> <span class="o">=</span> <span class="s1">&#39;mariabackup:password&#39;</span><span class="p">;</span>
+</pre><p>It can also be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up a node:</p>
+<pre class="fixed">[mariadb]
+...
+wsrep_sst_auth = mariabackup:password
+</pre><p>Some <a href="/kb/en/authentication-plugins/">authentication plugins</a> do not require a password. For example, the <code><a href="/kb/en/authentication-plugin-unix-socket/">unix_socket</a></code> and <code><a href="/kb/en/authentication-plugin-gssapi/">gssapi</a></code> authentication plugins do not require a password. If you are using a user account that does not require a password in order to log in, then you can just leave the password component of <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_auth">wsrep_sst_auth</a></code> empty. For example:</p>
+<pre class="fixed">[mariadb]
+...
+wsrep_sst_auth = mariabackup:
+</pre><p>See the relevant description or page for each SST method to find out what privileges need to be <a href="/kb/en/grant/">granted</a> to the user and whether the privileges are needed on the donor node or joiner node for that method.</p>
+<h2 class="anchored_heading" id="ssts-and-systemd">SSTs and Systemd</h2>
+<p>MariaDB's <code><a href="/kb/en/systemd/">systemd</a></code> unit file has a default startup timeout of about 90 seconds on most systems. If an SST takes longer than this default startup timeout on a joiner node, then <code>systemd</code> will assume that <code>mysqld</code> has failed to startup, which causes <code>systemd</code> to kill the <code>mysqld</code> process on the joiner node. To work around this, you can reconfigure the MariaDB <code>systemd</code> unit to have an infinite timeout, such as by executing one of the following commands:</p>
+<p>If you are using <code>systemd</code> 228 or older, then you can execute the following to set an infinite timeout:</p>
+<pre class="fixed">sudo tee /etc/systemd/system/mariadb.service.d/timeoutstartsec.conf &lt;&lt;EOF
+[Service]
+
+TimeoutStartSec=0
+EOF
+sudo systemctl daemon-reload
+</pre><p><a href="https://lists.freedesktop.org/archives/systemd-devel/2016-February/035748.html">Systemd 229 added the infinity option</a>, so if you are using <code>systemd</code> 229 or later, then you can execute the following to set an infinite timeout:</p>
+<pre class="fixed">sudo tee /etc/systemd/system/mariadb.service.d/timeoutstartsec.conf &lt;&lt;EOF
+[Service]
+
+TimeoutStartSec=infinity
+EOF
+sudo systemctl daemon-reload
+</pre><p>See <a href="/kb/en/systemd/#configuring-the-systemd-service-timeout">Configuring the Systemd Service Timeout</a> for more details.</p>
+<p>Note that <a href="https://lists.freedesktop.org/archives/systemd-devel/2017-December/039996.html">systemd 236 added the <code>EXTEND_TIMEOUT_USEC</code> environment variable</a> that allows services to extend the startup timeout during long-running processes. Starting with <a href="/kb/en/mariadb-10135-release-notes/">MariaDB 10.1.35</a>, <a href="/kb/en/mariadb-10217-release-notes/">MariaDB 10.2.17</a>, and <a href="/kb/en/mariadb-1038-release-notes/">MariaDB 10.3.8</a>, on systems with systemd versions that support it, MariaDB uses this feature to extend the startup timeout during long SSTs. Therefore, if you are using <code>systemd</code> 236 or later, then you should not need to manually override <code>TimeoutStartSec</code>, even if your SSTs run for longer than the configured value. See <a href="https://jira.mariadb.org/browse/MDEV-15607">MDEV-15607</a> for more information.</p>
+<h2 class="anchored_heading" id="sst-failure">SST Failure</h2>
+<p>An SST failure generally renders the joiner node unusable. Therefore, when an SST failure is detected, the joiner node will abort.</p>
+<p>Restarting a node after a <code>mysqldump</code> SST failure may require manual restoration of the administrative tables.</p>
+<h2 class="anchored_heading" id="ssts-and-data-at-rest-encryption">SSTs and Data at Rest Encryption</h2>
+<p>Look at the description of each SST method to determine which methods support <a href="/kb/en/data-at-rest-encryption/">Data at Rest Encryption</a>.</p>
+<p>For logical SST methods like <code>mysqldump</code>, each node should be able to have different <a href="/kb/en/data-at-rest-encryption/#encryption-key-management">encryption keys</a>. For physical SST methods, all nodes need to have the same <a href="/kb/en/data-at-rest-encryption/#encryption-key-management">encryption keys</a>, since the donor node will copy encrypted data files to the joiner node, and the joiner node will need to be able to decrypt them.</p>
+<h2 class="anchored_heading" id="minimal-cluster-size">Minimal Cluster Size</h2>
+<p>In order to avoid a split-brain condition, the minimum recommended number of nodes in a cluster is 3.</p>
+<p>When using an SST method that blocks the donor, there is yet another reason to require a minimum of 3 nodes. In a 3-node cluster, if one node is acting as an SST joiner and one other node is acting as an SST donor, then there is still one more node to continue executing queries.</p>
+<h2 class="anchored_heading" id="manual-ssts">Manual SSTs</h2>
+<p>In some cases, if Galera Cluster's automatic SSTs repeatedly fail, then it can be helpful to perform a "manual SST". See the following pages on how to do that:</p>
+<ul start="1"><li><a href="/kb/en/manual-sst-of-galera-cluster-node-with-mariabackup/">Manual SST of Galera Cluster node with Mariabackup</a>
+</li><li><a href="/kb/en/manual-sst-of-galera-cluster-node-with-percona-xtrabackup/">Manual SST of Galera Cluster node with Percona XtraBackup</a>
+</li></ul>
+<h2 class="anchored_heading" id="known-issues">Known Issues</h2>
+<h3 class="anchored_heading" id="mysqld_multi">mysqld_multi</h3>
+<p>SST scripts can't currently read the <code>[mysqldN]</code> <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option groups</a> in <a href="/kb/en/configuring-mariadb-with-option-files/">option files</a> that are read by instances managed by <code><a href="/kb/en/mysqld_multi/">mysqld_multi</a></code>.</p>
+<p>See <a href="https://jira.mariadb.org/browse/MDEV-18863">MDEV-18863</a> for more information.</p>
+<h2 class="anchored_heading" id="see-also">See Also</h2>
+<ul start="1"><li><a href="https://galeracluster.com/library/documentation/sst.html">Galera Cluster documentation: STATE SNAPSHOT TRANSFERS</a></li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/introduction-to-state-snapshot-transfers-ssts/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/introduction-to-state-snapshot-transfers-ssts/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                
+                    <li><a href="/kb/en/state-snapshot-transfers-ssts-in-galera-cluster/">
+                        ↑ State Snapshot Transfers (SSTs) in Galera Cluster ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/mariabackup-sst-method/">
+                        mariabackup SST Method →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="8280" data-comments-url="/kb/en/introduction-to-state-snapshot-transfers-ssts/+comments"
+         data-reply-url="/kb/en/introduction-to-state-snapshot-transfers-ssts/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/state-snapshot-transfers-ssts-in-galera-cluster/">
+                    ↑ State Snapshot Transfers (SSTs) in Galera Cluster ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li class="active">
+                        <span>Introduction to State Snapshot Transfers (SSTs)</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariabackup-sst-method/">
+                            
+                            mariabackup SST Method
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/manual-sst-of-galera-cluster-node-with-mariabackup/">
+                            
+                            Manual SST of Galera Cluster Node With Mariabackup
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/xtrabackup-v2-sst-method/">
+                            
+                            xtrabackup-v2 SST Method
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/manual-sst-of-galera-cluster-node-with-percona-xtrabackup/">
+                            
+                            Manual SST of Galera Cluster Node With Percona XtraBackup
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

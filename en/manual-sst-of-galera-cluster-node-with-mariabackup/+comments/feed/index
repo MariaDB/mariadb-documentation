@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Manual SST of Galera Cluster Node With Mariabackup</title><link>https://mariadb.com/kb/en/manual-sst-of-galera-cluster-node-with-mariabackup/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/manual-sst-of-galera-cluster-node-with-mariabackup/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 17:41:00 +0000</lastBuildDate><item><title>Re: Manual SST of Galera Cluster Node With Mariabackup</title><link>https://mariadb.com/kb/en/manual-sst-of-galera-cluster-node-with-mariabackup/+comments/5031</link><description>&lt;p&gt;I prefer to use pure scp, it is faster and straightforward, no need to play with grastate.dat. Something like this:&lt;/p&gt;
+&lt;p&gt;Here we assume that we have one node (node1) running, started with galera_new_cluster. All other nodes are stopped. And MaxScales stopped&lt;/p&gt;
+&lt;p&gt;Perform this on all stopped nodes 2-5: Wipe datadirs on those stopped nodes (nodes 2-5), NOT on that running node! (node1). Also on slave if existing. &lt;/p&gt;
+&lt;pre class="fixed"&gt;find /var/lib/mysql -type f -not -path &amp;#34;/var/lib/mysql/example/*&amp;#34; -delete
+&lt;/pre&gt;&lt;p&gt;Perform this on all stopped nodes 2-5: Give permissions for your account to /var/lib/mysql. This is needed because root cannot scp files between the nodes. Use id &amp;lt;loginname&amp;gt; too see your group. Also on slave if existing.&lt;/p&gt;
+&lt;pre class="fixed"&gt;chown -R myid:mygroup /var/lib/mysql/
+&lt;/pre&gt;&lt;p&gt;Stop running node (node1) &lt;/p&gt;
+&lt;pre class="fixed"&gt;systemctl stop mariadb
+&lt;/pre&gt;&lt;p&gt;Start screens as user root for the scp’s on that node (node1) which was running Galera. You may want to utilise 4 terminals.&lt;/p&gt;
+&lt;pre class="fixed"&gt;screen -S fornode2 
+screen -S fornode3 
+screen -S fornode4 
+screen -S fornode5 
+screen -S fornode6 (for possible existing slave)
+&lt;/pre&gt;&lt;p&gt;And on every screen:&lt;/p&gt;
+&lt;pre class="fixed"&gt;scp -pr /var/lib/mysql/* myid@node2IP:/var/lib/mysql/ &amp;amp;&amp;amp; touch /tmp/scp_transfer_done_node2
+&lt;/pre&gt;&lt;pre class="fixed"&gt;scp -pr /var/lib/mysql/* myid@node3IP:/var/lib/mysql/ &amp;amp;&amp;amp; touch /tmp/scp_transfer_done_node3
+&lt;/pre&gt;&lt;pre class="fixed"&gt;scp -pr /var/lib/mysql/* myid@node4IP:/var/lib/mysql/ &amp;amp;&amp;amp; touch /tmp/scp_transfer_done_node4
+&lt;/pre&gt;&lt;pre class="fixed"&gt;scp -pr /var/lib/mysql/* myid@node5IP:/var/lib/mysql/ &amp;amp;&amp;amp; touch /tmp/scp_transfer_done_node5
+&lt;/pre&gt;&lt;pre class="fixed"&gt;scp -pr /var/lib/mysql/* myid@node6IP:/var/lib/mysql/ &amp;amp;&amp;amp; touch /tmp/scp_transfer_done_node6
+&lt;/pre&gt;&lt;p&gt;Wait until scp’s are finished. (watch -n 30 -d /tmp/)&lt;/p&gt;
+&lt;p&gt;Clear logs on node 2-5 if writing logs to /var/lib/mysql. Also on slave if existing&lt;/p&gt;
+&lt;pre class="fixed"&gt; :&amp;gt; /var/lib/mysql/mariadb.err /var/lib/mysql/slow-queries.log
+&lt;/pre&gt;&lt;p&gt;Set permissions back for mysql on nodes 2-5, also on slave if existing&lt;/p&gt;
+&lt;pre class="fixed"&gt;chown -R mysql:mysql /var/lib/mysql/
+&lt;/pre&gt;&lt;p&gt;Bootstrap Galera Cluster from node (node1) &lt;/p&gt;
+&lt;pre class="fixed"&gt;galera_new_cluster &amp;amp; 
+tail -f /var/lib/mysql/mariadb.err
+&lt;/pre&gt;&lt;p&gt;Start other nodes (2-5) one-by-one. Wait that node has joined to the cluster with IST before proceeding to start next node.&lt;/p&gt;
+&lt;pre class="fixed"&gt;systemctl start mariadb &amp;amp; 
+tail -f /var/lib/mysql/mariadb.err
+&lt;/pre&gt;&lt;p&gt;Start MaxScales
+Start replication&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Mika Hakala</dc:creator><guid>https://mariadb.com/kb/en/manual-sst-of-galera-cluster-node-with-mariabackup/+comments/5031</guid></item></channel></rss>

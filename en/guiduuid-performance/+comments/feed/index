@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: GUID/UUID Performance</title><link>https://mariadb.com/kb/en/guiduuid-performance/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/guiduuid-performance/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 22:08:37 +0000</lastBuildDate><item><title>Re: GUID/UUID Performance</title><link>https://mariadb.com/kb/en/guiduuid-performance/+comments/5358</link><description>&lt;p&gt;So what is the solution for Java/PHP v4-based UUID's&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Vard Lott</dc:creator><guid>https://mariadb.com/kb/en/guiduuid-performance/+comments/5358</guid></item><item><title>Re: GUID/UUID Performance</title><link>https://mariadb.com/kb/en/guiduuid-performance/+comments/4223</link><description>&lt;p&gt;Maybe I am missing something obvious here - or being too simplistic. &lt;/p&gt;
+&lt;p&gt;But if you're working with a single DB server, and code running on that DB server is the one which allocates the UUID, couldn't the MAC part also be shuffled to the front to also improve clustering?&lt;/p&gt;
+&lt;p&gt;Actually, in our case we have a small number of server nodes feeding a DB, but each are unique, and clustering tends to only be an issue when exporting from a single server, which ends up being similar&lt;/p&gt;
+&lt;p&gt;I guess my concern is does this threaten the uniqueness of the UUID?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Rob Walker</dc:creator><guid>https://mariadb.com/kb/en/guiduuid-performance/+comments/4223</guid></item><item><title>Re: GUID/UUID Performance</title><link>https://mariadb.com/kb/en/guiduuid-performance/+comments/4037</link><description>&lt;p&gt;Thanks - fixed in the article.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Richard James</dc:creator><guid>https://mariadb.com/kb/en/guiduuid-performance/+comments/4037</guid></item><item><title>Re: GUID/UUID Performance</title><link>https://mariadb.com/kb/en/guiduuid-performance/+comments/3917</link><description>&lt;p&gt;In the code example isn't there a separator between the create statement of the functions missing ? (&lt;em&gt;)&lt;/em&gt;&lt;/p&gt;
+&lt;pre class="fixed"&gt; DELIMITER //
+
+    CREATE FUNCTION UuidToBin(_uuid BINARY(36))
+        RETURNS BINARY(16)
+        LANGUAGE SQL  DETERMINISTIC  CONTAINS SQL  SQL SECURITY INVOKER
+    RETURN
+        UNHEX(CONCAT(
+            SUBSTR(_uuid, 15, 4),
+            SUBSTR(_uuid, 10, 4),
+            SUBSTR(_uuid,  1, 8),
+            SUBSTR(_uuid, 20, 4),
+            SUBSTR(_uuid, 25) ));
+//
+    CREATE FUNCTION UuidFromBin(_bin BINARY(16))
+        RETURNS BINARY(36)
+        LANGUAGE SQL  DETERMINISTIC  CONTAINS SQL  SQL SECURITY INVOKER
+    RETURN
+        LCASE(CONCAT_WS('-',
+            HEX(SUBSTR(_bin,  5, 4)),
+            HEX(SUBSTR(_bin,  3, 2)),
+            HEX(SUBSTR(_bin,  1, 2)),
+            HEX(SUBSTR(_bin,  9, 2)),
+            HEX(SUBSTR(_bin, 11))
+                 ));
+
+    //
+    DELIMITER ;
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Markus Schreiber</dc:creator><guid>https://mariadb.com/kb/en/guiduuid-performance/+comments/3917</guid></item></channel></rss>

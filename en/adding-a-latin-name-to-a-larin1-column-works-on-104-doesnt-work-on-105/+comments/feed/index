@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Adding a latin name to a larin1 column  works on 10.4, doesn't work on 10.5</title><link>https://mariadb.com/kb/en/adding-a-latin-name-to-a-larin1-column-works-on-104-doesnt-work-on-105/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/adding-a-latin-name-to-a-larin1-column-works-on-104-doesnt-work-on-105/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 20:05:44 +0000</lastBuildDate><item><title>Re: Adding a latin name to a larin1 column  works on 10.4, doesn't work on 10.5</title><link>https://mariadb.com/kb/en/adding-a-latin-name-to-a-larin1-column-works-on-104-doesnt-work-on-105/+comments/5504</link><description>&lt;p&gt;Latin Small Letter L with Stroke does not exists in latin1.&lt;/p&gt;
+&lt;p&gt;MariaDB can do two things when an impossible character gets written to a column:&lt;/p&gt;
+&lt;p&gt;- Issue a warning (the character gets replaced to the question mark in this case)&lt;/p&gt;
+&lt;p&gt;- Issue an error&lt;/p&gt;
+&lt;p&gt;The choice between the warning and the error is made according to:&lt;/p&gt;
+&lt;p&gt;- STRICT_TRANS_TABLES flag in sql_mode&lt;/p&gt;
+&lt;p&gt;- STRICT_ALL_TABLES flag in sql_mode&lt;/p&gt;
+&lt;p&gt;- The engine used.&lt;/p&gt;
+&lt;p&gt;It seems that after switch from 10.4 to 10.5 either of them have changed.&lt;/p&gt;
+&lt;p&gt;Please check the output of this script in both installations:&lt;/p&gt;
+&lt;pre class="fixed"&gt;SELECT @@sql_mode;
+SHOW CREATE TABLE &amp;lt;tablename&amp;gt;;
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Alexander Barkov</dc:creator><guid>https://mariadb.com/kb/en/adding-a-latin-name-to-a-larin1-column-works-on-104-doesnt-work-on-105/+comments/5504</guid></item><item><title>Re: Adding a latin name to a larin1 column  works on 10.4, doesn't work on 10.5</title><link>https://mariadb.com/kb/en/adding-a-latin-name-to-a-larin1-column-works-on-104-doesnt-work-on-105/+comments/5499</link><description>&lt;p&gt;The MariaDB encoding name "latin1" refers to Microsoft Code Page 1252, which extends ISO 8859-1 (a.k.a. ISO Latin 1) with a few code points.&lt;/p&gt;
+&lt;p&gt;The \xC5\x82 in your output looks like UTF-8 for U+0142 to me. The 0x82 is not a valid code point in "latin1" encoding. 0xc5 would be interpreted as U+00C5 LATIN CAPITAL LETTER A WITH RING ABOVE.&lt;/p&gt;
+&lt;p&gt;So, it looks like in 10.5 some additional validation was implemented. Previously, the incorrect data was wrongly and silently accepted. You could get surprising results for ORDER BY when using the wrong encoding and collation.&lt;/p&gt;
+&lt;p&gt;I think that you should define the table with the utf8mb3 or utf8mb4 encoding if you are going to insert UTF-8 encoded data into it.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Marko Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/adding-a-latin-name-to-a-larin1-column-works-on-104-doesnt-work-on-105/+comments/5499</guid></item></channel></rss>

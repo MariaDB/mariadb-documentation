@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: SELECT</title><link>https://mariadb.com/kb/en/select/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/select/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 17:37:45 +0000</lastBuildDate><item><title>Re: SELECT</title><link>https://mariadb.com/kb/en/select/+comments/5701</link><description>&lt;p&gt;Please direct me to an appropriate place for questions if this is not the place.&lt;/p&gt;
+&lt;p&gt;I have 26 procedures which worked fine in 5.5.  Now I'm getting no results from what looks like a simple query.  I'm passing a search parameter.  Strings like xml, browse return no records.
+I am using a cursor to iterate every DB.  I've never had an issue before.  I started from scratch and here is the procedure.  As I said, some strings return no records.
+The column I'm searching is called Name, values contains no spaces.  The procedure code is below this sample table.
+[Names]
+aggregator
+aggregator_test
+block
+block_test
+blog
+book
+color
+comment
+contact
+contextual
+dashboard
+dblog
+field
+field_sql_storage
+list
+list_test
+number
+options&lt;/p&gt;
+&lt;p&gt;CREATE OR REPLACE PROCEDURE FirstProc (IN mytext varchar(200))
+BEGIN
+    DECLARE finished tinyint DEFAULT 0;
+    DECLARE v_db varchar(400) DEFAULT NULL;&lt;/p&gt;
+&lt;p&gt;    drop temporary table if exists myemaillist;
+    CREATE TEMPORARY TABLE IF NOT EXISTS mydbs AS (SELECT TABLE_SCHEMA AS 'database' FROM information_schema.TABLES WHERE TABLE_TYPE = 'BASE TABLE' and table_name='users');
+    CREATE TEMPORARY TABLE IF NOT EXISTS myemaillist (module varchar(255), place varchar(255));
+    BEGIN
+        DECLARE mydb_cursor CURSOR FOR
+            SELECT TABLE_SCHEMA AS 'database' FROM information_schema.TABLES
+            WHERE TABLE_TYPE = 'BASE TABLE' and table_name='users';
+        DECLARE CONTINUE HANDLER
+            FOR NOT FOUND SET finished = 1;&lt;/p&gt;
+&lt;p&gt;        open mydb_cursor;&lt;/p&gt;
+&lt;p&gt;        SET @j = CONCAT('"%',mytext,'%"');&lt;/p&gt;
+&lt;p&gt;        get_mydb: LOOP
+            FETCH mydb_cursor INTO v_db;
+            IF finished  THEN
+                CLOSE mydb_cursor;
+                LEAVE get_mydb;
+            END IF;
+            SET @s = CONCAT('INSERT INTO myemaillist SELECT name, "',v_db,'" FROM system u WHERE type = ''module'' AND status = 1 AND name Like ',@j);
+            PREPARE stmt FROM @s;
+            EXECUTE stmt;
+        END LOOP get_mydb;&lt;/p&gt;
+&lt;p&gt;    END;
+    SELECT @S;
+select * from myemaillist order by Court;
+    drop temporary table if exists myemaillist;
+END&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Milton Snider</dc:creator><guid>https://mariadb.com/kb/en/select/+comments/5701</guid></item><item><title>Re: Can select for update / lock in share mode return no rows but still lock the relevant records ?</title><link>https://mariadb.com/kb/en/select/+comments/5351</link><description>&lt;p&gt;If you know your application is the only one that modifies the records, you could use &lt;a href="/kb/en/get_lock/"&gt;GET_LOCK&lt;/a&gt; to cooperatively lock the table without actually locking it.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Markus Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/select/+comments/5351</guid></item><item><title>Re: Can select for update / lock in share mode return no rows but still lock the relevant records ?</title><link>https://mariadb.com/kb/en/select/+comments/5349</link><description>&lt;p&gt;Try &lt;code&gt;SELECT COUNT(*) FROM ...&lt;/code&gt; or an impossible &lt;code&gt;HAVING&lt;/code&gt; clause&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Golubchik</dc:creator><guid>https://mariadb.com/kb/en/select/+comments/5349</guid></item><item><title>Can select for update / lock in share mode return no rows but still lock the relevant records ?</title><link>https://mariadb.com/kb/en/select/+comments/5348</link><description>&lt;p&gt;Is it possible to have select for update / lock in share mode to return no rows or an empty result set, but still lock all target records ?
+I use a select for update to reduce the occurrence of deadlocks but I am not interested in the returned result set.
+Would for instance select for update limit 0 lock all records which fulfill the conditions of the select statement but return no records ? 
+Or is there another way to accomplish this ?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Tibor den Ouden</dc:creator><guid>https://mariadb.com/kb/en/select/+comments/5348</guid></item><item><title>Re: SELECT * EXCEPT (col1, col2)</title><link>https://mariadb.com/kb/en/select/+comments/1423</link><description>&lt;p&gt;It seems equally as bad as select *. There's a number of reasons why select * are bad - &lt;a href="http://www.parseerror.com/blog/select-*-is-evil"&gt;http://www.parseerror.com/blog/select-*-is-evil&lt;/a&gt; . There are exceptions to this rule (like every rule) but it in generally using select * is a common way to incur a software maintenance debt. It also can force the db to retrieve more data than needed, and in doing, so miss out on query optimisations to get your data quicker (if you don't actually need all columns).&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black </dc:creator><guid>https://mariadb.com/kb/en/select/+comments/1423</guid></item><item><title>SELECT * EXCEPT (col1, col2)</title><link>https://mariadb.com/kb/en/select/+comments/449</link><description>&lt;p&gt;Is there any inverse SELECT in MariaDB for selecting all columns but few specified? I found in practice very useful syntax like:&lt;/p&gt;
+&lt;p&gt;SELECT * EXCEPT (col1, col2)
+FROM ...&lt;/p&gt;
+&lt;p&gt;This would select all columns except for those declared within the EXCEPT keyword. 
+This is specially useful for tables with many columns. 
+MySQL does not support anything similar, currently neither does MariaDB as far as I know. &lt;/p&gt;
+&lt;p&gt;Issue is discussed e.g. here:&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://stackoverflow.com/questions/9122/select-all-columns-except-one-in-mysql"&gt;http://stackoverflow.com/questions/9122/select-all-columns-except-one-in-mysql&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Thanx.
+Lubos&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Lubos Dz</dc:creator><guid>https://mariadb.com/kb/en/select/+comments/449</guid></item></channel></rss>

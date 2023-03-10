@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>设置字符集和排序规则 - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="设置字符集和排序规则" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/zh-cn/setting-character-sets-and-collations/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+在MariaDB中，默认的字符集character set为latin1，默认的排序规则为latin1_swedish_ci(但不同的发行版可能会不同，例如Differences in MariaDB in Debian)。字符集和排序规则都可以从server端一直指定到字段级别，client到server连接时也可以指定。当修改字符集但却没有指..." />
+
+    <meta name="description" content="
+在MariaDB中，默认的字符集character set为latin1，默认的排序规则为latin1_swedish_ci(但不同的发行版可能会不同，例如Differences in MariaDB in Debian)。字符集和排序规则都可以从server端一直指定到字段级别，client到server连接时也可以指定。当修改字符集但却没有指..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/zh-cn/setting-character-sets-and-collations/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/zh-cn/setting-character-sets-and-collations/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/zh-cn/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/zh-cn/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/zh-cn/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb/">MariaDB - 简体中文</a>
+    
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb-documentation/">MariaDB的使用</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/zh-cn/setting-character-sets-and-collations/">设置字符集和排序规则</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/zh-cn/">首页</a></li>
+                            
+                                
+                                    <li><a href="/kb/zh-cn/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/zh-cn/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/zh-cn/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/zh-cn/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/zh-cn/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/setting-character-sets-and-collations/+history" rel="nofollow">历史</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/setting-character-sets-and-collations/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/zh-cn/setting-character-sets-and-collations/+flag"
+                data-flag-url="/kb/zh-cn/setting-character-sets-and-collations/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/setting-character-sets-and-collations/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>已创建</dt>
+        <dd>
+
+<span class="datetime" title="2017-09-26 14:19">5 years, 5 months ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2017-09-26 14:39">5 years, 5 months ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/zh-cn/setting-character-sets-and-collations/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/zh-cn/setting-character-sets-and-collations/+history/feed/">
+            历史</a>
+        </li>
+        <li><a href="/kb/zh-cn/setting-character-sets-and-collations/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/zh-cn/setting-character-sets-and-collations/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+        
+
+<div class="well well-small box"><div><h5>Localized Versions</h5></div><div>
+
+        <ul>
+            
+            <li><a href="/kb/en/setting-character-sets-and-collations/">Setting Character Sets and Collations</a> [en]</li>
+            
+            <li><a href="/kb/it/setting-character-sets-and-collations/">Impostare i set di caratteri e le collation</a> [it]</li>
+            
+        </ul>
+        
+</div>
+</div>
+
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>设置字符集和排序规则</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#server级别" title="Server级别">Server级别</a></li>
+
+    <li class=""><a href="#database级别" title="Database级别">Database级别</a></li>
+
+    <li class=""><a href="#table级别" title="Table级别">Table级别</a></li>
+
+    <li class=""><a href="#column级别" title="Column级别">Column级别</a></li>
+
+    <li class=""><a href="#文件名" title="文件名">文件名</a></li>
+
+    <li class=""><a href="#字面符号译者注可理解为常量普通字符串或文本字符" title="字面符号(译者注：可理解为常量、普通字符串或文本字符)">字面符号(译者注：可理解为常量、普通字符串或文本字符)</a>    <ol class="toc">
+
+        <li class=""><a href="#示例" title="示例">示例</a></li>
+
+        <li class=""><a href="#n" title="N">N</a>    </ol>
+</li>
+
+    <li class=""><a href="#存储过程和视图" title="存储过程和视图">存储过程和视图</a></li>
+
+    <li class=""><a href="#示例更改默认的字符集为utf-8" title="示例：更改默认的字符集为UTF-8">示例：更改默认的字符集为UTF-8</a></li>
+
+    <li class=""><a href="#see-also" title="See also">See also</a> </ol>
+</li>
+</div><p>
+在MariaDB中，默认的字符集<a href="/kb/en/data-types-character-sets-and-collations/">character set</a>为latin1，默认的排序规则为latin1_swedish_ci(但不同的发行版可能会不同，例如<a href="/kb/en/differences-in-mariadb-in-debian/">Differences in MariaDB in Debian</a>)。字符集和排序规则都可以从server端一直指定到字段级别，client到server连接时也可以指定。当修改字符集但却没有指定排序规则时，将总是使用字符集的默认排序规则。</p>
+<p>字符集和排序规则总是级联向下的，所以当没有为字段指定排序规则时，将查找表的排序规则，同样对于表来说会上查到数据库，对数据库来说会上查到server级。因此，可以使用极细粒度的字符集和排序规则来控制控制你的数据。</p>
+<p>每种字符集的默认排序规则可使用<a href="/kb/en/show-collation/">SHOW COLLATION</a>语句查看，例如查找latin2字符集的默认排序规则：</p>
+<pre class="fixed"><span class="k">SHOW</span> <span class="k">COLLATION</span> <span class="k">LIKE</span> <span class="s1">&#39;latin2%&#39;</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---------------------+---------+----+---------+----------+---------+</span>
+<span class="o">|</span> <span class="k">Collation</span>           <span class="o">|</span> <span class="n">Charset</span> <span class="o">|</span> <span class="n">Id</span> <span class="o">|</span> <span class="k">Default</span> <span class="o">|</span> <span class="n">Compiled</span> <span class="o">|</span> <span class="n">Sortlen</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------------+---------+----+---------+----------+---------+</span>
+<span class="o">|</span> <span class="n">latin2_czech_cs</span>     <span class="o">|</span> <span class="n">latin2</span>  <span class="o">|</span>  <span class="mi">2</span> <span class="o">|</span>         <span class="o">|</span> <span class="n">Yes</span>      <span class="o">|</span>       <span class="mi">4</span> <span class="o">|</span>
+<span class="o">|</span> <span class="n">latin2_general_ci</span>   <span class="o">|</span> <span class="n">latin2</span>  <span class="o">|</span>  <span class="mi">9</span> <span class="o">|</span> <span class="n">Yes</span>     <span class="o">|</span> <span class="n">Yes</span>      <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>
+<span class="o">|</span> <span class="n">latin2_hungarian_ci</span> <span class="o">|</span> <span class="n">latin2</span>  <span class="o">|</span> <span class="mi">21</span> <span class="o">|</span>         <span class="o">|</span> <span class="n">Yes</span>      <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>
+<span class="o">|</span> <span class="n">latin2_croatian_ci</span>  <span class="o">|</span> <span class="n">latin2</span>  <span class="o">|</span> <span class="mi">27</span> <span class="o">|</span>         <span class="o">|</span> <span class="n">Yes</span>      <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>
+<span class="o">|</span> <span class="n">latin2_bin</span>          <span class="o">|</span> <span class="n">latin2</span>  <span class="o">|</span> <span class="mi">77</span> <span class="o">|</span>         <span class="o">|</span> <span class="n">Yes</span>      <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------------+---------+----+---------+----------+---------+</span>
+</pre><h2 class="anchored_heading" id="server级别">Server级别</h2>
+<p>可以设置系统变量<a href="/kb/en/server-system-variables/#character_set_server">character_set_server</a>来改变默认的server级的字符集。该变量可以使用<a href="/kb/en/set/">SET</a>命令在启动时或动态地设置：</p>
+<pre class="fixed"><span class="k">SET</span> <span class="n">character_set_server</span> <span class="o">=</span> <span class="s1">&#39;latin2&#39;</span><span class="p">;</span>
+</pre><p>类似地，变量<a href="/kb/en/server-system-variables/#collation_server">collation_server</a>用于设置server级别的默认排序规则。</p>
+<pre class="fixed"><span class="k">SET</span> <span class="n">collation_server</span> <span class="o">=</span> <span class="s1">&#39;latin2_czech_cs&#39;</span><span class="p">;</span>
+</pre><h2 class="anchored_heading" id="database级别">Database级别</h2>
+<p><a href="/kb/en/create-database/">CREATE DATABASE</a> 和 <a href="/kb/en/alter-database/">ALTER DATABASE</a> 语句中包含了可选的字符集、排序规则的设置子句。如果没有设置字符集、排序规则，它们将使用server级别的默认值。</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="n">czech_slovak_names</span> 
+  <span class="nb">CHARACTER</span> <span class="k">SET</span> <span class="o">=</span> <span class="s1">&#39;keybcs2&#39;</span>
+  <span class="k">COLLATE</span> <span class="o">=</span> <span class="s1">&#39;keybcs2_bin&#39;</span><span class="p">;</span>
+</pre><pre class="fixed"><span class="k">ALTER</span> <span class="k">DATABASE</span> <span class="n">czech_slovak_names</span> <span class="k">COLLATE</span> <span class="o">=</span> <span class="s1">&#39;keybcs2_general_ci&#39;</span><span class="p">;</span>
+</pre><p>使用下面的语句可以查看数据库所使用的字符集：</p>
+<pre class="fixed"><span class="k">SHOW</span> <span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="n">czech_slovak_names</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">--------------------+--------------------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="k">Database</span>           <span class="o">|</span> <span class="k">Create</span> <span class="k">Database</span>                                                                <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------+--------------------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="n">czech_slovak_names</span> <span class="o">|</span> <span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="o">`</span><span class="n">czech_slovak_names</span><span class="o">`</span> <span class="cm">/*!40100 DEFAULT CHARACTER SET keybcs2 */</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------+--------------------------------------------------------------------------------+</span>
+</pre><p>或者，使用下面的语句可以查看各数据库采用的字符集和排序规则：</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">INFORMATION_SCHEMA</span><span class="p">.</span><span class="n">SCHEMATA</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">--------------+--------------------+----------------------------+------------------------+----------+</span>
+<span class="o">|</span> <span class="k">CATALOG_NAME</span> <span class="o">|</span> <span class="k">SCHEMA_NAME</span>        <span class="o">|</span> <span class="n">DEFAULT_CHARACTER_SET_NAME</span> <span class="o">|</span> <span class="n">DEFAULT_COLLATION_NAME</span> <span class="o">|</span> <span class="n">SQL_PATH</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------+--------------------+----------------------------+------------------------+----------+</span>
+<span class="o">|</span> <span class="n">def</span>          <span class="o">|</span> <span class="n">czech_slovak_names</span> <span class="o">|</span> <span class="n">keybcs2</span>                    <span class="o">|</span> <span class="n">keybcs2_general_ci</span>     <span class="o">|</span> <span class="k">NULL</span>     <span class="o">|</span>
+<span class="o">|</span> <span class="n">def</span>          <span class="o">|</span> <span class="n">information_schema</span> <span class="o">|</span> <span class="n">utf8</span>                       <span class="o">|</span> <span class="n">utf8_general_ci</span>        <span class="o">|</span> <span class="k">NULL</span>     <span class="o">|</span>
+<span class="o">|</span> <span class="n">def</span>          <span class="o">|</span> <span class="n">mysql</span>              <span class="o">|</span> <span class="n">latin1</span>                     <span class="o">|</span> <span class="n">latin1_swedish_ci</span>      <span class="o">|</span> <span class="k">NULL</span>     <span class="o">|</span>
+<span class="o">|</span> <span class="n">def</span>          <span class="o">|</span> <span class="n">performance_schema</span> <span class="o">|</span> <span class="n">utf8</span>                       <span class="o">|</span> <span class="n">utf8_general_ci</span>        <span class="o">|</span> <span class="k">NULL</span>     <span class="o">|</span>
+<span class="o">|</span> <span class="n">def</span>          <span class="o">|</span> <span class="n">test</span>               <span class="o">|</span> <span class="n">latin1</span>                     <span class="o">|</span> <span class="n">latin1_swedish_ci</span>      <span class="o">|</span> <span class="k">NULL</span>     <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------+--------------------+----------------------------+------------------------+----------+</span>
+</pre><p>可以仅指定排序规则，由于每种排序规则都对应于一种字符集，因此会同时设置排序规则所对应的字符集。</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="n">danish_names</span> <span class="k">COLLATE</span> <span class="s1">&#39;utf8_danish_ci&#39;</span><span class="p">;</span>
+
+<span class="k">SHOW</span> <span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="n">danish_names</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">--------------+----------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="k">Database</span>     <span class="o">|</span> <span class="k">Create</span> <span class="k">Database</span>                                                                              <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------+----------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="n">danish_names</span> <span class="o">|</span> <span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="o">`</span><span class="n">danish_names</span><span class="o">`</span> <span class="cm">/*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_danish_ci */</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------+----------------------------------------------------------------------------------------------+</span>
+</pre><p>尽管可以动态地设置系统变量<a href="/kb/en/server-system-variables/#character_set_database">character_set_database</a>和<a href="/kb/en/server-system-variables/#collation_database">collation_database</a>，但它们用于确定数据库所使用的默认字符集和排序规则，应该尽量仅在server端进行设置。</p>
+<h2 class="anchored_heading" id="table级别">Table级别</h2>
+<p><a href="/kb/en/create-table/">CREATE TABLE</a> 和 <a href="/kb/en/alter-table/">ALTER TABLE</a> 语句支持可选的字符集、排序规则设置子句，它们是MariaDB和MySQL对标准SQL语句的扩展。</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">english_names</span> <span class="p">(</span><span class="n">id</span> <span class="nb">INT</span><span class="p">,</span> <span class="n">name</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">40</span><span class="p">))</span> 
+  <span class="nb">CHARACTER</span> <span class="k">SET</span> <span class="s1">&#39;utf8&#39;</span> 
+  <span class="k">COLLATE</span> <span class="s1">&#39;utf8_icelandic_ci&#39;</span><span class="p">;</span>
+</pre><p>如果既没有指定字符集也没有指定排序规则，则采用数据库的默认值。如果仅设置了字符集，将采用字符集的默认排序规则。如果仅设置了排序规则，则排序规则相关联的字符集也会被设置。见 <a href="/kb/en/supported-character-sets-and-collations/">Supported Character Sets and Collations</a>。</p>
+<pre class="fixed"><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="k">table_name</span>
+ <span class="k">CONVERT</span> <span class="k">TO</span> <span class="nb">CHARACTER</span> <span class="k">SET</span> <span class="n">charset_name</span> <span class="p">[</span><span class="k">COLLATE</span> <span class="k">collation_name</span><span class="p">];</span>
+</pre><p>如果没有指定排序规则，将使用字符集默认的排序规则。见 <a href="/kb/en/supported-character-sets-and-collations/">Supported Character Sets and Collations</a>。</p>
+<p>对于<a href="/kb/en/varchar/">VARCHAR</a>或<a href="/kb/en/text/">TEXT</a>类型的字段，为了保证新字段足够大以能够存储原字段的大量字符，<code>CONVERT TO CHARACTER SET</code>可能会改变数据类型。</p>
+<p>例如，某TEXT类型的字段存储ascii字符时由于每个字符仅占用一个字节，因此该字段可以存储65,535个字符。如果该字段转换为UTF8，由于每个字符需要3个字节，该字段的数据类型将被转换为<a href="/kb/en/mediumtext/">MEDIUMTEXT</a>类型以便能够存储所有原字段的字符。</p>
+<p><code>CONVERT TO CHARACTER SET binary</code>将分别转换<a href="/kb/en/char/">CHAR</a>、<a href="/kb/en/varchar/">VARCHAR</a>和<a href="/kb/en/text/">TEXT</a>字段为<a href="/kb/en/binary/">BINARY</a>、 <a href="/kb/en/varbinary/">VARBINARY</a>和<a href="/kb/en/blob/">BLOB</a>，并且之后将不再具有字符集属性，或者可以在以后使用<code>CONVERT TO CHARACTER SET</code>语句来改变该行为。</p>
+<p>为了避免<code>CONVERT TO CHARACTER SET</code>子句改变数据类型，可以在单独的字段上使用<code>MODIFY</code>。例如：</p>
+<pre class="fixed"><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="k">table_name</span> <span class="k">MODIFY</span> <span class="n">ascii_text_column</span> <span class="nb">TEXT</span> <span class="nb">CHARACTER</span> <span class="k">SET</span> <span class="n">utf8</span><span class="p">;</span>
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="k">table_name</span> <span class="k">MODIFY</span> <span class="n">ascii_varchar_column</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="n">M</span><span class="p">)</span> <span class="nb">CHARACTER</span> <span class="k">SET</span> <span class="n">utf8</span><span class="p">;</span>
+</pre><h2 class="anchored_heading" id="column级别">Column级别</h2>
+<p>同样可以为字段类型为CHAR、TEXT或VARCHAR的字段设置字符集和排序规则。可以使用<a href="/kb/en/create-table/">CREATE TABLE</a>和<a href="/kb/en/alter-table/">ALTER TABLE</a>语句进行设置——不像table级别的设置，column级别的设置是标准SQL所支持的。</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">european_names</span> <span class="p">(</span>
+  <span class="n">croatian_names</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span> <span class="k">COLLATE</span> <span class="s1">&#39;cp1250_croatian_ci&#39;</span><span class="p">,</span>
+  <span class="n">greek_names</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span> <span class="nb">CHARACTER</span> <span class="k">SET</span> <span class="s1">&#39;greek&#39;</span><span class="p">);</span>
+</pre><p>如果既没有指定字符集也没有指定排序规则，将使用表的默认值。如果仅设置了字符集，排序规则将使用字符集的默认排序规则，如果仅设置了排序规则，则其对应的字符集也会被设置。</p>
+<div class="cstm-style redbox"><p>当使用<a href="/kb/en/alter-table/">ALTER TABLE</a>改变字段的字符集时，需要确保字符集可以和已有数据兼容。MariaDB将尽可能地一一映射转换字符数据，但无法转换的数据可能会乱码丢失。</p>
+</div><p>可以使用<a href="/kb/en/show-create-table/">SHOW CREATE TABLE</a>语句，或者查询<code>INFORMATION_SCHEMA</code>数据库来查看字段的字符集和排序规则所采用的值。</p>
+<pre class="fixed"><span class="k">SHOW</span> <span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">european_names</span><span class="err">\</span><span class="k">G</span>
+<span class="o">***************************</span> <span class="mi">1</span><span class="p">.</span> <span class="k">row</span> <span class="o">***************************</span>
+       <span class="k">Table</span><span class="p">:</span> <span class="n">european_names</span>
+<span class="k">Create</span> <span class="k">Table</span><span class="p">:</span> <span class="k">CREATE</span> <span class="k">TABLE</span> <span class="o">`</span><span class="n">european_names</span><span class="o">`</span> <span class="p">(</span>
+  <span class="o">`</span><span class="n">croatian_names</span><span class="o">`</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span> <span class="nb">CHARACTER</span> <span class="k">SET</span> <span class="n">cp1250</span> <span class="k">COLLATE</span> <span class="n">cp1250_croatian_ci</span> <span class="k">DEFAULT</span> <span class="k">NULL</span><span class="p">,</span>
+  <span class="o">`</span><span class="n">greek_names</span><span class="o">`</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span> <span class="nb">CHARACTER</span> <span class="k">SET</span> <span class="n">greek</span> <span class="k">DEFAULT</span> <span class="k">NULL</span>
+<span class="p">)</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">InnoDB</span> <span class="k">DEFAULT</span> <span class="n">CHARSET</span><span class="o">=</span><span class="n">utf8</span> <span class="k">COLLATE</span><span class="o">=</span><span class="n">utf8_danish_ci</span>
+</pre><pre class="fixed"><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">INFORMATION_SCHEMA</span><span class="p">.</span><span class="n">COLUMNS</span> <span class="k">WHERE</span> <span class="k">TABLE_NAME</span> <span class="k">LIKE</span> <span class="s1">&#39;european%&#39;</span><span class="err">\</span><span class="k">G</span>
+<span class="o">***************************</span> <span class="mi">1</span><span class="p">.</span> <span class="k">row</span> <span class="o">***************************</span>
+           <span class="n">TABLE_CATALOG</span><span class="p">:</span> <span class="n">def</span>
+            <span class="n">TABLE_SCHEMA</span><span class="p">:</span> <span class="n">danish_names</span>
+              <span class="k">TABLE_NAME</span><span class="p">:</span> <span class="n">european_names</span>
+             <span class="k">COLUMN_NAME</span><span class="p">:</span> <span class="n">croatian_names</span>
+        <span class="n">ORDINAL_POSITION</span><span class="p">:</span> <span class="mi">1</span>
+          <span class="n">COLUMN_DEFAULT</span><span class="p">:</span> <span class="k">NULL</span>
+             <span class="n">IS_NULLABLE</span><span class="p">:</span> <span class="n">YES</span>
+               <span class="n">DATA_TYPE</span><span class="p">:</span> <span class="nb">varchar</span>
+<span class="n">CHARACTER_MAXIMUM_LENGTH</span><span class="p">:</span> <span class="mi">40</span>
+  <span class="n">CHARACTER_OCTET_LENGTH</span><span class="p">:</span> <span class="mi">40</span>
+       <span class="n">NUMERIC_PRECISION</span><span class="p">:</span> <span class="k">NULL</span>
+           <span class="n">NUMERIC_SCALE</span><span class="p">:</span> <span class="k">NULL</span>
+      <span class="n">DATETIME_PRECISION</span><span class="p">:</span> <span class="k">NULL</span>
+      <span class="k">CHARACTER_SET_NAME</span><span class="p">:</span> <span class="n">cp1250</span>
+          <span class="k">COLLATION_NAME</span><span class="p">:</span> <span class="n">cp1250_croatian_ci</span>
+             <span class="n">COLUMN_TYPE</span><span class="p">:</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>
+              <span class="n">COLUMN_KEY</span><span class="p">:</span> 
+                   <span class="n">EXTRA</span><span class="p">:</span> 
+              <span class="k">PRIVILEGES</span><span class="p">:</span> <span class="k">select</span><span class="p">,</span><span class="k">insert</span><span class="p">,</span><span class="k">update</span><span class="p">,</span><span class="k">references</span>
+          <span class="n">COLUMN_COMMENT</span><span class="p">:</span> 
+<span class="o">***************************</span> <span class="mi">2</span><span class="p">.</span> <span class="k">row</span> <span class="o">***************************</span>
+           <span class="n">TABLE_CATALOG</span><span class="p">:</span> <span class="n">def</span>
+            <span class="n">TABLE_SCHEMA</span><span class="p">:</span> <span class="n">danish_names</span>
+              <span class="k">TABLE_NAME</span><span class="p">:</span> <span class="n">european_names</span>
+             <span class="k">COLUMN_NAME</span><span class="p">:</span> <span class="n">greek_names</span>
+        <span class="n">ORDINAL_POSITION</span><span class="p">:</span> <span class="mi">2</span>
+          <span class="n">COLUMN_DEFAULT</span><span class="p">:</span> <span class="k">NULL</span>
+             <span class="n">IS_NULLABLE</span><span class="p">:</span> <span class="n">YES</span>
+               <span class="n">DATA_TYPE</span><span class="p">:</span> <span class="nb">varchar</span>
+<span class="n">CHARACTER_MAXIMUM_LENGTH</span><span class="p">:</span> <span class="mi">40</span>
+  <span class="n">CHARACTER_OCTET_LENGTH</span><span class="p">:</span> <span class="mi">40</span>
+       <span class="n">NUMERIC_PRECISION</span><span class="p">:</span> <span class="k">NULL</span>
+           <span class="n">NUMERIC_SCALE</span><span class="p">:</span> <span class="k">NULL</span>
+      <span class="n">DATETIME_PRECISION</span><span class="p">:</span> <span class="k">NULL</span>
+      <span class="k">CHARACTER_SET_NAME</span><span class="p">:</span> <span class="n">greek</span>
+          <span class="k">COLLATION_NAME</span><span class="p">:</span> <span class="n">greek_general_ci</span>
+             <span class="n">COLUMN_TYPE</span><span class="p">:</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>
+              <span class="n">COLUMN_KEY</span><span class="p">:</span> 
+                   <span class="n">EXTRA</span><span class="p">:</span> 
+              <span class="k">PRIVILEGES</span><span class="p">:</span> <span class="k">select</span><span class="p">,</span><span class="k">insert</span><span class="p">,</span><span class="k">update</span><span class="p">,</span><span class="k">references</span>
+          <span class="n">COLUMN_COMMENT</span><span class="p">:</span> 
+</pre><h2 class="anchored_heading" id="文件名">文件名</h2>
+<p>从<a href="/kb/en/what-is-mariadb-51/">MariaDB 5.1</a>开始，系统变量<a href="/kb/en/server-system-variables/#character_set_filesystem">character_set_filesystem</a>可用来控制对给定字符串的文件名解析。它会影响的下面语句和函数：</p>
+<ul start="1"><li><a href="/kb/en/select-into-dumpfile/">SELECT INTO DUMPFILE</a>
+</li><li><code>SELECT INTO OUTFILE</code>
+</li><li><a href="/kb/en/load-data-infile/">LOAD DATA INFILE</a>
+</li><li><a href="/kb/en/load-xml/">LOAD XML</a>
+</li><li><a href="/kb/en/load_file/">LOAD_FILE()</a>
+</li></ul>
+<h2 class="anchored_heading" id="字面符号译者注可理解为常量普通字符串或文本字符">字面符号(译者注：可理解为常量、普通字符串或文本字符)</h2>
+<p>默认情况下，字符集和排序规则通过系统变量<a href="/kb/en/server-system-variables/#character_set_connection">character_set_connection</a>和<a href="/kb/en/server-system-variables/#collation_connection">collation_connection</a>来决定使用的字面符号。但是可以显式地指定它们：</p>
+<pre class="fixed"><span class="p">[</span><span class="n">_charset_name</span><span class="p">]</span><span class="s1">&#39;string&#39;</span> <span class="p">[</span><span class="k">COLLATE</span> <span class="k">collation_name</span><span class="p">]</span>
+</pre><p>对于没有字符集introducer的字符集来说，它的字符串符号由系统变量<a href="/kb/en/server-system-variables/#character_set_connection">character_set_connection</a>决定。</p>
+<p>该查询：</p>
+<pre class="fixed">  <span class="k">SELECT</span> <span class="n">CHARSET</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">),</span> <span class="o">@@</span><span class="n">character_set_connection</span><span class="p">;</span>
+</pre><p>总是会为两列返回相同的字符集名称。</p>
+<p><a href="/kb/en/server-system-variables/#character_set_client">character_set_client</a>和<a href="/kb/en/server-system-variables/#character_set_connection">character_set_connection</a>一般会被设置为相同的值(例如在三次握手期间，或使用<code>SET NAMES</code>进行了设置)。但允许设置为不同值。 </p>
+<h3 class="anchored_heading" id="示例">示例</h3>
+<p>设置@@character_set_client和@@character_set_connection为不同的值时可能很有用处：</p>
+<p>示例 1：</p>
+<p>假设我们在utf8的数据库中创建下面的表：</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">a</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span> <span class="nb">CHARACTER</span> <span class="k">SET</span> <span class="n">utf8</span> <span class="k">COLLATE</span> <span class="n">utf8_general_ci</span><span class="p">;</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t1</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;oe&#39;</span><span class="p">),(</span><span class="s1">&#39;ö&#39;</span><span class="p">);</span>
+</pre><p>现在使用"mysql.exe"连接，它会使用DOS的字符集(西欧的机器上是cp850)，如果想要根据德国电话簿规则获取等于“ö”的所有记录。</p>
+<p>使用下面的语句：</p>
+<p>SET @@character_set_client=cp850, @@character_set_connection=utf8;
+SELECT a FROM t1 WHERE a='ö' COLLATE utf8_german2_ci;</p>
+<p>它将返回：</p>
+<pre class="fixed">+------+
+| a    |
++------+
+| oe   |
+| ö    |
++------+
+</pre><p>工作方式如下：</p>
+<ol start="1"><li>客户端使用cp850发送查询语句。
+</li><li>服务端解析查询语句时，将把'ö'从@@character_set_client (cp850)转换为@@character_set_connection (utf8)的文本字符。
+</li><li>服务端对该文本字符应用排序规则"utf8_germal2_ci"。
+</li><li>服务端使用utf8_german2_ci进行字符比较。
+</li></ol>
+<p>注意，如果重写为如下脚本：</p>
+<pre class="fixed"><span class="k">SET</span> <span class="k">NAMES</span> <span class="n">cp850</span><span class="p">;</span>
+<span class="k">SELECT</span> <span class="n">a</span> <span class="k">FROM</span> <span class="n">t1</span> <span class="k">WHERE</span> <span class="n">a</span><span class="o">=</span><span class="s1">&#39;ö&#39;</span> <span class="k">COLLATE</span> <span class="n">utf8_german2_ci</span><span class="p">;</span>
+</pre><p>将报错：</p>
+<pre class="fixed">ERROR 1253 (42000): COLLATION 'utf8_german2_ci' is not valid for CHARACTER SET 'cp850'
+</pre><p>因为：</p>
+<ul start="1"><li>在第2步中，将不会转换为utf8的文本字符，而是转换为cp850的文本字符。
+</li><li>在第3步中，服务端无法对cp850的字符串应用排序规则utf8_german2_ci。
+</li></ul>
+<p>示例 2:</p>
+<p>继续假设我们的数据库为utf8，并使用西欧机器上的"mysql.exe"进行连接。</p>
+<p>我们这样做：</p>
+<pre class="fixed"><span class="k">SET</span> <span class="o">@@</span><span class="n">character_set_client</span><span class="o">=</span><span class="n">cp850</span><span class="p">,</span> <span class="o">@@</span><span class="n">character_set_connection</span><span class="o">=</span><span class="n">utf8</span><span class="p">;</span>
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">t2</span> <span class="k">AS</span> <span class="k">SELECT</span> <span class="s1">&#39;ö&#39;</span><span class="p">;</span>
+</pre><p>这将会创建一张包含<code>VARCHAR(1) CHARACTER SET utf8</code>字段类型的表。</p>
+<p>注意，如果查询重写为：</p>
+<pre class="fixed"><span class="k">SET</span> <span class="k">NAMES</span> <span class="n">cp850</span><span class="p">;</span>
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">t2</span> <span class="k">AS</span> <span class="k">SELECT</span> <span class="s1">&#39;ö&#39;</span><span class="p">;</span>
+</pre><p>创建的表中的字段将为<code>VARCHAR(1) CHARACTER SET cp850</code>类型，这可能不是我们所期望的。</p>
+<h3 class="anchored_heading" id="n">N</h3>
+<p>同样, 可以使用前缀<code>N</code>或<code>n</code>来转换文本字符为国际字符集(MariaDB中为utf8)。 </p>
+<p>例如：</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="n">_latin2</span> <span class="s1">&#39;Müller&#39;</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">-----------+</span>
+<span class="o">|</span> <span class="n">M</span><span class="err">Ăź</span><span class="n">ller</span>   <span class="o">|</span>
+<span class="o">+</span><span class="c1">-----------+</span>
+<span class="o">|</span> <span class="n">M</span><span class="err">Ăź</span><span class="n">ller</span>   <span class="o">|</span>
+<span class="o">+</span><span class="c1">-----------+</span>
+</pre><pre class="fixed"><span class="k">SELECT</span> <span class="n">CHARSET</span><span class="p">(</span><span class="n">N</span><span class="s1">&#39;a string&#39;</span><span class="p">);</span>
+<span class="o">+</span><span class="c1">----------------------+</span>
+<span class="o">|</span> <span class="n">CHARSET</span><span class="p">(</span><span class="n">N</span><span class="s1">&#39;a string&#39;</span><span class="p">)</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----------------------+</span>
+<span class="o">|</span> <span class="n">utf8</span>                 <span class="o">|</span>
+<span class="o">+</span><span class="c1">----------------------+</span>
+</pre><pre class="fixed"><span class="k">SELECT</span> <span class="s1">&#39;Mueller&#39;</span> <span class="o">=</span> <span class="s1">&#39;Müller&#39;</span> <span class="k">COLLATE</span> <span class="s1">&#39;latin1_german2_ci&#39;</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---------------------------------------------------+</span>
+<span class="o">|</span> <span class="s1">&#39;Mueller&#39;</span> <span class="o">=</span> <span class="s1">&#39;Müller&#39;</span> <span class="k">COLLATE</span> <span class="s1">&#39;latin1_german2_ci&#39;</span>  <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------------------------------------------+</span>
+<span class="o">|</span>                                                 <span class="mi">1</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------------------------------------------+</span>
+</pre><h2 class="anchored_heading" id="存储过程和视图">存储过程和视图</h2>
+<p>当创建存储过程或视图时，其内出现的文本字符默认使用系统变量<a href="/kb/en/server-system-variables/#character_set_connection">character_set_connection</a>和<a href="/kb/en/server-system-variables/#collation_connection">collation_connection</a>指定的字符集和排序规则。可以使用<code>SHOW CREATE</code>语句获取所使用的值。要改变已存在存储过程、视图中的文本字符的字符集，需要删除存储程序然后重建。</p>
+<p>对于存储过程的参数和返回值，可以通过<code>CHARACTER SET</code>和<code>COLLATE</code>子句来指定其使用的字符集和排序规则。在<a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a>之前不支持指定排序规则。</p>
+<p>下面的示例中展示了创建存储程序时所使用的字符集和排序规则。</p>
+<pre class="fixed"><span class="k">SET</span> <span class="o">@@</span><span class="k">local</span><span class="p">.</span><span class="n">character_set_connection</span><span class="o">=</span><span class="s1">&#39;latin1&#39;</span><span class="p">;</span>
+
+<span class="k">DELIMITER</span> <span class="o">||</span>
+<span class="k">CREATE</span> <span class="k">PROCEDURE</span> <span class="o">`</span><span class="n">test</span><span class="o">`</span><span class="p">.</span><span class="o">`</span><span class="n">x</span><span class="o">`</span><span class="p">()</span>
+<span class="k">BEGIN</span>
+	<span class="k">SELECT</span> <span class="n">CHARSET</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">);</span>
+<span class="k">END</span><span class="p">;</span>
+<span class="o">||</span>
+<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">0</span> <span class="k">rows</span> <span class="n">affected</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">00</span> <span class="n">sec</span><span class="p">)</span>
+
+<span class="k">DELIMITER</span> <span class="p">;</span>
+<span class="k">SET</span> <span class="o">@@</span><span class="k">local</span><span class="p">.</span><span class="n">character_set_connection</span><span class="o">=</span><span class="s1">&#39;utf8&#39;</span><span class="p">;</span>
+
+<span class="k">CALL</span> <span class="o">`</span><span class="n">test</span><span class="o">`</span><span class="p">.</span><span class="o">`</span><span class="n">x</span><span class="o">`</span><span class="p">();</span>
+<span class="o">+</span><span class="c1">--------------+</span>
+<span class="o">|</span> <span class="n">CHARSET</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------+</span>
+<span class="o">|</span> <span class="n">latin1</span>       <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------+</span>
+</pre><p>下面的示例中展示了如何指定函数的参数和返回值的字符集和排序规则：</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">FUNCTION</span> <span class="o">`</span><span class="n">test</span><span class="o">`</span><span class="p">.</span><span class="o">`</span><span class="n">y</span><span class="o">`</span><span class="p">(</span><span class="o">`</span><span class="n">str</span><span class="o">`</span> <span class="nb">TEXT</span> <span class="nb">CHARACTER</span> <span class="k">SET</span> <span class="n">utf8</span> <span class="k">COLLATE</span> <span class="n">utf8_bin</span><span class="p">)</span>
+	<span class="k">RETURNS</span> <span class="nb">TEXT</span> <span class="nb">CHARACTER</span> <span class="k">SET</span> <span class="n">latin1</span> <span class="k">COLLATE</span> <span class="n">latin1_bin</span>
+<span class="k">BEGIN</span>
+	<span class="k">SET</span> <span class="o">@</span><span class="n">param_coll</span> <span class="o">=</span> <span class="k">COLLATION</span><span class="p">(</span><span class="o">`</span><span class="n">str</span><span class="o">`</span><span class="p">);</span>
+	<span class="k">RETURN</span> <span class="o">`</span><span class="n">str</span><span class="o">`</span><span class="p">;</span>
+<span class="k">END</span><span class="p">;</span>
+
+<span class="c1">-- 返回值的排序规则:</span>
+<span class="k">SELECT</span> <span class="k">COLLATION</span><span class="p">(</span><span class="o">`</span><span class="n">test</span><span class="o">`</span><span class="p">.</span><span class="o">`</span><span class="n">y</span><span class="o">`</span><span class="p">(</span><span class="s1">&#39;Hello, planet!&#39;</span><span class="p">));</span>
+<span class="o">+</span><span class="c1">-----------------------------------------+</span>
+<span class="o">|</span> <span class="k">COLLATION</span><span class="p">(</span><span class="o">`</span><span class="n">test</span><span class="o">`</span><span class="p">.</span><span class="o">`</span><span class="n">y</span><span class="o">`</span><span class="p">(</span><span class="s1">&#39;Hello, planet!&#39;</span><span class="p">))</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">-----------------------------------------+</span>
+<span class="o">|</span> <span class="n">latin1_bin</span>                              <span class="o">|</span>
+<span class="o">+</span><span class="c1">-----------------------------------------+</span>
+
+<span class="c1">-- 参数的排序规则：</span>
+<span class="k">SELECT</span> <span class="o">@</span><span class="n">param_coll</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">-------------+</span>
+<span class="o">|</span> <span class="o">@</span><span class="n">param_coll</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">-------------+</span>
+<span class="o">|</span> <span class="n">utf8_bin</span>    <span class="o">|</span>
+<span class="o">+</span><span class="c1">-------------+</span>
+</pre><h2 class="anchored_heading" id="示例更改默认的字符集为utf-8">示例：更改默认的字符集为UTF-8</h2>
+<p>要改变默认的字符集latin1为UTF-8，需要在配置文件my.cnf中进行如下设置：</p>
+<pre class="fixed">[client]
+...
+default-character-set=utf8
+...
+[mysql]
+...
+default-character-set=utf8
+...
+[mysqld]
+...
+collation-server = utf8_unicode_ci
+init-connect='SET NAMES utf8'
+character-set-server = utf8
+...
+</pre><p>注意，选项<code>default-character-set</code>是一个客户端选项，而非服务端选项。</p>
+<h2 class="anchored_heading" id="see-also">See also</h2>
+<ul start="1"><li><a href="/kb/en/string-literals/">String literals</a>
+</li><li><a href="/kb/en/cast/">CAST()</a>
+</li><li><a href="/kb/en/convert/">CONVERT()</a></li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/zh-cn/setting-character-sets-and-collations/+subscriptions/add"
+                 data-unsubscribe-url="/kb/zh-cn/setting-character-sets-and-collations/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/zh-cn/cache-index/">
+                        ← 索引-缓存
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/zh-cn/mariadb-documentation/">
+                        ↑ MariaDB的使用 ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/zh-cn/assignment-operator/">
+                        赋值操作符(:=) →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="7063" data-comments-url="/kb/zh-cn/setting-character-sets-and-collations/+comments"
+         data-reply-url="/kb/zh-cn/setting-character-sets-and-collations/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/zh-cn/mariadb-documentation/">
+                    ↑ MariaDB的使用 ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/alter/">
+                            
+                            ALTER语句
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create/">
+                            
+                            CREATE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/data-types/">
+                            
+                            数据类型
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/begin-end/">
+                            
+                            BEGIN END
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/case-statement/">
+                            
+                            CASE STATEMENT（条件语句）
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/close/">
+                            
+                            CLOSE(关闭)
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/coalesce/">
+                            
+                            COALESCE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/concurrent-inserts/">
+                            
+                            Concurrent Inserts
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create-database/">
+                            
+                            CREATE DATABASE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create-function/">
+                            
+                            CREATE FUNCTION
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create-procedure/">
+                            
+                            CREATE PROCEDURE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create-trigger/">
+                            
+                            CREATE TRIGGER
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/database/">
+                            
+                            DATABASE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/declare-handler/">
+                            
+                            DECLARE HANDLER
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/declare-variable/">
+                            
+                            DECLARE Variable
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/delete/">
+                            
+                            DELETE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/execute-statement/">
+                            
+                            EXECUTE 语句
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/fetch/">
+                            
+                            FETCH
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/galera-cluster-system-variables/">
+                            
+                            Galera Cluster System Variables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/getting-started-with-mariadb-galera-cluster/">
+                            
+                            Getting Started with MariaDB Galera Cluster
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/greatest/">
+                            
+                            GREATEST
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/group_concat/">
+                            
+                            GROUP_CONCAT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/help-command/">
+                            
+                            HELP 命令
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/high_prioritylow_priority/">
+                            
+                            HIGH_PRIORITY和LOW_PRIORITY
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/how-to-quickly-insert-data-into-mariadb/">
+                            
+                            How to Quickly Insert Data Into MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/if-statement/">
+                            
+                            IF 语句
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/in/">
+                            
+                            IN
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/insert/">
+                            
+                            INSERT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/insert-on-duplicate-key-update/">
+                            
+                            INSERT ON DUPLICATE KEY UPDATE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/insert-select/">
+                            
+                            INSERT SELECT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/iterate/">
+                            
+                            ITERATE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/labels/">
+                            
+                            Labels
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/last_value/">
+                            
+                            LAST_VALUE()
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/leave/">
+                            
+                            LEAVE（退出）
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/load-data-infile/">
+                            
+                            LOAD DATA INFILE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/loop/">
+                            
+                            LOOP（循环）
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/sql_modeoracle-from-mariadb-103/">
+                            
+                            MariaDB 10.3支持SQL_MODE=ORACLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/non-recursive-common-table-expressions-overview/">
+                            
+                            Non-Recursive Common Table Expressions Overview
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/rename-table/">
+                            
+                            RENAME TABLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/replace/">
+                            
+                            REPLACE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/selectinto/">
+                            
+                            SELECT INTO
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/select-into-outfile/">
+                            
+                            SELECT INTO OUTFILE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/set/">
+                            
+                            SET
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/set-names/">
+                            
+                            SET NAMES
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/set-password/">
+                            
+                            SET PASSWORD
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/set-variable/">
+                            
+                            SET Variable
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/show-databases/">
+                            
+                            SHOW DATABASES
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/ssl-overview/">
+                            
+                            SSL 综述
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/tinyint/">
+                            
+                            TINYINT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/truncate-table/">
+                            
+                            TRUNCATE TABLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/update/">
+                            
+                            UPDATE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/wait-and-nowait/">
+                            
+                            WAIT 和 NOWAIT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/window-functions-overview/">
+                            
+                            Window Functions速览
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/auto_increment-handling-in-xtradbinnodb/">
+                            
+                            XtraDB/InnoDB中的AUTO_INCREMENT处理方式
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/xtradbinnodb-file-format/">
+                            
+                            XtraDB/InnoDB的文件格式
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/general-query-log/">
+                            
+                            一般查询日志
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/using-innodb-instead-of-xtradb/">
+                            
+                            使用InnoDB替代XtraDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/about-xtradb/">
+                            
+                            关于 XtraDB 存储引擎
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/start-slave/">
+                            
+                            启动从服务
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/declare-cursor/">
+                            
+                            声明游标
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/performance-schema-table_lock_waits_summary_by_table-table/">
+                            
+                            性能配置方案 table_lock_waits_summary_by_table 表
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/numeric-data-type-overview/">
+                            
+                            数值型的数据类型概述
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/identifier-names/">
+                            
+                            标识符命名规则
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/identifier-case-sensitivity/">
+                            
+                            标识符对大小写敏感的情况
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/identifier-qualifiers/">
+                            
+                            标识限定符
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/user-defined-variables/">
+                            
+                            用户变量(User-Defined Variables)
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/cache-index/">
+                            
+                            索引-缓存
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>设置字符集和排序规则</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/assignment-operator/">
+                            
+                            赋值操作符(:=)
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/reset/">
+                            
+                            重置（清零）
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/error-log/">
+                            
+                            错误日志
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Authentication Plugin - GSSAPI</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 19:28:59 +0000</lastBuildDate><item><title>Re: Authentication Plugin - GSSAPI</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/5560</link><description>&lt;p&gt;I have Created a user using Plugin: auth_gssapi to allow Windows authentication to MariaDB.  As I attempted to log in with the new account, I got this error: ERROR 1105 (HY000): SSPI client error 0x80090342 - InitializeSecurityContext - SEC_E_KDC_UNKNOWN_ETYPE The encryption type requested is not supported by the KDC.
+Can't seem to find any documentation on mariadb.com explaining/instructing how to correct this problem.     ??????&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Les Peach</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/5560</guid></item><item><title>Re: Authentication Plugin - GSSAPI</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/4691</link><description>&lt;p&gt;Hi all&lt;/p&gt;
+&lt;p&gt;I hope somone who've made this work, is willing to look though this and hopefully spot where I've done something wrong? &lt;/p&gt;
+&lt;p&gt;Steps so far: &lt;/p&gt;
+&lt;p&gt;Microsoft AD team create keytab file: 
+ktpass.exe /princ mariadb/hostname.do.main@DO.MAIN /mapuser SERVICEUSERNAME /pass WHATEVER /out mariadb_mariadbhostname.keytab /crypto all /ptype KRB5_NT_PRINCIPAL /mapOp set &lt;/p&gt;
+&lt;p&gt;I receive, rename and place the keytabfile on database server databasehostname, in /etc/krb5-databasehostname.keytab &lt;/p&gt;
+&lt;p&gt;I check that "hostname responds with the FQDN:  
+hostname -f 
+  databasehostname.do.main &lt;/p&gt;
+&lt;p&gt;I then change the /etc/mysql/my.cnf file to point to same file: 
+under paragraph   [mariadb]  , added: 
+ plugin-load-add=auth_gssapi.so
+ gssapi_keytab_path	= /etc/krb5-databasehostname.keytab 
+ gssapi_principal_name = mariadb/hostname.do.main@DO.MAIN&lt;/p&gt;
+&lt;p&gt;I show contents of same keytab file: 
+ klist -k /etc/krb5-databasehostname.keytab 
+	KVNO	Principal
+	3		mariadb/hostname.do.main@DO.MAIN
+	3		mariadb/hostname.do.main@DO.MAIN&lt;/p&gt;
+&lt;p&gt;I restart MariaDB:
+ systemctl restart mariadb 
+	syslog states msqld ready for connections, and following: 
+	[Note] mysqld:  GSSAPI plugin : using principal name 'mariadb/mariadb/hostname.do.main@DO.MAIN'&lt;/p&gt;
+&lt;p&gt;I check setup in MariaDB:
+SHOW VARIABLES LIKE '%gassapi%';
+	Variable_name			|	Value 
+	--------------------	|---------------------------------
+	gssapi_keytab_path		|	/etc/krb5-databasehostname.keytab 
+	gssapi_principal_name	|	mariadb/hostname.do.main@DO.MAIN&lt;/p&gt;
+&lt;p&gt;I create user in same &lt;a href="/kb/en/mariadb-10322-release-notes/"&gt;MariaDB 10.3.22&lt;/a&gt; database:
+GRANT ALL ON *.* TO 'myADname'@'localhost' IDENTIFIED WITH 'gssapi' USING 'myADname'@'DO.MAIN';
+GRANT ALL ON *.* TO 'myADname'@'%' IDENTIFIED WITH 'gssapi' USING 'myADname'@'DO.MAIN';&lt;/p&gt;
+&lt;p&gt;Ensuring there's a kerberos ticket/token:
+ kinit 
+or also tried 
+ kinit myADuser 
+- both asks for my password, 
+and klist shows I got a ticket:&lt;/p&gt;
+&lt;p&gt;	Ticket cache: FILE:/tmp/krb5cc_xxxx_kq3sm1
+	Default principal: myADuser@DO.MAIN 
+	Valid starting      Expires             Service principal
+	07/28/2020 12:55    07/28/2020 22:55    krbtgt/DO.MAIN@DO.MAIN 
+	        renew until 08/04/2020 12:55
+	07/28/2020 13:09    07/28/2020 22:55    mariadb/hostname.do.main@DO.MAIN
+	        renew until 08/04/2020 12:55&lt;/p&gt;
+&lt;p&gt;I try to connect from local machine to local DB (but fails): &lt;/p&gt;
+&lt;p&gt;myADusername@hostname:$ mysql -umyADusername
+						or 
+						mysql -umyADusername
+	both barks this: 
+		ERROR 1105 (HY000): Server GSSAPI error (major 851968, minor 2529638957) : gssapi_accept_sec_contaxt -Unspecified GSS failure. Minor code may procide more information.  No key table entry found for mariadb/hostname.do.main@DO.MAIN.
+		or I have also seen: 
+			Access denied for user 'myADuser@DO.MAIN'@'localhost' (using password: No)&lt;/p&gt;
+&lt;p&gt;As far as I can see, I have done pretty much what is asked in the gssapi authentication guides I've found?
+I am lost in a dead end here, trying to figure out how to make gssapi/kerberos login work into MariaDB. Can any one shed some light on thsi for me, please :)  ???&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Brian R</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/4691</guid></item><item><title>Centralize Manage Mariadb Server With GSSAPI</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3850</link><description>&lt;p&gt;Thanks this document and plugin, I'm tried using it and it seems work fine. However it not so scalable in cause no suitable web ui able to use that. &lt;/p&gt;
+&lt;p&gt;After long research I'd publish a rough guide and some toolkit for  use Freeipa/Keycloak/adminer to centralize manage all mariadb server and user. Hope it can help others mariadb user. &lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/SIMITGROUP/CentralizeMariadbManager"&gt;https://github.com/SIMITGROUP/CentralizeMariadbManager&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ks Tan</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3850</guid></item><item><title>Re: Authentication Plugin - GSSAPI</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3780</link><description>&lt;p&gt;I'm testing this and it works great.  
+I have one question, and apologies it's not directly MariaDB related, I'm trying to see if it works in MySQL 8 (community edition).
+When I test it I get the following message:
+2019-01-12T04:06:15.628952Z 0 [ERROR] [MY-010900] [Server] Can't find symbol '_mysql_plugin_interface_version_' in library.
+I checked with nm and see you export the following symbol instead:
+_maria_plugin_interface_version_
+Do you think it's possible to get working with MySQL, (whether just from the binary install or from modifying source and recompiling)?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Patrick Jolliffe</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3780</guid></item><item><title>Re: Authentication Plugin - GSSAPI</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3298</link><description>&lt;p&gt;You don't need auth_gssapi_client.dll on remote server. It has to be on you client machine, where your odbc application is run from. And for the same reason it DSN has to be configured on local macnine, too.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Lawrin Novitsky</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3298</guid></item><item><title>Re: Authentication Plugin - GSSAPI</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3297</link><description>&lt;p&gt;You can either get from server distribution, or from Connector/C distribution.
+But I would not trust my.ini  Underlying Conncetor/C attempts to read my.ini in default places, and default (for C/C) sections, but I wouldn't be sure that your my.ini is in default location for it. Set plugin_dir in your DSN configuration, or in the connection string&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Lawrin Novitsky</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3297</guid></item><item><title>Re: Authentication Plugin - GSSAPI</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3296</link><description>&lt;p&gt;Hi,
+I have the same issue if I try connecting via remote server using Heidi SQL or other clients.&lt;/p&gt;
+&lt;p&gt;Environment:
+&lt;a href="/kb/en/what-is-mariadb-102/"&gt;Mariadb 10.2&lt;/a&gt; on Windows Server 2012 &lt;/p&gt;
+&lt;p&gt;These are the tasks I've done till now:&lt;/p&gt;
+&lt;p&gt;- Enable gssapi plugin&lt;/p&gt;
+&lt;p&gt;- create usr1 matching with usr1@example.com&lt;/p&gt;
+&lt;p&gt;- Test Kerberos login from localhost without any issue&lt;/p&gt;
+&lt;p&gt;- ODBC user DSN configuration on remote server, pointing to remote plugin folder on mariaDB server -&amp;gt; &lt;code class="fixed" style="white-space:pre-wrap"&gt;[ma-3.0.3] Plugin auth_gssapi_client could not be loaded: The specified module could not be found &lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;- Copy auth_gssapi_client.dll from MariaDB server to remote server&lt;/p&gt;
+&lt;p&gt;- ODBC user DSN configuration on remote server (in which Mariadb is not installed) pointing to copied DLL  -&amp;gt; &lt;code class="fixed" style="white-space:pre-wrap"&gt;[ma-3.0.3] Plugin auth_gssapi_client could not be loaded: The specified module could not be found &lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;If I try the connection via root user remotely it's always ok, if I try with usr1 I get always the error above.&lt;/p&gt;
+&lt;p&gt;Please can someone help me to resolve this issue?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/"> </dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3296</guid></item><item><title>Re: Authentication Plugin - GSSAPI</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3263</link><description>&lt;p&gt;Thank you for reply.
+I have set the plugin_dir inside my.ini file and the variable is set fine.&lt;/p&gt;
+&lt;p&gt;Do you know where I can a proper auth_gssapi_client.dll? I did a quick search for it but can't find anything.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Oskar Pilarski</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3263</guid></item><item><title>Re: Authentication Plugin - GSSAPI</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3262</link><description>&lt;p&gt;You need to point ODBC connector to the directory with auth_gssapi_client plugin. e.g. that can be "C:\Program Files\&lt;a href="/kb/en/what-is-mariadb-102/"&gt;MariaDB 10.2&lt;/a&gt;\lib\plugin". To do that you have to specify PLUGIN_DIR connection string parameter, or set that property in your DSN config.
+You also might need to obtain (proper)auth_gssapi_client.dll in case you don't have server installed on your system, or if your server is 64bit, and C/ODBC is 32bit(or vice versa)&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Lawrin Novitsky</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3262</guid></item><item><title>Re: Authentication Plugin - GSSAPI</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3261</link><description>&lt;p&gt;Im getting the following error when trying to login via ODBC:&lt;/p&gt;
+&lt;p&gt;&lt;code class="fixed" style="white-space:pre-wrap"&gt; [ma-3.0.3] Plugin auth_gssapi_client could not be loaded: The specified module could not be found &lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;I'm using Maria 10.2.13 on Windows Server 2012&lt;/p&gt;
+&lt;p&gt;Can anyone advise?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Oskar Pilarski</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/3261</guid></item><item><title>Re: GSSAPI Authentication Plugin</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/2596</link><description>&lt;p&gt;Thanks. 
+I also found this good description, if someone has same issue: &lt;a href="https://kb.iu.edu/d/aumh"&gt;https://kb.iu.edu/d/aumh&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Pavel Katiushyn</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/2596</guid></item><item><title>Re: GSSAPI Authentication Plugin</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/2591</link><description>&lt;p&gt;You need a kinit for the new user &lt;/p&gt;
+&lt;p&gt;you need to provide username, and maybe a keytab if you want to authenticate passwordless. Take a look at this&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://community.hortonworks.com/questions/5488/what-are-the-required-steps-we-need-to-follow-in-s.html"&gt;https://community.hortonworks.com/questions/5488/what-are-the-required-steps-we-need-to-follow-in-s.html&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Vladislav Vaintroub</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/2591</guid></item><item><title>Re: GSSAPI Authentication Plugin</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/2589</link><description>&lt;p&gt;Is this a question?  The message means you can authenticate as GSSAPI user, but there is a name mismatch between the user definition in MySQL and the actual principal name returned  by GSSAPI.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Vladislav Vaintroub</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/2589</guid></item><item><title>Re: GSSAPI Authentication Plugin</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/2588</link><description>&lt;p&gt;klist shows default principal:&lt;/p&gt;
+&lt;pre class="fixed"&gt;Default principal: user2@DOMAIN.LOCAL
+&lt;/pre&gt;&lt;p&gt;Is there any way to login with different user, than the one running process. When I try, I get error:&lt;/p&gt;
+&lt;pre class="fixed"&gt;mysql -uuser1 -p
+ERROR 1045 (28000): GSSAPI name mismatch, requested 'user1', actual name 'user2@DOMAIN.LOCAL'
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Pavel Katiushyn</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/2588</guid></item><item><title>Re: GSSAPI Authentication Plugin</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/1986</link><description>&lt;p&gt;Once again, thank you very much it is much clearer now!&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Noel D.</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/1986</guid></item><item><title>Re: GSSAPI Authentication Plugin</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/1985</link><description>&lt;p&gt;It is derived from &lt;code&gt;$USER&lt;/code&gt;. Alternatively, you can specify&lt;/p&gt;
+&lt;pre class="fixed"&gt;[mysql]
+user=usr1
+&lt;/pre&gt;&lt;p&gt;in your &lt;code&gt;/.my.cnf&lt;/code&gt; file.&lt;/p&gt;
+&lt;p&gt;The authentication with the MariaDB server works like this: the command-line client uses a user name that was specified on the command-line (with &lt;code&gt;-u&lt;/code&gt;), or in the &lt;code&gt;/.my.cnf&lt;/code&gt; file, or in &lt;code&gt;$USER&lt;/code&gt;. Then this name is sent to the server, and only then the server can look it up in privilege tables to find out that it needs to use gssapi authentication for this user. At this point the user name is fixed, it's too late to derive it from the principal.&lt;/p&gt;
+&lt;p&gt;In other words, the logic for deriving the default user name cannot depend on the authentication mechanism.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Golubchik</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/1985</guid></item><item><title>Re: GSSAPI Authentication Plugin</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/1984</link><description>&lt;p&gt;Thanks for the reply!&lt;/p&gt;
+&lt;p&gt;Well I am certainly not a security expert but I hope the user is derived somehow from the "principal" running the process and not from $USER.&lt;/p&gt;
+&lt;p&gt;It is good to know that the parameter is optional.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Noel D.</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/1984</guid></item><item><title>Re: GSSAPI Authentication Plugin</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/1977</link><description>&lt;p&gt;There is no need to specify &lt;code&gt;-u&lt;/code&gt;. See &lt;a href="https://mariadb.com/kb/en/mariadb/mysql-command-line-client"&gt;https://mariadb.com/kb/en/mariadb/mysql-command-line-client&lt;/a&gt; — &lt;code&gt;-u&lt;/code&gt; is an option that specifies what user name you want to use when logging in. It is totally optional. If not specified, the current user name (e.g. &lt;code&gt;$USER&lt;/code&gt; on Unixes) is used.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Golubchik</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/1977</guid></item><item><title>Re: GSSAPI Authentication Plugin</title><link>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/1976</link><description>&lt;p&gt;using -u on the client command line kinds of defeats the purpose. 
+The client should be able to tell from the command line that gssapi is the desired Auth method when no user/pwd is specified and there should be no need to specify -u at all.&lt;/p&gt;
+&lt;p&gt;This is how almost the rest of the world does Kerberos.
+Can you guys make the change? it should be trivial to add such features to the client libraries (jdbc and odbc)&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Noel D.</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-gssapi/+comments/1976</guid></item></channel></rss>

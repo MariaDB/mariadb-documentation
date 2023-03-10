@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Delayed Replication</title><link>https://mariadb.com/kb/en/delayed-replication/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/delayed-replication/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 16:43:21 +0000</lastBuildDate><item><title>4. Seconds behind master</title><link>https://mariadb.com/kb/en/delayed-replication/+comments/3589</link><description>&lt;p&gt;One more field of interest for monitoring is Seconds_Behind_Master. When initially the slave is in sync the four fields would say the following:&lt;/p&gt;
+&lt;pre class="fixed"&gt;MariaDB [test]&amp;gt; show slave status\G
+         Seconds_Behind_Master: 0
+                     SQL_Delay: 30
+           SQL_Remaining_Delay: NULL
+       Slave_SQL_Running_State: Slave has read all relay log; waiting for the slave I/O thread to update it
+ &lt;/pre&gt;&lt;p&gt;Here 30 seconds is my preference for MASTER_DELAY.&lt;/p&gt;
+&lt;p&gt;Once the master has updated some data &lt;/p&gt;
+&lt;pre class="fixed"&gt;MariaDB-master [test]&amp;gt; insert into t set a=1;
+Query OK, 1 row affected (0.01 sec)
+&lt;/pre&gt;&lt;p&gt;and it is replicated the fields show
+is progressed maintaining&lt;/p&gt;
+&lt;pre class="fixed"&gt;Seconds_Behind_Master + SQL_Remaining_Delay == SQL_Delay
+&lt;/pre&gt;&lt;p&gt;property:&lt;/p&gt;
+&lt;pre class="fixed"&gt;MariaDB-slave [test]&amp;gt; show slave status\G
+         Seconds_Behind_Master: 1
+                     SQL_Delay: 30
+           SQL_Remaining_Delay: 29
+       Slave_SQL_Running_State: Waiting until MASTER_DELAY seconds after master executed event
+...
+MariaDB-slave [test]&amp;gt; show slave status\G
+         Seconds_Behind_Master: 28
+                     SQL_Delay: 30
+           SQL_Remaining_Delay: 2
+       Slave_SQL_Running_State: Waiting until MASTER_DELAY seconds after master executed event
+1 row in set (0.01 sec)
+
+MariaDB-slave [test]&amp;gt; show slave status\G
+         Seconds_Behind_Master: 0
+                     SQL_Delay: 30
+           SQL_Remaining_Delay: NULL
+       Slave_SQL_Running_State: Slave has read all relay log; waiting for the slave I/O thread to update it
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Andrei Elkin</dc:creator><guid>https://mariadb.com/kb/en/delayed-replication/+comments/3589</guid></item></channel></rss>

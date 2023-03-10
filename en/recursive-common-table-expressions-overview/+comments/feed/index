@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Recursive Common Table Expressions Overview</title><link>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 17:11:45 +0000</lastBuildDate><item><title>Re: Why are aggregate functions excluded?</title><link>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/4602</link><description>&lt;p&gt;Try setting `standard_compliant_cte` to OFF.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">John Doe</dc:creator><guid>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/4602</guid></item><item><title>Why are aggregate functions excluded?</title><link>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/4520</link><description>&lt;p&gt;It took a long time to find out that aggregate functions cannot be used in the recursive portion of a CTE.&lt;/p&gt;
+&lt;p&gt;I'm trying to do roll-ups of a hierarchical accounting system, without limiting the number of levels that can be traversed. I thought I had it figured out, but kept getting "Query Failed. Restrictions imposed on recursive definitions are violated for table 'CTE2'. Error code 4008."&lt;/p&gt;
+&lt;p&gt;Is there a list of the "restrictions" that are "imposed" on recursive CTEs?&lt;/p&gt;
+&lt;p&gt;It seems to me that recursively getting a SUM of account balances that have the same super-account would be a relatively common thing to do!&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jan Steinman</dc:creator><guid>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/4520</guid></item><item><title>Re: Recursive Common Table Expressions Overview</title><link>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/3458</link><description>&lt;p&gt;The result:&lt;/p&gt;
+&lt;pre class="fixed"&gt;+---+-----------------------------+------------+
+| n | cur_path                    | cur_dest   |
++---+-----------------------------+------------+
+| 1 | New York                    | New York   |
+| 2 | New York,Boston             | Boston     |
+| 2 | New York,Washington         | Washington |
+| 3 | New York,Washington,Boston  | Boston     |
+| 3 | New York,Washington,Raleigh | Raleigh    |
++---+-----------------------------+------------+
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jon Armstrong</dc:creator><guid>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/3458</guid></item><item><title>Re: Recursive Common Table Expressions Overview</title><link>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/3457</link><description>&lt;p&gt;From the documentation above, I've added n to indicate the level within the hierarchy:&lt;/p&gt;
+&lt;pre class="fixed"&gt;CREATE TABLE bus_routes (origin varchar(50), dst varchar(50));
+INSERT INTO bus_routes VALUES
+  ('New York', 'Boston'),
+  ('Boston', 'New York'),
+  ('New York', 'Washington'),
+  ('Washington', 'Boston'),
+  ('Washington', 'Raleigh')
+;
+
+WITH RECURSIVE paths (n, cur_path, cur_dest) AS (
+    SELECT 1 AS n, origin, origin FROM bus_routes WHERE origin='New York' 
+     UNION
+    SELECT n + 1
+         , CONCAT(paths.cur_path, ',', bus_routes.dst)
+         , bus_routes.dst 
+      FROM paths, bus_routes 
+     WHERE paths.cur_dest = bus_routes.origin
+       AND LOCATE(bus_routes.dst, paths.cur_path) = 0 
+) 
+SELECT * FROM paths
+;
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jon Armstrong</dc:creator><guid>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/3457</guid></item><item><title>Re: Recursive Common Table Expressions Overview</title><link>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/3456</link><description>&lt;p&gt;From an example in the documentation above, I've added n, which represents the level within the hierarchy:&lt;/p&gt;
+&lt;pre class="fixed"&gt;CREATE TABLE bus_routes (origin varchar(50), dst varchar(50));
+INSERT INTO bus_routes VALUES
+ ('New York', 'Boston'),
+ ('Boston', 'New York'),
+ ('New York', 'Washington'),
+ ('Washington', 'Boston'),
+ ('Washington', 'Raleigh')
+;
+
+WITH RECURSIVE paths (n, cur_path, cur_dest) AS (
+ SELECT 1 AS n, origin, origin
+   FROM bus_routes
+  WHERE origin='New York'
+  UNION
+ SELECT n + 1, CONCAT(paths.cur_path, ',', bus_routes.dst), bus_routes.dst
+   FROM paths, bus_routes
+  WHERE paths.cur_dest = bus_routes.origin
+    AND LOCATE(bus_routes.dst, paths.cur_path) = 0
+ )
+SELECT * FROM paths;
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jon Armstrong</dc:creator><guid>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/3456</guid></item><item><title>Re: Recursive Common Table Expressions Overview</title><link>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/3455</link><description>&lt;p&gt;Sorry that the formatting was not maintained in the reply above.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jon Armstrong</dc:creator><guid>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/3455</guid></item><item><title>Re: Recursive Common Table Expressions Overview</title><link>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/3340</link><description>&lt;p&gt;How to get the depth of the graph?&lt;/p&gt;
+&lt;pre class="fixed"&gt;WITH RECURSIVE graph as (
+    SELECT pr.*,@depth as depth FROM rcte_people_relationships pr WHERE source_id=3
+  UNION
+    SELECT pr.*,(@depth:=@depth+1) as depth FROM rcte_people_relationships pr, graph WHERE graph.target_id=pr.source_id
+) 
+SELECT * FROM graph
+CROSS JOIN (SELECT @depth := 0) AS depth;&lt;/pre&gt;
+&lt;p&gt;Creates an infinite loop.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/"> </dc:creator><guid>https://mariadb.com/kb/en/recursive-common-table-expressions-overview/+comments/3340</guid></item></channel></rss>

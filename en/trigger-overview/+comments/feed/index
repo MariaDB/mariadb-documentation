@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Trigger Overview</title><link>https://mariadb.com/kb/en/trigger-overview/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/trigger-overview/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 19:30:38 +0000</lastBuildDate><item><title>Re: Statements that affect multiple rows will fail before inserting the current row</title><link>https://mariadb.com/kb/en/trigger-overview/+comments/4228</link><description>&lt;p&gt;That means that, if inserting multiple rows with a BEFORE trigger, an error in the trigger will cause ALL of the insertions to fail.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jan Steinman</dc:creator><guid>https://mariadb.com/kb/en/trigger-overview/+comments/4228</guid></item><item><title>Re: Trigger Overview</title><link>https://mariadb.com/kb/en/trigger-overview/+comments/4227</link><description>&lt;p&gt;Okay, answering my own question: I should have known this, but the answer is to use a seperate "join table" that contains a pointer to both the originating record and the inserted record:&lt;/p&gt;
+&lt;pre class="fixed"&gt;BEGIN
+INSERT INTO general_journal SET
+  -- other data as needed;
+INSERT INTO `sales-general_journal` SET
+  general_journal_ID = last_insert_id,
+  sales_ID = NEW.ID;
+END&lt;/pre&gt;
+&lt;p&gt;Now, both records are available from either record by doing a LEFT JOIN on the `sales-general_journal` table.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jan Steinman</dc:creator><guid>https://mariadb.com/kb/en/trigger-overview/+comments/4227</guid></item><item><title>Re: Trigger Overview</title><link>https://mariadb.com/kb/en/trigger-overview/+comments/4184</link><description>&lt;p&gt;Maybe good to know:&lt;/p&gt;
+&lt;p&gt;To check on an update trigger whether a column needs to be updated you can do old.value&amp;lt;&amp;gt;new.value as an if statement:&lt;/p&gt;
+&lt;pre class="fixed"&gt;if old.value&amp;lt;&amp;gt;new.value then
+ set new.value=whatever you need;
+end if;
+&lt;/pre&gt;&lt;p&gt;This even works on encrypted fields so you don't need to decrypt or encrypt values before comparing. It seems this is to be done by database itself "automatically".&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Dennis Giese</dc:creator><guid>https://mariadb.com/kb/en/trigger-overview/+comments/4184</guid></item><item><title>Re: Trigger Overview</title><link>https://mariadb.com/kb/en/trigger-overview/+comments/4142</link><description>&lt;p&gt;How can one use a trigger to install a back-pointer into the triggering record?&lt;/p&gt;
+&lt;p&gt;For example, entering a sales record causes a general journal record to be created with a pointer ("NEW.ID") to the sales record, and then a reference to the created record in the sales record?&lt;/p&gt;
+&lt;p&gt;In the trigger (simplified):
+&lt;/p&gt;&lt;pre class="fixed"&gt;BEGIN
+INSERT INTO general_journal SET
+  sales_record = NEW.ID;
+UPDATE sales SET
+  general_journal = last_insert_id,
+  posted = 'Y',
+WHERE ID = NEW.ID;
+END&lt;/pre&gt;
+&lt;p&gt;When I attempt such a thing, it tells me: "Can't update table 'sales' in stored function/trigger because it is already used by statement which invoked this stored function/trigger"&lt;/p&gt;
+&lt;p&gt;Surely, using a trigger to create a record in some other table, and then to save a reference to that new record should be a common thing to do, no?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jan Steinman</dc:creator><guid>https://mariadb.com/kb/en/trigger-overview/+comments/4142</guid></item><item><title>Statements that affect multiple rows will fail before inserting the current row</title><link>https://mariadb.com/kb/en/trigger-overview/+comments/3102</link><description>&lt;p&gt;What does text "Statements that affect multiple rows will fail before inserting the current row" (in the "Triggers and errors" section) means?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Anatolii Soloviov</dc:creator><guid>https://mariadb.com/kb/en/trigger-overview/+comments/3102</guid></item></channel></rss>

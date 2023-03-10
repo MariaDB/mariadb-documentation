@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Concurrent Inserts - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Concurrent Inserts" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/zh-cn/concurrent-inserts/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+MyISAM存储引擎支持并发插入。该特性使得执行INSERT操作的时候允许同时SELECT，并减少锁争抢行为。
+(译注：并发插入总是将数据插入到表的尾部，并发插入大致有几种情况：insert into ... values(),(),()...、insert...select、create table...select、load data，实际上..." />
+
+    <meta name="description" content="
+MyISAM存储引擎支持并发插入。该特性使得执行INSERT操作的时候允许同时SELECT，并减少锁争抢行为。
+(译注：并发插入总是将数据插入到表的尾部，并发插入大致有几种情况：insert into ... values(),(),()...、insert...select、create table...select、load data，实际上..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/zh-cn/concurrent-inserts/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/zh-cn/concurrent-inserts/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/zh-cn/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/zh-cn/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/zh-cn/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb/">MariaDB - 简体中文</a>
+    
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb-documentation/">MariaDB的使用</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/zh-cn/concurrent-inserts/">Concurrent Inserts</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/zh-cn/">首页</a></li>
+                            
+                                
+                                    <li><a href="/kb/zh-cn/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/zh-cn/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/zh-cn/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/zh-cn/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/zh-cn/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/concurrent-inserts/+history" rel="nofollow">历史</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/concurrent-inserts/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/zh-cn/concurrent-inserts/+flag"
+                data-flag-url="/kb/zh-cn/concurrent-inserts/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/concurrent-inserts/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>已创建</dt>
+        <dd>
+
+<span class="datetime" title="2018-04-19 06:15">4 years, 10 months ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2018-05-05 09:18">4 years, 10 months ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/zh-cn/concurrent-inserts/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/zh-cn/concurrent-inserts/+history/feed/">
+            历史</a>
+        </li>
+        <li><a href="/kb/zh-cn/concurrent-inserts/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/zh-cn/concurrent-inserts/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+        
+
+<div class="well well-small box"><div><h5>Localized Versions</h5></div><div>
+
+        <ul>
+            
+            <li><a href="/kb/en/concurrent-inserts/">Concurrent Inserts</a> [en]</li>
+            
+            <li><a href="/kb/it/le-insert-concorrenti/">Le insert concorrenti</a> [it]</li>
+            
+        </ul>
+        
+</div>
+</div>
+
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Concurrent Inserts</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#注意" title="注意">注意</a></li>
+
+    <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
+</li>
+</div><p>
+<a href="/kb/en/myisam/">MyISAM</a>存储引擎支持并发插入。该特性使得执行<code><a href="/kb/en/insert/">INSERT</a></code>操作的时候允许同时<code><a href="/kb/en/select/">SELECT</a></code>，并减少锁争抢行为。</p>
+<p>(译注：并发插入总是将数据插入到表的尾部，并发插入大致有几种情况：insert into ... values(),(),()...、insert...select、create table...select、load data，实际上单值插入insert into ...vales()也可以是并发插入。是否为并发插入操作依赖于下面的系统变量的设置。多数情况下并发插入效率要高的多，它减少了锁争抢以及寻找页面中的空闲空间的时间，因为它总是插入在表的最尾部。)</p>
+<p>是否允许使用并发插入，取决于系统变量<code><a href="/kb/en/server-system-variables/#concurrent_insert">concurrent_insert</a></code>的值：</p>
+<ul start="1"><li><code>NEVER</code> (0) 表示禁用并发插入。
+</li><li><code>AUTO</code> (1) 表示只有在目标表上没有空闲数据块(指的是在上一次执行<code><a href="/kb/en/optimize-table/">OPTIMIZE TABLE</a></code>语句后没有删除过表中的数据。译注：optimize table会整理数据文件中的碎片，也就是说表的数据文件中没有任何空洞)的时候才允许并发插入。这是默认值。
+</li><li><code>ALWAYS</code> (2) 总是允许并发插入。
+</li></ul>
+<p>如果使用了二进制日志<a href="/kb/en/binary-log/">binary log</a>，<code>CREATE TABLE ... SELECT</code>和<code><a href="/kb/en/insert-select/">INSERT ... SELECT</a></code>语句无法使用并发插入，它们会转换为普通的插入操作，会逐行记录日志。这些语句会获取一个目标表上的读锁，因此向这些表中并发插入数据的操作需要等待锁释放。这样一来，日志就能作为安全恢复数据的来源。</p>
+<p>基于行复制的slave服务器无法使用并发插入(见<a href="/kb/en/binary-log-formats/">binary log formats</a>)。</p>
+<p>如果<code>INSERT</code>语句包含了<code><a href="/kb/en/high_priority-and-low_priority-clauses/">HIGH_PRIORITY</a></code>子句，无法使用并发插入。如果使用并发插入，一般无需去定义DELAYED相关的属性<code><a href="/kb/en/insert-delayed/">INSERT ... DELAYED</a></code>。</p>
+<p>当<code><a href="/kb/en/load-data-infile/">LOAD DATA INFILE</a></code>指定了<code>CONCURRENT</code>关键字时且系统变量<code><a href="/kb/en/server-system-variables/#concurrent_insert">concurrent_insert</a></code>未指定为<code>NEVER</code>时，它也将使用并发插入。这可能会降低一点插入的速度(即使没有其他会话访问该表)，但是却减少了资源争抢，因为load data的时候，可以同时从表中读取数据。</p>
+<p>如果使用了<code>READ LOCAL</code>锁，<code><a href="/kb/en/transactions-lock/">LOCK TABLES</a></code>允许无冲突的并发插入。如果省略<code>LOCAL</code>关键字，则无法使用并发插入。</p>
+<h2 class="anchored_heading" id="注意">注意</h2>
+<p>是否启用并发插入是在表被打开的时候决定的。如果你更改了<code>concurrent_insert</code>变量的值，它不会影响已打开的表，而是只对还未打开的表生效。如果你想对当前已打开或已缓存的表也立即生效，可以在设置了该变量后使用<code><a href="/kb/en/flush/">FLUSH TABLES</a></code>语句刷新表。</p>
+<h2 class="anchored_heading" id="see-also">See Also</h2>
+<ul start="1"><li><a href="/kb/en/insert/">INSERT</a>
+</li><li><a href="/kb/en/insert-delayed/">INSERT DELAYED</a>
+</li><li><a href="/kb/en/insert-select/">INSERT SELECT</a>
+</li><li><a href="/kb/en/high_priority-and-low_priority/">HIGH_PRIORITY and LOW_PRIORITY</a>
+</li><li><a href="/kb/en/insert-default-duplicate-values/">INSERT - Default &amp; Duplicate Values</a>
+</li><li><a href="/kb/en/insert-ignore/">INSERT IGNORE</a>
+</li><li><a href="/kb/en/insert-on-duplicate-key-update/">INSERT ON DUPLICATE KEY UPDATE</a></li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/zh-cn/concurrent-inserts/+subscriptions/add"
+                 data-unsubscribe-url="/kb/zh-cn/concurrent-inserts/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/zh-cn/coalesce/">
+                        ← COALESCE
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/zh-cn/mariadb-documentation/">
+                        ↑ MariaDB的使用 ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/zh-cn/create-database/">
+                        CREATE DATABASE →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="7539" data-comments-url="/kb/zh-cn/concurrent-inserts/+comments"
+         data-reply-url="/kb/zh-cn/concurrent-inserts/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/zh-cn/mariadb-documentation/">
+                    ↑ MariaDB的使用 ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/alter/">
+                            
+                            ALTER语句
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create/">
+                            
+                            CREATE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/data-types/">
+                            
+                            数据类型
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/begin-end/">
+                            
+                            BEGIN END
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/case-statement/">
+                            
+                            CASE STATEMENT（条件语句）
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/close/">
+                            
+                            CLOSE(关闭)
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/coalesce/">
+                            
+                            COALESCE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Concurrent Inserts</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create-database/">
+                            
+                            CREATE DATABASE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create-function/">
+                            
+                            CREATE FUNCTION
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create-procedure/">
+                            
+                            CREATE PROCEDURE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create-trigger/">
+                            
+                            CREATE TRIGGER
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/database/">
+                            
+                            DATABASE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/declare-handler/">
+                            
+                            DECLARE HANDLER
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/declare-variable/">
+                            
+                            DECLARE Variable
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/delete/">
+                            
+                            DELETE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/execute-statement/">
+                            
+                            EXECUTE 语句
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/fetch/">
+                            
+                            FETCH
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/galera-cluster-system-variables/">
+                            
+                            Galera Cluster System Variables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/getting-started-with-mariadb-galera-cluster/">
+                            
+                            Getting Started with MariaDB Galera Cluster
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/greatest/">
+                            
+                            GREATEST
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/group_concat/">
+                            
+                            GROUP_CONCAT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/help-command/">
+                            
+                            HELP 命令
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/high_prioritylow_priority/">
+                            
+                            HIGH_PRIORITY和LOW_PRIORITY
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/how-to-quickly-insert-data-into-mariadb/">
+                            
+                            How to Quickly Insert Data Into MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/if-statement/">
+                            
+                            IF 语句
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/in/">
+                            
+                            IN
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/insert/">
+                            
+                            INSERT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/insert-on-duplicate-key-update/">
+                            
+                            INSERT ON DUPLICATE KEY UPDATE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/insert-select/">
+                            
+                            INSERT SELECT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/iterate/">
+                            
+                            ITERATE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/labels/">
+                            
+                            Labels
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/last_value/">
+                            
+                            LAST_VALUE()
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/leave/">
+                            
+                            LEAVE（退出）
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/load-data-infile/">
+                            
+                            LOAD DATA INFILE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/loop/">
+                            
+                            LOOP（循环）
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/sql_modeoracle-from-mariadb-103/">
+                            
+                            MariaDB 10.3支持SQL_MODE=ORACLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/non-recursive-common-table-expressions-overview/">
+                            
+                            Non-Recursive Common Table Expressions Overview
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/rename-table/">
+                            
+                            RENAME TABLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/replace/">
+                            
+                            REPLACE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/selectinto/">
+                            
+                            SELECT INTO
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/select-into-outfile/">
+                            
+                            SELECT INTO OUTFILE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/set/">
+                            
+                            SET
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/set-names/">
+                            
+                            SET NAMES
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/set-password/">
+                            
+                            SET PASSWORD
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/set-variable/">
+                            
+                            SET Variable
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/show-databases/">
+                            
+                            SHOW DATABASES
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/ssl-overview/">
+                            
+                            SSL 综述
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/tinyint/">
+                            
+                            TINYINT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/truncate-table/">
+                            
+                            TRUNCATE TABLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/update/">
+                            
+                            UPDATE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/wait-and-nowait/">
+                            
+                            WAIT 和 NOWAIT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/window-functions-overview/">
+                            
+                            Window Functions速览
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/auto_increment-handling-in-xtradbinnodb/">
+                            
+                            XtraDB/InnoDB中的AUTO_INCREMENT处理方式
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/xtradbinnodb-file-format/">
+                            
+                            XtraDB/InnoDB的文件格式
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/general-query-log/">
+                            
+                            一般查询日志
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/using-innodb-instead-of-xtradb/">
+                            
+                            使用InnoDB替代XtraDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/about-xtradb/">
+                            
+                            关于 XtraDB 存储引擎
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/start-slave/">
+                            
+                            启动从服务
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/declare-cursor/">
+                            
+                            声明游标
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/performance-schema-table_lock_waits_summary_by_table-table/">
+                            
+                            性能配置方案 table_lock_waits_summary_by_table 表
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/numeric-data-type-overview/">
+                            
+                            数值型的数据类型概述
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/identifier-names/">
+                            
+                            标识符命名规则
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/identifier-case-sensitivity/">
+                            
+                            标识符对大小写敏感的情况
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/identifier-qualifiers/">
+                            
+                            标识限定符
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/user-defined-variables/">
+                            
+                            用户变量(User-Defined Variables)
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/cache-index/">
+                            
+                            索引-缓存
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/setting-character-sets-and-collations/">
+                            
+                            设置字符集和排序规则
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/assignment-operator/">
+                            
+                            赋值操作符(:=)
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/reset/">
+                            
+                            重置（清零）
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/error-log/">
+                            
+                            错误日志
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

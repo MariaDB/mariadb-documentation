@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: How to Quickly Insert Data Into MariaDB</title><link>https://mariadb.com/kb/en/how-to-quickly-insert-data-into-mariadb/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/how-to-quickly-insert-data-into-mariadb/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 17:41:43 +0000</lastBuildDate><item><title>Re: How to Quickly Insert Data Into MariaDB</title><link>https://mariadb.com/kb/en/how-to-quickly-insert-data-into-mariadb/+comments/2195</link><description>&lt;p&gt;BEGIN;
+INSERT ...
+INSERT ...
+END;
+BEGIN;
+INSERT ...
+INSERT ...
+END;
+...&lt;/p&gt;
+&lt;p&gt;------------------------------------------------
+I tried to use above concept in java while inserting records in mariadb.&lt;/p&gt;
+&lt;p&gt;if in Linux system A(Ram size 4 GB) it takes 15 seconds to inserts 20000 records then in Linux system B(Ram size 16 GB) it takes about 2 minutes 55 seconds. you can see how much it slow is in case of Linux system B. 
+though B has got more RAM size than A. &lt;/p&gt;
+&lt;p&gt;insertion instructions : for any insertion instruction it give same result, for example you can see bellow. i think its not issue of insertion instruction. &lt;/p&gt;
+&lt;p&gt;String insertQuery = "insert into vm_missedcalls (SUBSCRIBER,CALLER,CALLEDTIME,PROCESSED,REASON) values (?,'2222222222',sysdate(),'N','U')"; &lt;/p&gt;
+&lt;p&gt;Please find bellow the sample code to insert 20000 records. 
+I have used BEGIN and END statement but its not working properly. 
+Please see the comment at line pStmt.execute(end); &lt;/p&gt;
+&lt;p&gt;?
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+    public static void insertIntoVM_MISSEDCALLS(){&lt;/p&gt;
+&lt;p&gt;         Connection con;
+         PreparedStatement pStmt = null;  
+         String begin = "BEGIN";
+         String end = "END";&lt;/p&gt;
+&lt;p&gt;         try {
+            Class.forName("org.mariadb.jdbc.Driver");
+            con = DriverManager.getConnection(ss,"root","onmobile");&lt;/p&gt;
+&lt;p&gt;            String insertQuery = "insert into vm_missedcalls (SUBSCRIBER,CALLER,CALLEDTIME,PROCESSED,REASON) values (?,'2222222222',sysdate(),'N','U')";&lt;/p&gt;
+&lt;p&gt;            pStmt = con.prepareStatement(insertQuery);&lt;/p&gt;
+&lt;p&gt;           String query;&lt;/p&gt;
+&lt;p&gt;            StringBuilder subsStart = new StringBuilder("11");
+            String subscriber;&lt;/p&gt;
+&lt;p&gt;            for(int i = 0 ;i&amp;lt;1;i++){
+                for(int j = 0 ;j&amp;lt;1;j++){
+                    for(int k = 0 ;k&amp;lt;1;k++){&lt;/p&gt;
+&lt;p&gt;                        &lt;em&gt; inserting 20000 records
+                        for(int l = 0 ;l&amp;lt;2;l++){
+                            for(int m = 0 ;m&amp;lt;10;m++){&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;                                         pStmt.execute(begin); &lt;em&gt; at each 1000 insertion&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;                                for(int n = 0 ;n&amp;lt;10;n++){
+                                    for(int o = 0 ;o&amp;lt;10;o++){
+                                        for(int p = 0 ;p&amp;lt;10;p++){
+                                            subscriber = subsStart.append(i).append(j).append(k).append(l).append(m).append(n).append(o).append(p).toString();&lt;/p&gt;
+&lt;p&gt;                                            pStmt.setString(1, subscriber);&lt;/p&gt;
+&lt;p&gt;                                            pStmt.execute();&lt;/p&gt;
+&lt;p&gt;                                            subsStart = new StringBuilder("11");&lt;/p&gt;
+&lt;p&gt;                                        }
+                                    }
+                                }&lt;/p&gt;
+&lt;p&gt;                                pStmt.execute(end);&lt;em&gt; due to this line it throw exception [see bottom part for exception]
+                                                                                      &lt;/em&gt; if i comment this line the only 19000 records are inserted into DB
+                            }&lt;/p&gt;
+&lt;p&gt;                        }
+                    }
+                }
+            }&lt;/p&gt;
+&lt;p&gt;         } catch (SQLException e) {
+         } catch (ClassNotFoundException e) {&lt;/p&gt;
+&lt;p&gt;         }finally{
+             closeStatement(pStmt);
+         }&lt;/p&gt;
+&lt;p&gt;    }&lt;/p&gt;
+&lt;p&gt;  &lt;em&gt;/&lt;/em&gt;&lt;em&gt;/&lt;/em&gt;  Exception thrown  
+java.sql.SQLSyntaxErrorException: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'END' at line 1
+Query is:
+END
+    at org.mariadb.jdbc.internal.SQLExceptionMapper.get(SQLExceptionMapper.java:138)
+    at org.mariadb.jdbc.internal.SQLExceptionMapper.throwException(SQLExceptionMapper.java:106)
+    at org.mariadb.jdbc.MySQLStatement.executeQueryEpilog(MySQLStatement.java:266)
+    at org.mariadb.jdbc.MySQLStatement.execute(MySQLStatement.java:289)
+    at org.mariadb.jdbc.MySQLStatement.execute(MySQLStatement.java:338)
+    at old.codes.InsertLessSubscribers.insertIntoVM_MISSEDCALLS(InsertLessSubscribers.java:156)
+    at old.codes.InsertLessSubscribers.main(InsertLessSubscribers.java:32)
+Caused by: org.mariadb.jdbc.internal.common.QueryException: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'END' at line 1
+Query is:
+END&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">rupesh kumar</dc:creator><guid>https://mariadb.com/kb/en/how-to-quickly-insert-data-into-mariadb/+comments/2195</guid></item></channel></rss>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Galera Cluster Recovery</title><link>https://mariadb.com/kb/en/galera-cluster-recovery/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/galera-cluster-recovery/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 14:47:40 +0000</lastBuildDate><item><title>Re: Galera Cluster Recovery</title><link>https://mariadb.com/kb/en/galera-cluster-recovery/+comments/4820</link><description>&lt;p&gt;If all servers are offline at the same time (such as during a power outage), then the cluster will need to be re-created following a crash procedure.&lt;/p&gt;
+&lt;p&gt;1. Check each node and see if they all have a zero in the "safe_to_bootstrap" value. If any have a 1 as the value, that is the server you start first.&lt;/p&gt;
+&lt;pre&gt;cat /var/lib/mysql/grastate.dat&lt;/pre&gt;
+&lt;pre&gt;# GALERA saved state
+version: 2.1
+uuid:    d89c79f4-b308-11e9-9931-8f96b3cc57b2
+seqno:   -1
+safe_to_bootstrap: 0&lt;/pre&gt;
+&lt;p&gt;2. If they all have an invalid seqno of -1 and none have a value of 1 in "safe_to_bootstrap" then you need to temporary start the database service on each server with a recovery option so you can see the number associated to the "Recovered Position"&lt;/p&gt;
+&lt;pre&gt;sudo -u mysql mysqld --wsrep-recover&lt;/pre&gt;
+&lt;p&gt;srv-db1 shows position is 31:&lt;/p&gt;
+&lt;pre&gt;2019-08-05 18:53:55 0 [Note] WSREP: Recovered position: d89c79f4-b308-11e9-9931-8f96b3cc57b2:31&lt;/pre&gt;
+&lt;p&gt;srv-db2 shows position is 29:&lt;/p&gt;
+&lt;pre&gt;2019-08-05 18:49:16 0 [Note] WSREP: Recovered position: d89c79f4-b308-11e9-9931-8f96b3cc57b2:29&lt;/pre&gt;
+&lt;p&gt;srv-db3 shows position is 30:&lt;/p&gt;
+&lt;pre&gt;2019-08-05 18:49:23 0 [Note] WSREP: Recovered position: d89c79f4-b308-11e9-9931-8f96b3cc57b2:30&lt;/pre&gt;
+&lt;p&gt;3. In this example, srv-db1 has the highest transaction number of 31 and should be the 1st node to be started in the cluster. Modify the grastate.dat and change "safe_to_bootstrap" to 1.&lt;/p&gt;
+&lt;pre&gt;sed -i 's/safe_to_bootstrap: 0/safe_to_bootstrap: 1/' /var/lib/mysql/grastate.dat&lt;/pre&gt;
+&lt;p&gt;4. Now you can follow the normal procedure to start a new Galera cluster using this server as the starting node.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Lon Hammonds</dc:creator><guid>https://mariadb.com/kb/en/galera-cluster-recovery/+comments/4820</guid></item></channel></rss>

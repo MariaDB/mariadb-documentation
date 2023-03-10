@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Understanding MariaDB Architecture - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Understanding MariaDB Architecture" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/understanding-mariadb-architecture/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="An overview of MariaDB server architecture, especially where it differs from SQL Server." />
+
+    <meta name="description" content="An overview of MariaDB server architecture, especially where it differs from SQL Server." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/understanding-mariadb-architecture/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/understanding-mariadb-architecture/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-administration/">MariaDB Administration</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/getting-installing-and-upgrading-mariadb/">Getting, Installing, and Upgrading MariaDB</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/migrating-to-mariadb/">Migrating to MariaDB</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/migrating-to-mariadb-from-sql-server/">Migrating to MariaDB from SQL Server</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/understanding-mariadb-architecture/">Understanding MariaDB Architecture</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/understanding-mariadb-architecture/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/understanding-mariadb-architecture/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/understanding-mariadb-architecture/+flag"
+                data-flag-url="/kb/en/understanding-mariadb-architecture/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/understanding-mariadb-architecture/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2019-12-11 12:30">3 years, 2 months ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2020-05-25 23:53">2 years, 9 months ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/understanding-mariadb-architecture/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/understanding-mariadb-architecture/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/understanding-mariadb-architecture/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/understanding-mariadb-architecture/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Understanding MariaDB Architecture</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#storage-engines" title="Storage Engines">Storage Engines</a>    <ol class="toc">
+
+        <li class=""><a href="#innodb" title="InnoDB">InnoDB</a>        <ol class="toc">
+
+            <li class=""><a href="#primary-key-and-indexes" title="Primary Key and Indexes">Primary Key and Indexes</a></li>
+
+            <li class=""><a href="#tablespaces" title="Tablespaces">Tablespaces</a></li>
+
+            <li class=""><a href="#transaction-logs" title="Transaction Logs">Transaction Logs</a></li>
+
+            <li class=""><a href="#innodb-buffer-pool" title="InnoDB Buffer Pool">InnoDB Buffer Pool</a></li>
+
+            <li class=""><a href="#innodb-background-threads" title="InnoDB Background Threads">InnoDB Background Threads</a></li>
+
+            <li class=""><a href="#checksums-and-doublewrite-buffer" title="Checksums and Doublewrite Buffer">Checksums and Doublewrite Buffer</a>        </ol>
+</li>
+
+        <li class=""><a href="#aria" title="Aria">Aria</a>    </ol>
+</li>
+
+    <li class=""><a href="#databases" title="Databases">Databases</a>    <ol class="toc">
+
+        <li class=""><a href="#system-databases" title="System Databases">System Databases</a></li>
+
+        <li class=""><a href="#default-database" title="Default Database">Default Database</a>    </ol>
+</li>
+
+    <li class=""><a href="#the-binary-log" title="The Binary Log">The Binary Log</a></li>
+
+    <li class=""><a href="#plugins" title="Plugins">Plugins</a></li>
+
+    <li class=""><a href="#thread-pool" title="Thread Pool">Thread Pool</a></li>
+
+    <li class=""><a href="#configuration" title="Configuration">Configuration</a>    <ol class="toc">
+
+        <li class=""><a href="#configuration-files" title="Configuration Files">Configuration Files</a></li>
+
+        <li class=""><a href="#dynamic-and-static-variables" title="Dynamic and Static Variables">Dynamic and Static Variables</a></li>
+
+        <li class=""><a href="#scope" title="Scope">Scope</a></li>
+
+        <li class=""><a href="#syntax" title="Syntax">Syntax</a></li>
+
+        <li class=""><a href="#setting-system-variables-with-startup-parameters" title="Setting System Variables with Startup Parameters">Setting System Variables with Startup Parameters</a></li>
+
+        <li class=""><a href="#debugging-configuration" title="Debugging Configuration">Debugging Configuration</a>    </ol>
+</li>
+
+    <li class=""><a href="#status-variables" title="Status Variables">Status Variables</a> </ol>
+</li>
+</div>
+<p>MariaDB architecture is partly different from the architecture of traditional DBMSs, like SQL Server. Here we will examine the main components that a new MariaDB DBA needs to know. We will also discuss a bit of history, because this may help understand MariaDB philosophy and certain design choices.</p>
+<p>This section is an overview of the most important components. More information is included in specific sections of this migration guide, or in other pages of the MariaDB Knowledge Base (see the links scattered over the text).</p>
+<h2 class="anchored_heading" id="storage-engines">Storage Engines</h2>
+<p>MariaDB was born from the source code of MySQL, in 2008. Therefore, its history begins with MySQL.</p>
+<p>MySQL was born at the beginning of the 90s. Back in the days, if compared to its existing competitors, MySQL was lightweight, simple to install, easy to learn. While it had a very limited set of features, it was also fast in certain common operations. And it was open source. These characteristics made it suitable to back the simple websites that existed at that time.</p>
+<p>The web evolved rapidly, and the same happened to MySQL. Being open source helped a lot in this respect, because the community needed functionalities that weren’t supported at that time.</p>
+<p>MySQL was probably the first database system to support a <a href="/kb/en/storage-engines/">pluggable storage engine architecture</a>. Basically, this means that MySQL knows very little about creating or populating a table, reading from it, building proper indexes and caches. It just delegated all these operations to a special plugin type called a storage engine.</p>
+<p>One of the first plugins developed by third parties was <a href="/kb/en/understanding-mariadb-architecture/#innodb">InnoDB</a>. It is very fast, and it adds two important features that are not otherwise supported: transactions and <a href="/kb/en/foreign-keys/">foreign keys</a>.</p>
+<p>Note that when MariaDB asks a storage engine to write or read a row, the storage engine could theoretically do anything. This led to the creation of very interesting alternative engines, like <a href="/kb/en/blackhole/">BLACKHOLE</a> (which doesn’t write or read any data, acting like the /dev/null file in Linux), or <a href="/kb/en/connect/">CONNECT</a> (which can read and write to files written in many different formats, or remote DBMSs, or some other special data sources).</p>
+<p>Nowadays InnoDB is the default MariaDB storage engine, and it is the best choice for most use cases. But for particular needs, sometimes using a different storage engine is desirable. In case of doubts about the best storage engine to use for a specific case, check the <a href="/kb/en/choosing-the-right-storage-engine/">Choosing the Right Storage Engine</a> page.</p>
+<p>When we create a table, we specify its storage engine or use the default one. It is possible to convert an existing table to another storage engine, though this is a blocking operation which requires a complete table copy. Third-party storage engines can also be installed while MariaDB is running.</p>
+<p>Note that it is perfectly possible to use tables with different storage engines in the same transaction (even if some engines are not transactional). It is even possible to use different engines in the same query, for example with JOINs and subqueries.</p>
+<p>The default storage engine can be changed by changing the <a href="/kb/en/server-system-variables/#default_storage_engine">default_storage_engine</a> variable. A different default can be specified for temporary tables by setting <a href="/kb/en/server-system-variables/#default_tmp_storage_engine">default_tmp_storage_engine</a>. MariaDB uses <a href="/kb/en/aria-storage-engine/">Aria</a> for system tables and temporary tables created internally to store the intermediate results of a query.</p>
+<h3 class="anchored_heading" id="innodb">InnoDB</h3>
+<p>It is worth spending some more words here about <a href="/kb/en/innodb/">InnoDB</a>, the default storage engine.</p>
+<h4 class="anchored_heading" id="primary-key-and-indexes">Primary Key and Indexes</h4>
+<p>InnoDB primary keys are always the equivalent of SQL Server clustered indexes. In other words, an InnoDB table is always ordered by the primary key.</p>
+<p>If an InnoDB table doesn't have a user-defined primary key, the first <code>UNIQUE</code> index whose columns are all <code>NOT NULL</code> is used as a primary key. If there is no such index, the table will have a <em>clustered index</em>. The terminology here can be a bit confusing for SQL Server and other DBMS users. A clustered index in InnoDB is a 6 bytes value that is added to the table. This index and its values are completely invisible to the users. It's important to note that clustered indexes are governed by a global mutex that greatly reduces their scalability.</p>
+<p>Secondary indexes are ordered by the columns that are part of the index, and contain a reference to each entry's corresponding primary key value.</p>
+<p>Some consequences of these design choices are the following:</p>
+<ul start="1"><li>For performance reasons, a primary key value should be inserted in order. In other words, the last inserted value should be the highest. This order is normally followed when inserting values into an <code>AUTO_INCREMENT</code> primary key. The reason is that inserting values in the middle of an ordered data structure is slower, unless they fit into existing holes. If we insert primary key values randomly, InnoDB often has to rearrange pages to make some room for the new data.
+</li><li>A big primary keys means that all secondary indexes are also big.
+</li><li>A query by primary key will require a single search. A query on a secondary index that also reads columns not contained in the index will require one search on the index, plus one more search for each row that satisfies the index condition.
+</li><li>We shouldn't explicitly include the primary key in a secondary index. If we do so, the primary key column will be duplicated in the index.
+</li></ul>
+<h4 class="anchored_heading" id="tablespaces">Tablespaces</h4>
+<p>For InnoDB, a <em>tablespace</em> is a file containing data (not a file group as in SQL Server). The types of tablespaces are:</p>
+<ul start="1"><li><a href="/kb/en/innodb-system-tablespaces/">System tablespace</a>.
+</li><li><a href="/kb/en/innodb-file-per-table-tablespaces/">File-per-table tablespaces</a>.
+</li><li><a href="/kb/en/innodb-temporary-tablespaces/">Temporary tablespaces</a>.
+</li></ul>
+<p>The system tablespace is stored in the file <code>ibdata</code>. It contains information used by InnoDB internally, like rollback segments, as well as some system tables. Historically, the system tablespace also contained all tables created by the user. In modern MariaDB versions, a table is created in the system tablespace only if the <a href="/kb/en/innodb-system-variables/#innodb_file_per_table">innodb_file_per_table</a> system variable is set to 0 at the moment of the table creation. By default, innodb_file_per_table is 1.</p>
+<p>Tables created while <code>innodb_file_per_table=1</code> are written into their own tablespace. These are <code>.ibd</code> files.</p>
+<p>Starting from <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>, temporary tables are written into temporary tablespaces, which means <code>ibtmp*</code> files. Previously, they were created in the system tablespace or in file-per-table tablespaces according to the value of <code>innodb_file_per_table</code>, just like regular tables. Temporary tablespaces, if present, are deleted when MariaDB starts.</p>
+<p><strong>It is important to remember that tablespaces can never shrink</strong>. If a file-per-table tablespace grows too much, deleting data won't recover space. Instead, a new table must be created and data needs to be copied. Finally, the old table will be deleted. If the system tablespace grows too much, the only solution is to move data into a new MariaDB installation.</p>
+<h4 class="anchored_heading" id="transaction-logs">Transaction Logs</h4>
+<p>In SQL Server, the transaction log contains both the undo log and the redo log. Usually we have only one transaction log.</p>
+<p>In MariaDB the undo log and the redo log are stored separately. By default, the <a href="/kb/en/innodb-redo-log/">redo log</a> is written to two files, called <code>ib_logfile0</code> and <code>ib_logfile1</code>. The <a href="/kb/en/innodb-undo-log/">undo log</a> by default is written to the <em>system tablespace</em>, which is in the <code>ibdata1</code> file. However, it is possible to write it in separate files in a specified directory.</p>
+<p>MariaDB provides no way to inspect the contents of the transaction logs. However, it is possible to inspect the <a href="/kb/en/understanding-mariadb-architecture/#the-binary-log">binary log</a>.</p>
+<p>InnoDB transaction logs are written in a circular fashion: their size is normally fixed, and when the end is reached, InnoDB continues to write from the beginning. However, if very long transactions are running, InnoDB cannot overwrite the oldest data, so it has to expand the log size instead.</p>
+<h4 class="anchored_heading" id="innodb-buffer-pool">InnoDB Buffer Pool</h4>
+<p>MariaDB doesn't have a central buffer pool. Each storage engine may or may not have a buffer pool. The <a href="/kb/en/innodb-buffer-pool/">InnoDB buffer pool</a> is typically assigned a big amount of memory. See <a href="/kb/en/mariadb-memory-allocation/">MariaDB Memory Allocation</a>.</p>
+<p>MariaDB has no extension like the SQL Server buffer pool extension.</p>
+<p>A part of the buffer pool is called the <a href="/kb/en/innodb-change-buffering/">change buffer</a>. It contains dirty pages that have been modified in memory and not yet flushed.</p>
+<h4 class="anchored_heading" id="innodb-background-threads">InnoDB Background Threads</h4>
+<p>InnoDB has background threads that take care of flushing dirty pages from the change buffer to the tablespaces. They don't directly affect the latency of queries, but they are very important for performance.</p>
+<p><a href="/kb/en/show-engine-innodb-status/">SHOW ENGINE InnoDB STATUS</a> shows information about them in the <code>BACKGROUND THREAD</code> section. They can also be seen using the <a href="/kb/en/performance-schema-threads-table/">threads</a> table, in the <a href="/kb/en/performance-schema/">performance_schema</a>.</p>
+<p>InnoDB flushing is similar to <em>lazy writes</em> and <em>checkpoints</em> in SQL Server. It has no equivalent for <em>eager writing</em>.</p>
+<p>For more information, see <a href="/kb/en/innodb-page-flushing/">InnoDB Page Flushing</a> and <a href="/kb/en/innodb-purge/">InnoDB Purge</a>.</p>
+<h4 class="anchored_heading" id="checksums-and-doublewrite-buffer">Checksums and Doublewrite Buffer</h4>
+<p>InnoDB pages have checksums. After writing pages to disk, InnoDB verifies that the checksums match. The checksum algorithm is determined by <a href="/kb/en/innodb-system-variables/#innodb_checksum_algorithm">innodb_checksum_algorithm</a>. Check the variable documentation for its consequences on performance, backward compatibility and encryption.</p>
+<p>In case of a system crash, hardware failure or power outage, a page could be half-written on disk. For some pages, this causes a disaster. Therefore, InnoDB writes essential pages to disk twice. A backup copy of the new page version is written first. Then, the old page is overwritten. The backup copies are written into a file called the <em>doublewrite buffer</em>.</p>
+<ul start="1"><li>If an event prevents the first page from being written, the old version of the page will still be available.
+</li><li>If an event prevents the old page from being completely overwritten by its new version, the page can still be recovered using the doublewrite buffer.
+</li></ul>
+<p>The doublewrite buffer can disabled using the <a href="/kb/en/innodb-system-variables/#innodb_doublewrite">innodb_doublewrite</a> variable, but this usually doesn't bring big performance benefits. The doublewrite buffer location can be changed with <a href="/kb/en/innodb-system-variables/#innodb_doublewrite_file">innodb_doublewrite_file</a>.</p>
+<h3 class="anchored_heading" id="aria">Aria</h3>
+<p>Even if we only create InnoDB tables, we use Aria indirectly, in two ways:</p>
+<ul start="1"><li>For system tables.
+</li><li>For internal temporary tables.
+</li></ul>
+<p>Aria is a non-transactional storage engine. By default it is crash-safe, meaning that all changes to data are written and fsynced to a write-ahead log and can always be recovered in case of a crash.</p>
+<p>Aria caches indexes into the pagecache. Data are not directly cached by Aria, so it's important that the underlying filesystem caches reads and writes.</p>
+<p>The pagecache size is determined by the <a href="/kb/en/aria-system-variables/#aria_pagecache_buffer_size">aria_pagecache_buffer_size</a> system variable. To know if it is big enough we can check the proportion of free pages (the ratio between <a href="/kb/en/aria-status-variables/#aria_pagecache_blocks_used">Aria_pagecache_blocks_used</a> and <a href="/kb/en/aria-status-variables/#aria_pagecache_blocks_unused">Aria_pagecache_blocks_unused</a>) and the proportion of cache misses (the ratio between <a href="/kb/en/aria-status-variables/#aria_pagecache_read_requests">Aria_pagecache_read_requests</a> and <a href="/kb/en/aria-status-variables/#aria_pagecache_reads">Aria_pagecache_reads</a>.</p>
+<p>The proportion of dirty pages is the ratio between <a href="/kb/en/aria-status-variables/#aria_pagecache_blocks_used">Aria_pagecache_blocks_used</a> and <a href="/kb/en/aria-status-variables/#aria_pagecache_blocks_not_flushed">Aria_pagecache_blocks_not_flushed</a> tells us if the log file is big enough.</p>
+<p>The size of Aria log is determined by <a href="/kb/en/aria-system-variables/#aria_pagecache_buffer_size">aria_log_file_size</a>.</p>
+<h2 class="anchored_heading" id="databases">Databases</h2>
+<p>MariaDB does not support the concept of schema. In MariaDB SQL, <em>schema</em> and <em>schemas</em> are synonyms for <em>database</em> and <em>databases</em>.</p>
+<p>When a user connects to MariaDB, they don't connect to a specific database. Instead, they can access any table they have permissions for. There is however a concept of <em>default database</em>, see below.</p>
+<p>A database is a container for database objects like tables and views. A database serves the following purposes:</p>
+<ul start="1"><li>A database is a namespace.
+</li><li>A database is a logical container to separate objects.
+</li><li>A database has a default <a href="/kb/en/character-sets/">character set</a> and collation, which are inherited by their tables.
+</li><li>Permissions can be assigned on a whole database, to make permission maintenance simpler.
+</li><li>Physical data files are stored in a directory which has the same name as the database to which they belong.
+</li></ul>
+<h3 class="anchored_heading" id="system-databases">System Databases</h3>
+<p>MariaDB has the following system databases:</p>
+<ul start="1"><li><a href="/kb/en/the-mysql-database-tables/">mysql</a> is for internal use only, and should not be read or written directly.
+</li><li><a href="/kb/en/information-schema/">information_schema</a> contains all information that can be found in SQL Server's information_schema and more. However, while SQL Server's <code>information_schema</code> is a schema containing information about the local database, MariaDB's <code>information_schema</code> is a database that contains information about all databases.
+</li><li><a href="/kb/en/performance-schema/">performance_schema</a> contains information about MariaDB runtime. It is disabled by default. Enabling it requires setting the <a href="/kb/en/performance-schema-system-variables/#performance_schema">performance_schema</a> system variable to 1 and restarting MariaDB.
+</li></ul>
+<h3 class="anchored_heading" id="default-database">Default Database</h3>
+<p>When a user connects to MariaDB, they can optionally specify a default database. A default database can also be specified or changed later, with the <a href="/kb/en/use/">USE</a> command.</p>
+<p>Having a default database specified allows one to specify tables without specifying the name of the database where they are located. If no default database is specified, all table names must be fully qualified.</p>
+<p>For example, the two following snippets are equivalent:</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">my_database</span><span class="p">.</span><span class="n">my_table</span><span class="p">;</span>
+
+<span class="c1">-- is equivalent to:</span>
+<span class="n">USE</span> <span class="n">my_database</span><span class="p">;</span>
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">my_table</span><span class="p">;</span>
+</pre><p>Even if a default database is specified, tables from other databases can be accessed by specifying their fully qualified names:</p>
+<pre class="fixed"><span class="c1">-- this query joins my_database.my_table to your_database.your_table</span>
+<span class="n">USE</span> <span class="n">my_database</span><span class="p">;</span>
+<span class="k">SELECT</span> <span class="n">m</span><span class="p">.</span><span class="o">*</span>
+    <span class="k">FROM</span> <span class="n">my_table</span> <span class="n">m</span>
+    <span class="k">JOIN</span> <span class="n">your_database</span><span class="p">.</span><span class="n">your_table</span> <span class="n">y</span>
+        <span class="k">ON</span> <span class="n">m</span><span class="p">.</span><span class="n">xyz</span> <span class="o">=</span> <span class="n">y</span><span class="p">.</span><span class="n">xyz</span><span class="p">;</span>
+</pre><p>MariaDB has the <a href="/kb/en/database/">DATABASE()</a> function to determine the current database:</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="k">DATABASE</span><span class="p">();</span>
+</pre><p>Stored procedures and triggers don't inherit a default database from the session, nor by a caller procedure. In that context, the default database is the database which contains the procedure. <code>USE</code> can be used to change it. The default database will only be valid for the rest of the procedure.</p>
+<h2 class="anchored_heading" id="the-binary-log">The Binary Log</h2>
+<p>Different tables can be built using different storage engines. It is important to note that not all engines are transactional, and that different engines implement the transaction logs in different ways. For this reason, MariaDB cannot replicate data from a master to a slave using an equivalent of SQL Server transactional replication.</p>
+<p>Instead, it needs a global mechanism to log the changes that are applied to data. This mechanism is the <a href="/kb/en/binary-log/">binary log</a>, often abbreviated to binlog.</p>
+<p>The binary log can be written in the following formats:</p>
+<ul start="1"><li>STATEMENT logs SQL statements that modify data;
+</li><li>ROW logs a reference to the rows that have been modified, if any (usually it’s the primary key), and the new values that have been added or modified, in a binary format.
+</li><li>MIXED is a combination of the above formats. It means that ROW is used for statements that can safely be logged in this way (see below), and STATEMENT is used in other cases. This is the default format from <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>.
+</li></ul>
+<p>In most cases, STATEMENT is slower because the SQL statement needs to be re-executed by the slave, and because certain statements may produce a different result in the slave (think about queries that use LIMIT without ORDER BY, or the CURRENT_TIMESTAMP() function). But there are exceptions, and besides, DDL statements are always logged as STATEMENT to avoid flooding the binary log. Therefore, the binary log may well contain both ROW and STATEMENT entries.</p>
+<p>See <a href="/kb/en/binary-log-formats/">Binary Log Formats</a>.</p>
+<p>The binary log allows:</p>
+<ul start="1"><li>replication, if enabled on the master;
+</li><li>promoting a slave to a master, if enabled on that slave;
+</li><li>incremental backups;
+</li><li>seeing data as they were in a point of time in the past (<a href="/kb/en/flashback/">flashback</a>);
+</li><li>restoring a backup and re-appling the binary log, with the exception of a data change which caused problems (human mistake, application bug, SQL injection);
+</li><li>Capture Data Changes (CDC), by streaming the binary log to technologies like Apache Kafka.
+</li></ul>
+<p>If you don't plan to use any of these features on a server, it is possible to <a href="/kb/en/replication-and-binary-log-system-variables/#log_bin">disable</a> the binary log to slightly improve the performance.</p>
+<p>The binary log can be inspected using the <a href="/kb/en/mysqlbinlog/">mysqlbinlog</a> utility, which comes with MariaDB. Enabling or disabling the binary log requires restarting MariaDB.</p>
+<p>See also <a href="/kb/en/mariadb-replication-overview-for-sql-server-users/">MariaDB Replication Overview for SQL Server Users</a> and <a href="/kb/en/mariadb-backups-overview-for-sql-server-users/">MariaDB Backups Overview for SQL Server Users</a> for a better understanding of how the binary log is used.</p>
+<h2 class="anchored_heading" id="plugins">Plugins</h2>
+<p>Storage engines are a special type of <a href="/kb/en/plugins/">plugin</a>. But others exist. For example, plugins can add authentication methods, new features, SQL syntax, functions, informative tables, and more.</p>
+<p>A plugin may add some server variables and some status variables. Server variables can be used to configure the plugin, and status variables can be used to monitor its activities and status. These variables generally use the plugin's name as a prefix. For example InnoDB has a server variable called innodb_buffer_pool_size to configure the size of its buffer pool, and a status variable called Innodb_pages_read which indicates the number of memory pages read from the buffer pool. The category <a href="/kb/en/system-variables/">system variables</a> of the MariaDB Knowledge Base has specific pages for system and status variables associated with various plugins.</p>
+<p>Many plugins are installed by default, or available but not installed by default. They can be installed or uninstalled at runtime with SQL statements, like <code>INSTALL PLUGIN</code>, <code>UNINSTALL PLUGIN</code> and others; see <a href="/kb/en/plugin-sql-statements/">Plugin SQL Statements</a>. 3rd party plugins can be made available for installation by simply copying them to the <a href="/kb/en/server-system-variables/#plugin_dir">plugin_dir</a>.</p>
+<p>It is important to note that different plugins may have different maturity levels. It is possible to prevent the installation of plugins we don’t consider production-ready by setting the <a href="/kb/en/server-system-variables/#plugin_maturity">plugin_maturity</a> system variable. For plugins that are distributed with MariaDB, the maturity level is determined by the MariaDB team based on the bugs reported and fixed.</p>
+<p>Some plugins are developed by 3rd parties. Even some 3rd party plugins are included in MariaDB official distributions - the ones available on mariadb.org.</p>
+<p>In MariaDB every authorization method (including the default one) is provided by an <a href="/kb/en/authentication-plugins/">authentication plugin</a>. A user can be required to use a certain authentication plugin. This gives us much flexibility and control. Windows users may be interested in <a href="/kb/en/authentication-plugin-gssapi/">gsapi</a> (which supports Windows authentication, Kerberos and NTLM) and <a href="/kb/en/authentication-plugin-named-pipe/">named_pipe</a> (which uses named pipe impersonation).</p>
+<p>Other plugins that can be very useful include <a href="/kb/en/user-statistics/">userstat</a>, which includes statistics about resources and table usage, and <a href="/kb/en/metadata_lock_info/">METADATA_LOCK_INFO</a>, which provides information about metadata locks.</p>
+<h2 class="anchored_heading" id="thread-pool">Thread Pool</h2>
+<p>MariaDB supports <a href="/kb/en/thread-pool/">thread pool</a>. It works differently on UNIX and on Windows. On Windows, it is enabled by default and its implementation is quite similar to SQL Server. It uses the Windows native CreateThreadpool API.</p>
+<p>If we don't use the thread pool, MariaDB will use its traditional method to handle connections. It consists of using a dedicated thread for each client connection. Creating a new thread has a cost in terms of CPU time. To mitigate this cost, after a client disconnects, the thread may be preserved for a certain time in the <a href="/kb/en/server-system-variables/#thread_cache_size">thread cache</a>.</p>
+<p>Whichever connection method we use, MariaDB has a maximum number of simultaneous connections, which can be changed at runtime. When the limit is reached, if more clients try to connect they will receive an error. This prevents MariaDB from consuming all the server resources and freezing or crashing. See <a href="/kb/en/handling-too-many-connections/">Handling Too Many Connections</a>.</p>
+<h2 class="anchored_heading" id="configuration">Configuration</h2>
+<p>MariaDB has many settings that 
+control the server behavior. These can be set up when starting mysqld (<a href="/kb/en/mysqld-options/">mysqld options</a>), and the vast majority are also accessible as <a href="/kb/en/server-system-variables/">server system variables</a>. These can be classified in these ways:</p>
+<ul start="1"><li><strong>Dynamic</strong> or <strong>static</strong>;
+</li><li><strong>Global</strong>, <strong>session</strong>, or both.
+</li></ul>
+<p>Note that server system variables are not to be confused with <a href="/kb/en/user-defined-variables/">user-defined variables</a>. The latter are not used for MariaDB configuration.</p>
+<h3 class="anchored_heading" id="configuration-files">Configuration Files</h3>
+<p>MariaDB can use several <a href="/kb/en/configuring-mariadb-with-option-files/">configuration files</a>. Configuration files are searched in several locations, including in the user directory, and if present they all are read and used. They are read in a consistent order. These locations depend on the operating system; see <a href="/kb/en/configuring-mariadb-with-option-files/#default-option-file-locations">Default Option File Locations</a>. It is possible to tell MariaDB which files it should read; see <a href="/kb/en/configuring-mariadb-with-option-files/#global-options-related-to-option-files">Global Options Related to Option Files</a>.</p>
+<p>On Linux, by default the configuration files are called <code>my.cnf</code>. On Windows, by default the configuration files can be called <code>my.ini</code> or <code>my.cnf</code>. The former is more common.</p>
+<p>If a variable is mentioned multiple times in different files, the occurrence that is read last will overwrite the others. Similarly, if a variable is mentioned several times in a single file, the occurrence that is read last overwrites the others.</p>
+<p>The contents of each configuration file are organized by <em>option groups</em>. MariaDB Server and client programs read different groups. The read groups also depend on the MariaDB version. See <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">Option Groups</a> for the details. Most commonly, the <code>[server]</code> or <code>[mysqld]</code> groups are used to contain all server configuration. The <code>[client-server]</code> group can be used for options that are shared by the server and the clients (like the port to use), to avoid repeating those variables multiple times.</p>
+<h3 class="anchored_heading" id="dynamic-and-static-variables">Dynamic and Static Variables</h3>
+<p>Dynamic variables have a value that can be changed at runtime, using the <a href="/kb/en/set/">SET</a> SQL statement. Static variables have a value that is decided at startup (see below) and cannot be changed without a restart.</p>
+<p>The <a href="/kb/en/server-system-variables/">Server System Variables</a> page states if variables are dynamic or static.</p>
+<h3 class="anchored_heading" id="scope">Scope</h3>
+<p>A global system variable is one that affects the general behavior of MariaDB. For example <a href="/kb/en/innodb-system-variables/#innodb_buffer_pool_size">innodb_buffer_pool_size</a> determines the size of the InnoDB buffer pool, which is used by read and write operations, no matter which user issued them. A session system variable is one that affects MariaDB behavior for the current connection; changing it will not affect other connected users, or future connections from the current user.</p>
+<p>A variable could exist in both the global and session scopes. In this case, the session value is what affects the current connection. When a user connects, the current global value is copied to the session scope. Changing the global value afterward will not change existing connections.</p>
+<p>The <a href="/kb/en/server-system-variables/">Server System Variables</a> page states the scope of each variable.</p>
+<p>Global variables and some session variables can only be modified by a user with the <a href="/kb/en/grant/#global-privileges">SUPER</a> privilege (typically root).</p>
+<h3 class="anchored_heading" id="syntax">Syntax</h3>
+<p>To see the value of a system variable:</p>
+<pre class="fixed"><span class="c1">-- global variables:</span>
+<span class="k">SELECT</span> <span class="o">@@</span><span class="k">global</span><span class="p">.</span><span class="n">variable_name</span><span class="p">;</span>
+<span class="c1">-- session variables:</span>
+<span class="k">SELECT</span> <span class="o">@@</span><span class="k">session</span><span class="p">.</span><span class="n">variable_name</span><span class="p">;</span>
+<span class="c1">-- or just use the shortcut:</span>
+<span class="k">SELECT</span> <span class="o">@@</span><span class="n">variable_name</span><span class="p">;</span>
+</pre><p>A longer syntax, which is mostly useful to get multiple variables, makes use of the same pattern syntax that is used by the <a href="/kb/en/like/">LIKE</a> operator:</p>
+<pre class="fixed"><span class="c1">-- global variables whose name starts with &#39;innodb&#39;:</span>
+<span class="k">SHOW</span> <span class="k">GLOBAL</span> <span class="n">VARIABLES</span> <span class="k">LIKE</span> <span class="s1">&#39;innodb%&#39;</span><span class="p">;</span>
+<span class="c1">-- session variables whose name starts with &#39;innodb&#39;:</span>
+<span class="k">SHOW</span> <span class="k">SESSION</span> <span class="n">VARIABLES</span> <span class="k">LIKE</span> <span class="s1">&#39;innodb%&#39;</span><span class="p">;</span>
+<span class="k">SHOW</span> <span class="n">VARIABLES</span> <span class="k">LIKE</span> <span class="s1">&#39;innodb%&#39;</span><span class="p">;</span>
+</pre><p>To modify the global or session value of a dynamic variable:</p>
+<pre class="fixed"><span class="k">SET</span> <span class="o">@@</span><span class="k">global</span><span class="p">.</span><span class="n">variable_name</span> <span class="o">=</span> <span class="s1">&#39;new &#39;</span><span class="n">value</span><span class="s1">&#39;;</span>
+<span class="s1">SET @@session.variable_name = &#39;</span><span class="k">new</span> <span class="s1">&#39;value&#39;</span><span class="p">;</span>
+</pre><p>Notice that if we modify a global variable in this way, the new value will be lost at server restart. For this reason we probably want to change the value in the configuration file too.</p>
+<p>For further information see:</p>
+<ul start="1"><li>The <a href="/kb/en/set/">SET</a> statement.
+</li><li>The <a href="/kb/en/show-variables/">SHOW VARIABLES</a> statement.
+</li></ul>
+<h3 class="anchored_heading" id="setting-system-variables-with-startup-parameters">Setting System Variables with Startup Parameters</h3>
+<p>System variables can be set at server startup without writing their values into a configuration file. This is useful if we want a value to be set once, until we change it or restart MariaDB. Values passed in this way override values written in the configuration files.</p>
+<p>The general rule is that every global variable can be passed as an argument of <code>mysqld</code> by prefixing its name with <code>--</code> and by replacing every occurrence of <code>_</code> with <code>-</code> in its name.</p>
+<p>For example, to pass <code>bind_address</code> as a startup argument:</p>
+<pre class="fixed"><span class="n">mysqld</span> <span class="c1">--bind-address=127.0.0.1</span>
+</pre><h3 class="anchored_heading" id="debugging-configuration">Debugging Configuration</h3>
+<p>Mistyping a variable can prevent MariaDB from starting. We cannot set a variable that doesn't exist in the MariaDB version in use. In these cases, an error is written in the <a href="/kb/en/error-log/">error log</a>.</p>
+<p>Having several configuration files and configuration groups, as well as being able to pass variables as command-line arguments, brings a lot of flexibility but can sometimes be confusing. When we are unsure about which values will be used, we can run:</p>
+<pre class="fixed"><span class="n">mysqld</span> <span class="c1">--print-defaults</span>
+</pre><h2 class="anchored_heading" id="status-variables">Status Variables</h2>
+<p>MariaDB status variables and some system tables allow external tools to monitor a server, building graphs on how they change over time, and allow the user to inspect what is happening inside the server.</p>
+<p><a href="/kb/en/server-status-variables/">Status variables</a> cannot be directly modified by the user. Their values indicate how MariaDB is operating. Their scope can be:</p>
+<ul start="1"><li><strong>Global</strong>, meaning that the value is about some MariaDB activity.
+</li><li><strong>Session</strong>, meaning that the value measures activities taking place in the current session.
+</li></ul>
+<p>Many status variables exist in both scopes. For example,<a href="/kb/en/server-status-variables/#cpu_time">Cpu_time</a> at global level indicates how much time the CPU was used by the MariaDB process (including all user sessions and all the background threads). At session level, it indicates how much time the CPU was used by the current session.</p>
+<p>The status variables created by a plugin, usually, use the plugin name as a prefix.</p>
+<p>The <a href="/kb/en/show-status/">SHOW STATUS</a> statement prints the values of the status variables that match a certain pattern.</p>
+<pre class="fixed"><span class="c1">-- Show all InnoDB global status variables</span>
+<span class="k">SHOW</span> <span class="k">GLOBAL</span> <span class="n">STATUS</span> <span class="k">LIKE</span> <span class="s1">&#39;innodb%&#39;</span><span class="p">;</span>
+<span class="c1">-- Show all InnoDB session status variables</span>
+<span class="k">SHOW</span> <span class="k">SESSION</span> <span class="n">STATUS</span> <span class="k">LIKE</span> <span class="s1">&#39;innodb%&#39;</span><span class="p">;</span>
+<span class="k">SHOW</span> <span class="n">STATUS</span> <span class="k">LIKE</span> <span class="s1">&#39;innodb%&#39;</span><span class="p">;</span>
+<span class="c1">-- Show global variables that contain the &quot;size&quot; substring:</span>
+<span class="k">SHOW</span> <span class="k">GLOBAL</span> <span class="n">STATUS</span> <span class="k">LIKE</span> <span class="s1">&#39;%size%&#39;</span><span class="p">;</span>
+</pre><p>Some status variables values are reset when <a href="/kb/en/flush/#flush-status">FLUSH STATUS</a> is executed. A possible use:</p>
+<pre class="fixed"><span class="k">DELIMITER</span> <span class="o">||</span>
+<span class="k">BEGIN</span> <span class="k">NOT</span> <span class="k">ATOMIC</span>
+<span class="k">SET</span> <span class="o">@</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">WHILE</span> <span class="o">@</span><span class="n">i</span> <span class="o">&lt;</span> <span class="mi">60</span> <span class="k">DO</span>
+    <span class="k">SHOW</span> <span class="k">GLOBAL</span> <span class="n">STATUS</span> <span class="k">LIKE</span> <span class="s1">&#39;Com_select&#39;</span><span class="p">;</span>
+    <span class="n">FLUSH</span> <span class="n">STATUS</span><span class="p">;</span>
+    <span class="k">DO</span> <span class="n">SLEEP</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="k">SET</span> <span class="o">@</span><span class="n">i</span> <span class="o">=</span> <span class="o">@</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+<span class="k">END</span> <span class="n">WHILE</span><span class="p">;</span>
+<span class="k">END</span> <span class="o">||</span>
+</pre>
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/understanding-mariadb-architecture/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/understanding-mariadb-architecture/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                
+                    <li><a href="/kb/en/migrating-to-mariadb-from-sql-server/">
+                        ↑ Migrating to MariaDB from SQL Server ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/sql-server-features-not-available-in-mariadb/">
+                        SQL Server Features Not Available in MariaDB →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="9460" data-comments-url="/kb/en/understanding-mariadb-architecture/+comments"
+         data-reply-url="/kb/en/understanding-mariadb-architecture/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/migrating-to-mariadb-from-sql-server/">
+                    ↑ Migrating to MariaDB from SQL Server ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li class="active">
+                        <span>Understanding MariaDB Architecture</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/sql-server-features-not-available-in-mariadb/">
+                            
+                            SQL Server Features Not Available in MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/sql-server-features-implemented-differently-in-mariadb/">
+                            
+                            SQL Server Features Implemented Differently in MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-features-not-available-in-sql-server/">
+                            
+                            MariaDB Features Not Available in SQL Server
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/setting-up-mariadb-for-testing-for-sql-server-users/">
+                            
+                            Setting Up MariaDB for Testing for SQL Server Users
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/syntax-differences-between-mariadb-and-sql-server/">
+                            
+                            Syntax Differences between MariaDB and SQL Server
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/sql-server-and-mariadb-types-comparison/">
+                            
+                            SQL Server and MariaDB Types Comparison
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-transactions-and-isolation-levels-for-sql-server-users/">
+                            
+                            MariaDB Transactions and Isolation Levels for SQL Server Users
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-authorization-and-permissions-for-sql-server-users/">
+                            
+                            MariaDB Authorization and Permissions for SQL Server Users
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/repairing-mariadb-tables-for-sql-server-users/">
+                            
+                            Repairing MariaDB Tables for SQL Server Users
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-backups-overview-for-sql-server-users/">
+                            
+                            MariaDB Backups Overview for SQL Server Users
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-replication-overview-for-sql-server-users/">
+                            
+                            MariaDB Replication Overview for SQL Server Users
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/moving-data-between-sql-server-and-mariadb/">
+                            
+                            Moving Data Between SQL Server and MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/sql_modemssql/">
+                            <span class="pull-right not_primary"></span>
+                            SQL_MODE=MSSQL
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

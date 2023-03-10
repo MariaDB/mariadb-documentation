@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Thread Pool in MariaDB - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Thread Pool in MariaDB" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/thread-pool-in-mariadb/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="Thread pool introduced in MariaDB 5.5." />
+
+    <meta name="description" content="Thread pool introduced in MariaDB 5.5." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/thread-pool-in-mariadb/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/thread-pool-in-mariadb/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/replication-cluster-multi-master/">High Availability &amp; Performance Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/optimization-and-tuning/">Optimization and Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/buffers-caches-and-threads/">Buffers, Caches and Threads</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/thread-pool/">Thread Pool</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/thread-pool-in-mariadb/">Thread Pool in MariaDB</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/thread-pool-in-mariadb/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/thread-pool-in-mariadb/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/thread-pool-in-mariadb/+flag"
+                data-flag-url="/kb/en/thread-pool-in-mariadb/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/thread-pool-in-mariadb/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2012-02-20 08:24">11 years ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2022-11-30 13:45">3 months, 1 week ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/thread-pool-in-mariadb/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/thread-pool-in-mariadb/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/thread-pool-in-mariadb/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/thread-pool-in-mariadb/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+        
+
+<div class="well well-small box"><div><h5>Localized Versions</h5></div><div>
+
+        <ul>
+            
+            <li><a href="/kb/it/thread-pool-in-mariadb-55/">Pool di Thread in MariaDB 5.5</a> [it]</li>
+            
+        </ul>
+        
+</div>
+</div>
+
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Thread Pool in MariaDB</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#problem-that-thread-pools-solve" title="Problem That Thread Pools Solve">Problem That Thread Pools Solve</a></li>
+
+    <li class=""><a href="#mariadb-thread-pool-features" title="MariaDB Thread Pool Features">MariaDB Thread Pool Features</a></li>
+
+    <li class=""><a href="#when-to-use-the-thread-pool" title="When to Use the Thread Pool">When to Use the Thread Pool</a></li>
+
+    <li class=""><a href="#when-the-thread-pool-is-less-efficient" title="When the Thread Pool is Less Efficient">When the Thread Pool is Less Efficient</a></li>
+
+    <li class=""><a href="#configuring-the-thread-pool" title="Configuring the Thread Pool">Configuring the Thread Pool</a>    <ol class="toc">
+
+        <li class=""><a href="#configuring-the-thread-pool-on-unix" title="Configuring the Thread Pool on Unix">Configuring the Thread Pool on Unix</a></li>
+
+        <li class=""><a href="#configuring-the-thread-pool-on-windows" title="Configuring the Thread Pool on Windows">Configuring the Thread Pool on Windows</a></li>
+
+        <li class=""><a href="#configuring-priority-scheduling" title="Configuring Priority Scheduling">Configuring Priority Scheduling</a></li>
+
+        <li class=""><a href="#configuring-the-extra-port" title="Configuring the Extra Port">Configuring the Extra Port</a>    </ol>
+</li>
+
+    <li class=""><a href="#monitoring-thread-pool-activity" title="Monitoring Thread Pool Activity">Monitoring Thread Pool Activity</a></li>
+
+    <li class=""><a href="#thread-groups-in-the-unix-implementation-of-the-thread-pool" title="Thread Groups in the Unix Implementation of the Thread Pool">Thread Groups in the Unix Implementation of the Thread Pool</a></li>
+
+    <li class=""><a href="#fixing-a-blocked-thread-pool" title="Fixing a Blocked Thread Pool">Fixing a Blocked Thread Pool</a></li>
+
+    <li class=""><a href="#mariadb-thread-pool-vs-oracle-mysql-enterprise-thread-pool" title="MariaDB Thread Pool vs Oracle MySQL Enterprise Thread Pool">MariaDB Thread Pool vs Oracle MySQL Enterprise Thread Pool</a>    <ol class="toc">
+
+        <li class=""><a href="#similarities" title="Similarities">Similarities</a></li>
+
+        <li class=""><a href="#differences" title="Differences">Differences</a>    </ol>
+</li>
+
+    <li class=""><a href="#mariadb-thread-pool-vs-percona-thread-pool" title="MariaDB Thread Pool vs  Percona Thread Pool">MariaDB Thread Pool vs  Percona Thread Pool</a></li>
+
+    <li class=""><a href="#thread-pool-internals" title="Thread Pool Internals">Thread Pool Internals</a></li>
+
+    <li class=""><a href="#running-benchmarks" title="Running Benchmarks">Running Benchmarks</a></li>
+
+    <li class=""><a href="#notes" title="Notes">Notes</a></li>
+
+    <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
+</li>
+</div>
+<h2 class="anchored_heading" id="problem-that-thread-pools-solve">Problem That Thread Pools Solve</h2>
+<p>The task of scalable server software (and a DBMS like MariaDB is an example of
+such software) is to maintain top performance with an increasing number of
+clients. MySQL traditionally assigned a thread for every client connection,
+and as the number of concurrent users grows this model shows performance drops.
+Many active threads are a performance killer, because increasing the number of
+threads leads to extensive context switching, bad locality for CPU caches, and
+increased contention for hot locks. An ideal solution that would help to reduce
+context switching is to maintain a lower number of threads than the number of
+clients. But this number should not be too low either, since we also want to
+utilize CPUs to their fullest, so ideally, there should be a single active
+thread for each CPU on the machine.</p>
+<h2 class="anchored_heading" id="mariadb-thread-pool-features">MariaDB Thread Pool Features</h2>
+<p>The current MariaDB thread pool was implemented in <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a>. It replaced the legacy thread pool that was introduced in <a href="/kb/en/what-is-mariadb-51/">MariaDB 5.1</a>. The main drawback of the previous solution was that this pool was static–it had a fixed number of threads. Static thread pools can have their merits, for some limited use cases, such as cases where callbacks executed by the threads never block and do not depend on each other. For example, iimagine something like an echo server.</p>
+<p>However, DBMS clients are more complicated. For example, a thread may depend on another thread's completion, and they may block each other via locks and/or I/O. Thus it is very hard, and sometimes impossible, to predict how many threads would be ideal or even sufficient to prevent deadlocks in every situation. <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a> implements a dynamic/adaptive pool that itself takes care of creating new threads in times of high demand and retiring threads if they have nothing to do. This is a complete reimplementation of the legacy <code>pool-of-threads</code> scheduler, with the following goals:</p>
+<ul start="1"><li>Make the pool dynamic, so that it will grow and shrink whenever required.
+</li><li>Minimize the amount of overhead that is  required to maintain the thread pool itself.
+</li><li>Make the best use of underlying OS capabilities. For example, if a native thread pool implementation is available, then it should be used, and if not, then the best I/O multiplexing method should be used.
+</li><li>Limit the resources used by threads.
+</li></ul>
+<p>There are currently two different low-level implementations – depending on OS. One implementation is designed specifically for Windows which utilizes a native <code><a href="https://docs.microsoft.com/en-us/windows/desktop/api/threadpoolapiset/nf-threadpoolapiset-createthreadpool">CreateThreadpool</a></code> API. The second implementation is primarily intended to be used in Unix-like systems. Because the implementations are
+different, some system variables differ between Windows and Unix.</p>
+<h2 class="anchored_heading" id="when-to-use-the-thread-pool">When to Use the Thread Pool</h2>
+<p>Thread pools are most efficient in situations where queries are relatively short and the load is CPU-bound, such as in OLTP workloads. If the workload is not CPU-bound, then you might still benefit from limiting the number of threads to save memory for the database memory buffers.</p>
+<h2 class="anchored_heading" id="when-the-thread-pool-is-less-efficient">When the Thread Pool is Less Efficient</h2>
+<p>There are special, rare cases where the thread pool is likely to be less efficient.</p>
+<ul start="1"><li>If you have a <strong>very bursty workload</strong>, then the thread pool may not work well for you. These tend to be workloads in which there are long periods of inactivity followed by short periods of very high activity by many users. These also tend to be workloads in which delays cannot be tolerated, so the throttling of thread creation that the thread pool uses is not ideal. Even in this situation, performance can be improved by tweaking how often threads are retired. For example, with <code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_pool_idle_timeout">thread_pool_idle_timeout</a></code> on Unix, or with <code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_pool_min_threads">thread_pool_min_threads</a></code> on Windows.
+</li></ul>
+<ul start="1"><li>If you have <strong>many concurrent, long, non-yielding</strong> queries, then the thread pool may not work well for you. In this context, a "non-yielding" query is one that never waits or which does not indicate waits to the thread pool. These kinds of workloads are mostly used in data warehouse scenarios. Long-running, non-yielding queries will delay execution of other queries. However, the thread pool has stall detection to prevent them from totally monopolizing the thread pool. See <a href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/#thread-group-stalls">Thread Groups in the Unix Implementation of the Thread Pool: Thread Group Stalls</a> for more information. Even when the whole thread pool is blocked by non-yielding queries, you can still connect to the server through the <code><a href="/kb/en/thread-pool-system-and-status-variables/#extra_port">extra-port</a></code> TCP/IP port.
+</li></ul>
+<ul start="1"><li>If you rely on the fact that <strong>simple queries always finish quickly</strong>, no matter how loaded your database server is, then the thread pool may not work well for you. When the thread pool is enabled on a busy server, even simple queries might be queued to be executed later. This means that even if the statement itself doesn't take much time to execute, even a simple <code>SELECT 1</code>, might take a bit longer when the thread pool is enabled than with <code>one-thread-per-connection</code> if it gets queued.
+</li></ul>
+<h2 class="anchored_heading" id="configuring-the-thread-pool">Configuring the Thread Pool</h2>
+<p>The <code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_handling">thread_handling</a></code> system variable is the primary system variable that is used to configure the thread pool.</p>
+<p>There are several other system variables as well, which are described in the sections below. Many of the system variables documented below are dynamic, meaning that they can be changed with <code><a href="/kb/en/set/#global-session">SET GLOBAL</a></code> on a running server.  </p>
+<p>Generally, there is no need to tweak many of these system variables. The goal of the thread pool was to
+provide good performance out-of-the box. However, the system variable values can be changed, and we intended to expose as many knobs from the underlying implementation as we could. Feel free to tweak them
+as you see fit.</p>
+<p>If you find any issues with any of the default behavior, then we encourage you to <a href="/kb/en/reporting-bugs/">submit a bug report</a>. </p>
+<p>See <a href="/kb/en/thread-pool-system-status-variables/">Thread Pool System and Status Variables</a> for the full list of the thread pool's system variables.</p>
+<h3 class="anchored_heading" id="configuring-the-thread-pool-on-unix">Configuring the Thread Pool on Unix</h3>
+<p>On Unix, if you would like to use the thread pool, then you can use the thread pool by setting the <code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_handling">thread_handling</a></code> system variable to <code>pool-of-threads</code> in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
+<pre class="fixed">[mariadb]
+...
+thread_handling=pool-of-threads
+</pre><p>The following system variables can also be configured on Unix:</p>
+<ul start="1"><li><code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_pool_size">thread_pool_size</a></code> – The number of <a href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/">thread groups</a> in the thread pool, which determines how many statements can execute simultaneously. The default value is the number of CPUs on the system. When setting this system variable's value at system startup, the max value is 100000. However, it is not a good idea to set it that high. When setting this system variable's value dynamically, the max value is either 128 or the value that was set at system startup--whichever value is higher. See <a href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/">Thread Groups in the Unix Implementation of the Thread Pool</a> for more information.
+</li></ul>
+<ul start="1"><li><code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code> – The maximum number of threads in the thread pool. Once this limit is reached, no new threads will be created in most cases. In rare cases, the actual number of threads can slightly exceed this, because each <a href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/">thread group</a> needs at least two threads (i.e. at least one worker thread and at least one listener thread) to prevent deadlocks. The default value in <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a> and <a href="/kb/en/what-is-mariadb-100/">MariaDB 10.0</a> is <code>500</code>. The default value in <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> is <code>1000</code> in <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a>. The default value in <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> and later is <code>65536</code>.
+</li></ul>
+<ul start="1"><li><code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_pool_stall_limit">thread_pool_stall_limit</a></code> – The number of milliseconds between each stall check performed by the timer thread. The default value is <code>500</code>. Stall detection is used to prevent a single client connection from monopolizing a thread group. When the timer thread detects that a thread group is stalled, it wakes up a sleeping worker thread in the thread group, if one is available. If there isn't one, then it creates a new worker thread in the thread group. This temporarily allows several client connections in the thread group to run in parallel. However, note that the timer thread will not create a new worker thread if the number of threads in the thread pool is already greater than or equal to the maximum defined by the <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code> variable, unless the thread group does not already have a listener thread. See <a href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/#thread-group-stalls">Thread Groups in the Unix Implementation of the Thread Pool: Thread Group Stalls</a> for more information.
+</li></ul>
+<ul start="1"><li><code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_pool_oversubscribe">thread_pool_oversubscribe</a></code> – Determines how many worker threads in a thread group can remain active at the same time once a thread group is oversubscribed due to stalls. The default value is <code>3</code>. Usually, a thread group only has one active worker thread at a time. However, the timer thread can add more active worker threads to a thread group if it detects a stall. There are trade-offs to consider when deciding whether to allow <strong>only one</strong> thread per CPU to run at a time, or whether to allow <strong>more than one</strong> thread per CPU to run at a time. Allowing only one thread per CPU means that the thread can have unrestricted access to the CPU while its running, but it also means that there is additional overhead from putting threads to sleep or waking them up more frequently. Allowing more than one thread per CPU means that the threads have to share the CPU, but it also means that there is less overhead from putting threads to sleep or waking them up. This is primarily for <strong>internal</strong> use, and it is <strong>not</strong> meant to be changed for most users. See <a href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/#thread-group-oversubscription">Thread Groups in the Unix Implementation of the Thread Pool: Thread Group Oversubscription</a> for more information.
+</li></ul>
+<ul start="1"><li><code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_pool_idle_timeout">thread_pool_idle_timeout</a></code> – The number of seconds before an idle worker thread exits. The default value is <code>60</code>. If there is currently no work to do, how long should an idle thread wait before exiting?
+</li></ul>
+<h3 class="anchored_heading" id="configuring-the-thread-pool-on-windows">Configuring the Thread Pool on Windows</h3>
+<p>The Windows implementation of the thread pool uses a native thread pool created with the <code><a href="https://docs.microsoft.com/en-us/windows/desktop/api/threadpoolapiset/nf-threadpoolapiset-createthreadpool">CreateThreadpool</a></code> API.</p>
+<p>On Windows, if you would like to use the thread pool, then you do not need to do anything, because the default for the <code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_handling">thread_handling</a></code> system variable is already preset to <code>pool-of-threads</code>. </p>
+<p>However, if you would like to use the old one thread per-connection behavior on Windows, then you can use use that by setting the <code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_handling">thread_handling</a></code> system variable to <code>one-thread-per-connection</code> in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
+<pre class="fixed">[mariadb]
+...
+thread_handling=one-thread-per-connection
+</pre><div class="cstm-style graybox" style="color:black;"><p>On older versions of Windows, such as XP and 2003, <code>pool-of-threads</code> is not
+implemented, and the server will silently switch to using the legacy
+<code>one-thread-per-connection</code> method.</p>
+</div><p>The native <code><a href="https://docs.microsoft.com/en-us/windows/desktop/api/threadpoolapiset/nf-threadpoolapiset-createthreadpool">CreateThreadpool</a></code> API allows applications to set the minimum and maximum number of threads in the pool. The following system variables can be used to configure those values on Windows:</p>
+<ul start="1"><li><code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_pool_min_threads">thread_pool_min_threads</a></code> – The minimum number of threads in the pool. Default is 1.
+  This applicable in a special case of very “bursty” workloads. Imagine having
+  longer periods of inactivity after periods of high activity. While the thread pool
+  is idle, Windows would decide to retire pool threads (based on
+  experimentation, this seems to happen after thread had been idle for 1
+  minute). Next time high load comes, it could take some milliseconds or
+  seconds until the thread pool size stabilizes again to optimal value. To avoid
+  thread retirement, one could set the parameter to a higher value.
+</li></ul>
+<ul start="1"><li><code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code> – The maximum number of threads in the pool.
+  Threads are not created when this value is reached. The default from <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a> to <a href="/kb/en/what-is-mariadb-100/">MariaDB 10.0</a> is 500 (this has been increased to 1000 in <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a>).  This
+  parameter can be used to prevent the creation of new threads if the pool can
+  have short periods where many or all clients are blocked (for example, with
+  “FLUSH TABLES WITH READ LOCK”, high contention on row locks, or similar). New
+  threads are created if a blocking situation occurs (such as after a
+  throttling interval), but sometimes you want to cap the number of threads,
+  if you’re familiar with the application and need to, for example, save
+  memory. If your application constantly pegs at 500 threads, it might be a
+  strong indicator for high contention in the application, and the thread pool does
+  not help much.
+</li></ul>
+<h3 class="anchored_heading" id="configuring-priority-scheduling">Configuring Priority Scheduling</h3>
+<p>Starting with <a href="/kb/en/mariadb-1022-release-notes/">MariaDB 10.2.2</a>, it is possible to configure connection prioritization. The priority behavior is configured by the <code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_pool_priority">thread_pool_priority</a></code> system variable.</p>
+<p>By default, if <code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_pool_priority">thread_pool_priority</a></code> is set to <code>auto</code>, then queries would be given a higher priority, in case the current connection is inside a transaction. This allows the running transaction to finish faster, and has the effect of lowering the number of transactions running in parallel. The default setting will generally improve throughput for transactional workloads. But it is also possible to explicitly set the priority for the current connection to either 'high' or 'low'.</p>
+<p>There is also a mechanism in place to ensure that higher priority connections are not monopolizing the worker threads in the pool (which would cause indefinite delays for low priority connections). On Unix, low priority connections are put into the high priority queue after the timeout specified by the <code><a href="/kb/en/thread-pool-system-and-status-variables/#thread_pool_prio_kickup_timer">thread_pool_prio_kickup_timer</a></code> system variable. </p>
+<h3 class="anchored_heading" id="configuring-the-extra-port">Configuring the Extra Port</h3>
+<p>MariaDB allows you to configure an extra port for administrative connections. This is primarily intended to be used in situations where all threads in the thread pool are blocked, and you still need a way to access the server. However, it can also be used to ensure that monitoring systems (including MaxScale's monitors) always have access to the system, even when all connections on the main port are used. This extra port uses the old <code>one-thread-per-connection</code> thread handling.</p>
+<p>You can enable this and configure a specific port by setting the <code><a href="/kb/en/thread-pool-system-status-variables/#extra_port">extra_port</a></code> system variable.</p>
+<p>You can configure a specific number of connections for this port by setting the <code><a href="/kb/en/thread-pool-system-status-variables/#extra_max_connections">extra_max_connections</a></code> system variable.</p>
+<p>These system variables can be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
+<pre class="fixed">[mariadb]
+...
+extra_port = 8385
+extra_max_connections = 10
+</pre><p>Once you have the extra port configured, you can use the <code><a href="/kb/en/mysql-command-line-client/">mysql</a></code> client with the <code>-P</code> option to connect to the port.</p>
+<pre class="fixed">$ mysql -u root -P 8385 -p
+</pre><h2 class="anchored_heading" id="monitoring-thread-pool-activity">Monitoring Thread Pool Activity</h2>
+<p>Currently there are two status variables exposed to monitor pool activity.</p>
+<div class="cstm-style darkheader-nospace-borders centered"><table><tr><th>Variable</th><th>Description</th></tr>
+<tr><td><code><a href="/kb/en/thread-pool-system-and-status-variables/#threadpool_threads">Threadpool_threads</a></code></td><td>Number of threads in the thread pool. In rare cases, this can be slightly higher than <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code>, because each thread group needs at least two threads (i.e. at least one worker thread and at least one listener thread) to prevent deadlocks.</td></tr>
+<tr><td><code><a href="/kb/en/thread-pool-system-and-status-variables/#threadpool_idle_threads">Threadpool_idle_threads</a></code></td><td>Number of inactive threads in the thread pool. Threads become inactive for various reasons, such as by waiting for new work. However, an inactive thread is not necessarily one that has not been assigned work. Threads are also considered inactive if they are being blocked while waiting on disk I/O, or while waiting on a lock, etc. This status variable is only meaningful on <strong>Unix</strong>.</td></tr>
+</table>
+</div><h2 class="anchored_heading" id="thread-groups-in-the-unix-implementation-of-the-thread-pool">Thread Groups in the Unix Implementation of the Thread Pool</h2>
+<p>On Unix, the thread pool implementation uses objects called thread groups to divide up client connections into many independent sets of threads. See <a href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/">Thread Groups in the Unix Implementation of the Thread Pool</a> for more information.</p>
+<h2 class="anchored_heading" id="fixing-a-blocked-thread-pool">Fixing a Blocked Thread Pool</h2>
+<p>When using global locks, even with a high value on the <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code> system variable, it is still possible to block the entire pool.  </p>
+<p>Imagine the case where a client performs <code><a href="/kb/en/flush/">FLUSH TABLES WITH READ LOCK</a></code> then pauses.  If then the number of other clients connecting to the server to start write operations exceeds the maximum number of threads allowed in the pool, it can block the Server.  This makes it impossible to issue the <code><a href="lock-and-unlock-tables">UNLOCK TABLES</a></code> statement.  It can also block MaxScale from monitoring the Server.</p>
+<p>To mitigate the issue, MariaDB allows you to configure an extra port for administrative connections.  See <a href="#configuring-the-extra-port">Configuring the Extra Port</a> for information on how to configure this.</p>
+<p>Once you have the extra port configured, you can use the <code><a href="/kb/en/mysql-command-line-client/">mysql</a></code> client with the <code>-P</code> option to connect to the port.</p>
+<pre class="fixed">$ mysql -u root -P 8385 -p
+</pre><p>This ensures that your administrators can access the server in cases where the number of threads is already equal to the configured value of the <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code> system variable, and all threads are blocked.  It also ensures that MaxScale can still access the server in such situations for monitoring information.</p>
+<p>Once you are connected to the extra port, you can solve the issue by increasing the value on the <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code> system variable, or by killing the offending connection, (that is, the connection that holds the global lock, which would be in the <code>sleep</code> state).</p>
+<h2 class="anchored_heading" id="mariadb-thread-pool-vs-oracle-mysql-enterprise-thread-pool">MariaDB Thread Pool vs Oracle MySQL Enterprise Thread Pool</h2>
+<p>Commercial editions of MySQL since 5.5 include an Oracle MySQL Enterprise
+thread pool implemented as a plugin, which delivers similar functionality.
+Official documentation of the feature can be found in the
+<a href="http://dev.mysql.com/doc/refman/5.5/en/thread-pool-plugin.html">MySQL Reference Manual</a>
+and a detailed discussion about the design of the feature is at
+<a href="http://mikaelronstrom.blogspot.com/2011/10/mysql-thread-pool-summary.html">Mikael Ronstrom's blog</a>.
+Here is the summary of similarities and differences, based on the above
+materials.</p>
+<h3 class="anchored_heading" id="similarities">Similarities</h3>
+<ul start="1"><li>On Unix, both MariaDB and Oracle MySQL Enterprise Threadpool will partition
+  client connections into groups. The <a href="/kb/en/thread-pool-system-and-status-variables/#thread_pool_size">thread_pool_size</a> parameter thus has
+  the same meaning for both MySQL and MariaDB. 
+</li></ul>
+<ul start="1"><li>Both implementations use similar schema checking for thread stalls, and both
+  have the same parameter name for <a href="/kb/en/thread-pool-system-and-status-variables/#thread_pool_stall_limit">thread_pool_stall_limit</a> (though in
+  MariaDB it is measured using millisecond units, not 10ms units like in Oracle
+  MySQL).
+</li></ul>
+<h3 class="anchored_heading" id="differences">Differences</h3>
+<ul start="1"><li>The Windows implementation is completely different – MariaDB's uses native
+  Windows threadpooling, while Oracle's implementation includes a convenience
+  function <em>WSAPoll()</em> (provided for convenience to port Unix applications).
+  As a consequence of relying on <em>WSAPoll()</em>, Oracle's implementation will
+  not work with named pipes and shared memory connections.
+</li></ul>
+<ul start="1"><li>MariaDB uses the most efficient I/O multiplexing facilities for each
+  operating system: Windows (the I/O completion port is used internally by the
+  native threadpool), Linux (epoll), Solaris (event ports), FreeBSD and OSX
+  (kevent). Oracle uses optimized I/O multiplexing only on Linux, with epoll,
+  and uses poll() otherwise.
+</li></ul>
+<ul start="1"><li>Unlike Oracle MySQL Enterprise Threadpool, MariaDB's one is builtin, not a
+  plugin.
+</li></ul>
+<h2 class="anchored_heading" id="mariadb-thread-pool-vs-percona-thread-pool">MariaDB Thread Pool vs  Percona Thread Pool</h2>
+<p><a href="https://www.percona.com/doc/percona-server/5.7/performance/threadpool.html">Percona's implementation</a> is a port of the MariaDB's threadpool with some added features. In particular, Percona added priority scheduling to its 5.5-5.7 releases. <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> and Percona priority scheduling work in a similar fashion, but there are some differences in details.</p>
+<ul start="1"><li>MariaDB's 10.2 thread_pool_priority=auto,high, low correspond to Percona's thread_pool_high_prio_mode=transactions,statements,none
+</li><li>Percona has a thread_pool_high_prio_tickets connection variable to allow every nth low priority query to be put into the high priority queue. MariaDB does not have corresponding settings.
+</li><li>MariaDB has a thread_pool_prio_kickup_timer setting, which Percona does not have. 
+</li></ul>
+<h2 class="anchored_heading" id="thread-pool-internals">Thread Pool Internals</h2>
+<p>Low-level implementation details are documented in the
+<a href="https://web.archive.org/web/20160526152157/http://worklog.askmonty.org/worklog/Server-BackLog/?tid=246">WL#246</a></p>
+<h2 class="anchored_heading" id="running-benchmarks">Running Benchmarks</h2>
+<p>When running sysbench and maybe other benchmarks, that create many threads on 
+the same machine as the server, it is advisable to run benchmark driver and 
+server on different CPUs to get the realistic results.
+Running lots of driver threads and only several server threads on the same CPUs 
+will have the effect that OS scheduler will schedule benchmark driver threads 
+to run with much higher probability than the server threads, that is driver 
+will pre-empt the server.
+Use "taskset –c" on Linuxes, and "set /affinity" on Windows to separate 
+benchmark driver and server CPUs, as the preferred method to fix this situation.</p>
+<p>A possible alternative on Unix (if taskset or a separate machine running the benchmark is not desired for some reason) would be to increase thread_pool_size to make  the server threads more "competitive" against the client threads.</p>
+<p>When running sysbench, a good rule of thumb could be to give 1/4 of all CPUs to the sysbench, and 3/4 of CPUs to mysqld. It is also good idea to run sysbench and mysqld on different NUMA nodes, if possible.</p>
+<h2 class="anchored_heading" id="notes">Notes</h2>
+<p>The <a href="/kb/en/server-system-variables/#thread_cache_size">thread_cache_size</a> system variable is not used when the thread pool is used and the <a href="/kb/en/server-status-variables/#threads_cached">Threads_cached</a> status variable will have a value of 0.</p>
+<h2 class="anchored_heading" id="see-also">See Also</h2>
+<ul start="1"><li><a href="/kb/en/thread-pool-system-and-status-variables/">Thread Pool System and Status Variables</a>
+</li><li><a href="/kb/en/threadpool-benchmarks/">Threadpool Benchmarks</a>
+</li><li><a href="/kb/en/thread-pool-in-mariadb-51-53/">Thread Pool in MariaDB 5.1 - 5.3</a></li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/thread-pool-in-mariadb/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/thread-pool-in-mariadb/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                
+                    <li><a href="/kb/en/thread-pool/">
+                        ↑ Thread Pool ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/">
+                        Thread Groups in the Unix Implementation of the Thread Pool →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="2372" data-comments-url="/kb/en/thread-pool-in-mariadb/+comments"
+         data-reply-url="/kb/en/thread-pool-in-mariadb/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/thread-pool/">
+                    ↑ Thread Pool ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li class="active">
+                        <span>Thread Pool in MariaDB</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/">
+                            
+                            Thread Groups in the Unix Implementation of the Thread Pool
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/thread-pool-system-status-variables/">
+                            
+                            Thread Pool System and Status Variables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/thread-pool-in-mariadb-51-53/">
+                            
+                            Thread Pool in MariaDB 5.1 - 5.3
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

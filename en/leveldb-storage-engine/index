@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>LevelDB Storage Engine - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="LevelDB Storage Engine" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/leveldb/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="Implementation details on the LevelDB storage engine" />
+
+    <meta name="description" content="Implementation details on the LevelDB storage engine" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/leveldb/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/leveldb/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/training-tutorials/">Training &amp; Tutorials</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/advanced-mariadb-articles/">Advanced MariaDB Articles</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/development-articles/">Development Articles</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/leveldb/">LevelDB Storage Engine</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/leveldb/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/leveldb/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/leveldb/+flag"
+                data-flag-url="/kb/en/leveldb/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/leveldb/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2012-11-08 15:25">10 years, 4 months ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2016-02-27 21:50">7 years ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/leveldb/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/leveldb/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/leveldb/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/leveldb/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>LevelDB Storage Engine</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <h2 class="anchored_heading" id="basic-feature-list">Basic feature list</h2>
+<ul start="1"><li>single-statement transactions
+</li><li>secondary indexes
+</li><li>HANDLER implementation with extensions to support atomic multi-put (kind of like multi-statement transactions)
+</li><li>binlog XA on the master to be crash safe
+</li><li>crash-proof slave replication state
+</li><li>(almost) non blocking schema change
+</li><li>full test coverage via mysql-test-run
+</li><li>hot backup
+</li><li>possible options are to have LevelDB instance per mysqld, per schema or per table
+</li></ul>
+<div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#basic-feature-list" title="Basic feature list">Basic feature list</a></li>
+
+    <li class=""><a href="#implementation-overview" title="Implementation overview">Implementation overview</a>    <ol class="toc">
+
+        <li class=""><a href="#one-leveldb-instance" title="One leveldb instance">One leveldb instance</a></li>
+
+        <li class=""><a href="#transaction-support" title="Transaction support">Transaction support</a></li>
+
+        <li class=""><a href="#data-formats" title="Data formats">Data formats</a></li>
+
+        <li class=""><a href="#secondary-indexes" title="Secondary Indexes">Secondary Indexes</a>        <ol class="toc">
+
+            <li class=""><a href="#unique-secondary-indexes" title="Unique secondary indexes">Unique secondary indexes</a></li>
+
+            <li class=""><a href="#non-unique-secondary-indexes" title="Non-unique secondary indexes">Non-unique secondary indexes</a>        </ol>
+</li>
+
+        <li class=""><a href="#non-blocking-schema-changes" title="Non-blocking schema changes">Non-blocking schema changes</a></li>
+
+        <li class=""><a href="#hot-backup" title="Hot backup">Hot backup</a>    </ol>
+</li>
+
+    <li class=""><a href="#sql-command-mapping-for-leveldb" title="SQL Command mapping for LevelDB">SQL Command mapping for LevelDB</a>    <ol class="toc">
+
+        <li class=""><a href="#insert" title="INSERT">INSERT</a>        <ol class="toc">
+
+            <li class=""><a href="#insert-or-update-low-priority" title="INSERT-or-UPDATE (low priority)">INSERT-or-UPDATE (low priority)</a>            <ol class="toc">
+
+                <li class=""><a href="#batching" title="Batching">Batching</a>            </ol>
+</li>
+
+            <li class=""><a href="#regular-insert" title="Regular INSERT">Regular INSERT</a>        </ol>
+</li>
+
+        <li class=""><a href="#update" title="UPDATE">UPDATE</a></li>
+
+        <li class=""><a href="#delete" title="DELETE">DELETE</a>        <ol class="toc">
+
+            <li class=""><a href="#delete-if_exists-low-priority" title="DELETE IF_EXISTS (low priority)">DELETE IF_EXISTS (low priority)</a></li>
+
+            <li class=""><a href="#regular-delete" title="Regular DELETE">Regular DELETE</a>        </ol>
+</li>
+
+        <li class=""><a href="#select" title="SELECT">SELECT</a>        <ol class="toc">
+
+            <li class=""><a href="#will-use-snapshot" title="Will use snapshot">Will use snapshot</a></li>
+
+            <li class=""><a href="#range-scans" title="Range scans">Range scans</a>        </ol>
+</li>
+
+        <li class=""><a href="#alter-table" title="ALTER TABLE">ALTER TABLE</a>    </ol>
+</li>
+
+    <li class=""><a href="#binlog-xa-on-master" title="Binlog XA on Master">Binlog XA on Master</a></li>
+
+    <li class=""><a href="#crash-proof-slave" title="Crash-proof slave">Crash-proof slave</a></li>
+
+    <li class=""><a href="#other-details" title="Other details">Other details</a></li>
+
+    <li class=""><a href="#milestones" title="Milestones">Milestones</a> </ol>
+</li>
+</div>
+<h2 class="anchored_heading" id="implementation-overview">Implementation overview</h2>
+<h3 class="anchored_heading" id="one-leveldb-instance">One leveldb instance</h3>
+<p>We consider using one LevelDB instance for mysqld process. LevelDB keys will be 
+prefixed with 'dbname.table_name', 'dbname.table_name.index_name' (or their shorter equivalents). This will allow to store arbitrary number of tables/indexes in one
+LevelDB instance.</p>
+<h3 class="anchored_heading" id="transaction-support">Transaction support</h3>
+<p>LevelDB supports</p>
+<ul start="1"><li>read snapshots
+</li><li>batch updates
+</li></ul>
+<p>when you have just those, there is no easy way to support full transactional
+semantics in the way it is required from MySQL table engine.</p>
+<p>If we limit ourselves to single-statement transactions which touch limited numbers of rows, they could be implemented as follows:</p>
+<ul start="1"><li>updates done by the statement are accumulated in a batch
+</li><li>if the statement is committed, the batch is applied.  LevelDB guarantees this will be an atomic operation
+</li><li>if the statement is rolled back, the batch is simply discarded.
+</li></ul>
+<p>(Note: the "Test implementation" uses exactly this approach. It presents itself to MySQL as a non-transactional engine which is able to roll back a statement)</p>
+<p>(Note: According to Serg: Storage Engine API does not specify whether the changes made to table data should be immediately visible, or remain invisible until the end of the statement. Both kinds of behavior are allowed).</p>
+<p><em>TODO: what if two transactions attempt to make conflicting changes? Will one of them get a conflict?  A: NO, because LevelDB's operations cannot get in conflict. Delete() means "delete if exists" and Put() means "write, or overwrite".  Therefore, no conflicts possible. TODO: is this ok? (more on this below)</em></p>
+<h3 class="anchored_heading" id="data-formats">Data formats</h3>
+<p>LevelDB compresses data with something called SnappyCompressor. </p>
+<p>We will rely on it to make the storage compact. Data that goes into LevelDB's key will be stored in KeyTupleFormat (which allows mysql's lookup/index ordering functions to work).   Data that goes into LevelDB's value will be stored in table-&gt;record[0] format, except blobs.  (Blobs will require special storage convention because they store a char* pointer in table-&gt;record[0]). </p>
+<p>(TODO: is it okay not to support blobs in the first milestone?)</p>
+<p>(note: datatypes in the provided benchmark are: composite primary/secondary keys, INTs and VARCHARs (are they latin1 or utf-8?)).</p>
+<h3 class="anchored_heading" id="secondary-indexes">Secondary Indexes</h3>
+<h4 class="anchored_heading" id="unique-secondary-indexes">Unique secondary indexes</h4>
+<p>Unique secondary index is stored in a {KEY-&gt;VALUE} mapping in LevelDB, where index
+columns are used as KEY, and Primary Key columns are used as VALUE. This way,</p>
+<ul start="1"><li>"index-only" scans are possible
+</li><li>non-"index-only" scan is a two step process (access the index, access the primary index).
+</li></ul>
+<p>We need to support unique indexes, but not in the first milestone. </p>
+<p>Note: unique indexes may prevent read-before-write optimization. There is a @@unique_checks variable (used at least by InnoDB) which can be used to offer no-guarantees fast execution.</p>
+<h4 class="anchored_heading" id="non-unique-secondary-indexes">Non-unique secondary indexes</h4>
+<p>LevelDB stores {KEY-&gt;VALUE} mappings. Non-unique index will need to have some unique values for KEY.  This is possible if we do </p>
+<pre class="fixed">KEY = {index_columns, primary_key_columns}.   
+VALUE = {nothing}
+</pre><p>(todo: check if leveldb allows zero-sized values).</p>
+<p>Using primary key as suffix will make DB::Get() useless. Instead, we will have to do lookups with:</p>
+<pre class="fixed">get(secondary_index_key_val)
+{
+  open cursor for (secondary_index_key_val)
+  read the first record
+  if (record &gt; secondary_index_key_val)
+    return NOT_FOUND;
+  else
+    return FOUND;
+}
+</pre><h3 class="anchored_heading" id="non-blocking-schema-changes">Non-blocking schema changes</h3>
+<ul start="1"><li>There is a requirement that doing schema changes does not block other queries
+  from running.
+</li></ul>
+<ul start="1"><li>Reclaiming space immediately after some parts of data were dropped is not
+  important.
+</li></ul>
+<p>Possible approaches we could use:</p>
+<ul start="1"><li>Record format that support multiple versions. That way, adding/modifying/
+  dropping a non-indexed column may be instant. Note that this is applicable
+  for records, not keys.
+</li></ul>
+<ul start="1"><li>Background creation/dropping of indexes.
+</li></ul>
+<h3 class="anchored_heading" id="hot-backup">Hot backup</h3>
+<p>Hot backup will be made outside of this project. The idea is to hard-link the 
+files so that they can't be deleted by compaction process, and then copy them over.</p>
+<h2 class="anchored_heading" id="sql-command-mapping-for-leveldb">SQL Command mapping for LevelDB</h2>
+<h3 class="anchored_heading" id="insert">INSERT</h3>
+<p>There will be two kinds of INSERTs</p>
+<ol start="1"><li>No-reads INSERT-or-UPDATE, with semantics like in LevelDB's DB::Put() operation.
+</li><li>a "real" INSERT with SQL semantics
+</li></ol>
+<h4 class="anchored_heading" id="insert-or-update-low-priority">INSERT-or-UPDATE (low priority)</h4>
+<p>SergeiG has pointed out that SQL layer already has support for write-optimized INSERTs (it was implemented for NDB Cluster). </p>
+<p>When the table has no triggers, REPLACE command will call
+handler-&gt;extra(HA_EXTRA_WRITE_CAN_REPLACE), after which
+handler-&gt;write_row() calls are allowed to silently overwrite rows. </p>
+<p>The number of affected rows returned by the statement is actually upper bound.</p>
+<p>(note: TokuDB documentation mentions they have something similar with INSERTs.
+They allow no-reads REPLACE and INSERT IGNORE, when the table has no triggers,
+there is no RBR binary logging, etc - the same conditions as we will have)</p>
+<h5 class="anchored_heading" id="batching">Batching</h5>
+<p>It is possible to batch multi-line REPLACE commands. (TODO: Can no-read REPLACEs fail at all? If not, we can limit batch size and use multiple batches if necessary. If yes, we'll have to document that big REPLACEs may fail in the middle of a statement/ Q: is this OK?)</p>
+<h4 class="anchored_heading" id="regular-insert">Regular INSERT</h4>
+<p>Regular INSERT will do a read before write and will use "gap locking" to 
+make sure its DB::Put() call doesn't overwrite somebody's data.</p>
+<h3 class="anchored_heading" id="update">UPDATE</h3>
+<p>UPDATE will do a read before write and will use record locking to make sure it's not overwriting somebody else's changes (or not updating a row that has just been deleted).</p>
+<p><em>Note: mysql-5.6 has <a href="http://askmonty.org/worklog/?tid=5906">WL#5906</a> (see link at the bottom)read before write removal (RBWR).  It is not exactly what we need, but is similar (and ugly)</em></p>
+<h3 class="anchored_heading" id="delete">DELETE</h3>
+<p>Currently, a DELETE statement has to do a read. Records are deleted through
+handler-&gt;delete_row() call of the Storage Engine API, which has the meaning
+"delete the row that was just read". </p>
+<p>There will be two kinds of DELETE statement:</p>
+<ul start="1"><li>Write-optimized DELETE IF_EXISTS
+</li><li>Regular DELETE
+</li></ul>
+<h4 class="anchored_heading" id="delete-if_exists-low-priority">DELETE IF_EXISTS (low priority)</h4>
+<p>This is a write-optimized version. It will have semantics close to LevelDB's 
+DB::Delete() call. We will have to modify the SQL layer to support it.</p>
+<p>The syntax will be</p>
+<p>&lt;&lt;code lang='sql'&gt;
+DELETE NO_READ FROM tbl WHERE ...
+&lt;&lt;/code&gt;&gt;</p>
+<p>the option NO_READ will be supported only for single-table DELETEs, and will 
+require that
+- the WHERE clause refers to primary key columns only
+- the WHERE clause allows to construct a list of primary keys to be deleted.
+- there ORDER BY clause</p>
+<p>if the above conditions are not met, the statement will fail with an error.
+if they are met, the statement translate into handler-&gt;delete_row() calls, without any read calls.</p>
+<p>mysql_affected_rows() will return an upper bound of how many rows could be deleted.</p>
+<h4 class="anchored_heading" id="regular-delete">Regular DELETE</h4>
+<p>Regular DELETE will have to use locking.</p>
+<h3 class="anchored_heading" id="select">SELECT</h3>
+<h4 class="anchored_heading" id="will-use-snapshot">Will use snapshot</h4>
+<p>SELECTs will allocate/use a snapshot for reading data. This way, sql layer will not
+get non-repeatable reads within a statement.</p>
+<p>Q: is this needed? Using snapshots has some cost?</p>
+<h4 class="anchored_heading" id="range-scans">Range scans</h4>
+<ul start="1"><li>LevelDB cursors can be used for range scans. 
+</li><li>DB::GetApproximateSizes() can be used to implement handler::records_in_range()
+</li><li>There is nothing for rec_per_key (index statistics)
+</li></ul>
+<h3 class="anchored_heading" id="alter-table">ALTER TABLE</h3>
+<p>MySQL 5.6 should support online ALTER TABLE operations (as InnoDB now supports them).</p>
+<p>TODO: what does the storage engine needs to do to inform the SQL layer that it is running a long DDL change which does not prevent other selects/updates from running?</p>
+<h2 class="anchored_heading" id="binlog-xa-on-master">Binlog XA on Master</h2>
+<p>This is about keeping binlog and LevelDB in sync on the master. MySQL does it as follows: </p>
+<ul start="1"><li>prepare transaction in the storage engine
+</li><li>write it into the binlog 
+</li><li>commit it in the engine
+</li></ul>
+<p>If transactions are grouped, they are committed in the same order as they were written into the binary log.</p>
+<p>Recovery proceeds as follows:</p>
+<ul start="1"><li>Read the last binlog file and note XIDs of transactions that are there.
+</li><li>for each storage engine, 
+<ul start="1"><li>scan the committed transactions and compare their XIDs to those we've found in the binlog.
+</li><li>If transaction is the binlog - commit, otherwise - roll it back)
+</li></ul>
+</li></ul>
+<p>(note that the order the transactions are applied in is determined from the engine, not from the binlog)</p>
+<p>TODO: suggestions about how PREPARE/COMMIT/recovery should work for LevelDB. (got some ideas after discussion with Kristian, need to write them down)</p>
+<h2 class="anchored_heading" id="crash-proof-slave">Crash-proof slave</h2>
+<p>MySQL 5.6 stores information that used to be in relay_log.info
+in InnoDB.  That way, InnoDB and relay_log.info (aka binlog position) are always in sync.</p>
+<p>It seems, switching to storing relay_log.info in a LevelDB table is sufficient for 
+crash-proof slave. (note: this implies that semantics of operations over LevelDB table is sufficiently close to that of a regular MySQL storage engine, like innodb).</p>
+<h2 class="anchored_heading" id="other-details">Other details</h2>
+<ul start="1"><li>The target version is MySQL 5.6 (good, because LevelDB API uses STL and
+  5.6-based versions support compiling with STL).
+</li><li>It is ok to make changes to LevelDB itself
+</li></ul>
+<ul start="1"><li>There is a "Test implementation" at <a href="https://github.com/tbdingqi/tbleveldb">https://github.com/tbdingqi/tbleveldb</a>. 
+</li></ul>
+<ul start="1"><li>Task tracking for this is done here: <a href="https://jira.mariadb.org/browse/MDEV-3841">MDEV-3841</a>
+</li></ul>
+<ul start="1"><li>We may want to check out this: <a href="http://dev.mysql.com/worklog/task/?id=5906">http://dev.mysql.com/worklog/task/?id=5906</a>. It is pushed into 5.6
+</li></ul>
+<h2 class="anchored_heading" id="milestones">Milestones</h2>
+<ul start="1"><li>Milestone #1 is described at <a href="/kb/en/leveldb-storage-engine-ms1/">leveldb-storage-engine-ms1</a>
+</li><li>Subsequent development is described at <a href="/kb/en/leveldb-storage-engine-development/">leveldb-storage-engine-development</a>
+</li></ul>
+<ul start="1"><li>Milestone #2 is described at <a href="/kb/en/leveldb-storage-engine-ms2/">leveldb-storage-engine-ms2</a>
+</li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/leveldb/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/leveldb/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/hbase-storage-engine/">
+                        ← HBase Storage Engine
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/development-articles/">
+                        ↑ Development Articles ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/leveldb-storage-engine-development/">
+                        LevelDB Storage Engine Development →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="3031" data-comments-url="/kb/en/leveldb/+comments"
+         data-reply-url="/kb/en/leveldb/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/development-articles/">
+                    ↑ Development Articles ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/general-development-information/">
+                            
+                            General Development Information
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-server-release-dates/">
+                            <span class="pull-right not_primary"></span>
+                            MariaDB Server Releases
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-internals-documentation/">
+                            
+                            MariaDB Internals Documentation
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/tools/">
+                            
+                            MariaDB Development Tools
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/debugging-mariadb/">
+                            
+                            Debugging MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/quality/">
+                            
+                            Quality
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/security/">
+                            
+                            Security Vulnerabilities Fixed in MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/security-vulnerabilities-in-oracle-mysql-that-did-not-exist-in-mariadb/">
+                            
+                            Security Vulnerabilities Fixed in Oracle MySQL That Did Not Exist in MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/using-git/">
+                            <span class="pull-right not_primary"></span>
+                            Using Git
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/dbt3-benchmark-queries/">
+                            
+                            DBT3 Benchmark Queries
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/explain-formatjson-in-mysql/">
+                            
+                            EXPLAIN FORMAT=JSON in MySQL
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/hbase-storage-engine/">
+                            
+                            HBase Storage Engine
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>LevelDB Storage Engine</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/leveldb-storage-engine-development/">
+                            
+                            LevelDB Storage Engine Development
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/leveldb-storage-engine-ms1/">
+                            
+                            LevelDB Storage Engine MS1
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/leveldb-storage-engine-ms2/">
+                            
+                            LevelDB Storage Engine MS2
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/stuff-in-mysql-56/">
+                            
+                            Stuff in MySQL 5.6
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/explain-format-json-differences/">
+                            
+                            EXPLAIN FORMAT=JSON Differences From MySQL
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/profiling-with-linux-perf-tool/">
+                            
+                            Profiling with Linux perf tool
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/uploading-package-to-ppa/">
+                            
+                            Uploading Package to PPA
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

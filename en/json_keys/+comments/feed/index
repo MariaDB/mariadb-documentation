@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: JSON_KEYS</title><link>https://mariadb.com/kb/en/json_keys/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/json_keys/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 16:46:03 +0000</lastBuildDate><item><title>Re: JSON_KEYS</title><link>https://mariadb.com/kb/en/json_keys/+comments/4317</link><description>&lt;p&gt;There are a few ways of doing it. Here are a few examples that I came up with:&lt;/p&gt;
+&lt;pre class="fixed"&gt;-- This is our JSON data, could be inlined in the SQL as well
+SET @json_doc='{&amp;#34;A&amp;#34;: 1, &amp;#34;B&amp;#34;: {&amp;#34;C&amp;#34;: 2}, &amp;#34;D&amp;#34;: 3}';
+
+-- With a Recursive Common Table Expression
+WITH RECURSIVE data AS (
+  SELECT JSON_VALUE(JSON_KEYS(@json_doc), '$[0]') AS v, 0 AS idx
+  UNION
+  SELECT JSON_VALUE(JSON_KEYS(@json_doc), CONCAT('$[', d.idx + 1, ']')) 
+  AS v, d.idx + 1 AS idx FROM data AS d
+  WHERE d.idx &amp;lt; JSON_LENGTH(JSON_KEYS(@json_doc)) - 1
+) SELECT v FROM data;
+
+-- With the Sequence engine (the upper limit is hard-coded)
+SELECT JSON_VALUE(JSON_KEYS(@json_doc), CONCAT('$[', seq, ']')) FROM seq_0_to_100000000 WHERE seq &amp;lt; JSON_LENGTH(JSON_KEYS(@json_doc));
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Markus Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/json_keys/+comments/4317</guid></item><item><title>Re: JSON_KEYS</title><link>https://mariadb.com/kb/en/json_keys/+comments/4315</link><description>&lt;p&gt;Is it possible to split the result of &lt;code class="fixed" style="white-space:pre-wrap"&gt;JSON_KEYS&lt;/code&gt; into several rows ? 
+We are trying to move our database from PostgreSQL to MariaDB, and over there we could use &lt;code class="fixed" style="white-space:pre-wrap"&gt;json_object_keys&lt;/code&gt; to do so.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Radhi Fadlillah</dc:creator><guid>https://mariadb.com/kb/en/json_keys/+comments/4315</guid></item></channel></rss>

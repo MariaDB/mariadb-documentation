@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: What to Do if MariaDB Doesn't Start</title><link>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 17:04:48 +0000</lastBuildDate><item><title>Re: What to Do if MariaDB Doesn't Start</title><link>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/4230</link><description>&lt;p&gt;Not always, but in many cases yes.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/4230</guid></item><item><title>Re: What to Do if MariaDB Doesn't Start</title><link>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/4155</link><description>&lt;p&gt;One of the first things you suggest at the top of this document is using these commands to locate the error log and data directory.  Will these commands run if "MariaDB Doesn't Start"?&lt;/p&gt;
+&lt;p&gt;mysqld --help --verbose | grep 'log-error' | tail -1
+mysqld --help --verbose | grep 'datadir' | tail -1&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Dana Williams</dc:creator><guid>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/4155</guid></item><item><title>Re: What to Do if MariaDB Doesn't Start</title><link>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/3791</link><description>&lt;p&gt;I have upgraded clean debian 7 to debian 9 and I have installed mariadb-server-10.1.37 (amd64) in my VPS.&lt;/p&gt;
+&lt;p&gt;MariaDB doesn't start.&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;systemctl status mariadb.service
+&lt;/li&gt;&lt;/ol&gt;
+&lt;ul start="1"&gt;&lt;li&gt;mariadb.service - &lt;a href="/kb/en/mariadb-10137-release-notes/"&gt;MariaDB 10.1.37&lt;/a&gt; database server
+   Loaded: loaded (/lib/systemd/system/mariadb.service; enabled; vendor preset: enabled)
+   Active: failed (Result: exit-code) since Sat 2019-01-18 00:56:28 CET; 7s ago
+     Docs: man:mysqld(8)
+           &lt;a href="https://mariadb.com/kb/en/library/systemd/"&gt;https://mariadb.com/kb/en/library/systemd/&lt;/a&gt;
+  Process: 6183 ExecStartPre=/usr/bin/install -m 755 -o mysql -g root -d /var/run/mysqld (code=exited, status=226/NAMESPACE)
+&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;ene 18 00:56:28 xxxxx.server.info install[6183]: mariadb.service: Failed at step NAMESPACE spawning /usr/bin/install: Value too large for defined data type&lt;/p&gt;
+&lt;p&gt;I have googled but I don't find solution for this problem. What can I do to solve it ?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jose Linux</dc:creator><guid>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/3791</guid></item><item><title>Re: What to Do if MariaDB Doesn't Start</title><link>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/3158</link><description>&lt;p&gt;The more correct is to create /etc/systemd/system/mariadb.service.d/homedir.conf&lt;/p&gt;
+&lt;pre class="fixed"&gt;[Service]
+ProtectHome=false
+&lt;/pre&gt;&lt;p&gt;This way the rest of the systemd file is preserved and other changes during upgrade still occurs. See MariaDB systemd documentation: &lt;a href="https://mariadb.com/kb/en/library/systemd/"&gt;https://mariadb.com/kb/en/library/systemd/&lt;/a&gt;. Thanks for contributing, this form of failure sure be documented here too.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/3158</guid></item><item><title>Re: What to Do if MariaDB Doesn't Start</title><link>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/3018</link><description>&lt;p&gt;Further to the Debian 9 issue where you get Permission Denied if your data dir is located under /home....&lt;/p&gt;
+&lt;p&gt;The correct way to override this setting is to make a local copy in /etc/systemd/system:&lt;/p&gt;
+&lt;p&gt;1: sudo cp /lib/systemd/system/mariadb.service /etc/systemd/system&lt;/p&gt;
+&lt;p&gt;2. Edit /etc/systemd/system/mariadb.service   and change ProtectHome to be false (ProtectHome=false).   Save the file&lt;/p&gt;
+&lt;p&gt;3. sudo systemd daemon-reload  # refresh the systemd services so it sees your override file&lt;/p&gt;
+&lt;p&gt;4. sudo systemctl start mysql    # and it should finally start&lt;/p&gt;
+&lt;p&gt;I spent ages searching for AppArmor and SELinux fixes to this problem, when it's just systemd preventing MySQL from writing to /home.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Damien Norris</dc:creator><guid>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/3018</guid></item><item><title>Re: What to Do if MariaDB Doesn't Start</title><link>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/2968</link><description>&lt;p&gt;As Leho mentioned it may be also a case, f.e. if you update your Debian 8 installation to Debian 9. I had my datadir symlinked from /var/lib/mysql to my /home/mysql and I was getting errcode 13 Permission denied, even if mysql users had all the chmod's properly set. I had to change ProtectHome to false in /etc/systemd/system/multi-user.target.wants/mariadb.service&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/"> </dc:creator><guid>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/2968</guid></item><item><title>Re: What to Do if MariaDB Doesn't Start</title><link>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/2799</link><description>&lt;p&gt;Also watch out for `ProtectHome` and `ProtectSystem` systemd service definition keys, if your data dir happens to live in relevant locations for whatever reason.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/"> </dc:creator><guid>https://mariadb.com/kb/en/what-to-do-if-mariadb-doesnt-start/+comments/2799</guid></item></channel></rss>

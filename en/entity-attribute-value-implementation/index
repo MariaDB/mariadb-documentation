@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Entity-Attribute-Value Implementation - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Entity-Attribute-Value Implementation" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/entity-attribute-value-implementation/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="A common, poorly performing, design pattern (EAV); plus an alternative" />
+
+    <meta name="description" content="A common, poorly performing, design pattern (EAV); plus an alternative" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/entity-attribute-value-implementation/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/entity-attribute-value-implementation/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/replication-cluster-multi-master/">High Availability &amp; Performance Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/optimization-and-tuning/">Optimization and Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/optimizing-tables/">Optimizing Tables</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/entity-attribute-value-implementation/">Entity-Attribute-Value Implementation</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/entity-attribute-value-implementation/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/entity-attribute-value-implementation/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/entity-attribute-value-implementation/+flag"
+                data-flag-url="/kb/en/entity-attribute-value-implementation/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/entity-attribute-value-implementation/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2016-06-09 11:34">6 years, 9 months ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2016-11-14 19:19">6 years, 3 months ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/entity-attribute-value-implementation/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/entity-attribute-value-implementation/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/entity-attribute-value-implementation/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/entity-attribute-value-implementation/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Entity-Attribute-Value Implementation</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#the-desires" title="The desires">The desires</a></li>
+
+    <li class=""><a href="#bad-solution" title="Bad solution">Bad solution</a></li>
+
+    <li class=""><a href="#the-problems" title="The problems">The problems</a></li>
+
+    <li class=""><a href="#a-solution" title="A solution">A solution</a></li>
+
+    <li class=""><a href="#but-what-about-the-ad-hoc-queries" title="But what about the ad hoc queries?">But what about the ad hoc queries?</a></li>
+
+    <li class=""><a href="#why-it-works" title="Why it works">Why it works</a></li>
+
+    <li class=""><a href="#details-on-the-blobjson" title="Details on the BLOB/JSON">Details on the BLOB/JSON</a></li>
+
+    <li class=""><a href="#conclusions" title="Conclusions">Conclusions</a></li>
+
+    <li class=""><a href="#postlog" title="Postlog">Postlog</a></li>
+
+    <li class=""><a href="#see-also" title="See also">See also</a> </ol>
+</li>
+</div>
+<h2 class="anchored_heading" id="the-desires">The desires</h2>
+<ul><li>Open-ended set of "attributes" (key=value) for each "entity". That is, the list of attributes is not known at development time, and will grow in the future. (This makes one column per attribute impractical.)
+</li><li>"ad hoc" queries testing attributes.
+</li><li>Attribute values come in different types (numbers, strings, dates, etc.)
+</li><li>Scale to lots of entities, yet perform well.
+</li></ul>
+<p>It goes by various names</p>
+<ul><li>EAV -- Entity - Attribute - Value
+</li><li>key-value
+</li><li>RDF -- This is a flavor of EAV
+</li><li>MariaDB has dynamic columns that look something like the solution below, with the added advantage of being able to index the columns otherwise hidden in the blob. (There are caveats.)
+</li><li>MySQL 5.7 Has JSON datatype, plus functions to access parts
+</li><li>MongoDB, CouchDB -- and others -- Not SQL-based.
+</li></ul>
+<h2 class="anchored_heading" id="bad-solution">Bad solution</h2>
+<ul><li>Table with 3 columns: entity_id, key, value
+</li><li>The "value" is a string, or maybe multiple columns depending on datatype or other kludges.
+</li><li>a JOIN b ON a.entity=b.entity AND b.key='x' JOIN c ON ... WHERE a.value=... AND b.value=...
+</li></ul>
+<h2 class="anchored_heading" id="the-problems">The problems</h2>
+<ul><li>The SELECTs get messy -- multiple JOINs
+</li><li>Datatype issues -- It's clumsy to be putting numbers into strings
+</li><li>Numbers stored in <a href="/kb/en/varchar/">VARCHAR</a> do not compare 'correctly', especially for range tests.
+</li><li>Bulky.
+</li><li>Dedupping the values is clumsy.
+</li></ul>
+<h2 class="anchored_heading" id="a-solution">A solution</h2>
+<p>Decide which columns need to be searched/sorted by SQL queries. No, you don't need all the columns to be searchable or sortable. Certain columns are frequently used for selection; identify these. You probably won't use all of them in all queries, but you will use some of them in every query.</p>
+<p>The solution uses one table for all the EAV stuff. The columns include the searchable fields plus one <a href="/kb/en/blob/">BLOB</a>. Searchable fields are declared appropriately (<a href="/kb/en/int/">INT</a>, <a href="/kb/en/timestamp/">TIMESTAMP</a>, etc). The BLOB contains JSON-encoding of all the extra fields.</p>
+<p>The table should be <a href="/kb/en/innodb/">InnoDB</a>, hence it should have a PRIMARY KEY. The entitity_id is the 'natural' PK. Add a small number of other indexes (often 'composite') on the searchable fields. <a href="/kb/en/managing-mariadb-partitioning/">PARTITIONing</a> is unlikely to be of any use, unless the Entities should purged after some time. (Example: News Articles)</p>
+<h2 class="anchored_heading" id="but-what-about-the-ad-hoc-queries">But what about the ad hoc queries?</h2>
+<p>You have included the most important fields to search on -- date, category, etc. These should filter the data down significantly. When you also need to filter on something more obscure, that will be handled differently. The application code will look at the BLOB for that; more on this later.</p>
+<h2 class="anchored_heading" id="why-it-works">Why it works</h2>
+<ul><li>You are not really going to search on more than a few fields.
+</li><li>The disk footprint is smaller; Smaller --&gt; More cacheable --&gt; Faster
+</li><li>It needs no JOINs
+</li><li>The indexes are useful
+</li><li>The one table has one row per entity, and can grow as needed. (EAV needs many rows per entity.)
+</li><li>Performance is as good as the indexes you have on the 'searchable fields'.
+</li><li>Optionally, you can duplicate the indexed fields in the BLOB.
+</li><li>Values missing from 'searchable fields' would need to be NULL (or whatever), and the code would need to deal with such.
+</li></ul>
+<h2 class="anchored_heading" id="details-on-the-blobjson">Details on the BLOB/JSON</h2>
+<ul><li>Build the extra (or all) key-value pairs in a hash (associative array) in your application. Encode it. COMPRESS it. Insert that string into the <a href="/kb/en/blob/">BLOB</a>.
+</li><li>JSON is recommended, but not mandatory; it is simpler than XML. Other serializations (eg, YAML) could be used.
+</li><li>COMPRESS the JSON and put it into a <a href="/kb/en/blob/">BLOB</a> (or <a href="/kb/en/mediumblob/">MEDIUMBLOB</a>) instead of a <a href="/kb/en/text/">TEXT</a> field. Compression gives about 3x shrinkage.
+</li><li>When SELECTing, UNCOMPRESS the blob. Decode the string into a hash. You are now ready to interrogate/display any of the extra fields.
+</li><li>If you choose to use the JSON features of MariaDB or 5.7, you will have to forgo the compression feature described.
+</li><li>MySQL 5.7.8's JSON native JSON datatype uses a binary format for more efficient access.
+</li></ul>
+<h2 class="anchored_heading" id="conclusions">Conclusions</h2>
+<ul><li>Schema is reasonably compact (compression, real datatypes, less redundancy, etc, than EAV)
+</li><li>Queries are fast (since you have picked 'good' indexes)
+</li><li>Expandable (JSON is happy to have new fields)
+</li><li>Compatible (No 3rd party products, just supported products)
+</li><li>Range tests work (unlike storing <a href="/kb/en/int/">INTs</a> in <a href="/kb/en/varchar/">VARCHARs</a>)
+</li><li>(Drawback) Cannot use the non-indexed attributes in WHERE or ORDER BY clauses, must deal with that in the app. (MySQL 5.7 partially alleviates this.)
+</li></ul>
+<h2 class="anchored_heading" id="postlog">Postlog</h2>
+<p>Posted Jan, 2014; Refreshed Feb, 2016.</p>
+<ul><li>MariaDB's <a href="/kb/en/dynamic-columns/">Dynamic Columns</a>
+</li><li><a href="https://dev.mysql.com/doc/refman/5.7/en/json.html">MySQL 5.7's JSON</a>
+</li></ul>
+<p>This looks very promising; I will need to do more research to see how much of this article is obviated by it: <a href="http://dev.mysql.com/doc/refman/5.7/en/document-store.html">Using MySQL as a Document Store in 5.7</a>, 
+<a href="http://mysqlserverteam.com/mysql-5-7-12-part-6-mysql-document-store-a-new-chapter-in-the-mysql-story/">more DocStore discussion</a></p>
+<p>If you insist on EAV, set <a href="/kb/en/server-system-variables/#optimizer_search_depth">optimizer_search_depth=1</a>.</p>
+<h2 class="anchored_heading" id="see-also">See also</h2>
+<p>Rick James graciously allowed us to use this article in the Knowledge Base.</p>
+<p><a href="http://mysql.rjweb.org/">Rick James' site</a> has other useful tips, how-tos,
+optimizations, and debugging tips.</p>
+<p>
+Original source: <a href="http://mysql.rjweb.org/doc.php/eav">http://mysql.rjweb.org/doc.php/eav</a></p>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/entity-attribute-value-implementation/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/entity-attribute-value-implementation/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/defragmenting-innodb-tablespaces/">
+                        ← Defragmenting InnoDB Tablespaces
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/optimizing-tables/">
+                        ↑ Optimizing Tables ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/ip-range-table-performance/">
+                        IP Range Table Performance →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="5699" data-comments-url="/kb/en/entity-attribute-value-implementation/+comments"
+         data-reply-url="/kb/en/entity-attribute-value-implementation/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/optimizing-tables/">
+                    ↑ Optimizing Tables ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/optimize-table/">
+                            
+                            OPTIMIZE TABLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/analyze-table/">
+                            <span class="pull-right not_primary"></span>
+                            ANALYZE TABLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/choosing-the-right-storage-engine/">
+                            <span class="pull-right not_primary"></span>
+                            Choosing the Right Storage Engine
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/converting-tables-from-myisam-to-innodb/">
+                            <span class="pull-right not_primary"></span>
+                            Converting Tables from MyISAM to InnoDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/histogram-based-statistics/">
+                            <span class="pull-right not_primary"></span>
+                            Histogram-Based Statistics
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/defragmenting-innodb-tablespaces/">
+                            
+                            Defragmenting InnoDB Tablespaces
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Entity-Attribute-Value Implementation</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/ip-range-table-performance/">
+                            
+                            IP Range Table Performance
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

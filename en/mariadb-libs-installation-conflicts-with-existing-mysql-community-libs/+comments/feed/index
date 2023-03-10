@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Mariadb-libs installation conflicts with existing MySQL community libs</title><link>https://mariadb.com/kb/en/mariadb-libs-installation-conflicts-with-existing-mysql-community-libs/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/mariadb-libs-installation-conflicts-with-existing-mysql-community-libs/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 15:01:20 +0000</lastBuildDate><item><title>Re: Mariadb-libs installation conflicts with existing MySQL community libs</title><link>https://mariadb.com/kb/en/mariadb-libs-installation-conflicts-with-existing-mysql-community-libs/+comments/3047</link><description>&lt;ul&gt;&lt;li&gt;MySQL and MariaDB both the instances can coexist. But MariaDB is to be installed to a non-standard directory. Please follow below steps to do the same:-
+&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;1)	Download the compiled binary tar.gz (mariadb-5.5.24-linux-x86_64.tar.gz)&lt;/p&gt;
+&lt;p&gt;2)	Create data directory and symlinks&lt;/p&gt;
+&lt;p&gt;a)	mkdir mariadb-data&lt;/p&gt;
+&lt;p&gt;b)	ln -s mariadb-5.5.24-linux-x86_64 mariadb&lt;/p&gt;
+&lt;p&gt;c)	groupadd --system mariadb&lt;/p&gt;
+&lt;p&gt;d)	useradd -c "MariaDB Server" -d /opt/mariadb -g mariadb --system mariadb&lt;/p&gt;
+&lt;p&gt;e)	chown -R mariadb:mariadb mariadb-5.5.24-linux-x86_64/&lt;/p&gt;
+&lt;p&gt;f)	chown -R mariadb:mariadb mariadb-data/&lt;/p&gt;
+&lt;p&gt;3)	Create a new my.cnf in /opt/mariadb from support files:&lt;/p&gt;
+&lt;p&gt;a)	cp mariadb/support-files/my-medium.cnf mariadb-data/my.cnf&lt;/p&gt;
+&lt;p&gt;b)	chown mariadb:mariadb mariadb-data/my.cnf&lt;/p&gt;
+&lt;p&gt;4)	Edit the file /opt/mariadb-data/my.cnf and add custom paths, socket, port, user and the most important of all: data directory and base directory
+[client]&lt;/p&gt;
+&lt;p&gt;port		= 3307&lt;/p&gt;
+&lt;p&gt;socket		= /opt/mariadb-data/mariadb.sock&lt;/p&gt;
+&lt;p&gt;[mysqld]
+datadir         = /opt/mariadb-data&lt;/p&gt;
+&lt;p&gt;basedir         = /opt/mariadb&lt;/p&gt;
+&lt;p&gt;port		= 3307&lt;/p&gt;
+&lt;p&gt;socket		= /opt/mariadb-data/mariadb.sock&lt;/p&gt;
+&lt;p&gt;user            = mariadb&lt;/p&gt;
+&lt;p&gt;5)	Copy the init.d script from support files in the right location:&lt;/p&gt;
+&lt;p&gt;a)	cp mariadb/support-files/mysql.server /etc/init.d/mariadb&lt;/p&gt;
+&lt;p&gt;b)	chmod +x /etc/init.d/mariadb&lt;/p&gt;
+&lt;p&gt;6)	Edit /etc/init.d/mariadb &lt;/p&gt;
+&lt;p&gt;a)	replacing mysql with mariadb&lt;/p&gt;
+&lt;p&gt;- # Provides: mysql&lt;/p&gt;
+&lt;p&gt;+ # Provides: mariadb&lt;/p&gt;
+&lt;p&gt;- basedir=&lt;/p&gt;
+&lt;p&gt;+ basedir=/opt/mariadb&lt;/p&gt;
+&lt;p&gt;- datadir=&lt;/p&gt;
+&lt;p&gt;+ datadir=/opt/mariadb-data&lt;/p&gt;
+&lt;p&gt;- lock_file_path="$lockdir/mysql"&lt;/p&gt;
+&lt;p&gt;+ lock_file_path="$lockdir/mariadb"&lt;/p&gt;
+&lt;p&gt;b)	$bindir/mysqld_safe --defaults-file=/opt/mariadb-data/my.cnf --datadir="$datadir" --pid-file="$mysqld_pid_file_path" $other_args &amp;gt;/dev/null 2&amp;gt;&amp;amp;1 &amp;amp;&lt;/p&gt;
+&lt;p&gt;c)	$bindir/mysqladmin --defaults-file=/opt/mariadb-data/my.cnf ping &amp;gt;/dev/null 2&amp;gt;&amp;amp;1;&lt;/p&gt;
+&lt;p&gt;7)	Run mysql_install_db&lt;/p&gt;
+&lt;p&gt;a)	cd mariadb&lt;/p&gt;
+&lt;p&gt;b)	scripts/mysql_install_db --defaults-file=/opt/mariadb-data/my.cnf&lt;/p&gt;
+&lt;p&gt;8)	Start MariaDB&lt;/p&gt;
+&lt;p&gt;/etc/init.d/mariadb start&lt;/p&gt;
+&lt;p&gt;9)	To Make MariaDB start at system start&lt;/p&gt;
+&lt;p&gt;a)	cd /etc/init.d&lt;/p&gt;
+&lt;p&gt;b)	chkconfig --add mariadb&lt;/p&gt;
+&lt;p&gt;c)	chkconfig --levels 3 mariadb on&lt;/p&gt;
+&lt;p&gt;10)	Test MariaDB instance is running&lt;/p&gt;
+&lt;p&gt;mysql -e "SELECT VERSION();" --socket=/opt/mariadb-data/mariadb.sock&lt;/p&gt;
+&lt;ul start="1"&gt;&lt;li&gt;Alternative way
+&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;Just for your information Mariadb is drop-in replacement for mysql. Therefore we can also switch from mysql to mariadb. Please perform below steps to do the same: &lt;/p&gt;
+&lt;p&gt;1) backup your database just in case there is any issue while switching to mariadb&lt;/p&gt;
+&lt;p&gt;2) uninstall mysql&lt;/p&gt;
+&lt;p&gt;3) install mariadb&lt;/p&gt;
+&lt;p&gt;4) start mariadb services
+All the databases and information is intact and even there is no need to have mysql dump to be performed to source into mariadb server as that data is already there&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">kanika satija</dc:creator><guid>https://mariadb.com/kb/en/mariadb-libs-installation-conflicts-with-existing-mysql-community-libs/+comments/3047</guid></item></channel></rss>

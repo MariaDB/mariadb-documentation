@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Securing Connections for Client and Server</title><link>https://mariadb.com/kb/en/securing-connections-for-client-and-server/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/securing-connections-for-client-and-server/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 17:29:34 +0000</lastBuildDate><item><title>have_ssl still DISABLED</title><link>https://mariadb.com/kb/en/securing-connections-for-client-and-server/+comments/5481</link><description>&lt;p&gt;It is worth mentioning that if you create the certificates as user root the MariaDB daemon CANNOT read the SSL certificates. You have to do a chown or chmod first:&lt;/p&gt;
+&lt;p&gt;SQL&amp;gt; SHOW GLOBAL VARIABLES LIKE '%ssl%';
++---------------------+------------------------------------------------------+&lt;/p&gt;
+&lt;table&gt;&lt;tr&gt;&lt;td&gt;Variable_name&lt;/td&gt;&lt;td&gt;Value&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+&lt;p&gt;+---------------------+------------------------------------------------------+&lt;/p&gt;
+&lt;table&gt;&lt;tr&gt;&lt;td&gt;have_ssl&lt;/td&gt;&lt;td&gt;DISABLED&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;ssl_ca&lt;/td&gt;&lt;td&gt;/home/mysql/database/mariadb-106/etc/ca.pem&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;ssl_cert&lt;/td&gt;&lt;td&gt;/home/mysql/database/mariadb-106/etc/server-cert.pem&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;ssl_key&lt;/td&gt;&lt;td&gt;/home/mysql/database/mariadb-106/etc/server-key.pem&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+&lt;p&gt;+---------------------+------------------------------------------------------+&lt;/p&gt;
+&lt;p&gt;SSL error: Unable to get private key from '/home/mysql/database/mariadb-106/etc/server-key.pem'
+2021-10-18 15:42:25 0 [Warning] Failed to setup SSL
+2021-10-18 15:42:25 0 [Warning] SSL error: Unable to get private key&lt;/p&gt;
+&lt;p&gt;After this command:&lt;/p&gt;
+&lt;p&gt;chown mysql: /etc/my.cnf.d/certificates/server-*.pem&lt;/p&gt;
+&lt;p&gt;SSL works fine.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Oli Sennhauser</dc:creator><guid>https://mariadb.com/kb/en/securing-connections-for-client-and-server/+comments/5481</guid></item><item><title>Re: Securing Connections for Client and Server</title><link>https://mariadb.com/kb/en/securing-connections-for-client-and-server/+comments/4447</link><description>&lt;p&gt;Thank you for the clarification and confirmation regarding my suspicion of "mysql" client linking to libmariadbclient.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Tommy Pham</dc:creator><guid>https://mariadb.com/kb/en/securing-connections-for-client-and-server/+comments/4447</guid></item><item><title>Re: Securing Connections for Client and Server</title><link>https://mariadb.com/kb/en/securing-connections-for-client-and-server/+comments/4446</link><description>&lt;p&gt;libmariadb.so and libmariadbclient.a are compiled from the same source tree and same settings. One &lt;code&gt;make&lt;/code&gt; command compiles both.&lt;/p&gt;
+&lt;p&gt;The "mysql" client is linked with &lt;code&gt;libmariadbclient.a&lt;/code&gt; (you can check with &lt;code&gt;ldd&lt;/code&gt;). The server uses neither.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Golubchik</dc:creator><guid>https://mariadb.com/kb/en/securing-connections-for-client-and-server/+comments/4446</guid></item><item><title>Re: Securing Connections for Client and Server</title><link>https://mariadb.com/kb/en/securing-connections-for-client-and-server/+comments/4444</link><description>&lt;p&gt;Hi Sergei,&lt;/p&gt;
+&lt;p&gt;Thank you for the feedback.  No, it's redacted.  The server and client are on the same host of FreeBSD 12.1.  I've check the compiled library linking to the OpenSSL:&lt;/p&gt;
+&lt;ol start="1"&gt;&lt;li&gt;readelf -a /usr/local/lib/mysql/libmariadbclient.a | grep SSL_init
+00000000003e 001a00000004 R_X86_64_PLT32      0000000000000000 OPENSSL_init_ssl + fffffffffffffffc
+    26: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND OPENSSL_init_ssl
+&lt;/li&gt;&lt;li&gt;readelf -a /usr/local/lib/mysql/libmariadb.so | grep SSL_init
+000000054408 005700000007 R_X86_64_JUMP_SLOT  0000000000000000 OPENSSL_init_ssl + 0
+    87: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND OPENSSL_init_ssl@OPENSSL_1_1_0 (7)
+&lt;/li&gt;&lt;/ol&gt;
+&lt;p&gt;The libmariadb seems to link correctly while the libmariadbclient doesn't.  I presume that the server uses libmariadb and the 'mysql' client uses libmariadbclient even though both client and server are compiled from the same source but with different configurations?  If that's the case, I'll need to file a bug with the maintainer.  By the way, when run the 'mariadb_config' on the client, does it utilizes libmariadbclient or libmariadb because the mariadb_config shows a different OpenSSL version 1.1.1e.&lt;/p&gt;
+&lt;p&gt;Thanks,
+Tommy&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Tommy Pham</dc:creator><guid>https://mariadb.com/kb/en/securing-connections-for-client-and-server/+comments/4444</guid></item><item><title>Re: Securing Connections for Client and Server</title><link>https://mariadb.com/kb/en/securing-connections-for-client-and-server/+comments/4443</link><description>&lt;p&gt;See &lt;a href="https://mariadb.com/kb/en/connecting-to-mariadb/#ssl-verify-server-cert"&gt;https://mariadb.com/kb/en/connecting-to-mariadb/#ssl-verify-server-cert&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;--ssl-verify-server-cert&lt;/code&gt; means "Verify server's "Common Name" in its cert against hostname used when connecting"&lt;/p&gt;
+&lt;p&gt;you have CN=mariadb, but your host name, probably, isn't "mariadb", is it?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Golubchik</dc:creator><guid>https://mariadb.com/kb/en/securing-connections-for-client-and-server/+comments/4443</guid></item><item><title>Re: Securing Connections for Client and Server</title><link>https://mariadb.com/kb/en/securing-connections-for-client-and-server/+comments/4442</link><description>&lt;p&gt;I have a script that generates self signed certs based on this instruction:&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://mariadb.com/kb/en/certificate-creation-with-openssl/"&gt;https://mariadb.com/kb/en/certificate-creation-with-openssl/&lt;/a&gt;&lt;/p&gt;
+&lt;pre class="fixed"&gt; # ./self_signed.sh mariadb 1
+=============== CA ===============
+Generating RSA private key, 4096 bit long modulus (2 primes)
+.............................................................................................++++
+.....++++
+e is 65537 (0x010001)
+=============== Server Certificate ===============
+Generating a RSA private key
+........................................++++
+....................++++
+writing new private key to 'mariadb_server-key.pem'
+-----
+writing RSA key
+Signature ok
+subject=CN = mariadb
+Getting CA Private Key
+=============== Client Certificate ===============
+Generating a RSA private key
+.....................................................................................................++++
+..............................................................................++++
+writing new private key to 'mariadb_client-key.pem'
+-----
+writing RSA key
+Signature ok
+subject=CN = mariadb
+Getting CA Private Key
+=============== Verifying Certificates ===============
+mariadb_server-cert.pem: OK
+mariadb_client-cert.pem: OK
+&lt;/pre&gt;&lt;p&gt;When connecting with --ssl-verify-server-cert, it fails:&lt;/p&gt;
+&lt;pre class="fixed"&gt;# mysql -p --ssl-cert=mariadb_client-cert.pem --ssl-key=mariadb_client-key.pem --ssl-ca=mariadb_ca-cert.pem --ssl-verify-server-cert
+Enter password:
+ERROR 2026 (HY000): SSL connection error: Validation of SSL server certificate failed
+&lt;/pre&gt;&lt;p&gt;
+Without server cert verification, I can login OK and the SSL sessions checks out:&lt;/p&gt;
+&lt;pre class="fixed"&gt;Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 32
+Server version: 10.4.12-MariaDB FreeBSD Ports
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]&amp;gt; show variables like 'have_ssl';
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| have_ssl      | YES   |
++---------------+-------+
+1 row in set (0.003 sec)
+
+MariaDB [(none)]&amp;gt; show session status like 'ssl_cipher';
++---------------+------------------------+
+| Variable_name | Value                  |
++---------------+------------------------+
+| Ssl_cipher    | TLS_AES_256_GCM_SHA384 |
++---------------+------------------------+
+1 row in set (0.005 sec)
+
+MariaDB [(none)]&amp;gt; show session status like 'ssl_version';
++---------------+---------+
+| Variable_name | Value   |
++---------------+---------+
+| Ssl_version   | TLSv1.3 |
++---------------+---------+
+1 row in set (0.004 sec)
+&lt;/pre&gt;&lt;p&gt;Please advise.  Thank you.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Tommy Pham</dc:creator><guid>https://mariadb.com/kb/en/securing-connections-for-client-and-server/+comments/4442</guid></item></channel></rss>

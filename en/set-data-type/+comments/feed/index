@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: SET Data Type</title><link>https://mariadb.com/kb/en/set-data-type/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/set-data-type/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 18:26:03 +0000</lastBuildDate><item><title>Indexing set type</title><link>https://mariadb.com/kb/en/set-data-type/+comments/3052</link><description>&lt;p&gt;Just a quick comment about this, as im trying to optimize a task scheduler and I was trying to find a way to index an enum column or to redesign the table whole yesterday, as it's getting bigger and it appears that mysql can't use indexes so we're not able to pick pending tasks fast enough. I wasn't able to find anything related to the subject, beside that's not possible / bug reports that index can't be used for SET...&lt;/p&gt;
+&lt;p&gt;It appears to the contrary to what's written it can be done using VIRTUAL COLUMNS.&lt;/p&gt;
+&lt;h2 class="anchored_heading" id="table-definition"&gt;Table definition&lt;/h2&gt;
+&lt;p&gt;`tasks_running` set('INIT_LIST','INIT_PREBUILD','SAVE_DATA'...) NOT NULL DEFAULT ''&lt;br&gt;
+`tasks_completed` set('INIT_LIST','INIT_PREBUILD','SAVE_DATA'...) NOT NULL DEFAULT ''&lt;br&gt;
+[...]&lt;br&gt;
+So we'll have about 10 different task types which can be running or completed and we need to select specific task type(s) to be run, or to be checked (in running state). This will result in full table scan. In this case we're getting next pending task of type INIT_LIST...&lt;/p&gt;
+&lt;pre class="fixed"&gt;SELECT memlist FROM scheduler
+  WHERE
+    NOT FIND_IN_SET('INIT_LIST', tasks_running) AND
+    NOT FIND_IN_SET('INIT_LIST', tasks_completed) 
+    ORDER BY created ASC LIMIT 1
+&lt;/pre&gt;&lt;p&gt;Now maria / mysql can only use index if we're doing static comparison (column = "a,b,c"), we can't use index for finding if some value is just present in set. But we can use virtual columns to create indexes which will help in filtering out rows...&lt;/p&gt;
+&lt;h2 class="anchored_heading" id="multi-set-case"&gt;Multi-set case&lt;/h2&gt;
+&lt;p&gt;If we have sets with same values which are co-related as like in this example (task can be only in 3 states - paused, running, completed), we can create 1 char column and put index on it. Notice that IF output will be trimmed, so that's why it can be done much simpler, without nested IFs... so in this case c means that task is completed and r running.&lt;/p&gt;
+&lt;pre class="fixed"&gt;ALTER TABLE `scheduler` ADD COLUMN
+`_status_init_list` char(1) AS (
+  CONCAT(
+    IF(FIND_IN_SET(tasks_completed, 'INIT_LIST'), &amp;#34;c&amp;#34;, &amp;#34;&amp;#34;),
+    IF(FIND_IN_SET(tasks_running, 'INIT_LIST'), &amp;#34;r&amp;#34;, &amp;#34;&amp;#34;)
+  )
+) PERSISTENT AFTER _filter,
+ADD INDEX (`_status_init_list`);
+&lt;/pre&gt;&lt;p&gt;Including new condition, to help mariadb filter out unneded rows. Q time drop from couple seconds to &amp;lt;0.1s.&lt;/p&gt;
+&lt;pre class="fixed"&gt;SELECT memlist FROM scheduler
+  WHERE
+    NOT FIND_IN_SET('INIT_LIST', tasks_running) AND
+    NOT FIND_IN_SET('INIT_LIST', tasks_completed) AND
+    _status_init_list = &amp;#34;&amp;#34; /* empty string, not completed and not running */
+    ORDER BY created ASC LIMIT 1
+&lt;/pre&gt;&lt;p&gt;We need to create single index and single column for each value for which we want to speed up lookup, in SET.&lt;/p&gt;
+&lt;h2 class="anchored_heading" id="single-set-case"&gt;Single-set case&lt;/h2&gt;
+&lt;p&gt;If we want to index just single SET (eg. task_completed in following example) it's much simpler than multi-set. In this case we can just use y/n to indicate if that value is present in set.&lt;/p&gt;
+&lt;pre class="fixed"&gt;ALTER TABLE `scheduler` ADD COLUMN
+`_status_compl_init_list` char(1) AS (
+   IF(FIND_IN_SET(tasks_completed, 'INIT_LIST'), &amp;#34;y&amp;#34;, &amp;#34;n&amp;#34;)
+  )
+) PERSISTENT AFTER _filter,
+ADD INDEX (`_status_compl_init_list`);
+&lt;/pre&gt;&lt;p&gt;And code can be easily written to both:&lt;/p&gt;
+&lt;ul start="1"&gt;&lt;li&gt;automatically create needed virtual columns, when schema changes.
+&lt;/li&gt;&lt;li&gt;add filtering condition to the query only if needed virtual column is present&lt;/li&gt;&lt;/ul&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Slawomir Pryczek</dc:creator><guid>https://mariadb.com/kb/en/set-data-type/+comments/3052</guid></item></channel></rss>

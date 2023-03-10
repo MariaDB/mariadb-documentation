@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: on duplicate key work around</title><link>https://mariadb.com/kb/en/on-duplicate-key-work-around/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/on-duplicate-key-work-around/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 18:42:23 +0000</lastBuildDate><item><title>Re: on duplicate key work around</title><link>https://mariadb.com/kb/en/on-duplicate-key-work-around/+comments/3188</link><description>&lt;p&gt;My data comes in somewhat randomly for some id's.  As an innodb table we used insert on dup key update...  What I have found in testing various workarounds is that loading the new data into a column store staging table.  select the staging table and join to the table to be updated.  Then left join to the table to be updated for the inserts.  Also it was faster to just do the update without a predicate to select only the rows with differences in the numeric_val column.&lt;/p&gt;
+&lt;p&gt;Deleting the rows via the join and re-inserting took about the same time as the update and insert.&lt;/p&gt;
+&lt;p&gt;One note... when I was doing these tests I observed that when I delete a row (via a join to another column store table) a row the server reports 0 rows affected even when rows are deleted. &lt;/p&gt;
+&lt;p&gt;Here's a sample...&lt;/p&gt;
+&lt;pre class="fixed"&gt;&lt;span class="c1"&gt;-- version=10.2.10-MariaDB-log         &lt;/span&gt;
+&lt;span class="c1"&gt;-- version_comment=Columnstore 1.1.2-1         &lt;/span&gt;
+
+&lt;span class="k"&gt;CREATE&lt;/span&gt; &lt;span class="k"&gt;TABLE&lt;/span&gt; &lt;span class="n"&gt;cs1&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="n"&gt;id&lt;/span&gt;              &lt;span class="nb"&gt;INT&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;UNSIGNED&lt;/span&gt; &lt;span class="k"&gt;NOT&lt;/span&gt; &lt;span class="k"&gt;NULL&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;timestamp_&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt;    &lt;span class="n"&gt;DATETIME&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;numeric_val&lt;/span&gt;     &lt;span class="n"&gt;DOUBLE&lt;/span&gt; &lt;span class="k"&gt;DEFAULT&lt;/span&gt; &lt;span class="k"&gt;NULL&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;ENGINE&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;columnstore&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;INSERT&lt;/span&gt; &lt;span class="k"&gt;INTO&lt;/span&gt; &lt;span class="n"&gt;cs1&lt;/span&gt; &lt;span class="k"&gt;VALUES&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;2018-01-09 21:59:02&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;11&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;CREATE&lt;/span&gt; &lt;span class="k"&gt;TABLE&lt;/span&gt; &lt;span class="n"&gt;cs2&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="n"&gt;id&lt;/span&gt;              &lt;span class="nb"&gt;INT&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;UNSIGNED&lt;/span&gt; &lt;span class="k"&gt;NOT&lt;/span&gt; &lt;span class="k"&gt;NULL&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;timestamp_&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt;    &lt;span class="n"&gt;DATETIME&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;numeric_val&lt;/span&gt;     &lt;span class="n"&gt;DOUBLE&lt;/span&gt; &lt;span class="k"&gt;DEFAULT&lt;/span&gt; &lt;span class="k"&gt;NULL&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;ENGINE&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;columnstore&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="k"&gt;INSERT&lt;/span&gt; &lt;span class="k"&gt;INTO&lt;/span&gt; &lt;span class="n"&gt;cs2&lt;/span&gt; &lt;span class="k"&gt;VALUES&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;2018-01-09 21:59:02&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;22&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;22&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    
+&lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;cs1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;DELETE&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt;  &lt;span class="n"&gt;cs1&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="c1"&gt;-- Query: delete from cs1 where id = 1&lt;/span&gt;
+&lt;span class="c1"&gt;-- 1 row(s) affected&lt;/span&gt;
+&lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;cs1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="c1"&gt;-- Query: select * from cs1 LIMIT 0, 5000&lt;/span&gt;
+&lt;span class="c1"&gt;-- 0 row(s) affected&lt;/span&gt;
+
+&lt;span class="k"&gt;INSERT&lt;/span&gt; &lt;span class="k"&gt;INTO&lt;/span&gt; &lt;span class="n"&gt;cs1&lt;/span&gt; &lt;span class="k"&gt;VALUES&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;2018-01-09 21:59:02&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;11&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;cs1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;cs2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;DELETE&lt;/span&gt; &lt;span class="n"&gt;cs1&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;cs1&lt;/span&gt; 
+    &lt;span class="k"&gt;JOIN&lt;/span&gt; &lt;span class="n"&gt;cs2&lt;/span&gt; &lt;span class="k"&gt;USING&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="n"&gt;timestamp_&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="c1"&gt;-- Query: DELETE cs1 from cs1 join cs2 using(id,timestamp_)&lt;/span&gt;
+&lt;span class="c1"&gt;-- 0 row(s) affected&lt;/span&gt;
+
+&lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;cs1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="c1"&gt;-- Query: SELECT * FROM cs1 LIMIT 0, 5000&lt;/span&gt;
+&lt;span class="c1"&gt;-- 0 row(s) affected&lt;/span&gt;
+
+
+&lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;cs2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="c1"&gt;-- Query: SELECT * FROM cs2 LIMIT 0, 5000&lt;/span&gt;
+&lt;span class="c1"&gt;-- 1 row(s) affected&lt;/span&gt;
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Mike Thibodeau</dc:creator><guid>https://mariadb.com/kb/en/on-duplicate-key-work-around/+comments/3188</guid></item><item><title>Re: on duplicate key work around</title><link>https://mariadb.com/kb/en/on-duplicate-key-work-around/+comments/3180</link><description>&lt;p&gt;Doing the insert select should be faster even just purely from the I/O involved i think. The case where it might be faster would be if you were to truncate the table or use partition drop but i assume that you are planning to just do some subset.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">David Thompson</dc:creator><guid>https://mariadb.com/kb/en/on-duplicate-key-work-around/+comments/3180</guid></item><item><title>Re: on duplicate key work around</title><link>https://mariadb.com/kb/en/on-duplicate-key-work-around/+comments/3178</link><description>&lt;p&gt;Thanks David.  That is what I thought.  I was going handle the inserts as you suggested and the updates with a left join.  Any thoughts on weather that will provide better performance than deleting the range and re-inserting the whole set?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Mike Thibodeau</dc:creator><guid>https://mariadb.com/kb/en/on-duplicate-key-work-around/+comments/3178</guid></item><item><title>Re: on duplicate key work around</title><link>https://mariadb.com/kb/en/on-duplicate-key-work-around/+comments/3176</link><description>&lt;p&gt;Since columnstore doesn't have unique indexes, then yes more or less. Another option is to load your inbound data into a staging table and then doing an insert select where you join and filter out the duplicates in what gets selected.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">David Thompson</dc:creator><guid>https://mariadb.com/kb/en/on-duplicate-key-work-around/+comments/3176</guid></item></channel></rss>

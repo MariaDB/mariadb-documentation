@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Problem with the Galera wsrep_sst_method xtrabackup-v2</title><link>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 20:14:41 +0000</lastBuildDate><item><title>Re: Problem with the Galera wsrep_sst_method xtrabackup-v2</title><link>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2165</link><description>&lt;p&gt;Just want to let you know that we did solve the problem. I will be repeating the tests that I performed with rsync using xtrabackup now.  To fix the xtrabackup problem, we had two issues:&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;. socat install problem. We went back a level to 1.7.2.4 and it installed OK.
+&lt;/li&gt;&lt;li&gt;. We have MariaDB and xtrabackup installed in non-default locations.  We had to setup environmental variables in &lt;code&gt;wsrep_sst_xtrabackup-v2&lt;/code&gt;.  We added a couple lines
+&lt;ol&gt;&lt;li&gt;$(dirname $0)/wsrep_sst_common&lt;code&gt;  &amp;lt;&amp;lt; after this line we added 2 lines below:&lt;/code&gt;
+&lt;/li&gt;&lt;/ol&gt;
+&lt;/li&gt;&lt;/ol&gt;
+&lt;pre class="fixed"&gt;## Execute environmental variables for MySQL
+. ${HOME}/.local 
+&lt;/pre&gt;&lt;p&gt;Here are the contents of our .local file:&lt;/p&gt;
+&lt;pre class="fixed"&gt;$ cat .local
+export LD_LIBRARY_PATH=${HOME}/local/lib/
+export LD_LIBRARY_PATH=:${HOME}/local/lib/
+export LD_LIB_PATH=${HOME}/local/lib/
+export LD_LIB_PATH=:${HOME}/local/lib/
+export MB=//opt/app/mysql/product/percona-xtrabackup-2.4.1-Linux-x86_64
+export MD=//opt/app/mysql/data
+export MH=//opt/app/mysql/product/mariadb-10.1.12-linux-x86_64
+export ML=//opt/app/mysql/log
+export MYSQL_BACKUP_HOME=//opt/app/mysql/product/percona-xtrabackup-2.4.1-Linux-x86_64
+export MYSQL_HOME=//opt/app/mysql/product/mariadb-10.1.12-linux-x86_64
+export MYSQL_LOCAL_HOME=//opt/app/mysql/local
+export PATH=${HOME}/local/bin:$PATH
+export PATH=${MYSQL_BACKUP_HOME}/bin:${PATH}
+export PATH=${MYSQL_HOME}/bin:${PATH}
+export PATH=${MYSQL_LOCAL_HOME}/bin:${PATH}
+export PYTHONPATH=${HOME}/local/lib
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Andy Ferretti</dc:creator><guid>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2165</guid></item><item><title>Re: Problem with the Galera wsrep_sst_method xtrabackup-v2</title><link>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2141</link><description>&lt;p&gt;OK, as information, I've been doing performance testing with the Galera cluster that I created using rsync instead of xtrabackup. I do want to get back to the xtrabackup. I noticed that the socat utility that is required for xtrabackup was not correctly installed. I'm not sure if this might be my problem.  In order to test xtrabackup, I have to tear down all nodes except primary and rebuild with xtrabackup.  Since I'm in the middle of my performance testing, I'll have to wait before I can get back to the xtrabackup testing.
+When I get back to the xtrabackup testing and if I cannot fix the xtrabackup problem by fixing the socat install, then I'll submit a bug as you suggest.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Andy Ferretti</dc:creator><guid>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2141</guid></item><item><title>Re: Problem with the Galera wsrep_sst_method xtrabackup-v2</title><link>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2139</link><description>&lt;p&gt;If you still didn't find the solution I suggest &lt;a href="/kb/en/reporting-bugs/"&gt;reporting as a bug&lt;/a&gt; - they can see if it's repeatable at least, and if not perhaps find help find out why it's failing in your case.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2139</guid></item><item><title>Re: Problem with the Galera wsrep_sst_method xtrabackup-v2</title><link>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2086</link><description>&lt;p&gt;I upgraded the donor node  to 10.1.12 and tested xtrabackup 2.4.1 with a full backup to disk. 
+I did a clean install of 10.1.12 on the second node and tried to start it.  I'm still getting errors. I'll paste the logs below.  
+I then decided to try switching from  wsrep_sst_method=xtrabackup-v2 to wsrep_sst_method=rsync.  This worked OK and synched the second node up with the donor node.  For now, I'm planning to add the third node and do some benchmarking.  
+I plan to come back to testing with wsrep_sst_method=xtrabackup-v2.  
+Below are the mysqld logs from the failed attempt to sync with xtrabackup:&lt;/p&gt;
+&lt;pre class="fixed"&gt;Donor node:
+2016-03-05 15:59:31 140018316211968 [Note] WSREP: (15d87d90, 'tcp://0.0.0.0:4567') turning message relay requesting on, nonlive peers:
+2016-03-05 15:59:31 140018316211968 [Note] WSREP: declaring 3f4f9a4f at tcp://130.9.221.48:4567 stable
+2016-03-05 15:59:31 140018316211968 [Note] WSREP: Node 15d87d90 state prim
+2016-03-05 15:59:31 140018316211968 [Note] WSREP: view(view_id(PRIM,15d87d90,2) memb {
+2016-03-05 15:59:31 140018316211968 [Note] WSREP: save pc into disk
+2016-03-05 15:59:31 140018305722112 [Note] WSREP: New COMPONENT: primary = yes, bootstrap = no, my_idx = 0, memb_num = 2
+2016-03-05 15:59:31 140018305722112 [Note] WSREP: STATE_EXCHANGE: sent state UUID: 3fa17dbd-e2eb-11e5-a1c4-23cb5b5ae270
+2016-03-05 15:59:31 140018305722112 [Note] WSREP: STATE EXCHANGE: sent state msg: 3fa17dbd-e2eb-11e5-a1c4-23cb5b5ae270
+2016-03-05 15:59:31 140018305722112 [Note] WSREP: STATE EXCHANGE: got state msg: 3fa17dbd-e2eb-11e5-a1c4-23cb5b5ae270 from 0 (zlx70605.vci.att.com)
+2016-03-05 15:59:32 140018305722112 [Note] WSREP: STATE EXCHANGE: got state msg: 3fa17dbd-e2eb-11e5-a1c4-23cb5b5ae270 from 1 (zlx70604.vci.att.com)
+2016-03-05 15:59:32 140018305722112 [Note] WSREP: Quorum results:
+2016-03-05 15:59:32 140018305722112 [Note] WSREP: Flow-control interval: [23, 23]
+2016-03-05 15:59:32 140018278459136 [Note] WSREP: New cluster view: global state: db762c6b-e246-11e5-90df-4adee5e6b24e:267, view# 2: Primary, number of nodes: 2, my index: 0, protocol version 3
+2016-03-05 15:59:32 140018278459136 [ERROR] WSREP: Process completed with error: /opt/app/mysql/product/mariadb-10.1.12-linux-x86_64/support-files/wsrep_notify --status Synced --uuid db762c6b-e246-11e5-90df-4adee5e6b24e --primary yes --index 0 --members 15d87d90-e2ea-11e5-8755-6f8d951d7f3f/zlx70605.vci.att.com/130.9.221.46:3306,3f4f9a4f-e2eb-11e5-8059-523034986974/zlx70604.vci.att.com/130.9.221.48:3306: 1 (Operation not permitted)
+2016-03-05 15:59:32 140018278459136 [ERROR] WSREP: Notification command failed: 1 (Operation not permitted): &amp;#34;/opt/app/mysql/product/mariadb-10.1.12-linux-x86_64/support-files/wsrep_notify --status Synced --uuid db762c6b-e246-11e5-90df-4adee5e6b24e --primary yes --index 0 --members 15d87d90-e2ea-11e5-8755-6f8d951d7f3f/zlx70605.vci.att.com/130.9.221.46:3306,3f4f9a4f-e2eb-11e5-8059-523034986974/zlx70604.vci.att.com/130.9.221.48:3306&amp;#34;
+2016-03-05 15:59:32 140018278459136 [Note] WSREP: REPL Protocols: 7 (3, 2)
+2016-03-05 15:59:32 140018371782400 [Note] WSREP: Service thread queue flushed.
+2016-03-05 15:59:32 140018278459136 [Note] WSREP: Assign initial position for certification: 267, protocol version: 3
+2016-03-05 15:59:32 140018371782400 [Note] WSREP: Service thread queue flushed.
+2016-03-05 15:59:34 140018316211968 [Note] WSREP: (15d87d90, 'tcp://0.0.0.0:4567') turning message relay requesting off
+2016-03-05 15:59:35 140018316211968 [Note] WSREP: forgetting 3f4f9a4f (tcp://130.9.221.48:4567)
+2016-03-05 15:59:35 140018316211968 [Note] WSREP: Node 15d87d90 state prim
+2016-03-05 15:59:35 140018316211968 [Note] WSREP: view(view_id(PRIM,15d87d90,3) memb {
+2016-03-05 15:59:35 140018316211968 [Note] WSREP: save pc into disk
+2016-03-05 15:59:35 140018316211968 [Note] WSREP: forgetting 3f4f9a4f (tcp://130.9.221.48:4567)
+2016-03-05 15:59:35 140018305722112 [Note] WSREP: New COMPONENT: primary = yes, bootstrap = no, my_idx = 0, memb_num = 1
+2016-03-05 15:59:35 140018305722112 [Note] WSREP: STATE_EXCHANGE: sent state UUID: 41bd523f-e2eb-11e5-873d-a304ee11139f
+2016-03-05 15:59:35 140018305722112 [Note] WSREP: STATE EXCHANGE: sent state msg: 41bd523f-e2eb-11e5-873d-a304ee11139f
+2016-03-05 15:59:35 140018305722112 [Note] WSREP: STATE EXCHANGE: got state msg: 41bd523f-e2eb-11e5-873d-a304ee11139f from 0 (zlx70605.vci.att.com)
+2016-03-05 15:59:35 140018305722112 [Note] WSREP: Quorum results:
+2016-03-05 15:59:35 140018305722112 [Note] WSREP: Flow-control interval: [16, 16]
+2016-03-05 15:59:35 140018278459136 [Note] WSREP: New cluster view: global state: db762c6b-e246-11e5-90df-4adee5e6b24e:267, view# 3: Primary, number of nodes: 1, my index: 0, protocol version 3
+2016-03-05 15:59:35 140018278459136 [ERROR] WSREP: Process completed with error: /opt/app/mysql/product/mariadb-10.1.12-linux-x86_64/support-files/wsrep_notify --status Synced --uuid db762c6b-e246-11e5-90df-4adee5e6b24e --primary yes --index 0 --members 15d87d90-e2ea-11e5-8755-6f8d951d7f3f/zlx70605.vci.att.com/130.9.221.46:3306: 1 (Operation not permitted)
+2016-03-05 15:59:35 140018278459136 [ERROR] WSREP: Notification command failed: 1 (Operation not permitted): &amp;#34;/opt/app/mysql/product/mariadb-10.1.12-linux-x86_64/support-files/wsrep_notify --status Synced --uuid db762c6b-e246-11e5-90df-4adee5e6b24e --primary yes --index 0 --members 15d87d90-e2ea-11e5-8755-6f8d951d7f3f/zlx70605.vci.att.com/130.9.221.46:3306&amp;#34;
+2016-03-05 15:59:35 140018278459136 [Note] WSREP: REPL Protocols: 7 (3, 2)
+2016-03-05 15:59:35 140018371782400 [Note] WSREP: Service thread queue flushed.
+2016-03-05 15:59:35 140018278459136 [Note] WSREP: Assign initial position for certification: 267, protocol version: 3
+2016-03-05 15:59:35 140018371782400 [Note] WSREP: Service thread queue flushed.
+2016-03-05 15:59:40 140018316211968 [Note] WSREP:  cleaning up 3f4f9a4f (tcp://130.9.221.48:4567)
+Second Node:
+160305 15:59:25 mysqld_safe Starting mysqld daemon with databases from //opt/app/mysql/data
+160305 15:59:25 mysqld_safe WSREP: Running position recovery with --log_error='//opt/app/mysql/data/wsrep_recovery.Zvw0Zn' --pid-file='//opt/app/mysql/data/zlx70604-recover.pid'
+2016-03-05 15:59:25 140289610856288 [Note] Using unique option prefix 'ignore_db_dir' is error-prone and can break in the future. Please use the full name 'ignore_db_dirs' instead.
+2016-03-05 15:59:25 140289610856288 [Note] //opt/app/mysql/product/mariadb-10.1.12-linux-x86_64/bin/mysqld (mysqld 10.1.12-MariaDB) starting as process 20792 ...
+160305 15:59:30 mysqld_safe WSREP: Recovered position 00000000-0000-0000-0000-000000000000:-1
+2016-03-05 15:59:30 139663019247456 [Note] Using unique option prefix 'ignore_db_dir' is error-prone and can break in the future. Please use the full name 'ignore_db_dirs' instead.
+2016-03-05 15:59:30 139663019247456 [Note] //opt/app/mysql/product/mariadb-10.1.12-linux-x86_64/bin/mysqld (mysqld 10.1.12-MariaDB) starting as process 20841 ...
+2016-03-05 15:59:30 139663019247456 [Note] WSREP: Read nil XID from storage engines, skipping position init
+2016-03-05 15:59:30 139663019247456 [Note] WSREP: wsrep_load(): loading provider library '/opt/app/mysql/product/mariadb-10.1.12-linux-x86_64/lib/galera/libgalera_smm.so'
+2016-03-05 15:59:30 139663019247456 [Note] WSREP: wsrep_load(): Galera 25.3.14(r3560) by Codership Oy &amp;lt;info@codership.com&amp;gt; loaded successfully.
+2016-03-05 15:59:30 139663019247456 [Note] WSREP: CRC-32C: using hardware acceleration.
+2016-03-05 15:59:30 139663019247456 [Warning] WSREP: Could not open state file for reading: '//opt/app/mysql/data//grastate.dat'
+2016-03-05 15:59:30 139663019247456 [Note] WSREP: Found saved state: 00000000-0000-0000-0000-000000000000:-1
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: Passing config to GCS: base_dir = //opt/app/mysql/data/; base_host = 130.9.221.48; base_port = 4567; cert.log_conflicts = no; debug = no; evs.auto_evict = 0; evs.delay_margin = PT1S; evs.delayed_keep_period = PT30S; evs.inactive_check_period = PT0.5S; evs.inactive_timeout = PT15S; evs.join_retrans_period = PT1S; evs.max_install_timeouts = 3; evs.send_window = 4; evs.stats_report_period = PT1M; evs.suspect_timeout = PT5S; evs.user_send_window = 2; evs.view_forget_timeout = PT24H; gcache.dir = //opt/app/mysql/data/; gcache.keep_pages_size = 0; gcache.mem_size = 0; gcache.name = //opt/app/mysql/data//galera.cache; gcache.page_size = 1G; gcache.size = 2G; gcs.fc_debug = 0; gcs.fc_factor = 1.0; gcs.fc_limit = 16; gcs.fc_master_slave = no; gcs.max_packet_size = 64500; gcs.max_throttle = 0.25; gcs.recv_q_hard_limit = 9223372036854775807; gcs.recv_q_soft_limit = 0.25; gcs.sync_donor = no; gmcast.segment = 0; gmcast.version = 0; pc.announce_timeout = PT3S; pc.checksum = false; pc.ignore_quorum = false; pc.igno
+2016-03-05 15:59:31 139660818175744 [Note] WSREP: Service thread queue flushed.
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: Assign initial position for certification: -1, protocol version: -1
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: wsrep_sst_grab()
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: Start replication
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: Setting initial position to 00000000-0000-0000-0000-000000000000:-1
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: protonet asio version 0
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: Using CRC-32C for message checksums.
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: backend: asio
+2016-03-05 15:59:31 139663019247456 [Warning] WSREP: access file(//opt/app/mysql/data//gvwstate.dat) failed(No such file or directory)
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: restore pc from disk failed
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: GMCast version 0
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: (3f4f9a4f, 'tcp://0.0.0.0:4567') listening at tcp://0.0.0.0:4567
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: (3f4f9a4f, 'tcp://0.0.0.0:4567') multicast: , ttl: 1
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: EVS version 0
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: gcomm: connecting to group 'DBAAS_ECLOUD_CLUST01', peer '130.9.221.46:,130.9.221.48:,130.9.220.190:'
+2016-03-05 15:59:31 139663019247456 [Warning] WSREP: (3f4f9a4f, 'tcp://0.0.0.0:4567') address 'tcp://130.9.221.48:4567' points to own listening address, blacklisting
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: (3f4f9a4f, 'tcp://0.0.0.0:4567') turning message relay requesting on, nonlive peers:
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: declaring 15d87d90 at tcp://130.9.221.46:4567 stable
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: Node 15d87d90 state prim
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: view(view_id(PRIM,15d87d90,2) memb {
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: save pc into disk
+2016-03-05 15:59:31 139663019247456 [Note] WSREP: discarding pending addr without UUID: tcp://130.9.220.190:4567
+2016-03-05 15:59:32 139663019247456 [Note] WSREP: gcomm: connected
+2016-03-05 15:59:32 139663019247456 [Note] WSREP: Changing maximum packet size to 64500, resulting msg size: 32636
+2016-03-05 15:59:32 139663019247456 [Note] WSREP: Shifting CLOSED -&amp;gt; OPEN (TO: 0)
+2016-03-05 15:59:32 139663019247456 [Note] WSREP: Opened channel 'DBAAS_ECLOUD_CLUST01'
+2016-03-05 15:59:32 139660745500416 [Note] WSREP: New COMPONENT: primary = yes, bootstrap = no, my_idx = 1, memb_num = 2
+2016-03-05 15:59:32 139660745500416 [Note] WSREP: STATE EXCHANGE: Waiting for state UUID.
+2016-03-05 15:59:32 139660745500416 [Note] WSREP: STATE EXCHANGE: sent state msg: 3fa17dbd-e2eb-11e5-a1c4-23cb5b5ae270
+2016-03-05 15:59:32 139660745500416 [Note] WSREP: STATE EXCHANGE: got state msg: 3fa17dbd-e2eb-11e5-a1c4-23cb5b5ae270 from 0 (zlx70605.vci.att.com)
+2016-03-05 15:59:32 139663019247456 [Note] WSREP: Waiting for SST to complete.
+2016-03-05 15:59:32 139660745500416 [Note] WSREP: STATE EXCHANGE: got state msg: 3fa17dbd-e2eb-11e5-a1c4-23cb5b5ae270 from 1 (zlx70604.vci.att.com)
+2016-03-05 15:59:32 139660745500416 [Note] WSREP: Quorum results:
+2016-03-05 15:59:32 139660745500416 [Note] WSREP: Flow-control interval: [23, 23]
+2016-03-05 15:59:32 139660745500416 [Note] WSREP: Shifting OPEN -&amp;gt; PRIMARY (TO: 267)
+2016-03-05 15:59:32 139660721907456 [Note] WSREP: State transfer required:
+2016-03-05 15:59:32 139660721907456 [Note] WSREP: New cluster view: global state: db762c6b-e246-11e5-90df-4adee5e6b24e:267, view# 2: Primary, number of nodes: 2, my index: 1, protocol version 3
+2016-03-05 15:59:32 139660721907456 [Warning] WSREP: Gap in state sequence. Need state transfer.
+2016-03-05 15:59:32 139660709852928 [Note] WSREP: Running: 'wsrep_sst_xtrabackup-v2 --role 'joiner' --address '130.9.221.48' --datadir '//opt/app/mysql/data/'   --parent '20841' --binlog '//opt/app/mysql/binlogs/mysql-bin' '
+2016-03-05 15:59:32 139660709852928 [ERROR] WSREP: Failed to read 'ready &amp;lt;addr&amp;gt;' from: wsrep_sst_xtrabackup-v2 --role 'joiner' --address '130.9.221.48' --datadir '//opt/app/mysql/data/'   --parent '20841' --binlog '//opt/app/mysql/binlogs/mysql-bin'
+2016-03-05 15:59:32 139660709852928 [ERROR] WSREP: Process completed with error: wsrep_sst_xtrabackup-v2 --role 'joiner' --address '130.9.221.48' --datadir '//opt/app/mysql/data/'   --parent '20841' --binlog '//opt/app/mysql/binlogs/mysql-bin' : 1 (Operation not permitted)
+2016-03-05 15:59:32 139660721907456 [ERROR] WSREP: Failed to prepare for 'xtrabackup-v2' SST. Unrecoverable.
+2016-03-05 15:59:32 139660721907456 [ERROR] Aborting
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Andy Ferretti</dc:creator><guid>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2086</guid></item><item><title>Re: Problem with the Galera wsrep_sst_method xtrabackup-v2</title><link>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2081</link><description>&lt;p&gt;Do you also have "password" under the client section in your donor's my.cnf? If so, that could be the problem.&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://bugs.launchpad.net/percona-xtradb-cluster/+bug/1505184"&gt;https://bugs.launchpad.net/percona-xtradb-cluster/+bug/1505184&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;This issue was fixed in &lt;a href="/kb/en/mariadb-10112-release-notes/"&gt;MariaDB 10.1.12&lt;/a&gt;.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Nirbhay Choubey</dc:creator><guid>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2081</guid></item><item><title>Re: Problem with the Galera wsrep_sst_method xtrabackup-v2</title><link>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2080</link><description>&lt;p&gt;Thanks for helping.  The full output from the doner is further below.  I saw this message:&lt;/p&gt;
+&lt;pre class="fixed"&gt;ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+&lt;/pre&gt;&lt;p&gt;I tested to be sure that I could connect as root on the local server on the doner node:&lt;/p&gt;
+&lt;pre class="fixed"&gt;/opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/bin/mysql -u root -pNotTheRealPassword --socket //opt/app/mysql/mysql.sock
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 17
+Server version: 10.1.11-MariaDB-log MariaDB Server
+Copyright (c) 2000, 2015, Oracle, MariaDB Corporation Ab and others.
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+MariaDB [(none)]&amp;gt;
+&lt;/pre&gt;&lt;p&gt;I put the value for the password (NotTheRealPassword) in the .my.cnf file on the second node, cleaned out the directories on the second node and tried again. I got the exact same error:
+Here are all the lines from the doner log from the time I try to start the second node until it fails:&lt;/p&gt;
+&lt;pre class="fixed"&gt;2016-03-05  2:23:59 140722242057984 [Note] WSREP: (8807b738, 'tcp://0.0.0.0:4567') turning message relay requesting on, nonlive peers:
+2016-03-05  2:23:59 140722242057984 [Note] WSREP: declaring 51bf0360 at tcp://130.9.221.48:4567 stable
+2016-03-05  2:23:59 140722242057984 [Note] WSREP: Node 8807b738 state prim
+2016-03-05  2:23:59 140722242057984 [Note] WSREP: view(view_id(PRIM,51bf0360,6) memb {
+        51bf0360,0
+        8807b738,0
+} joined {
+} left {
+} partitioned {
+})
+2016-03-05  2:23:59 140722242057984 [Note] WSREP: save pc into disk
+2016-03-05  2:23:59 140722231568128 [Note] WSREP: New COMPONENT: primary = yes, bootstrap = no, my_idx = 1, memb_num = 2
+2016-03-05  2:23:59 140722231568128 [Note] WSREP: STATE EXCHANGE: Waiting for state UUID.
+2016-03-05  2:24:00 140722231568128 [Note] WSREP: STATE EXCHANGE: sent state msg: 520bf58a-e279-11e5-9e8c-5385e139e4e3
+2016-03-05  2:24:00 140722231568128 [Note] WSREP: STATE EXCHANGE: got state msg: 520bf58a-e279-11e5-9e8c-5385e139e4e3 from 0 (zlx70604.vci.att.com)
+2016-03-05  2:24:00 140722231568128 [Note] WSREP: STATE EXCHANGE: got state msg: 520bf58a-e279-11e5-9e8c-5385e139e4e3 from 1 (zlx70605.vci.att.com)
+2016-03-05  2:24:00 140722231568128 [Note] WSREP: Quorum results:
+        version    = 3,
+        component  = PRIMARY,
+        conf_id    = 5,
+        members    = 1/2 (joined/total),
+        act_id     = 8,
+        last_appl. = 0,
+        protocols  = 0/7/3 (gcs/repl/appl),
+        group UUID = db762c6b-e246-11e5-90df-4adee5e6b24e
+2016-03-05  2:24:00 140722231568128 [Note] WSREP: Flow-control interval: [23, 23]
+2016-03-05  2:24:00 140724500207360 [Note] WSREP: New cluster view: global state: db762c6b-e246-11e5-90df-4adee5e6b24e:8, view# 6: Primary, number of nodes: 2, my index: 1, protocol version 3
+ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+2016-03-05  2:24:00 140724500207360 [ERROR] WSREP: Process completed with error: /opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/support-files/wsrep_notify --status Synced --uuid db762c6b-e246-11e5-90df-4adee5e6b24e --primary yes --index 1 --members 51bf0360-e279-11e5-958b-fa7765b2463a/zlx70604.vci.att.com/130.9.221.48:3306,8807b738-e259-11e5-b2fd-3ba2bd2554fd/zlx70605.vci.att.com/130.9.221.46:3306: 1 (Operation not permitted)
+2016-03-05  2:24:00 140724500207360 [ERROR] WSREP: Notification command failed: 1 (Operation not permitted): &amp;#34;/opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/support-files/wsrep_notify --status Synced --uuid db762c6b-e246-11e5-90df-4adee5e6b24e --primary yes --index 1 --members 51bf0360-e279-11e5-958b-fa7765b2463a/zlx70604.vci.att.com/130.9.221.48:3306,8807b738-e259-11e5-b2fd-3ba2bd2554fd/zlx70605.vci.att.com/130.9.221.46:3306&amp;#34;
+2016-03-05  2:24:00 140724500207360 [Note] WSREP: REPL Protocols: 7 (3, 2)
+2016-03-05  2:24:00 140722297632512 [Note] WSREP: Service thread queue flushed.
+2016-03-05  2:24:00 140724500207360 [Note] WSREP: Assign initial position for certification: 8, protocol version: 3
+2016-03-05  2:24:00 140722297632512 [Note] WSREP: Service thread queue flushed.
+2016-03-05  2:24:03 140722242057984 [Note] WSREP: (8807b738, 'tcp://0.0.0.0:4567') turning message relay requesting off
+2016-03-05  2:24:03 140722242057984 [Note] WSREP: forgetting 51bf0360 (tcp://130.9.221.48:4567)
+2016-03-05  2:24:03 140722242057984 [Note] WSREP: Node 8807b738 state prim
+2016-03-05  2:24:03 140722242057984 [Note] WSREP: view(view_id(PRIM,8807b738,7) memb {
+        8807b738,0
+} joined {
+} left {
+} partitioned {
+        51bf0360,0
+})
+2016-03-05  2:24:03 140722242057984 [Note] WSREP: save pc into disk
+2016-03-05  2:24:03 140722242057984 [Note] WSREP: forgetting 51bf0360 (tcp://130.9.221.48:4567)
+2016-03-05  2:24:03 140722231568128 [Note] WSREP: New COMPONENT: primary = yes, bootstrap = no, my_idx = 0, memb_num = 1
+2016-03-05  2:24:03 140722231568128 [Note] WSREP: STATE_EXCHANGE: sent state UUID: 53e30c12-e279-11e5-a48c-f2405158fb41
+2016-03-05  2:24:03 140722231568128 [Note] WSREP: STATE EXCHANGE: sent state msg: 53e30c12-e279-11e5-a48c-f2405158fb41
+2016-03-05  2:24:03 140722231568128 [Note] WSREP: STATE EXCHANGE: got state msg: 53e30c12-e279-11e5-a48c-f2405158fb41 from 0 (zlx70605.vci.att.com)
+2016-03-05  2:24:03 140722231568128 [Note] WSREP: Quorum results:
+        version    = 3,
+        component  = PRIMARY,
+        conf_id    = 6,
+        members    = 1/1 (joined/total),
+        act_id     = 8,
+        last_appl. = 0,
+        protocols  = 0/7/3 (gcs/repl/appl),
+        group UUID = db762c6b-e246-11e5-90df-4adee5e6b24e
+2016-03-05  2:24:03 140722231568128 [Note] WSREP: Flow-control interval: [16, 16]
+2016-03-05  2:24:03 140724500207360 [Note] WSREP: New cluster view: global state: db762c6b-e246-11e5-90df-4adee5e6b24e:8, view# 7: Primary, number of nodes: 1, my index: 0, protocol version 3
+ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+2016-03-05  2:24:03 140724500207360 [ERROR] WSREP: Process completed with error: /opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/support-files/wsrep_notify --status Synced --uuid db762c6b-e246-11e5-90df-4adee5e6b24e --primary yes --index 0 --members 8807b738-e259-11e5-b2fd-3ba2bd2554fd/zlx70605.vci.att.com/130.9.221.46:3306: 1 (Operation not permitted)
+2016-03-05  2:24:03 140724500207360 [ERROR] WSREP: Notification command failed: 1 (Operation not permitted): &amp;#34;/opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/support-files/wsrep_notify --status Synced --uuid db762c6b-e246-11e5-90df-4adee5e6b24e --primary yes --index 0 --members 8807b738-e259-11e5-b2fd-3ba2bd2554fd/zlx70605.vci.att.com/130.9.221.46:3306&amp;#34;
+2016-03-05  2:24:03 140724500207360 [Note] WSREP: REPL Protocols: 7 (3, 2)
+2016-03-05  2:24:03 140722297632512 [Note] WSREP: Service thread queue flushed.
+2016-03-05  2:24:03 140724500207360 [Note] WSREP: Assign initial position for certification: 8, protocol version: 3
+2016-03-05  2:24:03 140722297632512 [Note] WSREP: Service thread queue flushed.
+2016-03-05  2:24:08 140722242057984 [Note] WSREP:  cleaning up 51bf0360 (tcp://130.9.221.48:4567)
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Andy Ferretti</dc:creator><guid>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2080</guid></item><item><title>Re: Problem with the Galera wsrep_sst_method xtrabackup-v2</title><link>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2079</link><description>&lt;p&gt;This could be due to some issue on the donor node. Check out the donor log for any error. You can even share it here, if you do not see anything obvious.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Nirbhay Choubey</dc:creator><guid>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2079</guid></item><item><title>Re: Problem with the Galera wsrep_sst_method xtrabackup-v2</title><link>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2078</link><description>&lt;p&gt;We put a trace on the execution of wsrep_sst_xtrabackup-v2.  Here is the output:&lt;/p&gt;
+&lt;pre class="fixed"&gt;+ . /opt/app/mysql/product/mariadb-10.1.11-linux-x86_64//bin/wsrep_sst_common
+++ set -u
+++ WSREP_SST_OPT_BYPASS=0
+++ WSREP_SST_OPT_BINLOG=
+++ WSREP_SST_OPT_CONF_SUFFIX=
+++ WSREP_SST_OPT_DATA=
+++ WSREP_SST_OPT_AUTH=sstuser:passwordhere
+++ WSREP_SST_OPT_USER=
+++ WSREP_SST_OPT_PSWD=
+++ WSREP_SST_OPT_DEFAULT=
+++ WSREP_SST_OPT_EXTRA_DEFAULT=
+++ '[' 10 -gt 0 ']'
+++ case &amp;#34;$1&amp;#34; in
+++ readonly WSREP_SST_OPT_ROLE=joiner
+++ WSREP_SST_OPT_ROLE=joiner
+++ shift
+++ shift
+++ '[' 8 -gt 0 ']'
+++ case &amp;#34;$1&amp;#34; in
+++ readonly WSREP_SST_OPT_ADDR=130.9.221.48
+++ WSREP_SST_OPT_ADDR=130.9.221.48
+++ shift
+++ shift
+++ '[' 6 -gt 0 ']'
+++ case &amp;#34;$1&amp;#34; in
+++ readonly WSREP_SST_OPT_DATA=//opt/app/mysql/data/
+++ WSREP_SST_OPT_DATA=//opt/app/mysql/data/
+++ shift
+++ shift
+++ '[' 4 -gt 0 ']'
+++ case &amp;#34;$1&amp;#34; in
+++ readonly WSREP_SST_OPT_PARENT=28544
+++ WSREP_SST_OPT_PARENT=28544
+++ shift
+++ shift
+++ '[' 2 -gt 0 ']'
+++ case &amp;#34;$1&amp;#34; in
+++ WSREP_SST_OPT_BINLOG=//opt/app/mysql/binlogs/mysql-bin
+++ shift
+++ shift
+++ '[' 0 -gt 0 ']'
+++ readonly WSREP_SST_OPT_BYPASS
+++ readonly WSREP_SST_OPT_BINLOG
+++ readonly WSREP_SST_OPT_CONF_SUFFIX
+++++ dirname /opt/app/mysql/product/mariadb-10.1.11-linux-x86_64//bin/wsrep_sst_xtrabackup-v2
++++ cd /opt/app/mysql/product/mariadb-10.1.11-linux-x86_64//bin
++++ pwd -P
+++ SCRIPTS_DIR=/opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/bin
+++ EXTRA_DIR=/opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/bin/../extra
+++ CLIENT_DIR=/opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/bin/../client
+++ '[' -x /opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/bin/../client/mysql ']'
++++ which mysql
+++ MYSQL_CLIENT=/opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/bin/mysql
+++ '[' -x /opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/bin/../client/mysqldump ']'
++++ which mysqldump
+++ MYSQLDUMP=/opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/bin/mysqldump
+++ '[' -x /opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/bin/my_print_defaults ']'
+++ MY_PRINT_DEFAULTS=/opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/bin/my_print_defaults
+++ readonly 'WSREP_SST_OPT_CONF= '
+++ WSREP_SST_OPT_CONF=' '
+++ MY_PRINT_DEFAULTS='/opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/bin/my_print_defaults  '
+++ /opt/app/mysql/product/mariadb-10.1.11-linux-x86_64/bin/my_print_defaults sst
+++ grep -q wsrep_sst_auth
+++ readonly WSREP_SST_OPT_AUTH
+++ wsrep_auth_not_set
+++ '[' -z sstuser:passwordhere -o sstuser:passwordhere = '(null)' ']'
+++ AUTH_VEC=(${WSREP_SST_OPT_AUTH//:/ })
+++ readonly AUTH_VEC
+++ WSREP_SST_OPT_USER=sstuser
+++ WSREP_SST_OPT_PSWD=passwordhere
+++ readonly WSREP_SST_OPT_USER
+++ readonly WSREP_SST_OPT_PSWD
+++ '[' -n //opt/app/mysql/data/ ']'
+++ SST_PROGRESS_FILE=//opt/app/mysql/data//sst_in_progress
++ . /opt/app/mysql/.profile
+++ set +u
+++ set -o nolog
++++ uname -s
++++ tr '[:lower:]' '[:upper:]'
+++ OS_NAME=LINUX
+++ export OS_NAME
++++ uname -r
+++ OS_VERSION=2.6.32-504.8.1.el6.x86_64
+++ export PATH=/bin:/usr/bin:/sbin
+++ PATH=/bin:/usr/bin:/sbin
+++ PATH=/bin:/usr/bin:/sbin:/etc:/usr/sbin
+++ PATH=/bin:/usr/bin:/sbin:/etc:/usr/sbin:/usr/bin/X11
+++ PATH=/bin:/usr/bin:/sbin:/etc:/usr/sbin:/usr/bin/X11:/usr/local/bin:/usr/localcw/bin
+++ export OS_VERSION
+++ umask 022
+++ [[ xterm = '' ]]
+++ [[ xterm = \s\u\n ]]
+++ stty erase '^?'
+stty: standard input: Inappropriate ioctl for device
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Andy Ferretti</dc:creator><guid>https://mariadb.com/kb/en/problem-with-the-galera-wsrep_sst_method-xtrabackup-v2/+comments/2078</guid></item></channel></rss>

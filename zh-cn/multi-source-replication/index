@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>多源(主)复制 - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="多源(主)复制" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/zh-cn/multi-source-replication/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+MariaDB starting with &lt;a href=&#34;/kb/en/what-is-mariadb-100/&#34;&gt;10.0&lt;/a&gt;多源复制意味着一个服务器能从多个从服务器上复制。这是即将发布的MariaDB 10.0的一个新特性
+新语法
+在命令指定你想起作用的master的连接名或者设置@@default_master_connection..." />
+
+    <meta name="description" content="
+MariaDB starting with &lt;a href=&#34;/kb/en/what-is-mariadb-100/&#34;&gt;10.0&lt;/a&gt;多源复制意味着一个服务器能从多个从服务器上复制。这是即将发布的MariaDB 10.0的一个新特性
+新语法
+在命令指定你想起作用的master的连接名或者设置@@default_master_connection..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/zh-cn/multi-source-replication/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/zh-cn/multi-source-replication/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/zh-cn/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/zh-cn/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/zh-cn/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb/">MariaDB - 简体中文</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/zh-cn/multi-source-replication/">多源(主)复制</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/zh-cn/">首页</a></li>
+                            
+                                
+                                    <li><a href="/kb/zh-cn/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/zh-cn/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/zh-cn/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/zh-cn/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/zh-cn/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/multi-source-replication/+history" rel="nofollow">历史</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/multi-source-replication/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/zh-cn/multi-source-replication/+flag"
+                data-flag-url="/kb/zh-cn/multi-source-replication/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/multi-source-replication/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>已创建</dt>
+        <dd>
+
+<span class="datetime" title="2012-12-21 14:44">10 years, 2 months ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2016-06-16 15:53">6 years, 8 months ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/zh-cn/multi-source-replication/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/zh-cn/multi-source-replication/+history/feed/">
+            历史</a>
+        </li>
+        <li><a href="/kb/zh-cn/multi-source-replication/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/zh-cn/multi-source-replication/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+        
+
+<div class="well well-small box"><div><h5>Localized Versions</h5></div><div>
+
+        <ul>
+            
+            <li><a href="/kb/en/multi-source-replication/">Multi-Source Replication</a> [en]</li>
+            
+            <li><a href="/kb/it/multi-source-replication/">La replica multi-source</a> [it]</li>
+            
+        </ul>
+        
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+<div class="well well-small box"><div><h5>Product Versions</h5></div><div>
+
+        <ul id="product_chooser">
+            
+                <li class="mariadb_from_10_0">
+                    <label><input type="checkbox" data-product-class="mariadb_from_10_0"
+                            >MariaDB starting with 10.0</label>
+                </li>
+            
+        </ul>
+    
+</div>
+</div>
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>多源(主)复制</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class="mariadb_from_10_0"><a href="#新语法" title="新语法">新语法</a></li>
+
+    <li class="mariadb_from_10_0"><a href="#多源复制的变量" title="多源复制的变量">多源复制的变量</a></li>
+
+    <li class="mariadb_from_10_0"><a href="#新文件" title="新文件">新文件</a></li>
+
+    <li class="mariadb_from_10_0"><a href="#other-things" title="Other things">Other things</a></li>
+
+    <li class="mariadb_from_10_0"><a href="#typical-use-cases" title="Typical use cases">Typical use cases</a></li>
+
+    <li class="mariadb_from_10_0"><a href="#limitations" title="Limitations">Limitations</a></li>
+
+    <li class="mariadb_from_10_0"><a href="#todo" title="TODO">TODO</a></li>
+
+    <li class="mariadb_from_10_0"><a href="#incompatibilities-with-mariadbmysql-55" title="Incompatibilities with MariaDB/MySQL 5.5">Incompatibilities with MariaDB/MySQL 5.5</a></li>
+
+    <li class="mariadb_from_10_0"><a href="#see-also" title="See also:">See also:</a> </ol>
+</li>
+</div>
+<div class="mariadb_from_10_0 mariadb from_10_0 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-100/">10.0</a></h5><p>多源复制意味着一个服务器能从多个从服务器上复制。这是即将发布的<a href="/kb/en/what-is-mariadb-100/">MariaDB 10.0</a>的一个新特性</p>
+<h2 class="anchored_heading" id="新语法">新语法</h2>
+<p>在命令指定你想起作用的master的连接名或者设置<code class="highlight fixed" style="white-space:pre-wrap">@@default_master_connection</code>变量为你想生效的连接。</p>
+<p>连接名可以是任意的不超过64个字符的字符串.连接名对比的时候不考虑大小写（大小写不敏感）。 你应当保持连接名段(使用固定的连接名)，因为他将用来作relay和master信息的index文件的前缀。</p>
+<p>新语法介绍如何操作多个连接：</p>
+<ul start="1"><li><code class="highlight fixed" style="white-space:pre-wrap"><a href="/kb/en/change-master-to/">CHANGE MASTER ["connection_name"] ...</a></code>
+</li><li><code class="highlight fixed" style="white-space:pre-wrap">FLUSH RELAY LOGS ["connection_name"]</code>
+</li><li><code class="highlight fixed" style="white-space:pre-wrap"><a href="/kb/en/master_pos_wait/">MASTER_POS_WAIT(....,["connection_name"])</a></code>
+</li><li><code class="highlight fixed" style="white-space:pre-wrap"><a href="/kb/en/reset-slave/">RESET SLAVE ["connection_name"</a>]</code>
+</li><li><code class="highlight fixed" style="white-space:pre-wrap"><a href="/kb/en/show-relaylog-events/">SHOW RELAYLOG ["connection_name"] EVENTS</a></code>
+</li><li><code class="highlight fixed" style="white-space:pre-wrap"><a href="/kb/en/show-slave-status/">SHOW SLAVE ["connection_name"] STATUS</a></code>
+</li><li><code class="highlight fixed" style="white-space:pre-wrap"><a href="/kb/en/show-slave-status/">SHOW ALL SLAVES STATUS</a></code>
+</li><li><code class="highlight fixed" style="white-space:pre-wrap"><a href="/kb/en/start-slave/">START SLAVE ["connection_name"</a>...]]</code>
+</li><li><code class="highlight fixed" style="white-space:pre-wrap"><a href="/kb/en/start-slave/">START ALL SLAVES ...</a></code>
+</li><li><code class="highlight fixed" style="white-space:pre-wrap"><a href="/kb/en/stop-slave/">STOP SLAVE ["connection_name"] ...</a></code>
+</li><li><code class="highlight fixed" style="white-space:pre-wrap"><a href="/kb/en/stop-slave/">STOP ALL SLAVES ...</a></code>
+</li></ul>
+<p>原始的老式的连接是一个空字符串<code class="highlight fixed" style="white-space:pre-wrap">''</code>。你如果不想用的话可以不用这个连接。</p>
+<p>用<a href="/kb/en/change-master-to/">CHANGE MASTER</a>来创建新的master连接.<br>
+用 <a href="/kb/en/reset-slave/">RESET SLAVE "connection_name" ALL</a> 来永久的删除连接。</p>
+<h2 class="anchored_heading" id="多源复制的变量">多源复制的变量</h2>
+<p>新复制变量 <code class="highlight fixed" style="white-space:pre-wrap">@@default_master_connection</code> 指定了如果你不指定一个连接的话那个链接将会被命令和变量使用。默认这个值是 <code class="highlight fixed" style="white-space:pre-wrap">''</code> （默认连接名）。下面的复制变量是针对局部的连接的（换句话说，他们显示了 <code class="highlight fixed" style="white-space:pre-wrap">@@default_master_connection</code> 的值）。我们正致力于将重要的对于连接局部化。</p>
+<div class="cstm-style darkheader-nospace-borders"><table><tr><th>类型</th><th>名称</th><th>描述</th></tr>
+<tr><td>变量</td><td> <code>Max_relay_log_size</code></td><td>relay log的最大值. 如果是0的话，那么在启动的时候就会被设置成 <code>max_binlog_size</code> 的大小</td></tr>
+<tr><td>状态</td><td><code>Slave_heartbeat_period</code></td><td>多久从master请求一个心跳包 (以秒计算).</td></tr>
+<tr><td>状态</td><td><code>Slave_received_heartbeats</code></td><td>我们从master收到了多少个心跳包.</td></tr>
+<tr><td>状态</td><td><code>Slave_running</code></td><td>显示slave是否正在运行。YESS表示 sql 和 IO 线程是活动的。No表示其中任意一个没在运行中。""表示 <code>@@default_master_connection</code> 不存在。</td></tr>
+<tr><td>变量</td><td> <code>Sql_slave_skip_counter</code></td><td>复制日志要忽略多少个条目（主要用在日志中有错误的情况下）。</td></tr>
+</table>
+</div><p>你可以用 <code class="highlight fixed" style="white-space:pre-wrap">SESSION</code> 或者是 <code class="highlight fixed" style="white-space:pre-wrap">GLOBAL</code> 访问以上所有的变量。</p>
+<p>注意，和MySQL形成对比的是，所有的变量总是显示正确的有效的值!</p>
+<p>例如:</p>
+<pre class="fixed">set @@default_master_connection='';
+show status like 'Slave_running';
+set @@default_master_connection='other_connection';
+show status like 'Slave_running';
+</pre><p>如果 <code class="highlight fixed" style="white-space:pre-wrap">@@default_master_connection</code> 包含一个不存在的名称，你将收到一个警告.</p>
+<p>所有其他的master相关的变量都是全局的，并且影响 "" 连接或者是所有的连接。例如，
+<code class="highlight fixed" style="white-space:pre-wrap">Slave_retried_transactions</code> 现在显示所有的slave的重试事务次数。</p>
+<p>新添加的状态变量:</p>
+<div class="cstm-style darkheader-nospace-borders"><table><tr><th>名称</th><th>描述</th></tr>
+<tr><td><code>Com_start_all_slaves</code></td><td>执行 <code>START ALL SLAVES</code> 命令的次数。</td></tr>
+<tr><td><code>Com_start_slave</code></td><td>执行 <code>START SLAVE</code> 命令的次数。取代了 <code>Com_slave_start</code>.</td></tr>
+<tr><td><code>Com_stop_slave</code></td><td>执行 <code>STOP SLAVE</code> 命令的次数。取代了 <code>Com_slave_stop</code>.</td></tr>
+<tr><td><code>Com_stop_all_slaves</code></td><td>执行 <code>STOP ALL SLAVES</code> 命令的次数</td></tr>
+</table>
+</div><p><code class="highlight fixed" style="white-space:pre-wrap"><a href="/kb/en/show-slave-status/">SHOW ALL SLAVES STATUS</a></code> 有以下的新的列:</p>
+<div class="cstm-style darkheader-nospace-borders"><table><tr><th>名称</th><th>描述</th></tr>
+<tr><td><code>Connection_name</code></td><td>master的连接名。 这是第一个变量</td></tr>
+<tr><td><code>Slave_SQL_State</code></td><td>SQL 线程的状态</td></tr>
+<tr><td><code>Retried_transactions</code></td><td>这个连接重试事务的次数。</td></tr>
+<tr><td><code>Max_relay_log_size</code></td><td>这个连接的最大的relay日志的大小。</td></tr>
+<tr><td><code>Executed_log_entries</code></td><td>slave已经指向了多少个日志条目。</td></tr>
+<tr><td><code>Slave_received_heartbeats</code></td><td>从master获得了多少个心跳。</td></tr>
+<tr><td><code>Slave_heartbeat_period</code></td><td>多久从master请求一个心跳包(以秒计算)。</td></tr>
+</table>
+</div><h2 class="anchored_heading" id="新文件">新文件</h2>
+<p>被多源复制使用的新文件的基本准则是：他们有在扩展名前被冠以 <code class="highlight fixed" style="white-space:pre-wrap">连接名</code> 前缀的和原来的中继日志文件类似的名字。 主要的例外是，保存所有连接名字的 文件<code class="highlight fixed" style="white-space:pre-wrap">master-info-file</code> 被简单的命名为带有 <code class="highlight fixed" style="white-space:pre-wrap">multi-</code> 前缀的 <code class="highlight fixed" style="white-space:pre-wrap">master-info-file</code> 。</p>
+<p>当你使用多源复制的时候，下面的文件将被创建:</p>
+<div class="cstm-style darkheader-nospace-borders"><table><tr><th>名称</th><th>描述</th></tr>
+<tr><td>multi-<code>master-info-file</code></td><td><code>master-info-file</code> (一般是 <code>master.info</code>) 带上了 <code>multi-</code> 前缀。这里面是所有使用中的master连接信息。</td></tr>
+<tr><td><code>master-info-file</code>-connection_name<code>.extension</code></td><td>包含了当前master应用到slave的位置。扩展名一般是 <code>.info</code></td></tr>
+<tr><td><code>relay-log</code>-connection_name<code>.xxxxx</code></td><td>relay-log 有了一个 connection_name 的前缀. xxxxx 是 relay log 的编号。这里面保存的是从master读取的复制数据。</td></tr>
+<tr><td><code>relay-log-index</code>-connection_name<code>.extension</code> </td><td> 包含可用的 <code>relay-log</code>-connection_name<code>.xxxxx</code> 文件的名字。扩展名一般是 <code>.index</code></td></tr>
+<tr><td><code>relay-log-info-file</code>-connection_name<code>.extension</code></td><td>包含relay日志中的当前master的位置。扩展名一般是 <code>.info</code></td></tr>
+</table>
+</div><p>当创建这些文件的时候，连接名被转化成小写的，并且其中所有的特殊字符都被转化了，就和mysql表名中的特殊字符被转化一样。这样做是为了方便文件名可以在不同系统上移植。</p>
+<p>提示:</p>
+<p>你只需要指定 <code class="highlight fixed" style="white-space:pre-wrap">--log-base-name</code> ,所有的其他变量将会使用这个作为前缀，而不用为<code class="highlight fixed" style="white-space:pre-wrap">mysqld</code>指定 <code class="highlight fixed" style="white-space:pre-wrap">--relay-log</code>, <code class="highlight fixed" style="white-space:pre-wrap">--relay-log-index</code>, <code class="highlight fixed" style="white-space:pre-wrap">--relay-log-index</code>, <code class="highlight fixed" style="white-space:pre-wrap">--general-log</code>, <code class="highlight fixed" style="white-space:pre-wrap">--slow-log</code>,
+<code class="highlight fixed" style="white-space:pre-wrap">--log-bin</code>, <code class="highlight fixed" style="white-space:pre-wrap">--log-bin-index</code> 这些的名字。</p>
+<h2 class="anchored_heading" id="other-things">Other things</h2>
+<ul start="1"><li>All error messages from a slave with a connection name, that are written to the error log, are prefixed with <code class="highlight fixed" style="white-space:pre-wrap">Master 'connection_name':</code>. This makes it easy to see from where an error originated.
+</li><li>Errors <code class="highlight fixed" style="white-space:pre-wrap">ER_MASTER_INFO</code> and <code class="highlight fixed" style="white-space:pre-wrap">WARN_NO_MASTER_INFO</code> now includes connection_name.
+</li><li>There is no conflict resolution. The assumption is that there are no conflicts in data between the different masters.
+</li><li>All executed commands are stored in the normal binary log (nothing new here).
+</li><li>If the server variable <code class="highlight fixed" style="white-space:pre-wrap">log_warnings</code> &gt; 1 then you will get some information in the log about how the multi-master-info file is updated (mainly for debugging).
+</li><li><a href="/kb/en/show-slave-status/">SHOW [FULL] SLAVE STATUS</a> has one line per connection and more columns than before. <strong>Note that the first column is the <code class="highlight fixed" style="white-space:pre-wrap">connection_name</code>!</strong>
+</li><li><code class="highlight fixed" style="white-space:pre-wrap"><a href="/kb/en/reset-slave/">RESET SLAVE</a></code> now deletes all relay-log files.
+</li></ul>
+<h2 class="anchored_heading" id="typical-use-cases">Typical use cases</h2>
+<ul start="1"><li>You are partitioning your data over many masters and would like to get it all together on one machine to do analytical queries on all data.
+</li><li>You have many databases spread over many MariaDB/MySQL servers and would like to have all of them on one machine as an extra backup.
+</li></ul>
+<h2 class="anchored_heading" id="limitations">Limitations</h2>
+<ul start="1"><li>You can for now only have 64 masters (trivial to increase if necessary).
+</li><li>Each active connection will create 2 threads (as is normal for MariaDB replication).
+</li><li>You should ensure that all master have different <code class="highlight fixed" style="white-space:pre-wrap">server-id</code>'s. If you don't do this, you will get into trouble if you try to replicate from the multi-source slave back to your masters.
+</li><li>One can change <code class="highlight fixed" style="white-space:pre-wrap">max_relay_log_size</code> for any active connection, but new connections will always use the server startup value for <code class="highlight fixed" style="white-space:pre-wrap">max_relay_log_size</code>, which can't be changed at runtime.
+</li><li>Option <code class="highlight fixed" style="white-space:pre-wrap">innodb-recovery-update-relay-log</code> (xtradb feature to store and restore relay log position for slaves) only works for the default connection ''.  As this option is not really safe and can easily cause loss of data if you use storage engines other than InnoDB, we don't recommend this option to be used.
+</li><li><code class="highlight fixed" style="white-space:pre-wrap">Slave_net_timeout</code> affects all connections. We don't check anymore if it's less than <code>Slave_heartbeat_period</code>, as this doesn't make sense in a multi-source setup.
+</li></ul>
+<h2 class="anchored_heading" id="todo">TODO</h2>
+<ul start="1"><li>Semisync replication ('semisync_slave.so') doesn't yet work with multi-source. Will be fixed for next release.
+</li><li>All open tasks and known bugs for multi-source can be found <a href="https://jira.mariadb.org/issues/?filter=11400">here</a>.
+</li><li>allow to replicate from one master to one slave in many threads
+</li></ul>
+<h2 class="anchored_heading" id="incompatibilities-with-mariadbmysql-55">Incompatibilities with MariaDB/MySQL 5.5</h2>
+<ul start="1"><li><code class="highlight fixed" style="white-space:pre-wrap">max_relay_log_size</code> is now (almost) a normal variable and not automatically changed if <code class="highlight fixed" style="white-space:pre-wrap">max_binlog_size</code> is changed. To keep things compatible with old config files, we set it to <code class="highlight fixed" style="white-space:pre-wrap">max_binlog_size</code> at startup if its value is 0.
+</li><li>You can now access replication variables that depend on the active connection with either <code class="highlight fixed" style="white-space:pre-wrap">GLOBAL</code> or <code class="highlight fixed" style="white-space:pre-wrap">SESSION</code>.
+</li><li>We only write information about relay log positions for recovery if <code class="highlight fixed" style="white-space:pre-wrap">innodb-recovery-update-relay-log</code> is set.
+</li><li><code class="highlight fixed" style="white-space:pre-wrap">Slave_retried_transaction</code> now shows the total count of retried transactions over all slaves.
+</li><li>The status variable <code class="highlight fixed" style="white-space:pre-wrap">Com_slave_start</code> is replaced with <code class="highlight fixed" style="white-space:pre-wrap">Com_start_slave</code>.
+</li><li>The status variable <code class="highlight fixed" style="white-space:pre-wrap">Com_slave_stop</code> is replaced with <code class="highlight fixed" style="white-space:pre-wrap">Com_stop_slave</code>.
+</li><li><code class="highlight fixed" style="white-space:pre-wrap">FLUSH RELAY LOGS</code> are not replicated anymore. This is not safe as connection names may be different on the slave.
+</li></ul>
+</div><h2 class="anchored_heading" id="see-also">See also:</h2>
+<ul start="1"><li>The work in MariaDB is based on the project description at <a href="https://jira.mariadb.org/browse/MDEV-253">MDEV-253</a>.
+</li><li>The original code base comes from <a href="http://mysql.taobao.org/index.php/Patch_source_code#Multi-master_replication">Taobao, developed by Peng Lixun</a>. A big thanks to them for this important feature!
+</li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/zh-cn/multi-source-replication/+subscriptions/add"
+                 data-unsubscribe-url="/kb/zh-cn/multi-source-replication/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/zh-cn/buildbot-setup-for-solaris-x86/">
+                        ← 在Solaris x86上设置Buildbot
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/zh-cn/mariadb-mariadb-/">
+                        ↑ MariaDB - 简体中文 ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/zh-cn/suggested-development/">
+                        开发建议 →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="3148" data-comments-url="/kb/zh-cn/multi-source-replication/+comments"
+         data-reply-url="/kb/zh-cn/multi-source-replication/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/zh-cn/mariadb-mariadb-/">
+                    ↑ MariaDB - 简体中文 ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/mariadb-mariadb/">
+                            
+                            MariaDB简介
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/3033/">
+                            
+                            下载
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/mariadb-documentation/">
+                            
+                            MariaDB的使用
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/3104/">
+                            
+                            插件
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/aria-storage-engine/">
+                            
+                            Aria 存储引擎
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/mariadb-1004/">
+                            
+                            MariaDB 10.0.4 发行日志
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/deprecation-policy/">
+                            
+                            MariaDB 停止支持规范
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/mariadb-mariadbmysql/">
+                            
+                            MariaDB与MySQL——特性比较
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/mariadb-vs-mysql-compatibility/">
+                            
+                            MariaDB与MySQL兼容性比较
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/nimbuzz-uses-mariadb/">
+                            
+                            Nimbuzz 使用 MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/perfect-mariadb-a-mariadb-connector-in-swift/">
+                            
+                            Perfect-MariaDB - Swift语言的MariaDB数据库连接函数库
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/mariadb/">
+                            
+                            与 MariaDB 一同工作
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/buildbot-setup-for-solaris-sparc/">
+                            
+                            在Solaris Sparc上设置Buildbot
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/buildbot-setup-for-solaris-x86/">
+                            
+                            在Solaris x86上设置Buildbot
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>多源(主)复制</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/suggested-development/">
+                            
+                            开发建议
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/community-contributing-to-the-mariadb-project/">
+                            
+                            怎样为MariaDB做出贡献？
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/mariadb-mariadb-mysql/">
+                            
+                            推荐的 MariaDB / MySQL 电子书
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/licensing-faq/">
+                            
+                            许可证 FAQ
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/who-is-behind-mariadb/">
+                            
+                            谁在给MariaDB做贡献？
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/contributing-code/">
+                            
+                            贡献代码
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Identifying and removing duplicates</title><link>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 20:09:52 +0000</lastBuildDate><item><title>Re: Identifying and removing duplicates</title><link>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3153</link><description>&lt;p&gt;Many thanks for the solution Ian. I have tried it using 10.3 and it has worked. &lt;/p&gt;
+&lt;p&gt;I now have six other major files on the system that have similarly been corrupted with duplicates to work my wat through. &lt;/p&gt;
+&lt;p&gt;The corruption occured  not, I hasten to add, in MariaDB but in a D-ISAM based system which I have converted to MariaDB to solve the problem.&lt;/p&gt;
+&lt;p&gt;I really appreciate the time and trouble you have spent in helping me solve the issue.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Joe Curtis</dc:creator><guid>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3153</guid></item><item><title>Re: Identifying and removing duplicates</title><link>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3152</link><description>&lt;p&gt;Note that &lt;a href="/kb/en/what-is-mariadb-103/"&gt;MariaDB 10.3&lt;/a&gt; is still alpha. So you can use it just to convert your data and then re-import it back to your current version, or you can try the alternative version I've added above. I wouldn't suggest using 10.3 in production yet.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3152</guid></item><item><title>Re: Identifying and removing duplicates</title><link>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3151</link><description>&lt;p&gt;There is another alternative that should work on versions before &lt;a href="/kb/en/what-is-mariadb-103/"&gt;MariaDB 10.3&lt;/a&gt;. This works by setting a unique index on all the identical fields, and by making use of the old ALTER TABLE copying behaviour, ignoring errors when it copies the data back, basically silently dropping duplicates. This requires the &lt;a href="/kb/en/server-system-variables/#old_alter_table"&gt;old_alter_table&lt;/a&gt; system variable to be temporarily set. Here's a sample:&lt;/p&gt;
+&lt;pre class="fixed"&gt;CREATE TABLE t (id INT, f1 VARCHAR(2));
+
+INSERT INTO t VALUES (1,'a'), (2,'a'), (3,'b'), (4,'a');
+
+SELECT * FROM t;
++------+------+
+| id   | f1   |
++------+------+
+|    1 | a    |
+|    2 | a    |
+|    3 | b    |
+|    4 | a    |
++------+------+
+
+SET SESSION old_alter_table=1;
+
+ALTER IGNORE TABLE t ADD UNIQUE INDEX u(f1);
+Query OK, 4 rows affected (0.82 sec)               
+Records: 4  Duplicates: 2  Warnings: 0
+
+SELECT * FROM t;
++------+------+
+| id   | f1   |
++------+------+
+|    1 | a    |
+|    3 | b    |
++------+------+
+
+SET SESSION old_alter_table=0;
+&lt;/pre&gt;&lt;p&gt;With your data, you would create the unique index on all the duplicated fields, so something like:&lt;/p&gt;
+&lt;pre class="fixed"&gt;ALTER TABLE t ADD UNIQUE INDEX u(f1, f2, f3...);
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3151</guid></item><item><title>Re: Identifying and removing duplicates</title><link>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3150</link><description>&lt;p&gt;Thanks for the info. I'll dowwnload 10.3 and give it a go.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Joe Curtis</dc:creator><guid>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3150</guid></item><item><title>Re: Identifying and removing duplicates</title><link>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3149</link><description>&lt;p&gt;Apologies, I was leading you to syntax that only works in &lt;a href="/kb/en/what-is-mariadb-103/"&gt;MariaDB 10.3&lt;/a&gt; - &lt;a href="https://jira.mariadb.org/browse/MDEV-12137"&gt;MDEV-12137&lt;/a&gt;.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3149</guid></item><item><title>Re: Identifying and removing duplicates</title><link>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3148</link><description>&lt;p&gt;Hi Ian.
+This is the file structure dumped using HeidiSQL. The actual file size is 181.2Mb.&lt;/p&gt;
+&lt;pre class="fixed"&gt;/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET NAMES utf8 */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+
+
+-- Dumping database structure for antareso
+CREATE DATABASE IF NOT EXISTS `antareso` /*!40100 DEFAULT CHARACTER SET utf8 */;
+USE `antareso`;
+
+-- Dumping structure for table antareso.jobtransactionactuallabour
+CREATE TABLE IF NOT EXISTS `jobtransactionactuallabour` (
+  `I_TransactionId` int(11) NOT NULL AUTO_INCREMENT,
+  `I_JobNumber` int(11) DEFAULT NULL,
+  `SI_JobYearNumber` smallint(6) DEFAULT NULL,
+  `SI_FinancialPeriod` smallint(6) DEFAULT NULL,
+  `BIT_Flags1` tinyint(3) unsigned DEFAULT NULL,
+  `SI_FinancialYear` smallint(6) DEFAULT NULL,
+  `SI_OvertimeRate` smallint(6) DEFAULT NULL,
+  `C_WhereAmI` char(64) DEFAULT NULL,
+  `DT_PostingDate` datetime DEFAULT NULL,
+  `DT_ActualDate` datetime DEFAULT NULL,
+  `I_Hours1` int(11) DEFAULT NULL,
+  `I_Cost` int(11) DEFAULT NULL,
+  `I_ProductionUnits` int(11) DEFAULT NULL,
+  `C_OperationCode` char(16) DEFAULT NULL,
+  `C_EmployeeCode` char(16) DEFAULT NULL,
+  `C_Comments1` char(255) DEFAULT NULL,
+  `B_IsAuthorsCorrection` tinyint(4) DEFAULT NULL,
+  `B_IsHouseCorrection` tinyint(4) DEFAULT NULL,
+  `B_IsIndirect` tinyint(4) DEFAULT NULL,
+  `B_IsFinished` tinyint(4) DEFAULT NULL,
+  `I_Rate` int(11) DEFAULT NULL,
+  `DT_DateOn` datetime DEFAULT NULL,
+  `DT_DateOff` datetime DEFAULT NULL,
+  `C_TerminalOn` char(16) DEFAULT NULL,
+  `C_TerminalOff` char(16) DEFAULT NULL,
+  `C_Comments2` char(255) DEFAULT NULL,
+  `C_Comments3` char(255) DEFAULT NULL,
+  `C_Comments4` char(255) DEFAULT NULL,
+  `I_Hours2` int(11) DEFAULT NULL,
+  `I_Hours3` int(11) DEFAULT NULL,
+  `I_Hours4` int(11) DEFAULT NULL,
+  `BIT_Flags2` tinyint(3) unsigned DEFAULT NULL,
+  `duplicate` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`I_TransactionId`),
+  KEY `IDX_JobTransactionActualLabour1` (`SI_JobYearNumber`,`I_JobNumber`,`I_TransactionId`),
+  KEY `IDX_JobTransactionActualLabour2` (`DT_PostingDate`,`C_EmployeeCode`,`I_TransactionId`),
+  KEY `IDX_JobTransactionActualLabour3` (`C_OperationCode`)
+) ENGINE=InnoDB AUTO_INCREMENT=303159 DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
+/*!40014 SET FOREIGN_KEY_CHECKS=IF(@OLD_FOREIGN_KEY_CHECKS IS NULL, 1, @OLD_FOREIGN_KEY_CHECKS) */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Joe Curtis</dc:creator><guid>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3148</guid></item><item><title>Re: Identifying and removing duplicates</title><link>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3147</link><description>&lt;p&gt;Please paste your CREATE TABLE statement so that it's easier to replicate your structure.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3147</guid></item><item><title>Re: Identifying and removing duplicates</title><link>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3146</link><description>&lt;p&gt;Thanks Ian for the reply.&lt;/p&gt;
+&lt;p&gt;If I apply the coding shown in 'Removing Duplicates' to my problem as &lt;/p&gt;
+&lt;pre class="fixed"&gt;DELETE FROM jobtransactionactuallabour WHERE I_TransactionId IN (
+  SELECT t2.I_TransactionId  FROM jobtransactionactuallabour t1, jobtransactionactuallabour t2 
+	WHERE t1.SI_JobYearNumber=t2.SI_JobYearNumber 
+	AND t1.I_JobNumber=t2.I_JobNumber
+	AND t1.DT_ActualDate=t2.DT_ActualDate
+	AND t1.I_Hours1=t2.I_Hours1
+	AND t1.C_OperationCode=t2.C_OperationCode
+	AND t1.C_EmployeeCode=t2.C_EmployeeCode
+	AND t1.I_TransactionId &amp;lt;&amp;gt;t2.I_TransactionId  AND t1.I_TransactionId =(
+    SELECT MAX(I_TransactionId ) FROM jobtransactionactuallabour tab 
+		WHERE tab SI_JobYearNumber=t1.SI_JobYearNumber 
+		AND tab.I_JobNumber=t1.I_JobNumber
+		AND tab.DT_ActualDate=t1.DT_ActualDate
+		AND tab.I_Hours1=t1.I_Hours1
+		AND tab.C_OperationCode=t1.C_OperationCode
+		AND tab.C_EmployeeCode=t1.C_EmployeeCode
+  )
+);
+&lt;/pre&gt;&lt;p&gt;I get the error message-&lt;/p&gt;
+&lt;p&gt;SQL Erroe (1093): Table 'jobtransactionactuallabour' is specified twice, both as a target for 'DELETE' and as a separate source for the data.&lt;/p&gt;
+&lt;p&gt;I had thought that as the table was identified with aliases this should not be a problem but this doesn't appear to be the case&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Joe Curtis</dc:creator><guid>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3146</guid></item><item><title>Re: Identifying and removing duplicates</title><link>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3142</link><description>&lt;p&gt;It appears the values in all of your ORDER BY fields will be the same for more than one row, so your example does not specify a determinate order.&lt;/p&gt;
+&lt;p&gt;But since you have a unique ID, there's a much easier way to do this, without adding a new fields, or updating anything. See &lt;a href="/kb/en/common-mariadb-queries/#removing-duplicates"&gt;Removing Duplicates&lt;/a&gt;.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/identifying-and-removing-duplicates/+comments/3142</guid></item></channel></rss>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Rotating Logs on Unix and Linux</title><link>https://mariadb.com/kb/en/rotating-logs-on-unix-and-linux/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/rotating-logs-on-unix-and-linux/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 09 Mar 2023 18:06:28 +0000</lastBuildDate><item><title>Re: Rotating Logs on Unix and Linux</title><link>https://mariadb.com/kb/en/rotating-logs-on-unix-and-linux/+comments/4333</link><description>&lt;p&gt;First off, this a useful resource. Probably the best tutorial for Logrotate in general. Very efficient and used what was shared to tweak other log file rotations.&lt;/p&gt;
+&lt;p&gt;Unfortunately, one error breaks the rotation of logs with Logrotate, and I ran into a few of them, but I was able to solve them quickly.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;The following is how I got this to run without errors on Centos 7 with a "mariadb" config file located in: &lt;strong&gt;/etc/logrotate.d/mariadb&lt;/strong&gt;:&lt;/p&gt;
+&lt;hr&gt;
+&lt;hr&gt;
+&lt;pre class="fixed"&gt;/var/log/mysql/* {
+        missingok
+        create 660 mysql mysql
+        notifempty
+        daily
+        minsize 1M
+        maxsize 100M
+        rotate 30
+        dateext
+        dateformat .%Y-%m-%d
+        compress
+        delaycompress
+        sharedscripts 
+        olddir archive/
+        createolddir 770 mysql mysql
+    postrotate
+        # just if mysqld is really running
+        if test -x /usr/bin/mysqladmin &amp;amp;&amp;amp; \
+           /usr/bin/mysqladmin ping &amp;amp;&amp;gt;/dev/null
+        then
+           /usr/bin/mysqladmin --local flush-error-log \
+              flush-engine-log flush-general-log flush-slow-log
+        fi
+    endscript
+    su mysql mysql
+}
+&lt;/pre&gt;&lt;hr&gt;
+&lt;hr&gt;
+&lt;p&gt;Here the errors I was encountering when using the shared command above verbatim. &lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;strong&gt;error: /etc/logrotate.d/mariadb:1 unknown option 'sudo' -- ignoring line&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Since my config file went in /etc/logrotate.d/mariadb, I just removed "sudo tee /etc/logrotate.d/mariadb" and since the &amp;lt;&amp;lt;EOF operator was not reading throughout to the delimiter, I removed all references to "end of file". I am not sure if this is the right situation to use EOD in bash, but I believe they would have to be on inside the curly brackets (or possible outside as an option)  to function.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;strong&gt;error: /etc/logrotate.d/mariadb:7 bad size '1M # only use with logrotate &amp;gt;= 3.7.4'&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;error: /etc/logrotate.d/mariadb:7 bad size '100M # only use with logrotate &amp;gt;= 3.8.1'&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;The commented out notes after the commands were being included within the command, so I removed:&lt;/p&gt;
+&lt;pre class="fixed"&gt;# only use with logrotate &amp;gt;= 3.7.4
+# only use with logrotate &amp;gt;= 3.8.1
+# only use if your logrotate version is compatible with below dateformat
+&lt;/pre&gt;&lt;hr&gt;
+&lt;p&gt;&lt;strong&gt;error: skipping "/var/log/mysql/mariadb.err" because parent directory has insecure permissions (It's world writable or writable by group which is not "root") Set "su" directive in config file to tell logrotate which user/group should be used for rotation.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;error: skipping "/var/log/mysql/mariadb.log" because parent directory has insecure permissions (It's world writable or writable by group which is not "root") Set "su" directive in config file to tell logrotate which user/group should be used for rotation.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;error: skipping "/var/log/mysql/mariadb-slow.log" because parent directory has insecure permissions (It's world writable or writable by group which is not "root") Set "su" directive in config file to tell logrotate which user/group should be used for rotation.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;To fix the above permissions errors, I added &lt;em&gt;&lt;strong&gt;su mysql mysql&lt;/strong&gt;&lt;/em&gt; after the "endscript" to tell logrotate which user/group should be used for rotation.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;strong&gt;error: found error in /var/log/mysql/* , skipping&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Letting you know it's going to be skipping this rotation command. &lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;Tiny's comment was spot on. The trailing "}" is also missing. It took me a second glance when I first reviewed this article, but this stood out pretty clear right off the top.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;Strange, because in &lt;strong&gt;/var/lib/logrotate/logrotate.status&lt;/strong&gt; the date and time showed up perfect with:&lt;/p&gt;
+&lt;p&gt;&lt;code class="fixed" style="white-space:pre-wrap"&gt;dateformat.%Y-%m-%d-%H-%M-%S&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;But the archive names came out as:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;mariadb.log.2020-01-04-10-%M-%S&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;So, I choose to slim it down to:&lt;/p&gt;
+&lt;p&gt;&lt;code class="fixed" style="white-space:pre-wrap"&gt;dateformat .%Y-%m-%d&lt;/code&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;I hope this helps anyone who is looking for it.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Streamer Cloud</dc:creator><guid>https://mariadb.com/kb/en/rotating-logs-on-unix-and-linux/+comments/4333</guid></item><item><title>Tiny Logrotate Omission</title><link>https://mariadb.com/kb/en/rotating-logs-on-unix-and-linux/+comments/4172</link><description>&lt;p&gt;There's a tiny mistake in the logrotate entry -- there needs to be a closing brace (}) before the EOF.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jeff Williams</dc:creator><guid>https://mariadb.com/kb/en/rotating-logs-on-unix-and-linux/+comments/4172</guid></item></channel></rss>
