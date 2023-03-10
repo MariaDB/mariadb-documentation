@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-
 pub fn url_to_path(url: &str) -> PathBuf {
     let url_suffix = get_url_suffix(url);
     let mut path = PathBuf::from(url_suffix);

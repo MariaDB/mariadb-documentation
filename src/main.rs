@@ -1,7 +1,7 @@
 mod url_to_path;
 use std::{
     ffi::OsStr,
-    path::{Path, PathBuf},
+    path::{Path, PathBuf}, collections::HashMap,
 };
 use tokio_util::io::ReaderStream;
 
@@ -11,16 +11,19 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
     routing::get,
-    Router, Server,
+    Router, Server, Json,
 };
-use tokio::fs::File;
+use tokio::fs::{File, self};
 use url_to_path::url_to_path;
 
 const BASE_PATH: &str = "../mariadb_archive/";
 
 #[tokio::main]
 async fn main() {
-    let app = Router::new().route("/", get(root)).route("/*url", get(req));
+    let app = Router::new()
+        .route("/", get(root))
+        .route("/kb_urls.csv", get(get_kb_urls))
+        .route("/*url", get(req));
     let addr = "0.0.0.0:7032".parse().unwrap();
     let server = Server::bind(&addr).serve(app.into_make_service());
     println!("Listening on http://localhost:7032/");
@@ -30,6 +33,10 @@ async fn main() {
 #[debug_handler]
 async fn root() -> Result<Response, StatusCode> {
     req(extract::Path("/kb/en".to_owned())).await
+}
+
+async fn get_kb_urls() -> Result<String, StatusCode> {
+    fs::read_to_string("kb_urls.csv").await.map_err(|_| StatusCode::NOT_FOUND)
 }
 
 #[debug_handler]
