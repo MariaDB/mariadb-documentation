@@ -14,7 +14,7 @@ use crawler::Crawler;
 use method::ScrapeMethod;
 use standard_crawler::StandardCrawler;
 
-pub const BASE_PATH: &str = "../html";
+pub const BASE_PATH: &str = "../mariadb_archive";
 
 fn main() {
     logger::init();
