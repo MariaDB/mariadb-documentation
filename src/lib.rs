@@ -1,6 +1,8 @@
 mod graceful_shutdown;
 mod url_to_path;
 
+use axum::Json;
+use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use tokio_util::io::ReaderStream;
@@ -16,14 +18,15 @@ use axum::{
 };
 
 use tokio::fs::{self, File};
-use url_to_path::{url_to_path, url_to_index_path};
+use url_to_path::{url_to_index_path, url_to_path};
 
 const BASE_PATH: &str = "../mariadb_archive/";
 
 pub async fn run() {
     let app = Router::new()
         .route("/", get(root))
-        .route("/kb_urls.csv", get(get_kb_urls))
+        .route("/kb_urls.csv", get(get_kb_urls_csv))
+        .route("/kb_urls.json", get(get_kb_urls_json))
         .route("/kb/*url", get(request_kb));
     let addr = "0.0.0.0:7032".parse().expect("Invalid Port");
     let server = Server::bind(&addr)
@@ -36,17 +39,20 @@ pub async fn run() {
 
 #[debug_handler]
 async fn root(query: Query<ReqQuery>) -> Result<Response, StatusCode> {
-    request_kb(
-        extract::Path("/kb/en".to_owned()),
-        query,
-    )
-    .await
+    request_kb(extract::Path("/kb/en".to_owned()), query).await
 }
 
-async fn get_kb_urls() -> Result<String, StatusCode> {
+async fn get_kb_urls_csv() -> Result<String, StatusCode> {
     fs::read_to_string("kb_urls.csv")
         .await
         .map_err(|_| StatusCode::NOT_FOUND)
+}
+
+async fn get_kb_urls_json() -> Result<Response, StatusCode> {
+    let kb_urls = get_kb_urls_csv().await?;
+    let mut reader = csv::Reader::from_reader(kb_urls.as_bytes());
+    let rows: Result<Vec<HashMap<String, String>>, _> = reader.deserialize().collect();
+    Ok(Json(rows.map_err(|_| StatusCode::NOT_FOUND)?).into_response())
 }
 
 #[derive(serde::Deserialize, Debug)]
@@ -75,9 +81,8 @@ async fn request_kb(
 }
 
 async fn request_kb_list(url: String) -> Result<Response, StatusCode> {
-    let path = url_to_path(&url);
-    let cwd = PathBuf::from(BASE_PATH);
-    let Ok(mut dir) = fs::read_dir(cwd.join(&path)).await else {
+    let path = PathBuf::from(BASE_PATH).join(url_to_path(&url));
+    let Ok(mut dir) = fs::read_dir(&path).await else {
         eprintln!("path {path:?}");
         return Err(StatusCode::NOT_FOUND);
     };
@@ -89,6 +94,7 @@ async fn request_kb_list(url: String) -> Result<Response, StatusCode> {
     }
     Ok(items.join(",").into_response())
 }
+
 fn content_type_from_extension(extension: &str) -> Option<&'static str> {
     let content_type = match extension {
         "html" => "text/html; charset=utf-8",
