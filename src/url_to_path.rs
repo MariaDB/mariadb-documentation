@@ -1,11 +1,15 @@
 use std::path::PathBuf;
-pub fn url_to_path(url: &str) -> PathBuf {
-    let url_suffix = get_url_suffix(url);
-    let mut path = PathBuf::from(url_suffix);
-    if path.extension().is_none() {
-        path = path.join("index");
+
+pub fn url_to_index_path(url: &str) -> PathBuf {
+    let path = url_to_path(url);
+    if path.extension().is_some() {
+        return path;
     }
-    path
+    path.join("index")
+}
+
+pub fn url_to_path(url: &str) -> PathBuf {
+    PathBuf::from(get_url_suffix(url))
 }
 pub fn get_url_suffix(mut url: &str) -> &str {
     if let Some(idx) = url.find('?').or_else(|| url.find('#')) {

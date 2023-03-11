@@ -17,7 +17,7 @@ use axum::{
     Router, Server,
 };
 use tokio::fs::{self, File};
-use url_to_path::url_to_path;
+use url_to_path::{url_to_path, url_to_index_path};
 
 const BASE_PATH: &str = "../mariadb_archive/";
 
@@ -25,7 +25,7 @@ pub async fn run() {
     let app = Router::new()
         .route("/", get(root))
         .route("/kb_urls.csv", get(get_kb_urls))
-        .route("/kb/*url", get(req));
+        .route("/kb/*url", get(request_kb));
     let addr = "0.0.0.0:7032".parse().expect("Invalid Port");
     let server = Server::bind(&addr)
         .serve(app.into_make_service())
@@ -36,12 +36,10 @@ pub async fn run() {
 }
 
 #[debug_handler]
-async fn root() -> Result<Response, StatusCode> {
-    req(
+async fn root(query: Query<ReqQuery>) -> Result<Response, StatusCode> {
+    request_kb(
         extract::Path("/kb/en".to_owned()),
-        Query(ReqQuery {
-            list: Some(String::new()),
-        }),
+        query,
     )
     .await
 }
@@ -52,20 +50,21 @@ async fn get_kb_urls() -> Result<String, StatusCode> {
         .map_err(|_| StatusCode::NOT_FOUND)
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Debug)]
 pub struct ReqQuery {
     list: Option<String>,
 }
 
 #[debug_handler]
-async fn req(
+async fn request_kb(
     extract::Path(url): extract::Path<String>,
     Query(query): Query<ReqQuery>,
 ) -> Result<Response, StatusCode> {
+    println!("{query:?}");
     if query.list.is_some() {
-        return req_list(url).await;
+        return request_kb_list(url).await;
     }
-    let path = &PathBuf::from(BASE_PATH).join(url_to_path(&url));
+    let path = &PathBuf::from(BASE_PATH).join(url_to_index_path(&url));
     let extension = match path.extension().map_or(Some("html"), OsStr::to_str) {
         Some(extension) => extension,
         None => return Err(StatusCode::BAD_REQUEST),
@@ -77,15 +76,11 @@ async fn req(
     content_builder(content_type, path).await
 }
 
-async fn req_list(url: String) -> Result<Response, StatusCode> {
+async fn request_kb_list(url: String) -> Result<Response, StatusCode> {
     let path = url_to_path(&url);
-    let Some(parent) = path.parent() else {
-        eprintln!("path {path:?}!");
-        return Err(StatusCode::NOT_FOUND);
-    };
     let cwd = PathBuf::from(BASE_PATH);
-    let Ok(mut dir) = fs::read_dir(cwd.join(parent)).await else {
-        eprintln!("parent {parent:?}");
+    let Ok(mut dir) = fs::read_dir(cwd.join(&path)).await else {
+        eprintln!("path {path:?}");
         return Err(StatusCode::NOT_FOUND);
     };
     let mut items = vec![];
