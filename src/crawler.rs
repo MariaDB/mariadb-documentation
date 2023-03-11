@@ -1,12 +1,9 @@
-use crate::scrape::format_url;
+use crate::scrape::{format_url, scrape_urls};
 use crate::url_to_path;
 
-use crate::{
-    req::{self, ScrapeClient},
-    scrape, BASE_PATH,
-};
+use crate::{req::ScrapeClient, scrape, BASE_PATH};
 use std::{
-    collections::{HashSet, VecDeque},
+    collections::VecDeque,
     error::Error,
     fs,
     path::{Path, PathBuf},

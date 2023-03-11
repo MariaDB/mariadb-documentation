@@ -1,7 +1,7 @@
 use crate::ScrapeMethod;
 use clap::{arg, Command};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct AppArgs {
     pub scrape_method: ScrapeMethod,
     pub clear: bool,

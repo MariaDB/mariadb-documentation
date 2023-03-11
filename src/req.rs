@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use reqwest::blocking::{self, Response};
 
 pub struct ScrapeClient {
@@ -14,7 +16,7 @@ impl ScrapeClient {
             inner: blocking::Client::new(),
         }
     }
-    pub fn get(&mut self, url: &str) -> Result<ScrapeResult, reqwest::Error> {
+    pub fn get(&mut self, url: &str) -> Result<ScrapeResult, Box<dyn Error>> {
         log::info!("Requesting: {url}");
         let response = self.get_until_connect(url)?;
         let status = response.status();
@@ -24,8 +26,12 @@ impl ScrapeClient {
             log::warn!("Invalid Status: {status} for url {url}");
         }
         let response = response.error_for_status()?;
+        let directed_url = response.url().to_string();
+        if directed_url.contains("https://id.mariadb.com") {
+            return Err("redirected to id".into());
+        }
         let result = ScrapeResult {
-            directed_url: response.url().to_string(),
+            directed_url,
             file_extension: get_file_extension(&response).map(str::to_owned),
             content: response.bytes()?.to_vec(),
         };

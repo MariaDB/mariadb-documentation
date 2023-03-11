@@ -1,7 +1,5 @@
 use log::LevelFilter;
-use simplelog::{
-    ConfigBuilder, TermLogger, TerminalMode, WriteLogger,
-};
+use simplelog::{ConfigBuilder, WriteLogger};
 use std::fs::File;
 
 pub fn init() {

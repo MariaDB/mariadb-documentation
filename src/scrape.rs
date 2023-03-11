@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 pub const IGNORED_URL_SEGMENTS: &[&str] = &[
     "/+change_order/",
     "/add/",
@@ -53,7 +51,9 @@ pub fn valid_url(url: &str) -> bool {
     {
         return false;
     };
-    !url.trim_start_matches("https://mariadb.com/kb")
+    !url.trim_start_matches("https://mariadb.com")
+        .trim_start_matches('/')
+        .trim_start_matches("kb")
         .trim_start_matches('/')
         .is_empty()
 }
