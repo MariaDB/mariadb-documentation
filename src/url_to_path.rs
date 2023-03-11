@@ -5,7 +5,7 @@ pub fn url_to_index_path(url: &str) -> PathBuf {
     if path.extension().is_some() {
         return path;
     }
-    path.join("index")
+    path.join("index.html")
 }
 
 pub fn url_to_path(url: &str) -> PathBuf {

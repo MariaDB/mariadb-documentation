@@ -42,7 +42,6 @@ async fn get_kb_urls_csv() -> Result<String, StatusCode> {
         .map_err(|_| StatusCode::NOT_FOUND)
 }
 
-
 #[derive(serde::Deserialize, Debug)]
 pub struct ReqQuery {
     list: Option<String>,
