@@ -82,10 +82,9 @@ async fn request_kb(
 
 async fn request_kb_list(url: String) -> Result<Response, StatusCode> {
     let path = PathBuf::from(BASE_PATH).join(url_to_path(&url));
-    let Ok(mut dir) = fs::read_dir(&path).await else {
-        eprintln!("path {path:?}");
-        return Err(StatusCode::NOT_FOUND);
-    };
+    let mut dir = fs::read_dir(&path)
+        .await
+        .map_err(|_| StatusCode::NOT_FOUND)?;
     let mut items = vec![];
     while let Ok(Some(item)) = dir.next_entry().await {
         if let Ok(false) = item.metadata().await.map(|metadata| metadata.is_file()) {
@@ -108,11 +107,10 @@ fn content_type_from_extension(extension: &str) -> Option<&'static str> {
 async fn content_builder(content_type: &str, path: &Path) -> Result<Response, StatusCode> {
     debug_assert!(content_type.contains("charset=utf-8"));
     let file = File::open(path).await.map_err(|_| StatusCode::NOT_FOUND)?;
-    let stream = ReaderStream::new(file);
-    let body = StreamBody::new(stream);
-    Ok(Response::builder()
+    let body = StreamBody::new(ReaderStream::new(file));
+    Response::builder()
         .header("content-type", content_type)
         .body(body)
-        .unwrap()
-        .into_response())
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+        .map(IntoResponse::into_response)
 }
