@@ -1,8 +1,5 @@
-mod graceful_shutdown;
 mod url_to_path;
 
-use axum::Json;
-use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use tokio_util::io::ReaderStream;
@@ -26,15 +23,12 @@ pub async fn run() {
     let app = Router::new()
         .route("/", get(root))
         .route("/kb_urls.csv", get(get_kb_urls_csv))
-        .route("/kb_urls.json", get(get_kb_urls_json))
+        //.route("/kb_urls.json", get(get_kb_urls_json))
         .route("/kb/*url", get(request_kb));
     let addr = "0.0.0.0:7032".parse().expect("Invalid Port");
-    let server = Server::bind(&addr)
-        .serve(app.into_make_service())
-        .with_graceful_shutdown(graceful_shutdown::shutdown_signal());
     println!("Listening on http://localhost:7032/");
-    println!("Ctrl-C to exit.");
-    server.await;
+    println!("Ctrl to Exit.");
+    Server::bind(&addr).serve(app.into_make_service()).await;
 }
 
 #[debug_handler]
@@ -48,12 +42,12 @@ async fn get_kb_urls_csv() -> Result<String, StatusCode> {
         .map_err(|_| StatusCode::NOT_FOUND)
 }
 
-async fn get_kb_urls_json() -> Result<Response, StatusCode> {
-    let kb_urls = get_kb_urls_csv().await?;
-    let mut reader = csv::Reader::from_reader(kb_urls.as_bytes());
-    let rows: Result<Vec<HashMap<String, String>>, _> = reader.deserialize().collect();
-    Ok(Json(rows.map_err(|_| StatusCode::NOT_FOUND)?).into_response())
-}
+// async fn get_kb_urls_json() -> Result<Response, StatusCode> {
+//     let kb_urls = get_kb_urls_csv().await?;
+//     let mut reader = csv::Reader::from_reader(kb_urls.as_bytes());
+//     let rows: Result<Vec<HashMap<String, String>>, _> = reader.deserialize().collect();
+//     Ok(Json(rows.map_err(|_| StatusCode::NOT_FOUND)?).into_response())
+// }
 
 #[derive(serde::Deserialize, Debug)]
 pub struct ReqQuery {
