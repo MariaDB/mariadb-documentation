@@ -1,10 +1,8 @@
 mod graceful_shutdown;
 mod url_to_path;
 
-use std::{
-    ffi::OsStr,
-    path::{Path, PathBuf},
-};
+use std::ffi::OsStr;
+use std::path::{Path, PathBuf};
 use tokio_util::io::ReaderStream;
 
 use axum::{
@@ -16,6 +14,7 @@ use axum::{
     routing::get,
     Router, Server,
 };
+
 use tokio::fs::{self, File};
 use url_to_path::{url_to_path, url_to_index_path};
 
@@ -60,7 +59,6 @@ async fn request_kb(
     extract::Path(url): extract::Path<String>,
     Query(query): Query<ReqQuery>,
 ) -> Result<Response, StatusCode> {
-    println!("{query:?}");
     if query.list.is_some() {
         return request_kb_list(url).await;
     }
