@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Strange issue with a complex stored procedure and Union Query</title><link>https://mariadb.com/kb/en/strange-issue-with-a-complex-stored-procedure-and-union-query/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/strange-issue-with-a-complex-stored-procedure-and-union-query/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 10 Mar 2023 12:14:03 +0000</lastBuildDate><item><title>Re: Strange issue with a complex stored procedure and Union Query</title><link>https://mariadb.com/kb/en/strange-issue-with-a-complex-stored-procedure-and-union-query/+comments/1940</link><description>&lt;p&gt;&lt;a href="http://stackoverflow.com/questions/213851/sql-query-using-order-by-in-union"&gt;http://stackoverflow.com/questions/213851/sql-query-using-order-by-in-union&lt;/a&gt; probably answers your question.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/strange-issue-with-a-complex-stored-procedure-and-union-query/+comments/1940</guid></item><item><title>Re: Strange issue with a complex stored procedure and Union Query</title><link>https://mariadb.com/kb/en/strange-issue-with-a-complex-stored-procedure-and-union-query/+comments/1513</link><description>&lt;p&gt;Hi the working code is as follows:-&lt;/p&gt;
+&lt;pre class="fixed"&gt;CREATE DEFINER = 'root'@'192.168.2.101'
+PROCEDURE Eyesdb.proc_GeneratePatientRecall()
+BEGIN
+INSERT INTO PatientRecall (patientID, recallLastTest, recallDate, recallMethod, recallPeriod, recallReminderSent, recallLabelName, recallForename, recallSalutation,recallFormalSalutation, recallSnippet, recallTelephone, recallOptom, recallAddress, recallEmail, recallMobile, recallPref, recallType, patientAge)
+SELECT p.PatientID, DATE(e.Date), CURDATE(), IF(p.patientEmailPref=1,'EMAIL',IF(p.patientSMSPref=1,'SMS','LETTER')), p.patientRecallPeriod, 0, p.patientLabelname, p.patientForename, 
+  p.patientSalutation, p.patientFormalSalutation,
+  (SELECT snippetParagraph FROM ReportSnippets WHERE snippetRecallNo = 1 AND snippetReportName = IF(p.patientEmailPref=1,'EMAIL',IF(p.patientSMSPref=1,'SMS','LETTER')) AND snippetAge = IF(p.patientAge&amp;lt;=(SELECT childAge FROM System),'CHILD','ADULT')),
+  (SELECT practiceTelephone FROM System ),(SELECT optLabelname FROM Optician WHERE optID = e.optID),
+  (SELECT CONCAT(IF (NOT ISNULL(pt.patientProperty),CONCAT(pt.patientProperty,'\n'),''),IF (NOT ISNULL(pt.patientStreet),CONCAT(pt.patientStreet,'\n'),''),IF (NOT ISNULL(pt.patientLocality),CONCAT(pt.patientLocality,'\n'),''),IF (NOT ISNULL(pt.patientTown),CONCAT(pt.patientTown,'\n'),''),IF (NOT ISNULL(pt.patientCounty),CONCAT(pt.patientCounty,'\n'),''),IF (NOT ISNULL(pt.patientPostcode),pt.patientPostcode,'')) AS Address FROM patient pt WHERE pt.PatientID = p.patientID),
+  p.patientEmail, p.patientMobileNo,  IF(p.patientEmailPref=1,'EMAIL',IF(p.patientSMSPref=1,'SMS','LETTER')), 'EYE TEST', p.patientAge
+  FROM eyetest e
+  INNER JOIN patient p ON e.PatID = p.PatientID
+  WHERE (DATE_ADD(DATE(e.Date), Interval p.patientRecallPeriod-1 Month) = DATE(CURDATE()))
+  AND (patientID NOT IN (SELECT patientID FROM PatientRecall WHERE patientID = p.PatientID AND recallType = 'EYE TEST'))
+  AND (patientID NOT IN (SELECT patientID FROM PatCal INNER JOIN calendar ON PatCal.calID = calendar.calID WHERE calendar.calStatus = 'Booked'))
+UNION
+SELECT p.PatientID, DATE(cl.Date), CURDATE(), IF(p.patientEmailPref=1,'EMAIL',IF(p.patientSMSPref=1,'SMS','LETTER')), p.patientCLRecallPeriod, 0, p.patientLabelname, p.patientForename, 
+  p.patientSalutation, p.patientFormalSalutation,
+  (SELECT snippetParagraph FROM ReportSnippets WHERE snippetRecallNo = 1 AND snippetReportName = IF(p.patientEmailPref=1,'CLEMAIL',IF(p.patientSMSPref=1,'CLSMS','CLLETTER'))),
+  (SELECT practiceTelephone FROM System ),(SELECT optLabelname FROM Optician WHERE optID = cl.optID),
+  (SELECT CONCAT(IF (NOT ISNULL(pt.patientProperty),CONCAT(pt.patientProperty,'\n'),''),IF (NOT ISNULL(pt.patientStreet),CONCAT(pt.patientStreet,'\n'),''),IF (NOT ISNULL(pt.patientLocality),CONCAT(pt.patientLocality,'\n'),''),IF (NOT ISNULL(pt.patientTown),CONCAT(pt.patientTown,'\n'),''),IF (NOT ISNULL(pt.patientCounty),CONCAT(pt.patientCounty,'\n'),''),IF (NOT ISNULL(pt.patientPostcode),pt.patientPostcode,'')) AS Address FROM patient pt WHERE pt.PatientID = p.patientID),
+  p.patientEmail, p.patientMobileNo,  IF(p.patientEmailPref=1,'EMAIL',IF(p.patientSMSPref=1,'SMS','LETTER')), 'CONTACT LENS TEST', p.patientAge
+  FROM PatientContactLense cl
+  INNER JOIN patient p ON cl.PatID = p.PatientID
+  WHERE (DATE_ADD(DATE(cl.Date), Interval p.patientRecallPeriod-1 Month) = DATE(CURDATE()))
+  AND (patientID NOT IN (SELECT patientID FROM PatientRecall WHERE patientID = p.PatientID AND recallType = 'CONTACT LENS TEST'))
+  AND (patientID NOT IN (SELECT patientID FROM PatCal INNER JOIN calendar ON PatCal.calID = calendar.calID WHERE calendar.calStatus = 'Booked'));
+
+Update PatientRecall
+  SET recallReminderNo = 2, 
+  recallDate=DATE(CURDATE()), 
+  recallReminderSent=0, 
+  recallSnippet=(SELECT snippetParagraph FROM ReportSnippets WHERE (snippetRecallNo = 2) AND (snippetReportName = PatientRecall.recallPref) AND (snippetAge = IF((SELECT p.patientAge FROM patient p WHERE p.PatientID = PatientRecall.patientID)&amp;lt;=(SELECT childAge FROM System),'CHILD','ADULT'))),
+  patientAge=(SELECT patientAge FROM patient WHERE PatientID=PatientRecall.patientID)
+  WHERE (recallDate = DATE_SUB(DATE(CURDATE()),INTERVAL (SELECT System.recall2Delay FROM System) DAY))
+  AND (recallReminderNo = 1)
+  AND (recallReminderSent = 1);
+
+Update PatientRecall
+  SET recallReminderNo = 3, 
+  recallDate=DATE(CURDATE()), 
+  recallReminderSent=0, 
+  recallSnippet=(SELECT snippetParagraph FROM ReportSnippets WHERE (snippetRecallNo = 3) AND (snippetReportName = PatientRecall.recallPref) AND (snippetAge = IF((SELECT p.patientAge FROM patient p WHERE p.PatientID = PatientRecall.patientID)&amp;lt;=(SELECT childAge FROM System),'CHILD','ADULT'))),
+  patientAge=(SELECT patientAge FROM patient WHERE PatientID=PatientRecall.patientID)
+  WHERE (recallDate = DATE_SUB(DATE(CURDATE()),INTERVAL (SELECT System.recall3Delay FROM System) DAY))
+  AND (recallReminderNo = 2)
+  AND (recallReminderSent = 1);
+END
+&lt;/pre&gt;&lt;p&gt;The code that fails is:-&lt;/p&gt;
+&lt;pre class="fixed"&gt;CREATE DEFINER = 'root'@'192.168.2.101'
+PROCEDURE Eyesdb.proc_GeneratePatientRecall()
+BEGIN
+INSERT INTO PatientRecall (patientID, recallLastTest, recallDate, recallMethod, recallPeriod, recallReminderSent, recallLabelName, recallForename, recallSalutation,recallFormalSalutation, recallSnippet, recallTelephone, recallOptom, recallAddress, recallEmail, recallMobile, recallPref, recallType, patientAge)
+(SELECT p.PatientID, DATE(e.Date), CURDATE(), IF(p.patientEmailPref=1,'EMAIL',IF(p.patientSMSPref=1,'SMS','LETTER')), p.patientRecallPeriod, 0, p.patientLabelname, p.patientForename, 
+  p.patientSalutation, p.patientFormalSalutation,
+  (SELECT snippetParagraph FROM ReportSnippets WHERE snippetRecallNo = 1 AND snippetReportName = IF(p.patientEmailPref=1,'EMAIL',IF(p.patientSMSPref=1,'SMS','LETTER')) AND snippetAge = IF(p.patientAge&amp;lt;=(SELECT childAge FROM System),'CHILD','ADULT')),
+  (SELECT practiceTelephone FROM System ),(SELECT optLabelname FROM Optician WHERE optID = e.optID),
+  (SELECT CONCAT(IF (NOT ISNULL(pt.patientProperty),CONCAT(pt.patientProperty,'\n'),''),IF (NOT ISNULL(pt.patientStreet),CONCAT(pt.patientStreet,'\n'),''),IF (NOT ISNULL(pt.patientLocality),CONCAT(pt.patientLocality,'\n'),''),IF (NOT ISNULL(pt.patientTown),CONCAT(pt.patientTown,'\n'),''),IF (NOT ISNULL(pt.patientCounty),CONCAT(pt.patientCounty,'\n'),''),IF (NOT ISNULL(pt.patientPostcode),pt.patientPostcode,'')) AS Address FROM patient pt WHERE pt.PatientID = p.patientID),
+  p.patientEmail, p.patientMobileNo,  IF(p.patientEmailPref=1,'EMAIL',IF(p.patientSMSPref=1,'SMS','LETTER')), 'EYE TEST', p.patientAge
+  FROM eyetest e
+  INNER JOIN patient p ON e.PatID = p.PatientID
+  WHERE (DATE_ADD(DATE(e.Date), Interval p.patientRecallPeriod-1 Month) = DATE(CURDATE()))
+  AND (patientID NOT IN (SELECT patientID FROM PatientRecall WHERE patientID = p.PatientID AND recallType = 'EYE TEST'))
+  AND (patientID NOT IN (SELECT patientID FROM PatCal INNER JOIN calendar ON PatCal.calID = calendar.calID WHERE calendar.calStatus = 'Booked'))
+  ORDER BY e.ID DESC LIMIT 0,1)
+UNION
+(SELECT p.PatientID, DATE(cl.Date), CURDATE(), IF(p.patientEmailPref=1,'EMAIL',IF(p.patientSMSPref=1,'SMS','LETTER')), p.patientCLRecallPeriod, 0, p.patientLabelname, p.patientForename, 
+  p.patientSalutation, p.patientFormalSalutation,
+  (SELECT snippetParagraph FROM ReportSnippets WHERE snippetRecallNo = 1 AND snippetReportName = IF(p.patientEmailPref=1,'CLEMAIL',IF(p.patientSMSPref=1,'CLSMS','CLLETTER'))),
+  (SELECT practiceTelephone FROM System ),(SELECT optLabelname FROM Optician WHERE optID = cl.optID),
+  (SELECT CONCAT(IF (NOT ISNULL(pt.patientProperty),CONCAT(pt.patientProperty,'\n'),''),IF (NOT ISNULL(pt.patientStreet),CONCAT(pt.patientStreet,'\n'),''),IF (NOT ISNULL(pt.patientLocality),CONCAT(pt.patientLocality,'\n'),''),IF (NOT ISNULL(pt.patientTown),CONCAT(pt.patientTown,'\n'),''),IF (NOT ISNULL(pt.patientCounty),CONCAT(pt.patientCounty,'\n'),''),IF (NOT ISNULL(pt.patientPostcode),pt.patientPostcode,'')) AS Address FROM patient pt WHERE pt.PatientID = p.patientID),
+  p.patientEmail, p.patientMobileNo,  IF(p.patientEmailPref=1,'EMAIL',IF(p.patientSMSPref=1,'SMS','LETTER')), 'CONTACT LENS TEST', p.patientAge
+  FROM PatientContactLense cl
+  INNER JOIN patient p ON cl.PatID = p.PatientID
+  WHERE (DATE_ADD(DATE(cl.Date), Interval p.patientRecallPeriod-1 Month) = DATE(CURDATE()))
+  AND (patientID NOT IN (SELECT patientID FROM PatientRecall WHERE patientID = p.PatientID AND recallType = 'CONTACT LENS TEST'))
+  AND (patientID NOT IN (SELECT patientID FROM PatCal INNER JOIN calendar ON PatCal.calID = calendar.calID WHERE calendar.calStatus = 'Booked'))
+  ORDER BY cl.ID DESC LIMIT 0,1);
+
+Update PatientRecall
+  SET recallReminderNo = 2, 
+  recallDate=DATE(CURDATE()), 
+  recallReminderSent=0, 
+  recallSnippet=(SELECT snippetParagraph FROM ReportSnippets WHERE (snippetRecallNo = 2) AND (snippetReportName = PatientRecall.recallPref) AND (snippetAge = IF((SELECT p.patientAge FROM patient p WHERE p.PatientID = PatientRecall.patientID)&amp;lt;=(SELECT childAge FROM System),'CHILD','ADULT'))),
+  patientAge=(SELECT patientAge FROM patient WHERE PatientID=PatientRecall.patientID)
+  WHERE (recallDate = DATE_SUB(DATE(CURDATE()),INTERVAL (SELECT System.recall2Delay FROM System) DAY))
+  AND (recallReminderNo = 1)
+  AND (recallReminderSent = 1);
+
+Update PatientRecall
+  SET recallReminderNo = 3, 
+  recallDate=DATE(CURDATE()), 
+  recallReminderSent=0, 
+  recallSnippet=(SELECT snippetParagraph FROM ReportSnippets WHERE (snippetRecallNo = 3) AND (snippetReportName = PatientRecall.recallPref) AND (snippetAge = IF((SELECT p.patientAge FROM patient p WHERE p.PatientID = PatientRecall.patientID)&amp;lt;=(SELECT childAge FROM System),'CHILD','ADULT'))),
+  patientAge=(SELECT patientAge FROM patient WHERE PatientID=PatientRecall.patientID)
+  WHERE (recallDate = DATE_SUB(DATE(CURDATE()),INTERVAL (SELECT System.recall3Delay FROM System) DAY))
+  AND (recallReminderNo = 2)
+  AND (recallReminderSent = 1);
+END
+&lt;/pre&gt;&lt;p&gt;The only change is adding () around the select statements, and the ORDER BY clause.&lt;/p&gt;
+&lt;p&gt;Error message is :- Object has invalid source text and cannot be saved.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Stewart Page</dc:creator><guid>https://mariadb.com/kb/en/strange-issue-with-a-complex-stored-procedure-and-union-query/+comments/1513</guid></item><item><title>Re: Strange issue with a complex stored procedure and Union Query</title><link>https://mariadb.com/kb/en/strange-issue-with-a-complex-stored-procedure-and-union-query/+comments/1511</link><description>&lt;p&gt;I think you need to post the code and error message to get any helpful feedback, although you'd probably get a quicker response on the &lt;a href="/kb/en/irc/"&gt;IRC&lt;/a&gt; channel.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/strange-issue-with-a-complex-stored-procedure-and-union-query/+comments/1511</guid></item></channel></rss>

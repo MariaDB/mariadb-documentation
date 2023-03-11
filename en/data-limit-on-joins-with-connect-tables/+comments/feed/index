@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Data limit on joins with connect tables?</title><link>https://mariadb.com/kb/en/data-limit-on-joins-with-connect-tables/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/data-limit-on-joins-with-connect-tables/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 10 Mar 2023 10:49:07 +0000</lastBuildDate><item><title>Re: Data limit on joins with connect tables?</title><link>https://mariadb.com/kb/en/data-limit-on-joins-with-connect-tables/+comments/1172</link><description>&lt;p&gt;SELECT * FROM innodb_table LEFT JOIN connect_table ON innodb_table.attrib = connect_table.attrib;&lt;/p&gt;
+&lt;p&gt;... gives the same problems.&lt;/p&gt;
+&lt;p&gt;This join can not be build on the external server because innodb_table is local and only connect_table's source is external.&lt;/p&gt;
+&lt;p&gt;[Tested with MariaDB v10.0.9 &amp;amp; v10.0.10 (both 64-bit) and ODBC drivers Informix v3.70.FC8 &amp;amp; v4.10.FC3 and MySQL Connector/ODBC v5.2.6 (all three 64-bit) on Windows 7 Enterprise SP1 (64-bit).]&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Tobias Post</dc:creator><guid>https://mariadb.com/kb/en/data-limit-on-joins-with-connect-tables/+comments/1172</guid></item><item><title>Re: Data limit on joins with connect tables?</title><link>https://mariadb.com/kb/en/data-limit-on-joins-with-connect-tables/+comments/1116</link><description>&lt;p&gt;Perhaps you have not a recent version of connect or because the on line CONNECT documentation is outdated, but there another possibility to join remote tables when they belong to the same data source. It is to create a table that make the remote server to the join. Here is an example:&lt;/p&gt;
+&lt;p&gt;create table categories engine=connect table_type=ODBC block_size=10
+Connection='DSN=MS Access Database;DBQ=C:/Program Files/Microsoft Office/Office/1033/FPNWIND.MDB;';&lt;/p&gt;
+&lt;p&gt;create table products engine=connect table_type=ODBC block_size=10
+Connection='DSN=MS Access Database;DBQ=C:/Program Files/Microsoft Office/Office/1033/FPNWIND.MDB;';&lt;/p&gt;
+&lt;p&gt;If you do:&lt;/p&gt;
+&lt;p&gt;select productid, productName, p.categoryid, categoryname, description from products p natural join categories;&lt;/p&gt;
+&lt;p&gt;MariaDB has to retrieve the relevant parts of the two tables and make the join locally. This is not good performance wise (except for small tables) and can be limited by the used storage. To have the join done by the data source you can do:&lt;/p&gt;
+&lt;p&gt;create table prodcat engine=connect table_type=ODBC block_size=10
+Connection='DSN=MS Access Database;DBQ=C:/Program Files/Microsoft Office/Office/1033/FPNWIND.MDB;'
+srcdef='select p.ProductID, p.ProductName, p.CategoryID, c.CategoryName, c.Description from products p inner join categories c on p.CategoryID=c.CategoryID';&lt;/p&gt;
+&lt;p&gt;This table is based on a query specified by the SRCDEF option that will be executed remotely by the data source (note that the syntax must be the data source syntax)
+Now you can get the result of the join by:&lt;/p&gt;
+&lt;p&gt;select * from prodcat;&lt;/p&gt;
+&lt;p&gt;In your case, perhaps this will avoid loosing result rows.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Olivier Bertrand</dc:creator><guid>https://mariadb.com/kb/en/data-limit-on-joins-with-connect-tables/+comments/1116</guid></item><item><title>Re: Data limit on joins with connect tables?</title><link>https://mariadb.com/kb/en/data-limit-on-joins-with-connect-tables/+comments/1038</link><description>&lt;p&gt;Probably this won't help you, but... try checking the value of &lt;a href="/kb/en/server-system-variables/#sql_select_limit"&gt;sql_select_limit&lt;/a&gt;. If it's != 0, it is the max number of rows that can be returned by a select.&lt;/p&gt;
+&lt;p&gt;Otherwise, I'd do a simple check. If the number of rows returned by&lt;/p&gt;
+&lt;p&gt;SELECT * FROM table;&lt;/p&gt;
+&lt;p&gt;is != the result of&lt;/p&gt;
+&lt;p&gt;SELECT COUNT(*) FROM table;&lt;/p&gt;
+&lt;p&gt;it's supposed to be a bug in MariaDB or in the CONNECT engine. In this case, it would be useful if you file a bug at &lt;a href="https://mariadb.atlassian.net/browse/MDEV"&gt;https://mariadb.atlassian.net/browse/MDEV&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Federico Razzoli</dc:creator><guid>https://mariadb.com/kb/en/data-limit-on-joins-with-connect-tables/+comments/1038</guid></item></channel></rss>

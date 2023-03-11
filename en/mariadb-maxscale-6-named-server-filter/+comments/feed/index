@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for:  Named Server Filter</title><link>https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 10 Mar 2023 10:25:18 +0000</lastBuildDate><item><title>Re:  Named Server Filter</title><link>https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/+comments/5820</link><description>&lt;p&gt;I tested the filter by creating it with GUI and using &lt;code&gt;match01=SELECT.*FinishedPacks&lt;/code&gt; and &lt;code&gt;target01=-&amp;gt;master&lt;/code&gt; and it appears to work correctly:&lt;/p&gt;
+&lt;pre class="fixed"&gt;info: &amp;gt; Autocommit: [enabled], trx is [not open], cmd: (0x03) COM_QUERY, plen: 44, type: QUERY_TYPE_READ, stmt: SELECT * FROM FinishedPacks WHERE 1 = 1, Hint: HINT_ROUTE_TO_MASTER
+info: Route query to master: server1 &amp;lt;
+info: Reply complete from 'server1' (Error: 1146, 42S02 Table 'test.FinishedPacks' doesn't exist)
+info: &amp;gt; Autocommit: [enabled], trx is [not open], cmd: (0x03) COM_QUERY, plen: 49, type: QUERY_TYPE_READ, stmt: SELECT * FROM FinishedOtherPacks WHERE 1 = 1
+info: Route query to slave: server2 &amp;lt;
+info: Reply complete from 'server2' (Error: 1146, 42S02 Table 'test.FinishedOtherPacks' doesn't exist)
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Markus Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/+comments/5820</guid></item><item><title>Re:  Named Server Filter</title><link>https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/+comments/5819</link><description>&lt;p&gt;Lovely thank you, looks like that will tide me over to figure out why my filter isn't working. 
+&lt;br&gt;Are the forward slashes still not compatible with NamedServerFilter when defining the match in the configuration file? &lt;/p&gt;
+&lt;p&gt;Still not getting anything diverted with various attempts. Trying to redirect anything SELECT-ing from tables starting with "Finished". ie: FinishedPieces or FinishedPacks. &lt;/p&gt;
+&lt;p&gt;I've tried the following based on &lt;a href="https://mariadb.com/kb/en/mariadb-maxscale-6-mariadb-maxscale-configuration-guide/#regular-expressions"&gt;this&lt;/a&gt;: &lt;br&gt;&lt;/p&gt;
+&lt;pre&gt;
+SELECT.*FinishedPacks
+^SELECT.*FinishedPacks
+*FROM FinishedPacks
+FinishedPacks
+&lt;/pre&gt;
+&lt;p&gt;Note: i'm updating the filter from the web UI&lt;/p&gt;
+&lt;p&gt;What other conditions would prevent a filter / hint from being considered by the Read-Write-Service?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Richard Lee</dc:creator><guid>https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/+comments/5819</guid></item><item><title>Re:  Named Server Filter</title><link>https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/+comments/5818</link><description>&lt;p&gt;Ah, that must be an oversight in the &lt;code&gt;show filters&lt;/code&gt; output in MaxCtrl and it doesn't show the filter diagnostics: I opened &lt;a href="https://jira.mariadb.org/browse/MXS-4166"&gt;MXS-4166&lt;/a&gt; for it and it should be fixed for the next release.&lt;/p&gt;
+&lt;p&gt;You can also access the information directly with &lt;code&gt;curl&lt;/code&gt;:&lt;/p&gt;
+&lt;pre class="fixed"&gt;curl -u admin:mariadb localhost:8989/v1/filters
+&lt;/pre&gt;&lt;p&gt;If you've created a new MaxCtrl user or changed the password of the admin user, replace the credentials in the command.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Markus Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/+comments/5818</guid></item><item><title>Re:  Named Server Filter</title><link>https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/+comments/5817</link><description>&lt;p&gt;Hi Markus, thanks for the response. &lt;br&gt;There is no "number of diverted queries" counts in the output from &lt;strong&gt;maxctrl show filters&lt;/strong&gt;. 
+&lt;br&gt;It shows a table with the following rows:
+&lt;br&gt;Filter, Source, Module, Services, Parameters. 
+&lt;br&gt;This is on v 6.4.0&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Richard Lee</dc:creator><guid>https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/+comments/5817</guid></item><item><title>Re:  Named Server Filter</title><link>https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/+comments/5816</link><description>&lt;p&gt;If you added &lt;code&gt;filters=NamedServerFilter&lt;/code&gt; under the &lt;code&gt;[Read-Write-Service]&lt;/code&gt; section, that should already cause the filter to be linked to the service.&lt;/p&gt;
+&lt;p&gt;The output of &lt;code&gt;maxctrl show filters&lt;/code&gt; should have the number of queries that were diverted by the filter. If the number increases, you know the filter works. An alternative way is to enable the info level log by adding &lt;code&gt;log_info=true&lt;/code&gt; under the &lt;code&gt;[maxscale]&lt;/code&gt; section and then looking at the log to see where the queries are routed.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Markus Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/+comments/5816</guid></item><item><title>Re:  Named Server Filter</title><link>https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/+comments/5815</link><description>&lt;p&gt;After adding the [NamedServerFilter] and including it in the [Read-Write-Service] in the maxscale.cnf file, and restarting the service, I could see the Filter show in the web UI, but it was not connected to the service...&lt;/p&gt;
+&lt;p&gt;I had to manually link the filter to the service in the web GUI. &lt;/p&gt;
+&lt;p&gt;Also, is there a way to test the filter is working? 
+A counter variable in the service or filter would be very handy.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Richard Lee</dc:creator><guid>https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/+comments/5815</guid></item></channel></rss>

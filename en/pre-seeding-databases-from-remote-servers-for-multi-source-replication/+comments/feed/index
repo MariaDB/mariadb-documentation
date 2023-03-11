@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: pre-seeding databases from remote servers for multi-source replication</title><link>https://mariadb.com/kb/en/pre-seeding-databases-from-remote-servers-for-multi-source-replication/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/pre-seeding-databases-from-remote-servers-for-multi-source-replication/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 10 Mar 2023 12:27:37 +0000</lastBuildDate><item><title>Re: pre-seeding databases from remote servers for multi-source replication</title><link>https://mariadb.com/kb/en/pre-seeding-databases-from-remote-servers-for-multi-source-replication/+comments/1181</link><description>&lt;p&gt;Hi Sergii,&lt;/p&gt;
+&lt;p&gt;my previous response had been blocked as spam, so reposting...&lt;/p&gt;
+&lt;p&gt;did you mean copying just tablespace files, or copying the entire innodb database directory (each tablespace is an individual file)?&lt;/p&gt;
+&lt;p&gt;copying all mysql data files will work only for one server. this has to do with tablespace metadata information stored in transaction logs (ibdata*) and  master mysql database (table ids, etc.). for more info about that error, see the following:&lt;/p&gt;
+&lt;p&gt;"... 14:21:02 InnoDB: Error: tablespace id in file './db_name/new_innodb_table.ibd' is 26, but in the InnoDB
+InnoDB: data dictionary it is 28."&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://mysqlhints.blogspot.com/2008/10/fixing-innodb-import-tablespace-error.html"&gt;http://mysqlhints.blogspot.com/2008/10/fixing-innodb-import-tablespace-error.html&lt;/a&gt;
+&lt;a href="http://dba.stackexchange.com/questions/6268/how-to-recover-an-innodb-table-whose-files-were-moved-around/6269#6269"&gt;http://dba.stackexchange.com/questions/6268/how-to-recover-an-innodb-table-whose-files-were-moved-around/6269#6269&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;so i can restore a full file-based backup (or AWS EBS snapshot restore) for the first server, server A, and all of the databases/tables from the first server will work. the problem is when i try and copy files from additional servers. if I copy in just the database files, then the mysql database doesn't contain the necessary metadata and tablespace IDs that match between mysql master database and the copied tablespace files. the database will appear in "show databases", but i get an error when trying to query from the tables (mismatch tablespace id).&lt;/p&gt;
+&lt;p&gt;overwriting the restored mysql master database with a second server (server B) will break access to server A's tablespaces (since the metadata in master mysql database would contain server B's info and not server A's info, again running into the mismatching tablespace ids).&lt;/p&gt;
+&lt;p&gt;i know of no way to merge information from multiple master mysql tablespaces, unless i upgrade to 5.6 and use transportable tablespaces:&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://dev.mysql.com/doc/refman/5.6/en/tablespace-copying.html"&gt;https://dev.mysql.com/doc/refman/5.6/en/tablespace-copying.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;i'm guessing my only option is to use an intermediary server to upgrade the data restored from a snapshot from 5.5 to 5.6. this way i can then use the transportable tablespaces. the new process will look like:&lt;/p&gt;
+&lt;p&gt;(assumes multiple 5.5 source servers and a new multi-source replication server running 5.6+ / &lt;a href="/kb/en/what-is-mariadb-100/"&gt;mariadb 10.0&lt;/a&gt;+)&lt;/p&gt;
+&lt;p&gt;1) create a new 5.5 DB instance
+2) restore data directory from a snapshot of a 5.5 server
+3) start and stop 5.5 server to cleanly commit transaction logs to tablespaces
+4) upgrade from 5.5 to 5.6+
+5) export desired database/tablespace files with transportable tablespace options
+6) move database/tablespace files to new multi-source replication server
+7) import tablespace files into 5.6+ (or &lt;a href="/kb/en/what-is-mariadb-100/"&gt;mariadb 10.0&lt;/a&gt;+) multi-source replication server
+8) grant privileges to imported database/tables.
+9) stop / start server and verify no errors.
+10) delete the temporary 5.5 &amp;gt;&amp;gt; 5.6+ database instance&lt;/p&gt;
+&lt;p&gt;(repeat 1-10 for each source 5.5 server)&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ives Stoddard</dc:creator><guid>https://mariadb.com/kb/en/pre-seeding-databases-from-remote-servers-for-multi-source-replication/+comments/1181</guid></item><item><title>Re: pre-seeding databases from remote servers for multi-source replication</title><link>https://mariadb.com/kb/en/pre-seeding-databases-from-remote-servers-for-multi-source-replication/+comments/1125</link><description>&lt;p&gt;You can copy the whole data directory, can you not?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Golubchik</dc:creator><guid>https://mariadb.com/kb/en/pre-seeding-databases-from-remote-servers-for-multi-source-replication/+comments/1125</guid></item></channel></rss>

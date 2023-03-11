@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: How to troubleshoot: ERROR 1296 (HY000): Got error 122 'Cannot retrieve error message' from CONNECT</title><link>https://mariadb.com/kb/en/connect-how-to-troubleshoot-error-1296-hy000-got-error-122-cannot-retrieve-/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/connect-how-to-troubleshoot-error-1296-hy000-got-error-122-cannot-retrieve-/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 10 Mar 2023 10:49:27 +0000</lastBuildDate><item><title>Re: How to troubleshoot: ERROR 1296 (HY000): Got error 122 'Cannot retrieve error message' from CONNECT</title><link>https://mariadb.com/kb/en/connect-how-to-troubleshoot-error-1296-hy000-got-error-122-cannot-retrieve-/+comments/4518</link><description>&lt;p&gt;Hi,
+I had same kind of issue. Problem solved by replacing, 
+JavaWrappers.jar and JdbcInterface.jar to /usr/lib/mysql/plugin path on &lt;a href="/kb/en/what-is-mariadb-103/"&gt;MariaDB 10.3&lt;/a&gt; official docker image which is based on Ubuntu 18.04 LTS bionic.&lt;/p&gt;
+&lt;p&gt;So, no need to change connect_work_size every time..&lt;/p&gt;
+&lt;p&gt;Here I will attach my git hub code sample, (you can take correct jars from there)
+&lt;a href="https://github.com/pk-gt/MariaDB-10.3-Connect-Engine-Docker"&gt;https://github.com/pk-gt/MariaDB-10.3-Connect-Engine-Docker&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Also read the medium article with installation details,
+&lt;a href="https://medium.com/@prabuddha.kulatunga/install-mariadb-connect-engine-on-docker-with-dremio-vds-jdbc-connect-table-support-c969f7c97c90"&gt;https://medium.com/@prabuddha.kulatunga/install-mariadb-connect-engine-on-docker-with-dremio-vds-jdbc-connect-table-support-c969f7c97c90&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;May be these things will helpful for someone..&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Prabuddha Kulatunga</dc:creator><guid>https://mariadb.com/kb/en/connect-how-to-troubleshoot-error-1296-hy000-got-error-122-cannot-retrieve-/+comments/4518</guid></item><item><title>Re: How to troubleshoot: ERROR 1296 (HY000): Got error 122 'Cannot retrieve error message' from CONNECT</title><link>https://mariadb.com/kb/en/connect-how-to-troubleshoot-error-1296-hy000-got-error-122-cannot-retrieve-/+comments/4497</link><description>&lt;p&gt;Self resolved.&lt;/p&gt;
+&lt;p&gt;In summary, realized I tried using connect_xtrace=1023, but set it as a global variable &amp;amp; did not set it as a session variable, hence its effect was not immediate. After setting it as a session variable, was able to trace it to memory allocation failure.&lt;/p&gt;
+&lt;p&gt;After using CONNECT engine JDBC tables to retrieve data for a day or 2, the error when selecting from a CONNECT storage engine JDBC external table was:
+"ERROR 1296 (HY000): Got error 122 'Cannot retrieve error message' from CONNECT"
+...
+and error when trying to create a CONNECT storage engine JDBC external table was:
+"ERROR 1030 (HY000): Got error 122 "Internal (unspecified) error in handler" from storage engine CONNECT"&lt;/p&gt;
+&lt;p&gt;I just recently noticed multiple of below lines appeared in mysqld.log too:
+Work area: Memory allocation failed: malloc returned Null&lt;/p&gt;
+&lt;p&gt;So tried to troubleshoot again...&lt;/p&gt;
+&lt;p&gt;Maybe I had previously used set global connect_xtrace=1023; which only changes settings for global but not current session. Hence this time tried set session connect_xtrace=1023 instead and relevant log entries below started appearing.&lt;/p&gt;
+&lt;p&gt;So key was to set connect_xtrace=1023 for the session. My bad.&lt;/p&gt;
+&lt;p&gt;Anyway, mysqld.log entries had more info now:
+...
+New CONNECT 0x7fc46403de80, table: mssql_CURRENCY_RATE
+open: name=./_TMP_D/mssql_CURRENCY_RATE mode=2 test=18
+PlugInit: Language='Null'
+SareaAlloc: Memory allocation failed: malloc returned Null
+Delete CONNECT 0x7fc46403de80, table: mssql_CURRENCY_RATE, xp=(nil) count=0
+...
+PlugInit: Language='Null'
+SareaAlloc: Memory allocation failed: malloc returned Null  
+New CONNECT 0x7fc46403de80, table: mssql_CURRENCY_RATE
+open: name=./_TMP_D/mssql_CURRENCY_RATE mode=2 test=18
+...&lt;/p&gt;
+&lt;p&gt;So tried to set a much lower connect_work_size value: 64MB (default),
+and things worked again! No more errors.&lt;/p&gt;
+&lt;p&gt;So conclusion it would seem, is, CONNECT engine stopped being able to allocate based on connect_work_size after some time as mysqld &amp;amp; OS used more &amp;amp; more memory over time.&lt;/p&gt;
+&lt;p&gt;Then tried setting connect_work_size to 1GB &amp;amp; tried a select again, still works. Increased another 1GB &amp;amp; select again, repeating a few more times. Started to notice from mysqld.log that memory set for connect_work_size stops being followed after some time, &amp;amp; last successful value is used. (this seems to be as per documentation).&lt;/p&gt;
+&lt;p&gt;Since I had not come across a more detailed guide on how much to set connect_work_size to, made a stored procedure that I will call to set connect_work_size just before using CONNECT engine, try the size I want, then try CONNECT engine, if fail, try smaller size and try CONNECT engine, if fail, repeat until things work.&lt;/p&gt;
+&lt;p&gt;Would be great if:
+a) connect_work_size were implemented in similar manner to: innodb_buffer_pool_instances, innodb_buffer_pool_chunk_size, innodb_buffer_pool_size
+b) might be good to have something like a connect_work_size_guaranteed, which could be an amt of memory allocated but never released, to have a minimum guarantee of memory for the plugin.
+c) have more detailed documentation; ie: if approx table row size is xxx &amp;amp; rows queried in memory at any one point in time is yyy, then connect_work_size must be ( xxx * yyy ) * 1.1.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Kar Heng Chan</dc:creator><guid>https://mariadb.com/kb/en/connect-how-to-troubleshoot-error-1296-hy000-got-error-122-cannot-retrieve-/+comments/4497</guid></item></channel></rss>

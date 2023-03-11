@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 10 Mar 2023 12:37:45 +0000</lastBuildDate><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5318</link><description>&lt;p&gt;Many thanks for all your help.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">James Stewart Miller</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5318</guid></item><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5316</link><description>&lt;p&gt;Thanks for explaining your use and fixing my missing -.&lt;/p&gt;
+&lt;p&gt;Using MARIADB_ROOT_HOST=localhost will prevent a root@% creation. There will still be a root@localhost user which is unix socket only, so only a podman exec can use it.&lt;/p&gt;
+&lt;p&gt;If you do need to remove a user please use &lt;a href="https://mariadb.com/kb/en/drop-user/"&gt;drop user&lt;/a&gt;. The entrypoint that does similar hackery needs to be cleaned up and is obviously a bad example.&lt;/p&gt;
+&lt;p&gt;Waiting until it starts is something I plan to fix with a healthcheck script (&lt;a href="https://jira.mariadb.org/browse/MDEV-25434"&gt;MDEV-25434&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;In the mean time your loop should be using mysql --protocol=tcp as there can be a few temporary starts which could get your command executed early.&lt;/p&gt;
+&lt;p&gt;Happy to take issues/feature requests on github or JIRA.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5316</guid></item><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5313</link><description>&lt;p&gt;So, I finally got it to work.  I was having another issue which is that once I had created the container using podman run,  I had to wait an unspecified amount of time before the database in the container would accept commands.
+I ended up running a podman exec command to delete root@% as a do, done loop, like so...
+until podman exec -e ROOT_PASSWORD="$mysql_root_password" -it "${MARIA_CONT_NAME}" bash -c "mysql -uroot  -p\"\${ROOT_PASSWORD}\" -h'localhost' -e \"delete from mysql.global_priv where user='root' and host='%'; flush privileges;\""  &amp;gt; /dev/null 2&amp;gt;&amp;amp;1
+do
+	echo -n "."
+done&lt;/p&gt;
+&lt;p&gt;Note, I added the redirection to null after I last tested it, but it should be ok, I guess.&lt;/p&gt;
+&lt;p&gt;Then I ran the podman exec command to create the database, and it worked fine.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">James Stewart Miller</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5313</guid></item><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5311</link><description>&lt;p&gt;just in case anyone reads the post, the secret creation command is correct except for a hyphen at the end -&lt;/p&gt;
+&lt;p&gt;read -p "Enter variable for MARIADB_ROOT_PASSWORD : " token &amp;amp;&amp;amp; echo -n "$token" | podman secret create "MARIADB_ROOT_PASSWORD"  -&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">James Stewart Miller</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5311</guid></item><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5310</link><description>&lt;p&gt;Many thanks for your help.   I discovered the issue.   When a pod is created, a network namespace is created for it automatically.  This has the following name 'ceramic_isles_dev_pod', in my case.
+So, if I run:
+ podman exec -it maria_cont2 bash -c "mysql -uroot -h'ceramic_isles_dev_pod' -p"
+I am able to successfully enter the password with no issue.
+....you said....
+Note I recommend leaving it to the container entrypoint to create the non-root user and its password. It handles the escaping of passwords in shell and SQL significantly better that the scripting you have written.
+.....
+There are two reasons that I don't use the container entrypoint with environment variables.  The first and principle reason is that I intend to start/restart the container with a systemd script that generates a new container each time the host starts.   This container will then connect to an existing database, as although the container will be new and fresh, the database will still exist at the bind mount to /var/lib/mysql.   This will allow me to run/create the containers under a system (&amp;lt;999 id) user, for extra security.
+Since the podman generate-systemd command uses the initial run command to start the new container each time, I don't want to have a new database and user recreated each time, as I want to reuse the existing database.  I will be using the --files and --new flags of the podman generate systemd command...
+&lt;a href="http://docs.podman.io/en/latest/markdown/podman-generate-systemd.1.html"&gt;http://docs.podman.io/en/latest/markdown/podman-generate-systemd.1.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;The second reason, is that in the past, when I tried to use the initial database creation environment variables, is that it didn't work, as I remember.  The container failed to run, quitting immediately, and on restarting it, I seem to recall that either the database wasn't created or I couldn't see it because of my current issues.
+So, I have just tried it again, and counter-intuitively, the new user and database is created but on the host of 'ceramic_isles_dev_pod' - the pod name, but root is created on localhost.   I am able to login successfully in both cases.  So, if I don't create a database initially, then root is pod_name but if I do then root is 'localhost'.
+My bash scripting is not particularly good, you are quite right.  I had changed the printf in the read command from echo, to remove a newline character and must have deleted the $ sign in front of the variable 'token' then.  I will use your syntax provided, many thanks.
+And many thanks overall, not just for your help, but for your work in supporting the community with your maintenance of this image.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">James Stewart Miller</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5310</guid></item><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5309</link><description>&lt;p&gt;edit use the following to prevent shell escaping of the password:&lt;/p&gt;
+&lt;pre class="fixed"&gt;read -p &amp;#34;Enter variable for MARIADB_ROOT_PASSWORD : &amp;#34; token &amp;amp;&amp;amp; echo -n &amp;#34;$token&amp;#34; | podman secret create &amp;#34;MARIADB_ROOT_PASSWORD&amp;#34; 
+&lt;/pre&gt;&lt;p&gt;Note I recommend leaving it to the container entrypoint to create the non-root user and its password. It handles the escaping of passwords in shell and SQL significantly better that the scripting you have written.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5309</guid></item><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5306</link><description>&lt;pre class="fixed"&gt;$(read -p &amp;#34;Enter variable for MARIADB_ROOT_PASSWORD : &amp;#34; token) &amp;amp;&amp;amp; printf token
+Enter variable for MARIADB_ROOT_PASSWORD : what is this password
+token
+&lt;/pre&gt;&lt;p&gt;Note:&lt;/p&gt;
+&lt;ol start="1"&gt;&lt;li&gt;a literal "token" is printed so that is the password.
+&lt;/li&gt;&lt;li&gt;because &lt;em&gt;read&lt;/em&gt; is in a subshell, the token variable isn't saved.
+&lt;/li&gt;&lt;/ol&gt;
+&lt;p&gt;To observe results:&lt;/p&gt;
+&lt;pre class="fixed"&gt;Use podman inspect {container} | grep -i password
+&lt;/pre&gt;&lt;p&gt;Use:&lt;/p&gt;
+&lt;pre class="fixed"&gt;read -p &amp;#34;Enter variable for MARIADB_ROOT_PASSWORD : &amp;#34; token &amp;amp;&amp;amp; echo -n $token | podman secret create &amp;#34;MARIADB_ROOT_PASSWORD&amp;#34; -
+&lt;/pre&gt;&lt;p&gt;If you use the environment variables &lt;em&gt;MARIADB_USER&lt;/em&gt;, &lt;em&gt;MARIADB_PASSWORD&lt;/em&gt; and &lt;em&gt;MARIADB_DATABASE&lt;/em&gt; you end up with that user &lt;a href="https://github.com/MariaDB/mariadb-docker/blob/master/docker-entrypoint.sh#L328-L329"&gt;having all grants on the database&lt;/a&gt; exactly how you are trying to achieve this.&lt;/p&gt;
+&lt;p&gt;Attempted your podman exec:&lt;/p&gt;
+&lt;pre class="fixed"&gt;$ podman exec -e ROOT_PASSWORD='davebob' -e DB_NAME=space -e DB_USER=major -e DB_HOST=% -e DB_PASSWORD=soverysecret -it mdbtest bash -c &amp;#34;mysql -uroot -p\${ROOT_PASSWORD} -hlocalhost -e \&amp;#34;CREATE DATABASE \${DB_NAME} CHARSET utf8; grant all privileges on \${DB_NAME}.* TO \${DB_USER}@\${DB_HOST} identified by '$\{DB_PASSWORD}';\&amp;#34;&amp;#34;
+ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '% identified by '$\{DB_PASSWORD}'' at line 1
+
+$ podman exec   mdbtest mysql -pdavebob -e 'drop database space'
+
+$ podman exec -e ROOT_PASSWORD='davebob' -e DB_NAME=space -e DB_USER=major -e DB_HOST=% -e DB_PASSWORD=soverysecret -it mdbtest bash -c &amp;#34;mysql -uroot -p\${ROOT_PASSWORD} -hlocalhost -e \&amp;#34;CREATE DATABASE \${DB_NAME} CHARSET utf8; grant all privileges on \${DB_NAME}.* TO '\${DB_USER}'@'\${DB_HOST}' identified by '\${DB_PASSWORD}';\&amp;#34;&amp;#34;
+
+$ podman exec   mdbtest mysql -pdavebob -e 'show databases'
+Database
+information_schema
+mysql
+performance_schema
+space
+
+$ podman exec   mdbtest mysql -pdavebob -e 'show create user major'
+CREATE USER for major@%
+CREATE USER `major`@`%` IDENTIFIED BY PASSWORD '*D03D15427D788A324B1D75E87F702540998589DB'
+
+$ podman exec   mdbtest mysql -u major -psoverysecret -e 'show databases'
+Database
+information_schema
+space
+&lt;/pre&gt;&lt;p&gt;To fix (as I did above):&lt;/p&gt;
+&lt;ol start="1"&gt;&lt;li&gt;quote your hostname, and possibly username if it can be more than just basic
+&lt;/li&gt;&lt;li&gt;&lt;em&gt;\&lt;/em&gt; should be before &lt;em&gt;$&lt;/em&gt; near &lt;em&gt;DB_PASSWORD&lt;/em&gt;
+&lt;/li&gt;&lt;/ol&gt;
+&lt;pre class="fixed"&gt;$ podman exec   mdbtest mysql -pdavebob -e 'select * from mysql.global_priv'
+Host	User	Priv
+localhost	mariadb.sys	{&amp;#34;access&amp;#34;:0,&amp;#34;plugin&amp;#34;:&amp;#34;mysql_native_password&amp;#34;,&amp;#34;authentication_string&amp;#34;:&amp;#34;&amp;#34;,&amp;#34;account_locked&amp;#34;:true,&amp;#34;password_last_changed&amp;#34;:0}
+localhost	root	{&amp;#34;access&amp;#34;:549755813887,&amp;#34;plugin&amp;#34;:&amp;#34;mysql_native_password&amp;#34;,&amp;#34;authentication_string&amp;#34;:&amp;#34;*F64E0B8EB4D0A34AD85562E6BF2E2F9C8274DAB5&amp;#34;,&amp;#34;password_last_changed&amp;#34;:1624925339,&amp;#34;version_id&amp;#34;:100510}
+%	root	{&amp;#34;access&amp;#34;:549755813887,&amp;#34;version_id&amp;#34;:100510,&amp;#34;plugin&amp;#34;:&amp;#34;mysql_native_password&amp;#34;,&amp;#34;authentication_string&amp;#34;:&amp;#34;*F64E0B8EB4D0A34AD85562E6BF2E2F9C8274DAB5&amp;#34;,&amp;#34;password_last_changed&amp;#34;:1624925339}
+%	major	{&amp;#34;access&amp;#34;:0,&amp;#34;version_id&amp;#34;:100510,&amp;#34;plugin&amp;#34;:&amp;#34;mysql_native_password&amp;#34;,&amp;#34;authentication_string&amp;#34;:&amp;#34;*D03D15427D788A324B1D75E87F702540998589DB&amp;#34;,&amp;#34;password_last_changed&amp;#34;:1624925600}
+&lt;/pre&gt;&lt;p&gt;In 10.4+ don't depend on the &lt;em&gt;mysql.user&lt;/em&gt; view, look at &lt;em&gt;mysql.global_priv&lt;/em&gt; directly.&lt;/p&gt;
+&lt;p&gt;Focus on your scripting and observing its behaviour. The container is actually ok.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5306</guid></item><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5305</link><description>&lt;p&gt;Ok, I am certain it is because it is running inside a pod.  I made a new container using the same commands,  and was able to get into it easily.&lt;/p&gt;
+&lt;p&gt;So, something about the container being inside a pod is causing the issues that I am having.&lt;/p&gt;
+&lt;p&gt;I guess it is because it is using a network namespace with only 445 and 80 exposed, but that shouldn't stop me from being able to exec into the container and connect using localhost socket.  Gah....&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">James Stewart Miller</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5305</guid></item><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5304</link><description>&lt;p&gt;If I do the following:
+podman run -dit -e MARIADB_ROOT_PASSWORD='davebob' -e MARIADB_ROOT_HOST='localhost' --name ${MARIA_CONT_NAME} --pod ${POD_NAME} ${MARIA_IMAGE} 
+and
+podman exec -e ROOT_PASSWORD='davebob' -e DB_NAME=${DB_NAME} -e DB_USER=${DB_USER} -e DB_HOST=${DB_HOST} -e DB_PASSWORD=${DB_PASSWORD} -it ${MARIA_CONT_NAME} bash -c "mysql -uroot -p\${ROOT_PASSWORD} -hlocalhost -e \"CREATE DATABASE \${DB_NAME} CHARSET utf8; grant all privileges on \${DB_NAME}.* TO \${DB_USER}@\${DB_HOST} identified by '$\{DB_PASSWORD}';\""&lt;/p&gt;
+&lt;p&gt;I get told that no connection can be made through the socket.
+&lt;strong&gt;tearing my hair out&lt;/strong&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">James Stewart Miller</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5304</guid></item><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5303</link><description>&lt;p&gt;This...&lt;/p&gt;
+&lt;p&gt;MariaDB [(none)]&amp;gt; show create user root;
+ERROR 1290 (HY000): The MariaDB server is running with the --skip-grant-tables option so it cannot execute this statement
+MariaDB [(none)]&amp;gt; select user,host,plugin from mysql.user;
++-------------+--------------------------+-----------------------+&lt;/p&gt;
+&lt;table&gt;&lt;tr&gt;&lt;td&gt;User&lt;/td&gt;&lt;td&gt;Host&lt;/td&gt;&lt;td&gt;plugin&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+&lt;p&gt;+-------------+--------------------------+-----------------------+&lt;/p&gt;
+&lt;table&gt;&lt;tr&gt;&lt;td&gt;mariadb.sys&lt;/td&gt;&lt;td&gt;localhost&lt;/td&gt;&lt;td&gt;mysql_native_password&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;root&lt;/td&gt;&lt;td&gt;localhost&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;root&lt;/td&gt;&lt;td&gt;ceramic\_isles\_dev\_pod&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;root&lt;/td&gt;&lt;td&gt;127.0.0.1&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;root&lt;/td&gt;&lt;td&gt;::1&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+&lt;p&gt;+-------------+--------------------------+-----------------------+
+5 rows in set (0.062 sec)&lt;/p&gt;
+&lt;p&gt;So that explains why I am getting access denied, because no plugin is being used&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">James Stewart Miller</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5303</guid></item><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5302</link><description>&lt;p&gt;Perhaps it is because my maria_container is being created inside a pod which only exposes ports 80 and 445?
+But I am execing into the container so the port shouldn't be necessary.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">James Stewart Miller</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5302</guid></item><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5301</link><description>&lt;p&gt;I see you are using version 10.5.   I have been trying with the mariadb:latest image, which I now see defaults to version 10.5.&lt;/p&gt;
+&lt;p&gt;When I try the following commands in a script:&lt;/p&gt;
+&lt;p&gt;read -p "Enter your MYSQL_ROOT_PASSWORD : " mysql_root_password
+podman exec -e MYSQL_ROOT_PASSWORD=${mysql_root_password} -e DB_NAME=${DB_NAME} -e DB_USER=${DB_USER} -e DB_HOST=${DB_HOST} -e DB_PASSWORD=${DB_PASSWORD} -it ${MARIA_CONT_NAME} bash -c "mysql -uroot -p\${MYSQL_ROOT_PASSWORD} -hlocalhost -e \"CREATE DATABASE \${DB_NAME} CHARSET utf8; grant all privileges on \${DB_NAME}.* TO \${DB_USER}@\${DB_HOST} identified by '$\{DB_PASSWORD}';\""&lt;/p&gt;
+&lt;p&gt;or when I try and log in from a command line having exec'ed into a bash session inside the maria container, I get the following error:
+ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)&lt;/p&gt;
+&lt;p&gt;I have checked and the variable 'mysql_root_password' does not contain a newline character.
+There is no space between -p and the password in any command.&lt;/p&gt;
+&lt;p&gt;This is my command for making the Mariadb secret:
+$(read -p "Enter variable for MARIADB_ROOT_PASSWORD : " token) &amp;amp;&amp;amp; printf token | podman secret create "MARIADB_ROOT_PASSWORD" -&lt;/p&gt;
+&lt;p&gt;which I then later use:
+podman run -dit --secret=MARIADB_ROOT_PASSWORD,type=env --name ${MARIA_CONT_NAME} --pod ${POD_NAME} ${MARIA_IMAGE}&lt;/p&gt;
+&lt;p&gt;the above run command is followed immediately by:&lt;/p&gt;
+&lt;p&gt;read -p "Enter your MYSQL_ROOT_PASSWORD : " mysql_root_password&lt;/p&gt;
+&lt;p&gt;podman exec -e MARIADB_ROOT_PASSWORD=${mysql_root_password} -e DB_NAME=${DB_NAME} -e DB_USER=${DB_USER} -e DB_HOST=${DB_HOST} -e DB_PASSWORD=${DB_PASSWORD} -it ${MARIA_CONT_NAME} bash -c "mysql -uroot -p\${MARIADB_ROOT_PASSWORD} -hlocalhost -e \"CREATE DATABASE \${DB_NAME} CHARSET utf8; grant all privileges on \${DB_NAME}.* TO \${DB_USER}@\${DB_HOST} identified by '$\{DB_PASSWORD}';\""&lt;/p&gt;
+&lt;p&gt;And this command (or me manually trying to log into the mariadb with the root password) fails with access denied.&lt;/p&gt;
+&lt;p&gt;I am creating it this way, because I want to use the command 'podman generate systemd --files --new' so that the systemd script create the container from new each time.  So, I will, if I can connect to mariadb, mount the /var/lib/sql directory on the host in the run command.  The aim is that the newly created by systemd container will reuse the database each time.&lt;/p&gt;
+&lt;p&gt;But I can't get this basic command to work.  I have tried creating the maria container with -e MARIADB_ROOT_PASSWORD="some_password", but I still get no luck.&lt;/p&gt;
+&lt;p&gt;I'm stumped...&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">James Stewart Miller</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5301</guid></item><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5299</link><description>&lt;p&gt;Based on a possibility that your secret included a \n at the end, the next release of the Docker Library MariaDB containers will contain &lt;a href="https://github.com/MariaDB/mariadb-docker/commit/2809485eba66f862d21d218bbd008b01ccdb2094"&gt;this fix&lt;/a&gt; that will correctly start if there is one (or more) \n at the end of the password (and a few other odd exception cases).&lt;/p&gt;
+&lt;p&gt;The other possibility is that you are putting a space between "-p" and the password in the mysql command line which treats the password as a database name. Run without the space like above.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5299</guid></item><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5298</link><description>&lt;p&gt;Based on a possibility that your secret included a \n at the end, the next release of the Docker Library MariaDB containers will contain &lt;a href="https://github.com/MariaDB/mariadb-docker/commit/2809485eba66f862d21d218bbd008b01ccdb2094"&gt;this fix&lt;/a&gt; that will correctly start if there is one (or more) \n at the end of the password (and a few other odd exception cases).&lt;/p&gt;
+&lt;p&gt;My mis-pasted "testing with secrets" above should of began with:&lt;/p&gt;
+&lt;pre class="fixed"&gt;$ echo $(pwgen 30) | podman secret create MARIADB_ROOT_PASSWORD -
+&lt;/pre&gt;&lt;p&gt;If you did something similar, echo appends \n so it always ends up in the secret.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5298</guid></item><item><title>Re: How to change root to native-password plugin with dockerhub image</title><link>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5297</link><description>&lt;p&gt;edit: no space between -p and password on the mysql command line
+(I got caught by formatting syntax)&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/how-to-change-root-to-native-password-plugin-with-dockerhub-image/+comments/5297</guid></item></channel></rss>

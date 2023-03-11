@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Data case sensitive issue</title><link>https://mariadb.com/kb/en/data-case-sensitive-issue/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/data-case-sensitive-issue/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 10 Mar 2023 11:48:58 +0000</lastBuildDate><item><title>Re: Data case sensitive issue</title><link>https://mariadb.com/kb/en/data-case-sensitive-issue/+comments/5804</link><description>&lt;p&gt;I think what is happening is that by specifying the CHARACTER SET as utf8 on the field level (which has a case insensitive default collation), but not the collation, you are overriding the default table collation. Try:&lt;/p&gt;
+&lt;pre class="fixed"&gt;CREATE OR REPLACE TABLE a4vdds.`gum_adm_user` (
+  `ID` decimal(19,0) NOT NULL, 
+  `UUID` varchar(255) CHARACTER SET utf8 NOT NULL, 
+  `NAME` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,  
+  `ENCODED_PASSWORD` varchar(255) CHARACTER SET utf8 NOT NULL, 
+  `DATA` longtext CHARACTER SET utf8 DEFAULT NULL, 
+  PRIMARY KEY (`ID`), 
+  UNIQUE KEY `UC_GUM_ADM_USER_1` (`UUID`), 
+  UNIQUE KEY `UC_GUM_ADM_USER_2` (`NAME`), 
+  CONSTRAINT `SYS_C008765` CHECK ('ENCODED_PASSWORD' is not null), 
+  CONSTRAINT `SYS_C008763` CHECK ('UUID' is not null), 
+  CONSTRAINT `SYS_C008762` CHECK ('ID' is not null), 
+  CONSTRAINT `SYS_C008764` CHECK ('NAME' is not null) ) 
+ENGINE=InnoDB DEFAULT CHARSET='utf8' DEFAULT COLLATE='utf8_bin';
+
+INSERT INTO a4vdds.gum_adm_user 
+  VALUES('6530748','user-16Ks6IuR4bsPy9Kf','s7u9u5y','XXXXXX','XXXXXX');
+Query OK, 1 row affected (0.006 sec)
+
+INSERT INTO a4vdds.gum_adm_user 
+  VALUES('6380446','user-pvsERO6MFmyaDBAn','S7U9U5Y','XXXXXX','XXXXXX');
+Query OK, 1 row affected (0.003 sec)
+&lt;/pre&gt;&lt;p&gt;Or just remove the field level specification entirely:&lt;/p&gt;
+&lt;pre class="fixed"&gt;CREATE OR REPLACE TABLE a4vdds.`gum_adm_user` (
+  `ID` decimal(19,0) NOT NULL, 
+  `UUID` varchar(255) CHARACTER SET utf8 NOT NULL, 
+  `NAME` varchar(255) NOT NULL, 
+  `ENCODED_PASSWORD` varchar(255) CHARACTER SET utf8 NOT NULL, 
+  `DATA` longtext CHARACTER SET utf8 DEFAULT NULL, 
+  PRIMARY KEY (`ID`), 
+  UNIQUE KEY `UC_GUM_ADM_USER_1` (`UUID`), 
+  UNIQUE KEY `UC_GUM_ADM_USER_2` (`NAME`), 
+  CONSTRAINT `SYS_C008765` CHECK ('ENCODED_PASSWORD' is not null),
+  CONSTRAINT `SYS_C008763` CHECK ('UUID' is not null), 
+  CONSTRAINT `SYS_C008762` CHECK ('ID' is not null), 
+  CONSTRAINT `SYS_C008764` CHECK ('NAME' is not null) ) 
+ENGINE=InnoDB DEFAULT CHARSET='utf8' DEFAULT COLLATE='utf8_bin';
+Query OK, 0 rows affected (0.055 sec)
+
+INSERT INTO a4vdds.gum_adm_user 
+  VALUES('6380446','user-pvsERO6MFmyaDBAn','S7U9U5Y','XXXXXX','XXXXXX');
+Query OK, 1 row affected (0.027 sec)
+
+INSERT INTO a4vdds.gum_adm_user 
+  VALUES('6530748','user-16Ks6IuR4bsPy9Kf','s7u9u5y','XXXXXX','XXXXXX');
+Query OK, 1 row affected (0.003 sec)
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/data-case-sensitive-issue/+comments/5804</guid></item><item><title>Re: Data case sensitive issue</title><link>https://mariadb.com/kb/en/data-case-sensitive-issue/+comments/5803</link><description>&lt;p&gt;The MariaDB database is on AWS RDS.&lt;/p&gt;
+&lt;p&gt;We have simulated the following scenarios and none of them allows us to insert the data in the table. What else we can do to make this work ?&lt;/p&gt;
+&lt;p&gt;INSERT INTO Test3_db.gum_adm_user
+VALUES('6380446','user-pvsERO6MFmyaDBAn','S7U9U5Y','XXXXXX','XXXXXX')&lt;/p&gt;
+&lt;p&gt;INSERT INTO Test3_db.gum_adm_user
+VALUES('6530748','user-16Ks6IuR4bsPy9Kf','s7u9u5y','XXXXXX','XXXXXX')&lt;/p&gt;
+&lt;p&gt;After the First Insert, we will get the below error in the second insert.&lt;/p&gt;
+&lt;p&gt;SQL Error [1062][23000]:(conn=13) Duplicate entry 's7u9u5y' for key 'UC_GUM_ADM_USER_2'&lt;/p&gt;
+&lt;p&gt;Note: Name Column has Unique Key Constraint.&lt;/p&gt;
+&lt;p&gt;Schema Structure&lt;/p&gt;
+&lt;p&gt;CREATE TABLE `gum_adm_user` (
+  `ID` decimal(19,0) NOT NULL,
+  `UUID` varchar(255) CHARACTER SET utf8 NOT NULL,
+  `NAME` varchar(255) CHARACTER SET utf8 NOT NULL,
+  `ENCODED_PASSWORD` varchar(255) CHARACTER SET utf8 NOT NULL,
+  `DATA` longtext CHARACTER SET utf8 DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `UC_GUM_ADM_USER_1` (`UUID`),
+  UNIQUE KEY `UC_GUM_ADM_USER_2` (`NAME`),
+  CONSTRAINT `SYS_C008765` CHECK ('ENCODED_PASSWORD' is not null),
+  CONSTRAINT `SYS_C008763` CHECK ('UUID' is not null),
+  CONSTRAINT `SYS_C008762` CHECK ('ID' is not null),
+  CONSTRAINT `SYS_C008764` CHECK ('NAME' is not null)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin&lt;/p&gt;
+&lt;p&gt;Scenario 1 :  Change the Parameter Values for Collation and Character set  at RDS Instance &lt;/p&gt;
+&lt;p&gt;show variables like '%collation%';&lt;/p&gt;
+&lt;p&gt;collation_connection     utf8_bin
+collation_database         utf8_bin
+collation_server              utf8_bin&lt;/p&gt;
+&lt;p&gt;show variables like 'char%';&lt;/p&gt;
+&lt;p&gt;character_set_client      utf8
+character_set_connection          utf8
+character_set_database utf8
+character_set_filesystem            utf8
+character_set_results    utf8
+character_set_server     utf8
+character_set_system   utf8
+character_sets_dir         /rdsdbbin/mariadb-10.5.15.R1/share/charsets/&lt;/p&gt;
+&lt;p&gt;Scenario 2 :  Change the Parameter Values for Collation and Character set  at Database Level
+Scenario 3 :  Change the Parameter Values for Collation and Character set  at Table Level
+Scenario 4 :  Change the Parameter Values for Collation and Character set  at Table and Column Level
+Scenario 5 :  Change the Parameter Values for Collation and Character set  at RDS, Database, Table and Column Level&lt;/p&gt;
+&lt;p&gt;All of the above changes together. But nothing works. MariaDB just does not allow duplicate values like Oracle.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Vasant S</dc:creator><guid>https://mariadb.com/kb/en/data-case-sensitive-issue/+comments/5803</guid></item><item><title>Re: Data case sensitive issue</title><link>https://mariadb.com/kb/en/data-case-sensitive-issue/+comments/5801</link><description>&lt;p&gt;Are these run on the same server? What is the value of the &lt;a href="/kb/en/server-system-variables/#lower_case_table_names"&gt;lower_case_table_names&lt;/a&gt; variable? See &lt;a href="/kb/en/identifier-case-sensitivity/"&gt;Identifier Case-sensitivity&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;For the character sets, you probably want utf8mb4 in MariaDB; utf8 only holds 3-bytes, and does not support the full UTF8 range. See &lt;a href="/kb/en/unicode/"&gt;unicode&lt;/a&gt;.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/data-case-sensitive-issue/+comments/5801</guid></item></channel></rss>

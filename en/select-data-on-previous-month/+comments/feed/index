@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Select data on previous month</title><link>https://mariadb.com/kb/en/select-data-on-previous-month/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/select-data-on-previous-month/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 10 Mar 2023 10:06:56 +0000</lastBuildDate><item><title>Re: Select data on previous month</title><link>https://mariadb.com/kb/en/select-data-on-previous-month/+comments/3835</link><description>&lt;hr&gt;
+&lt;h4 class="anchored_heading" id="curdate"&gt;CURDATE()&lt;/h4&gt;
+&lt;hr&gt;
+&lt;pre class="fixed"&gt;SELECT CURDATE();
++------------+
+| CURDATE()  |
++------------+
+| 2019-01-30 |
++------------+
+&lt;/pre&gt;&lt;hr&gt;
+&lt;h4 class="anchored_heading" id="date_add"&gt;DATE_ADD()&lt;/h4&gt;
+&lt;hr&gt;
+&lt;pre class="fixed"&gt;SELECT DATE_ADD(CURDATE(), INTERVAL 1 MONTH);
++---------------------------------------+
+| DATE_ADD(CURDATE(), INTERVAL 1 MONTH) |
++---------------------------------------+
+| 2019-02-28                            |
++---------------------------------------+
+&lt;/pre&gt;&lt;hr&gt;
+&lt;h4 class="anchored_heading" id="date_sub"&gt;DATE_SUB()&lt;/h4&gt;
+&lt;hr&gt;
+&lt;pre class="fixed"&gt;SELECT DATE_SUB(CURDATE(), INTERVAL 1 MONTH);
++---------------------------------------+
+| DATE_SUB(CURDATE(), INTERVAL 1 MONTH) |
++---------------------------------------+
+| 2018-12-30                            |
++---------------------------------------+
+&lt;/pre&gt;&lt;hr&gt;
+&lt;h4 class="anchored_heading" id="datediff"&gt;DATEDIFF()&lt;/h4&gt;
+&lt;hr&gt;
+&lt;pre class="fixed"&gt;SELECT DATEDIFF(CURDATE(), DATE_SUB(CURDATE(), INTERVAL 2 MONTH));
++------------------------------------------------------------+
+| DATEDIFF(CURDATE(), DATE_SUB(CURDATE(), INTERVAL 2 MONTH)) |
++------------------------------------------------------------+
+|                                                         61 |
++------------------------------------------------------------+
+&lt;/pre&gt;&lt;hr&gt;
+&lt;h4 class="anchored_heading" id="generate-data"&gt;Generate data:&lt;br&gt;&lt;/h4&gt;
+&lt;p&gt;First create a table with records in interval of "n" months:&lt;br&gt;
+In my case it is 3 months starting from now()&lt;br&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;pre class="fixed"&gt;CREATE TEMPORARY TABLE daterange (dt DATE); 
+
+SET @counter := -1;
+SET @nmonths := 3;
+SET @to:= curdate();
+SET @from := date_sub(curdate(), INTERVAL @nmonths MONTH);
+set @diff := DATEDIFF(@to, @from);
+&lt;/pre&gt;&lt;hr&gt;
+&lt;h4 class="anchored_heading" id="results"&gt;Results:&lt;/h4&gt;
+&lt;hr&gt;
+&lt;pre class="fixed"&gt;SHOW FIELDS FROM daterange;
++-------+------+------+-----+---------+-------+
+| Field | Type | Null | Key | Default | Extra |
++-------+------+------+-----+---------+-------+
+| dt    | date | YES  |     | NULL    |       |
++-------+------+------+-----+---------+-------+
+
+SELECT @to;
++------------+
+| @to        |
++------------+
+| 2019-01-30 |
++------------+
+
+SELECT @from;
++------------+
+| @from      |
++------------+
+| 2018-10-30 |
++------------+
+
+SELECT @diff;
++-------+
+| @diff |
++-------+
+|    92 |
++-------+
+&lt;/pre&gt;&lt;hr&gt;
+&lt;h4 class="anchored_heading" id="insert-data-into-the-table"&gt;Insert data into the table&lt;/h4&gt;
+&lt;hr&gt;
+&lt;pre class="fixed"&gt;DELIMITER //
+WHILE (@counter &amp;lt; @diff) DO 
+    INSERT daterange VALUES (DATE_ADD(@from, INTERVAL @counter:=@counter + 1 DAY));
+END WHILE; //
+DELIMITER ;
+&lt;/pre&gt;&lt;hr&gt;
+&lt;h4 class="anchored_heading" id="results"&gt;Results:&lt;/h4&gt;
+&lt;hr&gt;
+&lt;pre class="fixed"&gt;Query OK, 93 rows affected (0.024 sec)
+
+SELECT COUNT(dt) from daterange; 
++-----------+
+| count(dt) |
++-----------+
+|        93 |
++-----------+
+&lt;/pre&gt;&lt;hr&gt;
+&lt;h4 class="anchored_heading" id="get-the-first-and-last-5-days"&gt;Get the first and last 5 days:&lt;/h4&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;br&gt;Get the first 5 days:&lt;/p&gt;
+&lt;pre class="fixed"&gt;SELECT * FROM daterange LIMIT 5; 
++------------+
+| dt         |
++------------+
+| 2018-10-30 |
+| 2018-10-31 |
+| 2018-11-01 |
+| 2018-11-02 |
+| 2018-11-03 |
++------------+
+&lt;/pre&gt;&lt;p&gt;Get the last 5 days from table:&lt;/p&gt;
+&lt;pre class="fixed"&gt;SELECT * FROM daterange ORDER BY(dt) DESC LIMIT 5; 
++------------+
+| dt         |
++------------+
+| 2019-01-30 |
+| 2019-01-29 |
+| 2019-01-28 |
+| 2019-01-27 |
+| 2019-01-26 |
++------------+
+&lt;/pre&gt;&lt;hr&gt;
+&lt;h4 class="anchored_heading" id="get-the-interval"&gt;Get the interval&lt;br&gt;&lt;/h4&gt;
+&lt;p&gt;Get the x [day,month] data (@x) from table, &lt;br&gt;
+starting from @mydate, where @mydate is 1 day before today&lt;br&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;pre class="fixed"&gt;SET @mydate:= DATE_SUB(curdate(),INTERVAL 1 day);
+SET @x:= 1;
+
+SELECT @mydate;
++------------+
+| @mydate    |
++------------+
+| 2019-01-29 |
++------------+
+&lt;/pre&gt;&lt;hr&gt;
+&lt;h4 class="anchored_heading" id="result-for-day-interval"&gt;Result for day interval:&lt;/h4&gt;
+&lt;hr&gt;
+&lt;pre class="fixed"&gt;SELECT * FROM daterange WHERE dt&amp;gt;=DATE_SUB(@mydate, INTERVAL @x day) AND dt&amp;lt;=@mydate;
++------------+
+| dt         |
++------------+
+| 2019-01-28 |
+| 2019-01-29 |
++------------+
+2 rows in set (0.001 sec)
+&lt;/pre&gt;&lt;hr&gt;
+&lt;h4 class="anchored_heading" id="result-for-month-interval"&gt;Result for month interval:&lt;/h4&gt;
+&lt;hr&gt;
+&lt;pre class="fixed"&gt;SELECT * FROM daterange WHERE dt&amp;gt;=DATE_SUB(@mydate, INTERVAL @x MONTH) AND dt&amp;lt;=@mydate;
++------------+
+| dt         |
++------------+
+| 2018-12-29 |
+| 2018-12-30 |
+| 2018-12-31 |
+| 2019-01-01 |
+| 2019-01-02 |
+| 2019-01-03 |
+| 2019-01-04 |
+| 2019-01-05 |
+| 2019-01-06 |
+| 2019-01-07 |
+| 2019-01-08 |
+| 2019-01-09 |
+| 2019-01-10 |
+| 2019-01-11 |
+| 2019-01-12 |
+| 2019-01-13 |
+| 2019-01-14 |
+| 2019-01-15 |
+| 2019-01-16 |
+| 2019-01-17 |
+| 2019-01-18 |
+| 2019-01-19 |
+| 2019-01-20 |
+| 2019-01-21 |
+| 2019-01-22 |
+| 2019-01-23 |
+| 2019-01-24 |
+| 2019-01-25 |
+| 2019-01-26 |
+| 2019-01-27 |
+| 2019-01-28 |
+| 2019-01-29 |
++------------+
+32 rows in set (0.001 sec)
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Anel Husakovic</dc:creator><guid>https://mariadb.com/kb/en/select-data-on-previous-month/+comments/3835</guid></item></channel></rss>

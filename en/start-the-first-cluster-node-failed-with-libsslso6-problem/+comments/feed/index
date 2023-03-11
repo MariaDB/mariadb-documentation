@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: start the first cluster node failed with libssl.so.6 problem</title><link>https://mariadb.com/kb/en/start-the-first-cluster-node-failed-with-libsslso6-problem/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/start-the-first-cluster-node-failed-with-libsslso6-problem/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 10 Mar 2023 10:13:15 +0000</lastBuildDate><item><title>Re: start the first cluster node failed with libssl.so.6 problem</title><link>https://mariadb.com/kb/en/start-the-first-cluster-node-failed-with-libsslso6-problem/+comments/1902</link><description>&lt;p&gt;I don't have root or sudo access for the server i worked on for galera, but it pretty much same as following server. which i have root access ( we have standard redhat 6 env for all the linux server in our company):&lt;/p&gt;
+&lt;pre&gt;
+root@xxx:/root # ldconfig -p | grep 'libssl\|libcrypto'
+        libssl3.so (libc6,x86-64) =&amp;gt; /usr/lib64/libssl3.so
+        libssl.so.10 (libc6,x86-64) =&amp;gt; /usr/lib64/libssl.so.10
+        libcrypto.so.10 (libc6,x86-64) =&amp;gt; /usr/lib64/libcrypto.so.10
+&lt;/pre&gt;
+&lt;p&gt;btw in the above server (EL6) that i have root access,i created soft link libssl.so.6 and libcrypto.so.6,&lt;/p&gt;
+&lt;pre&gt;
+fxxxxx02:/usr/lib64$ ls -l libssl.so.6
+lrwxrwxrwx 1 root root 16 Jan  4 14:23 libssl.so.6 -&amp;gt; libssl.so.1.0.1e
+fxxxx02:/usr/lib64$ ls -l libcrypto.so.6
+lrwxrwxrwx 1 root root 19 Jan  4 14:24 libcrypto.so.6 -&amp;gt; libcrypto.so.1.0.1e
+
+
+&lt;/pre&gt;
+&lt;p&gt;It seems i can bring up the first node by that way.I am not sure if it really works or not, as I am waiting for SA to create similar links for bunch of servers that i will test the galera cluster.&lt;/p&gt;
+&lt;p&gt;Denis&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Yu Denis</dc:creator><guid>https://mariadb.com/kb/en/start-the-first-cluster-node-failed-with-libsslso6-problem/+comments/1902</guid></item><item><title>Re: start the first cluster node failed with libssl.so.6 problem</title><link>https://mariadb.com/kb/en/start-the-first-cluster-node-failed-with-libsslso6-problem/+comments/1901</link><description>&lt;p&gt;What do you get for $ sudo ldconfig -p | grep 'libssl\|libcrypto' ?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Nirbhay Choubey</dc:creator><guid>https://mariadb.com/kb/en/start-the-first-cluster-node-failed-with-libsslso6-problem/+comments/1901</guid></item><item><title>Re: start the first cluster node failed with libssl.so.6 problem</title><link>https://mariadb.com/kb/en/start-the-first-cluster-node-failed-with-libsslso6-problem/+comments/1900</link><description>&lt;pre&gt;
+
+fxxxx2:/apps/opt/mysql/galera-10.0.21/lib$ ldd ./libgalera_smm.so
+        linux-vdso.so.1 =&amp;gt;  (0x00007fff077a7000)
+        libpthread.so.0 =&amp;gt; /lib64/libpthread.so.0 (0x00007fe4d6816000)
+        librt.so.1 =&amp;gt; /lib64/librt.so.1 (0x00007fe4d660d000)
+        libssl.so.6 =&amp;gt; not found
+        libcrypto.so.6 =&amp;gt; not found
+        libm.so.6 =&amp;gt; /lib64/libm.so.6 (0x00007fe4d6388000)
+        libgcc_s.so.1 =&amp;gt; /lib64/libgcc_s.so.1 (0x00007fe4d6172000)
+        libc.so.6 =&amp;gt; /lib64/libc.so.6 (0x00007fe4d5dde000)
+        /lib64/ld-linux-x86-64.so.2 (0x0000003e3ba00000)
+
+
+&lt;/pre&gt;
+&lt;p&gt;i have libssl and libcrypto as follows:&lt;/p&gt;
+&lt;pre&gt;
+fxxxx02:/lib$ rpm -ql openssl  | grep libssl
+/usr/lib64/.libssl.so.1.0.1e.hmac
+/usr/lib64/.libssl.so.10.hmac
+/usr/lib64/libssl.so.1.0.1e
+/usr/lib64/libssl.so.10
+fxxxx02:/lib$ rpm -ql openssl  | grep libcrypto
+/usr/lib64/.libcrypto.so.1.0.1e.hmac
+/usr/lib64/.libcrypto.so.10.hmac
+/usr/lib64/libcrypto.so.1.0.1e
+/usr/lib64/libcrypto.so.10
+
+
+&lt;/pre&gt;
+&lt;p&gt;i don't have CentOS 6 at this moment, does 10.0.23 version also looking for libssl.so.6 ?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Yu Denis</dc:creator><guid>https://mariadb.com/kb/en/start-the-first-cluster-node-failed-with-libsslso6-problem/+comments/1900</guid></item><item><title>Re: start the first cluster node failed with libssl.so.6 problem</title><link>https://mariadb.com/kb/en/start-the-first-cluster-node-failed-with-libsslso6-problem/+comments/1899</link><description>&lt;p&gt;I was able to install and start MariaDB Galera on Centos6 :&lt;/p&gt;
+&lt;p&gt;10.0.23-MariaDB, galera.x86_64 25.3.9-1.rhel6.el6, openssl.x86_64 1.0.1e-30.el6.8 @updates.&lt;/p&gt;
+&lt;p&gt;Can you check of you have libssl.so.xx available on your system?&lt;/p&gt;
+&lt;p&gt;What's the output of the following command:&lt;/p&gt;
+&lt;p&gt;ldd /usr/lib64/galera/libgalera_smm.so  | grep ssl&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Nirbhay Choubey</dc:creator><guid>https://mariadb.com/kb/en/start-the-first-cluster-node-failed-with-libsslso6-problem/+comments/1899</guid></item></channel></rss>

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for:  Readwritesplit</title><link>https://mariadb.com/kb/en/mariadb-maxscale-21-readwritesplit/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/mariadb-maxscale-21-readwritesplit/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 10 Mar 2023 09:41:01 +0000</lastBuildDate><item><title>Re:  Readwritesplit</title><link>https://mariadb.com/kb/en/mariadb-maxscale-21-readwritesplit/+comments/5812</link><description>&lt;p&gt;You can use the &lt;a href="https://mariadb.com/kb/en/mariadb-maxscale-6-named-server-filter/"&gt;namedserverfilter&lt;/a&gt; to force certain queries to be routed to the current master server.&lt;/p&gt;
+&lt;p&gt;Something like this should work:&lt;/p&gt;
+&lt;pre class="fixed"&gt;[NamedServerFilter]
+type=filter
+module=namedserverfilter
+match01=SELECT.*MyTable
+target01=-&amp;gt;master
+&lt;/pre&gt;&lt;p&gt;Then just add &lt;code&gt;filters=NamedServerFilter&lt;/code&gt; to the readwritesplit service.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Markus Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/mariadb-maxscale-21-readwritesplit/+comments/5812</guid></item><item><title>Re:  Readwritesplit</title><link>https://mariadb.com/kb/en/mariadb-maxscale-21-readwritesplit/+comments/5811</link><description>&lt;p&gt;Is it possible to setup a readwritesplitter so that queries to a specific database or table will be routed to the master instead of the slave?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Richard Lee</dc:creator><guid>https://mariadb.com/kb/en/mariadb-maxscale-21-readwritesplit/+comments/5811</guid></item><item><title>Re: My setup can't detect Master and Slave server</title><link>https://mariadb.com/kb/en/mariadb-maxscale-21-readwritesplit/+comments/2827</link><description>&lt;p&gt;Hello,&lt;/p&gt;
+&lt;p&gt;Eureka&lt;/p&gt;
+&lt;p&gt;GRANT REPLICATION CLIENT ON *.* TO 'myuser'@'%';&lt;/p&gt;
+&lt;p&gt;give maxscale user access to replica, and I had issue in maxscale logging so i didn't see the error in the log&lt;/p&gt;
+&lt;p&gt;Thank you.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Mohammad Lahlouh</dc:creator><guid>https://mariadb.com/kb/en/mariadb-maxscale-21-readwritesplit/+comments/2827</guid></item><item><title>Re: My setup can't detect Master and Slave server</title><link>https://mariadb.com/kb/en/mariadb-maxscale-21-readwritesplit/+comments/2826</link><description>&lt;p&gt;yes it's running correctly&lt;/p&gt;
+&lt;pre class="fixed"&gt;mysql&amp;gt; show slave status\G
+*************************** 1. row ***************************
+               Slave_IO_State: Waiting for master to send event
+                  Master_Host: mysql
+                  Master_User: repl
+                  Master_Port: 33061
+                Connect_Retry: 60
+              Master_Log_File: mysql-node01.000016
+          Read_Master_Log_Pos: 478
+               Relay_Log_File: 1b69c4837339-relay-bin.000019
+                Relay_Log_Pos: 697
+        Relay_Master_Log_File: mysql-node01.000016
+             Slave_IO_Running: Yes
+            Slave_SQL_Running: Yes
+              Replicate_Do_DB:
+          Replicate_Ignore_DB:
+           Replicate_Do_Table:
+       Replicate_Ignore_Table:
+      Replicate_Wild_Do_Table:
+  Replicate_Wild_Ignore_Table:
+                   Last_Errno: 0
+                   Last_Error:
+                 Skip_Counter: 0
+          Exec_Master_Log_Pos: 478
+              Relay_Log_Space: 1976
+              Until_Condition: None
+               Until_Log_File:
+                Until_Log_Pos: 0
+           Master_SSL_Allowed: No
+           Master_SSL_CA_File:
+           Master_SSL_CA_Path:
+              Master_SSL_Cert:
+            Master_SSL_Cipher:
+               Master_SSL_Key:
+        Seconds_Behind_Master: 0
+Master_SSL_Verify_Server_Cert: No
+                Last_IO_Errno: 0
+                Last_IO_Error:
+               Last_SQL_Errno: 0
+               Last_SQL_Error:
+  Replicate_Ignore_Server_Ids:
+             Master_Server_Id: 1
+                  Master_UUID: 3c9fbf8b-09bd-11e7-af8e-0242ac110002
+             Master_Info_File: /var/lib/mysql/master.info
+                    SQL_Delay: 0
+          SQL_Remaining_Delay: NULL
+      Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
+           Master_Retry_Count: 86400
+                  Master_Bind:
+      Last_IO_Error_Timestamp:
+     Last_SQL_Error_Timestamp:
+               Master_SSL_Crl:
+           Master_SSL_Crlpath:
+           Retrieved_Gtid_Set:
+            Executed_Gtid_Set:
+                Auto_Position: 0
+         Replicate_Rewrite_DB:
+                 Channel_Name:
+           Master_TLS_Version:
+1 row in set (0.00 sec)
+&lt;/pre&gt;&lt;p&gt;and here mysql cnf file for master&lt;/p&gt;
+&lt;pre class="fixed"&gt;root@docker:~# cat /root/docker/mysql-node01/conf.d/my-custom.cnf
+[mysql]
+port=33061
+[mysqld]
+port=33061
+server-id=1
+log-bin=mysql-node01
+max_connections=1000
+#innodb_buffer_pool_size=30M
+binlog_format=mixed
+max_allowed_packet=10M
+report_host=172.17.0.3
+&lt;/pre&gt;&lt;p&gt;slave:&lt;/p&gt;
+&lt;pre class="fixed"&gt;root@docker:~# cat /root/docker/mysql-node02/conf.d/my-custom.cnf
+[mysql]
+port=33062
+[mysqld]
+port=33062
+server-id=2
+log-bin=mysql-node02
+max_connections=1000
+#innodb_buffer_pool_size=30M
+binlog_format=mixed
+read_only
+max_allowed_packet=10M
+read_only
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Mohammad Lahlouh</dc:creator><guid>https://mariadb.com/kb/en/mariadb-maxscale-21-readwritesplit/+comments/2826</guid></item><item><title>Re: My setup can't detect Master and Slave server</title><link>https://mariadb.com/kb/en/mariadb-maxscale-21-readwritesplit/+comments/2825</link><description>&lt;p&gt;Does the output of &lt;code&gt;SHOW SLAVE STATUS&lt;/code&gt; show that replication is running properly?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Markus Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/mariadb-maxscale-21-readwritesplit/+comments/2825</guid></item><item><title>My setup can't detect Master and Slave server</title><link>https://mariadb.com/kb/en/mariadb-maxscale-21-readwritesplit/+comments/2824</link><description>&lt;p&gt;Hello,&lt;/p&gt;
+&lt;p&gt;I do steps here &lt;a href="https://mariadb.com/kb/en/mariadb-enterprise/mariadb-maxscale-14/maxscale-readwrite-splitting-with-mysql-replication/"&gt;https://mariadb.com/kb/en/mariadb-enterprise/mariadb-maxscale-14/maxscale-readwrite-splitting-with-mysql-replication/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;to setup maxscale 2.0 and I have in backend 2 MySQL 5.7 configured as master slave.&lt;/p&gt;
+&lt;p&gt;But maxscale can't detect master server and slave server; So when I try to connect through maxscale I got: &lt;/p&gt;
+&lt;pre class="fixed"&gt;ERROR 1045 (28000): failed to create new session
+&lt;/pre&gt;&lt;p&gt;and in error log: &lt;/p&gt;
+&lt;pre class="fixed"&gt;Apr 16 20:55:13 docker maxscale[25981]: Couldn't find suitable Master from 2 candidates.
+Apr 16 20:55:13 docker maxscale[25981]: Failed to create new router session for service 'Read-Write Service'. See previous errors for more details.
+&lt;/pre&gt;&lt;p&gt;my config file:&lt;/p&gt;
+&lt;pre class="fixed"&gt;[maxscale]
+threads=2
+[server1]
+type=server
+address=172.17.0.2
+port=33061
+protocol=MySQLBackend
+authenticator_options=skip_authentication=true
+router_options=master
+[server2]
+type=server
+address=172.17.0.3
+port=33062
+protocol=MySQLBackend
+authenticator_options=skip_authentication=true
+router_options=slave
+[Read-Write Service]
+type=service
+router=readwritesplit
+#router=readconnroute
+servers=server1,server2
+user=myuser
+passwd=mypwd
+max_slave_connections=100%
+#localhost_match_wildcard_host
+enable_root_user=1
+#detect_standalone_master
+#failover
+#router_options=slave_selection_criteria=LEAST_CURRENT_OPERATIONS
+#max_slave_replication_lag=30
+router_options=master_accept_reads=true
+[MaxAdmin Service]
+type=service
+router=cli
+
+[Read-Write Listener]
+type=listener
+service=Read-Write Service
+protocol=MySQLClient
+port=33060
+socket=/tmp/maxadmin.sock
+[MaxAdmin Listener]
+type=listener
+service=MaxAdmin Service
+protocol=maxscaled
+socket=default
+
+
+[MySQL Monitor]
+type=monitor
+module=mysqlmon
+servers=server1,server2
+user=myuser
+passwd=mypwd
+&lt;/pre&gt;&lt;pre class="fixed"&gt;root@docker:~# maxadmin list servers
+Servers.
+-------------------+-----------------+-------+-------------+--------------------
+Server             | Address         | Port  | Connections | Status
+-------------------+-----------------+-------+-------------+--------------------
+server1            | 172.17.0.2      | 33061 |           0 | Running
+server2            | 172.17.0.3      | 33062 |           0 | Running
+-------------------+-----------------+-------+-------------+--------------------
+&lt;/pre&gt;&lt;p&gt;But in all documentation I saw server1 status as Running, Master&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Mohammad Lahlouh</dc:creator><guid>https://mariadb.com/kb/en/mariadb-maxscale-21-readwritesplit/+comments/2824</guid></item></channel></rss>

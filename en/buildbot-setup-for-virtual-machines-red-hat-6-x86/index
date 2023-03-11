@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Buildbot Setup for Virtual Machines - Red Hat 6 x86 - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Buildbot Setup for Virtual Machines - Red Hat 6 x86" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+The following steps were used to create a Red Hat 6 x86 buildslave.
+Initial Setup
+cd vms
+qemu-img create -f qcow2 vm-rhel6-x86-base.qcow2 8G
+kvm -m 1024 -hda vm-rhel6-x86-bas..." />
+
+    <meta name="description" content="
+The following steps were used to create a Red Hat 6 x86 buildslave.
+Initial Setup
+cd vms
+qemu-img create -f qcow2 vm-rhel6-x86-base.qcow2 8G
+kvm -m 1024 -hda vm-rhel6-x86-bas..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/training-tutorials/">Training &amp; Tutorials</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/advanced-mariadb-articles/">Advanced MariaDB Articles</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/development-articles/">Development Articles</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/tools/">MariaDB Development Tools</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/buildbot/">Buildbot</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/buildbot-setup/">Buildbot Setup</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/buildbot-setup-for-virtual-machines/">Buildbot Setup for Virtual Machines</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/buildbot-setup-for-virtual-machines-red-hat/">Buildbot Setup for Virtual Machines - Red Hat</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/">Buildbot Setup for Virtual Machines - Red Hat 6 x86</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/+flag"
+                data-flag-url="/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2011-02-26 17:12">12 years ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2012-06-06 12:27">10 years, 9 months ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+        
+
+<div class="well well-small box"><div><h5>Localized Versions</h5></div><div>
+
+        <ul>
+            
+            <li><a href="/kb/it/configurare-buildbot-per-le-macchine-virtuali-red-hat-6-x86/">Configurare Buildbot per le Macchine Virtuali - Red Hat 6 x86</a> [it]</li>
+            
+        </ul>
+        
+</div>
+</div>
+
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Buildbot Setup for Virtual Machines - Red Hat 6 x86</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#initial-setup" title="Initial Setup">Initial Setup</a></li>
+
+    <li class=""><a href="#serial-console-setup" title="Serial Console Setup">Serial Console Setup</a></li>
+
+    <li class=""><a href="#create-buildbot-account" title="Create buildbot account">Create buildbot account</a></li>
+
+    <li class=""><a href="#rhn-and-updates" title="RHN and Updates">RHN and Updates</a></li>
+
+    <li class=""><a href="#image-for-rpm-build" title="Image for RPM Build">Image for RPM Build</a></li>
+
+    <li class=""><a href="#image-for-installtest" title="Image for install/test">Image for install/test</a> </ol>
+</li>
+</div><p>
+The following steps were used to create a Red Hat 6 x86 buildslave.</p>
+<h2 class="anchored_heading" id="initial-setup">Initial Setup</h2>
+<pre class="fixed">cd vms
+qemu-img create -f qcow2 vm-rhel6-x86-base.qcow2 8G
+kvm -m 1024 -hda vm-rhel6-x86-base.qcow2 -cdrom ../iso/red-hat/rhel-server-6.0-i386-dvd.iso -redir 'tcp:22275::22' -boot d -smp 2 -cpu qemu32,-nx -net nic,model=virtio -net user
+</pre><p>When the VM boots. Go through the prompts.</p>
+<p>Re-initialize the drive, when prompted.</p>
+<p>Set the Hostname to "rhel6-x86".</p>
+<p>Configure Network, set eth0 to "Connect Automatically"</p>
+<p>Set the root password.</p>
+<p>Set partitioning type to: Use All Space</p>
+<p>Don't encrypt the partitions (just adds overhead).</p>
+<p>Select "Write Changes to Disk" on the popup that appears.</p>
+<p>Set the software set to "Virtual Host".</p>
+<p>After clicking next on the install-type page, the installation will finally start.</p>
+<p>After installation completes, click reboot. Then shutdown the VM.</p>
+<h2 class="anchored_heading" id="serial-console-setup">Serial Console Setup</h2>
+<pre class="fixed">cd vms
+qemu-img create -b vm-rhel6-x86-base.qcow2 -f qcow2 vm-rhel6-x86-serial.qcow2
+kvm -m 1024 -hda vm-rhel6-x86-serial.qcow2 -redir 'tcp:22275::22' -boot c -smp 2 -cpu qemu32,-nx -net nic,model=virtio -net user
+</pre><p>Login as root.</p>
+<p>Add to /boot/grub/menu.lst:</p>
+<pre class="fixed">serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1
+terminal --timeout=3 serial console
+</pre><p>also add in menu.lst to kernel line (after removing 'quiet'):</p>
+<pre class="fixed">console=tty0 console=ttyS0,115200n8
+</pre><p>Add login prompt on serial console:</p>
+<pre>
+cat &gt;&gt;/etc/inittab &lt;&lt;END
+
+# Serial console.
+S0:2345:respawn:/sbin/agetty -h -L ttyS0 19200 vt100
+END
+</pre>
+<h2 class="anchored_heading" id="create-buildbot-account">Create buildbot account</h2>
+<p>With the network up and running, it's time to add a user so that we don't have
+to login as root all the time.</p>
+<pre class="fixed">useradd buildbot
+<span class="c1"># Password is disabled by default in Centos5.</span>
+usermod -a -G wheel buildbot
+visudo
+<span class="c1"># Uncomment the line &quot;%wheel        ALL=(ALL)       NOPASSWD: ALL&quot;</span>
+<span class="c1"># Comment out this line:</span>
+<span class="c1"># Defaults    requiretty</span>
+
+<span class="c1"># Put in public ssh key for own account and host buildbot account.</span>
+<span class="c1"># Note that Centos5 seems to require .ssh/authorized_keys chmod go-rwx.</span>
+su - buildbot
+mkdir .ssh
+chmod go-rwx .ssh
+
+<span class="c1"># scp the key from the vm host over to .ssh/authorized_keys</span>
+
+chmod go-rwx .ssh/authorized_keys
+</pre><p>Now logout and then ssh to the VM as the buildbot user. On my local box I added
+the following to my /.ssh/config file to make logging in easier:</p>
+<pre class="fixed">Host rhel6-x86
+HostName localhost
+  User buildbot
+  IdentityFile ~/.ssh/id_rsa
+  Port 2225
+</pre><p>With the above in place I can simply type:</p>
+<pre class="fixed">ssh rhel6-x86
+</pre><p>...to connect to the vm.</p>
+<h2 class="anchored_heading" id="rhn-and-updates">RHN and Updates</h2>
+<p>Register the system with RHN:</p>
+<pre class="fixed">sudo rhn_register
+</pre><p>Choose defaults when registering. After the process is complete:</p>
+<pre class="fixed">sudo yum update
+</pre><p>The first time you update you'll be prompted to import some GPG keys from Red
+Hat. The updating process may take a while, depending on the number of updates
+and the speed of your Internet connection.</p>
+<p>After updating shutdown so we can make more copies.</p>
+<pre class="fixed">sudo shutdown -h now
+</pre><h2 class="anchored_heading" id="image-for-rpm-build">Image for RPM Build</h2>
+<pre class="fixed">qemu-img create -b vm-rhel6-x86-serial.qcow2 -f qcow2 vm-rhel6-x86-build.qcow2
+kvm -m 1024 -hda vm-rhel6-x86-build.qcow2 -redir 'tcp:22275::22' -boot c -smp 2 -cpu qemu32,-nx -net nic,model=virtio -net user -nographic
+</pre><p>Wait for the system to boot.</p>
+<p>Install compilers etc:</p>
+<pre class="fixed">sudo yum groupinstall &#34;Development Tools&#34;
+sudo yum install libaio-devel openssl-devel
+</pre><p>If the "Development Tools" group is not available, the following lines will install the packages from it:</p>
+<pre class="fixed"><span class="c1"># Mandatory Packages:</span>
+sudo yum install autoconf automake binutils bison flex gcc gcc-c++ gettext
+sudo yum install libtool make patch pkgconfig redhat-rpm-config rpm-build
+
+<span class="c1"># Default Packages:</span>
+sudo yum install byacc cscope ctags cvs diffstat doxygen elfutils gcc-gfortran
+sudo yum install git indent intltool patchutils rcs subversion swig systemtap
+
+<span class="c1"># Optional Packages:</span>
+sudo yum install ElectricFence ant babel bzr chrpath cmake compat-gcc-34
+sudo yum install compat-gcc-34-c++ compat-gcc-34-g77 dejagnu expect gcc-gnat
+sudo yum install gcc-java gcc-objc gcc-objc++ imake jpackage-utils libstdc++-docs
+sudo yum install mercurial mod_dav_svn nasm perltidy python-docs rpmdevtools
+sudo yum install rpmlint systemtap-sdt-devel systemtap-server
+</pre><p>Other packages to install:</p>
+<pre class="fixed">sudo yum install gperf readline-devel ncurses-devel zlib-devel perl perl<span class="se">\(</span>DBI<span class="se">\)</span>
+</pre><p>Create rpm directories and download 5.0 rpm for shared-compat:</p>
+<pre class="fixed">sudo mkdir -vp /usr/src/redhat/SOURCES /usr/src/redhat/SPECS /usr/src/redhat/RPMS /usr/src/redhat/SRPMS
+sudo mkdir -vp /srv/shared/yum/CentOS/5/i386/RPMS/
+cd /srv/shared/yum/CentOS/5/i386/RPMS/
+sudo wget http://mirror.ourdelta.org/yum/CentOS/5/i386/RPMS/MySQL-OurDelta-shared-5.0.87.d10-65.el5.i386.rpm
+</pre><h2 class="anchored_heading" id="image-for-installtest">Image for install/test</h2>
+<pre class="fixed">qemu-img create -b vm-rhel6-x86-serial.qcow2 -f qcow2 vm-rhel6-x86-install.qcow2
+kvm -m 1024 -hda vm-rhel6-x86-install.qcow2 -redir 'tcp:22275::22' -boot c -smp 2 -cpu qemu32,-nx -net nic,model=virtio -net user -nographic
+</pre><p>Install extra dependencies:</p>
+<pre class="fixed">sudo yum install perl perl\(DBI\)
+</pre>
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/buildbot-setup-for-virtual-machines-centos-62/">
+                        ← Buildbot Setup for Virtual Machines - CentOS 6.2
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/buildbot-setup-for-virtual-machines-red-hat/">
+                        ↑ Buildbot Setup for Virtual Machines - Red Hat ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/buildbot-setup-for-virtual-machines-centos-5-i386/">
+                        Buildbot Setup for Virtual Machines - CentOS 5 i386 →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="1551" data-comments-url="/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/+comments"
+         data-reply-url="/kb/en/buildbot-setup-for-virtual-machines-red-hat-6-x86/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/buildbot-setup-for-virtual-machines-red-hat/">
+                    ↑ Buildbot Setup for Virtual Machines - Red Hat ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/buildbot-setup-for-virtual-machines-fedora-20/">
+                            
+                            Buildbot Setup for Virtual Machines - Fedora 20
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/buildbot-setup-for-virtual-machines-fedora-19/">
+                            
+                            Buildbot Setup for Virtual Machines - Fedora 19
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/buildbot-setup-for-virtual-machines-fedora-18/">
+                            
+                            Buildbot Setup for Virtual Machines - Fedora 18
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/buildbot-setup-for-virtual-machines-fedora-17/">
+                            
+                            Buildbot Setup for Virtual Machines - Fedora 17
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/buildbot-setup-for-virtual-machines-fedora-16/">
+                            
+                            Buildbot Setup for Virtual Machines - Fedora 16
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/buildbot-setup-for-virtual-machines-centos-62/">
+                            
+                            Buildbot Setup for Virtual Machines - CentOS 6.2
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Buildbot Setup for Virtual Machines - Red Hat 6 x86</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/buildbot-setup-for-virtual-machines-centos-5-i386/">
+                            
+                            Buildbot Setup for Virtual Machines - CentOS 5 i386
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/buildbot-setup-for-virtual-machines-centos-5-amd64/">
+                            
+                            Buildbot Setup for Virtual Machines - Centos 5 amd64
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>
