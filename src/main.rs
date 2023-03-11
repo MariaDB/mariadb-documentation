@@ -1,6 +1,5 @@
 mod app_args;
 mod crawler;
-mod kb_urls;
 mod logger;
 mod method;
 mod req;
@@ -30,7 +29,6 @@ fn run_crawler(args: AppArgs) -> Result<(), Box<dyn Error>> {
 }
 
 // TODO - Move this code elsewhere and write tests.
-
 
 pub fn url_to_path(url: &str) -> PathBuf {
     let url_suffix = get_url_suffix(url);

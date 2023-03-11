@@ -1,6 +1,6 @@
 use log::LevelFilter;
 use simplelog::{
-    ColorChoice, CombinedLogger, ConfigBuilder, TermLogger, TerminalMode, WriteLogger,
+    ConfigBuilder, TermLogger, TerminalMode, WriteLogger,
 };
 use std::fs::File;
 

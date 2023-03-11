@@ -1,3 +1,4 @@
+use crate::scrape::format_url;
 use crate::url_to_path;
 
 use crate::{
@@ -14,7 +15,11 @@ use std::{
 pub trait Crawler: Sized {
     fn ignore_existing_files(&self) -> bool;
     fn starting_urls(&mut self) -> VecDeque<String> {
-        vec!["https://mariadb.com/kb/en/".into()].into()
+        ["https://mariadb.com/kb/en/"]
+            .into_iter()
+            .chain(include!("css_links.txt").into_iter())
+            .map(format_url)
+            .collect()
     }
     fn is_valid_url(&mut self, url: &str) -> bool;
     fn crawl(mut self) -> Result<(), Box<dyn Error>> {
