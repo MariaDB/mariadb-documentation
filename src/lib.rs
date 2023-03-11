@@ -42,12 +42,6 @@ async fn get_kb_urls_csv() -> Result<String, StatusCode> {
         .map_err(|_| StatusCode::NOT_FOUND)
 }
 
-// async fn get_kb_urls_json() -> Result<Response, StatusCode> {
-//     let kb_urls = get_kb_urls_csv().await?;
-//     let mut reader = csv::Reader::from_reader(kb_urls.as_bytes());
-//     let rows: Result<Vec<HashMap<String, String>>, _> = reader.deserialize().collect();
-//     Ok(Json(rows.map_err(|_| StatusCode::NOT_FOUND)?).into_response())
-// }
 
 #[derive(serde::Deserialize, Debug)]
 pub struct ReqQuery {
