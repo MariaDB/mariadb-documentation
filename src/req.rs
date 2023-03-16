@@ -1,9 +1,6 @@
-use std::error::Error;
-
-use reqwest::blocking::{self, Response};
-
 use crate::scrape::{format_url, valid_url};
-
+use crate::Result;
+use reqwest::blocking::{self, Response};
 pub struct ScrapeClient {
     inner: blocking::Client,
 }
@@ -18,7 +15,7 @@ impl ScrapeClient {
             inner: blocking::Client::new(),
         }
     }
-    pub fn get(&mut self, url: &str) -> Result<ScrapeResult, Box<dyn Error>> {
+    pub fn get(&mut self, url: &str) -> Result<ScrapeResult> {
         log::info!("Requesting: {url}");
         let response = self.get_until_connect(url)?;
         let status = response.status();
@@ -57,7 +54,7 @@ impl ScrapeClient {
     }
 }
 
-pub fn get_kb_urls() -> Result<Vec<String>, Box<dyn Error>> {
+pub fn get_kb_urls() -> Result<Vec<String>> {
     let response = blocking::get("http://localhost:7032/kb_urls.csv")?.error_for_status()?;
     let text = response.text()?;
     let mut kb_urls = csv::Reader::from_reader(text.as_bytes());
