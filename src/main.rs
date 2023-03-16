@@ -6,15 +6,18 @@ mod redirect;
 mod req;
 mod scrape;
 mod standard_crawler;
+mod starting_urls;
 
 use std::{error::Error, path::PathBuf};
 
 use app_args::AppArgs;
 use crawler::Crawler;
 use method::ScrapeMethod;
+use scrape::trim_url;
 use standard_crawler::StandardCrawler;
 
 pub const BASE_PATH: &str = "../mariadb_archive";
+pub type Result<T, E = Box<dyn std::error::Error>> = std::result::Result<T, E>;
 
 fn main() {
     logger::init();
@@ -41,10 +44,5 @@ pub fn get_url_suffix(mut url: &str) -> &str {
     if let Some(idx) = url.find('?').or_else(|| url.find('#')) {
         url = &url[..idx];
     }
-    url.trim_start_matches("https://")
-        .trim_start_matches('/')
-        .trim_start_matches("mariadb.com/")
-        .trim_start_matches("kb")
-        .trim_matches('/')
-        .trim()
+    trim_url(url)
 }

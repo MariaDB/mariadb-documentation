@@ -49,12 +49,14 @@ pub fn valid_url(url: &str) -> bool {
         .contains('.')
 }
 pub fn trim_url(url: &str) -> &str {
-    url.trim_start_matches("https://")
+    url.trim()
+        .trim_start_matches("https://")
         .trim_start_matches('/')
         .trim_start_matches("mariadb.com")
         .trim_start_matches('/')
         .trim_start_matches("kb")
         .trim_matches('/')
+        .trim()
 }
 
 #[cfg(test)]
