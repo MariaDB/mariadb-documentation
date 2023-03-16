@@ -32,28 +32,58 @@ pub fn format_url(url: impl AsRef<str>) -> String {
         }
         debug_assert!(!suffix.contains(symbol));
     }
-
-    let url = suffix
-        .trim_start_matches('/')
-        .trim_start_matches("kb/")
-        .trim_start_matches("mariadb.com/kb/")
-        .trim_start_matches("https://mariadb.com/kb/")
-        .trim();
-
-    String::from("https://mariadb.com/kb/") + url
+    String::from("https://mariadb.com/kb/") + trim_url(suffix)
 }
 
 pub fn valid_url(url: &str) -> bool {
-    debug_assert_eq!(url, &format_url(url));
     if IGNORED_URL_SEGMENTS
         .iter()
         .any(|segment| url.contains(segment) || url.ends_with(segment.trim_end_matches('/')))
     {
         return false;
     };
-    !url.trim_start_matches("https://mariadb.com")
+    if !url.starts_with("https://mariadb.com/kb") {
+        return false;
+    }
+    !url.trim_start_matches("https://mariadb.com/kb")
+        .contains('.')
+}
+pub fn trim_url(url: &str) -> &str {
+    url.trim_start_matches("https://")
+        .trim_start_matches('/')
+        .trim_start_matches("mariadb.com")
         .trim_start_matches('/')
         .trim_start_matches("kb")
-        .trim_start_matches('/')
-        .is_empty()
+        .trim_matches('/')
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn kb(suffix: &str) -> String {
+        format!("https://mariadb.com/kb/{suffix}")
+    }
+    #[test]
+    fn test_trim() {
+        assert_eq!(trim_url(&kb("en")), "en");
+        assert_eq!(trim_url(&kb("en/")), "en");
+        assert_eq!(trim_url(&kb("en/select")), "en/select");
+    }
+    #[test]
+    fn test_valid() {
+        let urls = ["en/select", "en", ""];
+        for url in urls.map(format_url) {
+            assert!(valid_url(&url), "{url}");
+        }
+    }
+    #[test]
+    fn test_invalid() {
+        let full_urls = ["mariadb.com/kb/en/select", "https://test/kb/en/select"]
+            .into_iter()
+            .map(str::to_owned);
+        let url_suffixes = ["en/remove/", "en/remove/meh"].into_iter().map(format_url);
+        for url in full_urls.chain(url_suffixes) {
+            assert!(!valid_url(&url), "{url}");
+        }
+    }
 }

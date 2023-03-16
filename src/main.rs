@@ -2,6 +2,7 @@ mod app_args;
 mod crawler;
 mod logger;
 mod method;
+mod redirect;
 mod req;
 mod scrape;
 mod standard_crawler;
@@ -28,15 +29,13 @@ fn run_crawler(args: AppArgs) -> Result<(), Box<dyn Error>> {
     }
 }
 
-// TODO - Move this code elsewhere and write tests.
-
 pub fn url_to_path(url: &str) -> PathBuf {
     let url_suffix = get_url_suffix(url);
     let mut path = PathBuf::from(url_suffix);
     if path.extension().is_none() {
         path = path.join("index.html");
     }
-    path
+    PathBuf::from(BASE_PATH).join(path)
 }
 pub fn get_url_suffix(mut url: &str) -> &str {
     if let Some(idx) = url.find('?').or_else(|| url.find('#')) {
@@ -45,5 +44,7 @@ pub fn get_url_suffix(mut url: &str) -> &str {
     url.trim_start_matches("https://")
         .trim_start_matches('/')
         .trim_start_matches("mariadb.com/")
-        .trim_start_matches("kb/")
+        .trim_start_matches("kb")
+        .trim_matches('/')
+        .trim()
 }

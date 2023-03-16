@@ -2,6 +2,8 @@ use std::error::Error;
 
 use reqwest::blocking::{self, Response};
 
+use crate::scrape::{format_url, valid_url};
+
 pub struct ScrapeClient {
     inner: blocking::Client,
 }
@@ -26,9 +28,9 @@ impl ScrapeClient {
             log::warn!("Invalid Status: {status} for url {url}");
         }
         let response = response.error_for_status()?;
-        let directed_url = response.url().to_string();
-        if directed_url.contains("https://id.mariadb.com") {
-            return Err("redirected to id".into());
+        let directed_url = format_url(response.url().as_str());
+        if !valid_url(directed_url.trim_end_matches('/')) {
+            return Err("Invalid redirect".into());
         }
         let result = ScrapeResult {
             directed_url,
@@ -53,6 +55,17 @@ impl ScrapeClient {
             }
         }
     }
+}
+
+pub fn get_kb_urls() -> Result<Vec<String>, Box<dyn Error>> {
+    let response = blocking::get("http://localhost:7032/kb_urls.csv")?.error_for_status()?;
+    let text = response.text()?;
+    let mut kb_urls = csv::Reader::from_reader(text.as_bytes());
+    let vec: Result<Vec<String>, csv::Error> = kb_urls
+        .records()
+        .map(|res| res.map(|rec| format_url(&rec[0])))
+        .collect();
+    vec.map_err(std::convert::Into::into)
 }
 
 fn get_file_extension(response: &Response) -> Option<&str> {
