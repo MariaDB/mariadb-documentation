@@ -1,11 +1,10 @@
+mod redirect;
 mod url_to_path;
 
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
-use tokio_util::io::ReaderStream;
 
 use axum::{
-    body::StreamBody,
     debug_handler,
     extract::{self, Query},
     http::StatusCode,
@@ -14,7 +13,7 @@ use axum::{
     Router, Server,
 };
 
-use tokio::fs::{self, File};
+use tokio::fs;
 use url_to_path::{url_to_index_path, url_to_path};
 
 const BASE_PATH: &str = "../mariadb_archive/";
@@ -23,17 +22,21 @@ pub async fn run() {
     let app = Router::new()
         .route("/", get(root))
         .route("/kb_urls.csv", get(get_kb_urls_csv))
+        .route("/kb_urls.csv/", get(get_kb_urls_csv))
         //.route("/kb_urls.json", get(get_kb_urls_json))
         .route("/kb/*url", get(request_kb));
     let addr = "0.0.0.0:7032".parse().expect("Invalid Port");
     println!("Listening on http://localhost:7032/");
     println!("Ctrl to Exit.");
-    Server::bind(&addr).serve(app.into_make_service()).await;
+    Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await
+        .expect("Failed to start server");
 }
 
 #[debug_handler]
 async fn root(query: Query<ReqQuery>) -> Result<Response, StatusCode> {
-    request_kb(extract::Path("/kb/en".to_owned()), query).await
+    request_kb(extract::Path("/kb/".to_owned()), query).await
 }
 
 async fn get_kb_urls_csv() -> Result<String, StatusCode> {
@@ -93,8 +96,10 @@ fn content_type_from_extension(extension: &str) -> Option<&'static str> {
 
 async fn content_builder(content_type: &str, path: &Path) -> Result<Response, StatusCode> {
     debug_assert!(content_type.contains("charset=utf-8"));
-    let file = File::open(path).await.map_err(|_| StatusCode::NOT_FOUND)?;
-    let body = StreamBody::new(ReaderStream::new(file));
+    let bytes = redirect::read(path)
+        .await
+        .map_err(|_| StatusCode::NOT_FOUND)?;
+    let body = axum::body::Full::from(bytes);
     Response::builder()
         .header("content-type", content_type)
         .body(body)
