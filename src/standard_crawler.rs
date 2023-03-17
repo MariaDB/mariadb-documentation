@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use crate::{
     crawler::{read_and_write_content, Crawler},
     req::ScrapeClient,
@@ -7,6 +5,7 @@ use crate::{
     starting_urls::standard_starting_urls,
     Result,
 };
+use std::collections::VecDeque;
 
 pub struct StandardCrawler {
     queue: VecDeque<String>,
@@ -14,10 +13,8 @@ pub struct StandardCrawler {
 }
 impl StandardCrawler {
     pub fn new(resume: bool) -> Self {
-        Self {
-            resume,
-            queue: standard_starting_urls(),
-        }
+        let queue = standard_starting_urls();
+        Self { queue, resume }
     }
 }
 

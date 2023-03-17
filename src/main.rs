@@ -1,7 +1,9 @@
 mod app_args;
 mod crawler;
+mod last_updated;
 mod logger;
 mod method;
+mod recent_crawler;
 mod redirect;
 mod req;
 mod scrape;
@@ -10,10 +12,16 @@ mod starting_urls;
 
 use app_args::AppArgs;
 use crawler::Crawler;
+use last_updated::write_last_updated;
 use method::ScrapeMethod;
+use recent_crawler::RecentCrawler;
 use scrape::trim_url;
 use standard_crawler::StandardCrawler;
-use std::{error::Error, path::PathBuf};
+use std::{
+    error::Error,
+    io,
+    path::{Path, PathBuf},
+};
 
 pub const BASE_PATH: &str = "../mariadb_archive";
 pub type Result<T, E = Box<dyn Error>> = std::result::Result<T, E>;
@@ -25,15 +33,19 @@ fn main() {
         eprintln!("{err}");
         std::process::exit(1);
     }
-}
-
-fn run_crawler(args: AppArgs) -> Result<(), Box<dyn Error>> {
-    match args.scrape_method {
-        ScrapeMethod::Standard => StandardCrawler::new(args.ignore_existing).crawl(),
-        _ => todo!(),
+    if args.scrape_method.is_complete_scrape() {
+        write_last_updated().expect("Failed to update last updated");
     }
 }
 
+fn run_crawler(args: AppArgs) -> Result<(), Box<dyn Error>> {
+    log::info!("Selected: {:?}", &args.scrape_method);
+    match args.scrape_method {
+        ScrapeMethod::Standard => StandardCrawler::new(args.ignore_existing).crawl(),
+        ScrapeMethod::RecentChanges => RecentCrawler::new().crawl(),
+        _ => todo!(),
+    }
+}
 pub fn url_to_path(url: &str) -> PathBuf {
     let mut path = PathBuf::from(get_url_suffix(url));
     if path.extension().is_none() {
@@ -41,9 +53,43 @@ pub fn url_to_path(url: &str) -> PathBuf {
     }
     PathBuf::from(BASE_PATH).join(path)
 }
+pub fn path_to_url(path: &Path) -> String {
+    let path = path.to_string_lossy().to_string();
+    let path = path
+        .trim_start_matches("../mariadb_archive")
+        .trim_end_matches("index.html")
+        .replace('\\', "/");
+    format!("https://mariadb.com/kb{path}")
+}
 pub fn get_url_suffix(mut url: &str) -> &str {
     if let Some(idx) = url.find('#').or_else(|| url.find('?')) {
         url = &url[..idx];
     }
     trim_url(url)
+}
+
+pub fn get_subpaths(mut path: &Path) -> Result<Vec<PathBuf>, io::Error> {
+    if path
+        .file_name()
+        .map(|path| path.to_string_lossy() == "index.html")
+        == Some(true)
+    {
+        if let Some(parent) = path.parent() {
+            path = parent;
+        };
+    }
+    get_subpaths_raw(path.to_owned())
+}
+
+fn get_subpaths_raw(path: PathBuf) -> Result<Vec<PathBuf>, io::Error> {
+    if !path.is_dir() {
+        return Ok(vec![path]);
+    }
+    let mut dir = std::fs::read_dir(path)?;
+    let mut items = vec![];
+    while let Some(Ok(item)) = dir.next() {
+        let sub_items = get_subpaths_raw(item.path())?;
+        items.extend_from_slice(&sub_items);
+    }
+    Ok(items)
 }
