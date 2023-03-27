@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/filesort-with-small-limit-optimization/+r/34026/">34026</a></dd>
+            <dd><a href="/kb/en/filesort-with-small-limit-optimization/+r/124522/">124522</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-115">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2015-01-27 15:44">2015-01-27 15:44</span></dd>
+<span class="datetime" title="2023-03-21 19:14">2023-03-21 19:14</span></dd>
         </dl>
     </div>
     
@@ -309,20 +309,16 @@
         
         <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
 
-== Optimization description
-MySQL 5.6 has an optimization for ##ORDER BY ...LIMIT n## queries. When ##n## is sufficiently small, the optimizer will use a [[http://en.wikipedia.org/wiki/Priority_queue|priority queue]]  for sorting. The alternative is, roughly speaking, to sort the entire output and then pick only first ##n## rows.
+== Optimization Description
+When ##n## is sufficiently small, the optimizer will use a [[http://en.wikipedia.org/wiki/Priority_queue|priority queue]]  for sorting. Before the optimization&#39;s porting to MariaDB 10.0, the alternative was, roughly speaking, to sort the entire output and then pick only first ##n## rows.
 
-The optimization was ported into MariaDB 10.0 in version 10.0.0. The server would not give any indication of whether the optimization was used, though. (This is how the feature was designed by Oracle. In MySQL 5.6, the only way one can see this feature is to examine the optimizer_trace, which is not currently supported by MariaDB).
+== Optimization Visibility in MariaDB 
+There are two ways to check whether filesort has used a priority queue.
 
-== Optimization visibility in MariaDB 
-&lt;&lt;product mariadb from=10.0.13&gt;&gt;
-Starting from [[mariadb-10013-release-notes|MariaDB 10.0.13]], there are two ways to check whether filesort has used a priority queue.
-&lt;&lt;/product&gt;&gt;
-
-=== Status variable
+=== Status Variable
 The first way is to check the [[server-status-variables#sort_priority_queue_sorts|Sort_priority_queue_sorts]] status variable. It shows the number of times that sorting was done through a priority queue. (The total number of times sorting was done is a sum [[server-status-variables#sort_range|Sort_range]] and [[server-status-variables#sort_scan|Sort_scan]]).
 
-=== Slow query log
+=== Slow Query Log
 The second way is to check the slow query log. When one uses [[slow-query-log-extended-statistics|Extended statistics in the slow query log]] and  specifies [[server-system-variables#log_slow_verbosity|log_slow_verbosity=query_plan]], [[slow-query-log|slow query log]] entries look like this
 
 &lt;&lt;code&gt;&gt;
@@ -339,7 +335,7 @@ Note the &#34;Priority_queue: Yes&#34; on the last comment line. (##pt-query-dig
 
 As for ##EXPLAIN##, it will give no indication whether filesort uses priority queue or the generic quicksort and merge algorithm. ##Using filesort## will be shown in both cases, by both MariaDB and MySQL.
 
-== See also
+== See Also
 * [[http://dev.mysql.com/doc/refman/5.6/en/limit-optimization.html|LIMIT Optimization]] page in the MySQL 5.6 manual (search for &#34;priority queue&#34;).
 * MySQL WorkLog entry, [[http://dev.mysql.com/worklog/task/?id=1393|WL#1393]]
 * MDEV-415, MDEV-6430</textarea>

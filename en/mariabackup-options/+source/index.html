@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariabackup-options/+r/119584/">119584</a></dd>
+            <dd><a href="/kb/en/mariabackup-options/+r/124598/">124598</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-10-05 12:03">2022-10-05 12:03</span></dd>
+<span class="datetime" title="2023-03-24 10:56">2023-03-24 10:56</span></dd>
         </dl>
     </div>
     
@@ -1112,7 +1112,7 @@ Mariabackup initializes its own embedded instance of InnoDB using the same confi
 
 === ##--innodb-flush-method##
 
-Defines the data flush method.
+Defines the data flush method. Ignored from MariaDB 11.0.
 
 &lt;&lt;code&gt;&gt;
 --innodb-flush-method=fdatasync 
@@ -1417,7 +1417,7 @@ Using this option causes Mariabackup to disable table locks with the ##FLUSH TAB
 $ mariabackup --backup --no-lock
 &lt;&lt;/code&gt;&gt;
 
-If you&#39;re considering ##--no-lock## due to backups failing to acquire locks, this may be due to incoming replication events preventing the lock.  Consider using the ##[[#-safe-slave-backup|--safe-slave-backup]]## option to momentarily stop the replication slave thread.  This alternative may help the backup to succeed without resorting to ##--no-lock##. 
+If you&#39;re considering ##--no-lock## due to backups failing to acquire locks, this may be due to incoming replication events preventing the lock.  Consider using the [[#-safe-slave-backup|--safe-slave-backup]] option to momentarily stop the replica thread.  This alternative may help the backup to succeed without resorting to ##--no-lock##. 
 
 &lt;&lt;style class=&#34;redbox&#34;&gt;&gt;
 Do not use this option. This option may cause data consistency issues. This option is not supported.
@@ -1583,9 +1583,9 @@ This option is not compatible with the ##[[#-stream|--stream]]## option.
 
 === ##--safe-slave-backup##
 
-Stops slave SQL threads for backups.
+Stops replica SQL threads for backups.
 
-When running Mariabackup on a server that uses replication, you may occasionally encounter locks that block backups.  Using this option, it stops slave SQL threads and waits until the ##Slave_open_temp_tables## in the ##SHOW STATUS## statement is zero.  If there are no open temporary tables, the backup runs, otherwise the SQL thread starts and stops until there are no open temporary tables.
+When running Mariabackup on a server that uses replication, you may occasionally encounter locks that block backups.  Using this option, it stops replica SQL threads and waits until the ##Slave_open_temp_tables## in the ##SHOW STATUS## statement is zero.  If there are no open temporary tables, the backup runs, otherwise the SQL thread starts and stops until there are no open temporary tables.
 
 &lt;&lt;code&gt;&gt;
 $ mariabackup --backup \
@@ -1593,18 +1593,18 @@ $ mariabackup --backup \
       --safe-slave-backup-timeout=500
 &lt;&lt;/code&gt;&gt;
 
-The backup fails if the ##Slave_open_temp_tables## doesn&#39;t reach zero after the timeout period set by the ##[[#-safe-slave-backup-timeout|--safe-slave-backup-timeout]]## option.
+The backup fails if the ##Slave_open_temp_tables## doesn&#39;t reach zero after the timeout period set by the [[#-safe-slave-backup-timeout|--safe-slave-backup-timeout]] option.
 
 
 === ##--safe-slave-backup-timeout##
 
-Defines the timeout for slave backups.
+Defines the timeout for replica backups.
 
 &lt;&lt;code&gt;&gt;
 --safe-slave-backup-timeout=#
 &lt;&lt;/code&gt;&gt;
 
-When running Mariabackup on a server that uses replication, you may occasionally encounter locks that block backups.  With the ##[[#-safe-slave-backup|--safe-slave-backup]]## option, it waits until the ##Slave_open_temp_tables## in the ##SHOW STATUS## statement reaches zero.  Using this option, you set how long it waits.  It defaults to 300.
+When running Mariabackup on a server that uses replication, you may occasionally encounter locks that block backups.  With the [[#-safe-slave-backup|--safe-slave-backup]] option, it waits until the ##Slave_open_temp_tables## in the ##SHOW STATUS## statement reaches zero.  Using this option, you set how long it waits.  It defaults to 300.
 
 &lt;&lt;code&gt;&gt;
 $ mariabackup --backup \
@@ -1616,7 +1616,7 @@ $ mariabackup --backup \
 
 Refuses client connections to servers using the older protocol.
 
-Using this option, you can set it explicitly to refuse client connections to the server when using the older protocol, from before 4.1.1.  This feature is enabled by default.  Use the ##[[#-skip-secure-auth|--skip-secure-auth]]## option to disable it.
+Using this option, you can set it explicitly to refuse client connections to the server when using the older protocol, from before 4.1.1.  This feature is enabled by default.  Use the [[#-skip-secure-auth|--skip-secure-auth]] option to disable it.
 
 &lt;&lt;code&gt;&gt;
 $ mariabackup --backup --secure-auth
@@ -1662,13 +1662,13 @@ $ mariabackup --backup --skip-secure-auth
 
 === ##--slave-info##
 
-Prints the binary log position and the name of the master server.
+Prints the binary log position and the name of the primary server.
 
-If the server is a [[replication|replication slave]], then this option causes Mariabackup to print the hostname of the slave&#39;s replication master and the [[binary-log|binary log]] file and position of the [[replication-threads/#slave-sql-thread|slave&#39;s SQL thread]] to ##stdout##.
+If the server is a [[replication|replica]], then this option causes Mariabackup to print the hostname of the replica&#39;s replication primary and the [[binary-log|binary log]] file and position of the [[replication-threads/#replica-sql-thread|replica&#39;s SQL thread]] to ##stdout##.
 
-This option also causes Mariabackup to record this information as a ##[[change-master-to|CHANGE MASTER]]## command that can be used to set up a new server as a slave of the original server&#39;s master after the backup has been restored. This information will be written to to the ##[[files-created-by-mariabackup/#xtrabackup_slave_info|xtrabackup_slave_info]]## file.
+This option also causes Mariabackup to record this information as a [[change-master-to|CHANGE MASTER]] command that can be used to set up a new server as a replica of the original server&#39;s primary after the backup has been restored. This information will be written to to the [[files-created-by-mariabackup/#xtrabackup_slave_info|xtrabackup_slave_info]] file.
 
-Mariabackup does **not** check if [[gtid|GTIDs]] are being used in replication. It takes a shortcut and assumes that if the ##[[gtid/#gtid_slave_pos|gtid_slave_pos]]## system variable is non-empty, then it writes the ##[[change-master-to|CHANGE MASTER]]## command with the ##[[change-master-to/#master_use_gtid|MASTER_USE_GTID]]## option set to ##slave_pos##. Otherwise, it writes the ##[[change-master-to|CHANGE MASTER]]## command with the ##[[change-master-to/#master_log_file|MASTER_LOG_FILE]]## and ##[[change-master-to/#master_log_pos|MASTER_LOG_POS]]## options using the master&#39;s [[binary-log|binary log]] file and position. See MDEV-19264 for more information.
+Mariabackup does **not** check if [[gtid|GTIDs]] are being used in replication. It takes a shortcut and assumes that if the [[gtid/#gtid_slave_pos|gtid_slave_pos]] system variable is non-empty, then it writes the [[change-master-to|CHANGE MASTER]] command with the [[change-master-to/#master_use_gtid|MASTER_USE_GTID]] option set to ##slave_pos##. Otherwise, it writes the [[change-master-to|CHANGE MASTER]] command with the [[change-master-to/#master_log_file|MASTER_LOG_FILE]] and [[change-master-to/#master_log_pos|MASTER_LOG_POS]] options using the primary&#39;s [[binary-log|binary log]] file and position. See MDEV-19264 for more information.
 
 &lt;&lt;code&gt;&gt;
 $ mariabackup --slave-info
@@ -1721,7 +1721,7 @@ $ mariabackup --backup \
 
 See [[secure-connections-overview/#certificate-authorities-cas|Secure Connections Overview: Certificate Authorities (CAs)]] for more information. 
 
-This option implies the ##[[#-ssl|--ssl]]## option.
+This option implies the [[#-ssl|--ssl]] option.
 
 === ##--ssl-capath##
 
@@ -1741,11 +1741,11 @@ $ mariabackup --backup \
    --ssl-capath=/etc/my.cnf.d/certificates/ca/
 &lt;&lt;/code&gt;&gt;
 
-The directory specified by this option needs to be run through the ##[[https://www.openssl.org/docs/man1.1.1/man1/rehash.html|openssl rehash]]## command.
+The directory specified by this option needs to be run through the [[https://www.openssl.org/docs/man1.1.1/man1/rehash.html|openssl rehash]] command.
 
 See [[secure-connections-overview/#certificate-authorities-cas|Secure Connections Overview: Certificate Authorities (CAs)]] for more information
 
-This option implies the ##[[#-ssl|--ssl]]## option.
+This option implies the [[#-ssl|--ssl]] option.
 
 === ##--ssl-cert##
 
@@ -1764,7 +1764,7 @@ $ mariabackup --backup \
    --ssl-ca=/etc/my.cnf.d/certificates/ca.pem
 &lt;&lt;/code&gt;&gt;
 
-This option implies the ##[[#-ssl|--ssl]]## option.
+This option implies the [[#-ssl|--ssl]] option.
 
 === ##--ssl-cipher##
 
@@ -1784,9 +1784,9 @@ $ mariabackup --backup \
    --ssl-cipher=TLSv1.2
 &lt;&lt;/code&gt;&gt;
 
-To determine if the server restricts clients to specific ciphers, check the ##[[ssltls-system-variables#ssl_cipher|ssl_cipher]]## system variable.
+To determine if the server restricts clients to specific ciphers, check the [[ssltls-system-variables#ssl_cipher|ssl_cipher]] system variable.
 
-This option implies the ##[[#-ssl|--ssl]]## option.
+This option implies the [[#-ssl|--ssl]] option.
 
 === ##--ssl-crl##
 
@@ -1828,7 +1828,7 @@ $ mariabackup --backup \
    --ssl-crlpath=/etc/my.cnf.d/certificates/crl/ 
 &lt;&lt;/code&gt;&gt;
 
-The directory specified by this option needs to be run through the ##[[https://www.openssl.org/docs/man1.1.1/man1/rehash.html|openssl rehash]]## command.
+The directory specified by this option needs to be run through the [[https://www.openssl.org/docs/man1.1.1/man1/rehash.html|openssl rehash]] command.
 
 See [[secure-connections-overview/#certificate-revocation-lists-crls|Secure Connections Overview: Certificate Revocation Lists (CRLs)]] for more information.
 
@@ -1851,7 +1851,7 @@ $ mariabackup --backup \
    --ssl-ca=/etc/my.cnf.d/certificates/ca.pem
 &lt;&lt;/code&gt;&gt;
 
-This option implies the ##[[#-ssl|--ssl]]## option.
+This option implies the [[#-ssl|--ssl]] option.
 
 === ##--ssl-verify-server-cert##
 
@@ -1886,7 +1886,7 @@ To extract all files from the xbstream archive into a directory use  the ##mbstr
 $ mbstream  -x &lt; backup.xb
 &lt;&lt;/code&gt;&gt;
 
-If a backup is streamed, then Mariabackup will record the format in the ##[[files-created-by-mariabackup/#xtrabackup_info|xtrabackup_info]]## file.
+If a backup is streamed, then Mariabackup will record the format in the [[files-created-by-mariabackup/#xtrabackup_info|xtrabackup_info]] file.
 
 === ##--tables##
 
@@ -1896,7 +1896,7 @@ Defines the tables you want to include in the backup.
 --tables=REGEX
 &lt;&lt;/code&gt;&gt;
 
-Using this option, you can define what tables you want Mariabackup to back up from the database.  The table values are defined using Regular Expressions. To define the tables you want to exclude from the backup, see the ##[[#-tables-exclude|--tables-exclude]]## option.
+Using this option, you can define what tables you want Mariabackup to back up from the database.  The table values are defined using Regular Expressions. To define the tables you want to exclude from the backup, see the [[#-tables-exclude|--tables-exclude]] option.
 
 &lt;&lt;code&gt;&gt;
 $ mariabackup --backup \
@@ -1905,7 +1905,7 @@ $ mariabackup --backup \
      --tables-exclude=nodes_tmp
 &lt;&lt;/code&gt;&gt;
 
-If a backup is a [[partial-backup-and-restore-with-mariabackup|partial backup]], then Mariabackup will record that detail in the ##[[files-created-by-mariabackup/#xtrabackup_info|xtrabackup_info]]## file.
+If a backup is a [[partial-backup-and-restore-with-mariabackup|partial backup]], then Mariabackup will record that detail in the [[files-created-by-mariabackup/#xtrabackup_info|xtrabackup_info]] file.
 
 === ##--tables-exclude##
 
@@ -1916,7 +1916,7 @@ Defines the tables you want to exclude from the backup.
 --tables-exclude=REGEX
 &lt;&lt;/code&gt;&gt;
 
-Using this option, you can define what tables you want Mariabackup to exclude from the backup.  The table values are defined using Regular Expressions. To define the tables you want to include from the backup, see the ##[[#-tables|--tables]]## option.
+Using this option, you can define what tables you want Mariabackup to exclude from the backup.  The table values are defined using Regular Expressions. To define the tables you want to include from the backup, see the [[#-tables|--tables]] option.
 
 &lt;&lt;code&gt;&gt;
 $ mariabackup --backup \
@@ -1925,7 +1925,7 @@ $ mariabackup --backup \
      --tables-exclude=nodes_tmp
 &lt;&lt;/code&gt;&gt;
 
-If a backup is a [[partial-backup-and-restore-with-mariabackup|partial backup]], then Mariabackup will record that detail in the ##[[files-created-by-mariabackup/#xtrabackup_info|xtrabackup_info]]## file.
+If a backup is a [[partial-backup-and-restore-with-mariabackup|partial backup]], then Mariabackup will record that detail in the [[files-created-by-mariabackup/#xtrabackup_info|xtrabackup_info]] file.
 
 === ##--tables-file##
 
@@ -1943,7 +1943,7 @@ $ mariabackup --backup \
      --tables-file=/etc/mysql/backup-file
 &lt;&lt;/code&gt;&gt;
 
-If a backup is a [[partial-backup-and-restore-with-mariabackup|partial backup]], then Mariabackup will record that detail in the ##[[files-created-by-mariabackup/#xtrabackup_info|xtrabackup_info]]## file.
+If a backup is a [[partial-backup-and-restore-with-mariabackup|partial backup]], then Mariabackup will record that detail in the [[files-created-by-mariabackup/#xtrabackup_info|xtrabackup_info]] file.
 
 === ##--target-dir##
 
@@ -1969,7 +1969,7 @@ Defines the limit for I/O operations per second in IOS values.
 --throttle=#
 &lt;&lt;/code&gt;&gt;
 
-Using this option, you can set a limit on the I/O operations Mariabackup performs per second in IOS values.  It is only used during the ##[[#-backup|--backup]]## command option.
+Using this option, you can set a limit on the I/O operations Mariabackup performs per second in IOS values.  It is only used during the [[#-backup|--backup]] command option.
 
 === ##--tls-version##
 

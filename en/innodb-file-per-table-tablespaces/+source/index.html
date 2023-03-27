@@ -292,7 +292,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-file-per-table-tablespaces/+r/115981/">115981</a></dd>
+            <dd><a href="/kb/en/innodb-file-per-table-tablespaces/+r/124555/">124555</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5454">
@@ -301,7 +301,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-05-11 12:57">2022-05-11 12:57</span></dd>
+<span class="datetime" title="2023-03-23 00:12">2023-03-23 00:12</span></dd>
         </dl>
     </div>
     
@@ -427,7 +427,7 @@ You can export a partitioned table by locking the table and copying the ##.ibd##
 &lt;&lt;sql&gt;&gt;
 CREATE TABLE test.t2 (
    employee_id INT,
-   name VARCHAR(50),
+   name VARCHAR(50)
 ) ENGINE=InnoDB
 PARTITION BY RANGE (employee_id) (
    PARTITION p0 VALUES LESS THAN (6),
@@ -472,8 +472,8 @@ total 428
 
 &lt;&lt;code&gt;&gt;
 $ mkdir /tmp/backup
-$ sudo cp /var/lib/mysql/test/*.ibd /tmp/backup
-$ sudo cp /var/lib/mysql/test/*.cfg /tmp/backup
+$ sudo cp /var/lib/mysql/test/t2*.ibd /tmp/backup
+$ sudo cp /var/lib/mysql/test/t2*.cfg /tmp/backup
 &lt;&lt;/code&gt;&gt;
 
 * Then, once we&#39;ve copied the files, we can release the lock with [[lock-tables-and-unlock-tables|UNLOCK TABLES]]:
@@ -496,9 +496,8 @@ $ scp /tmp/backup/t2* user@target-host:/tmp/backup
 
 &lt;&lt;sql&gt;&gt;
 CREATE TABLE test.t2 (
-   id INT PRIMARY KEY AUTO_INCREMENT,
-   name VARCHAR(50),
-   employee_id INT
+   employee_id INT,
+   name VARCHAR(50)
 ) ENGINE=InnoDB
 PARTITION BY RANGE (employee_id) (
    PARTITION p0 VALUES LESS THAN (6),
@@ -511,8 +510,8 @@ PARTITION BY RANGE (employee_id) (
 * Then, using this table as a model, we need to create a placeholder of this table with the same structure that does not use partitioning. This can be done with a [[create-table#create-select|CREATE TABLE... AS SELECT]] statement:
 
 &lt;&lt;sql&gt;&gt;
-CREATE TABLE test.t2_placeholder AS
-   SELECT * FROM test.t2 WHERE NULL;
+CREATE TABLE test.t2_placeholder LIKE test.t2;
+ALTER TABLE test.t2_placeholder REMOVE PARTITIONING;
 &lt;&lt;/sql&gt;&gt;
 
 This statement will create a new table called ##t2_placeholder## that has the same schema structure as ##t2##, but it does not use partitioning and it contains no rows.

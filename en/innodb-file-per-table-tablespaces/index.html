@@ -256,7 +256,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-05-11 12:57">10 months, 1 week ago</span></dd>
+<span class="datetime" title="2023-03-23 00:12">3 days, 17 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -490,7 +490,7 @@ drwxr-xr-x 3 mysql mysql  4096 Dec 8 18:46 ..
 </li></ul>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test</span><span class="p">.</span><span class="n">t2</span> <span class="p">(</span>
    <span class="n">employee_id</span> <span class="nb">INT</span><span class="p">,</span>
-   <span class="n">name</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">50</span><span class="p">),</span>
+   <span class="n">name</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
 <span class="p">)</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">InnoDB</span>
 <span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">RANGE</span> <span class="p">(</span><span class="n">employee_id</span><span class="p">)</span> <span class="p">(</span>
    <span class="n">PARTITION</span> <span class="n">p0</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">6</span><span class="p">),</span>
@@ -525,8 +525,8 @@ total 428
 </pre><ul start="1"><li>Then, while our connection still holds the lock on the table, we need to copy the tablespace files and the metadata files to a safe directory:
 </li></ul>
 <pre class="fixed">$ mkdir /tmp/backup
-$ sudo cp /var/lib/mysql/test/*.ibd /tmp/backup
-$ sudo cp /var/lib/mysql/test/*.cfg /tmp/backup
+$ sudo cp /var/lib/mysql/test/t2*.ibd /tmp/backup
+$ sudo cp /var/lib/mysql/test/t2*.cfg /tmp/backup
 </pre><ul start="1"><li>Then, once we've copied the files, we can release the lock with <a href="/kb/en/lock-tables-and-unlock-tables/">UNLOCK TABLES</a>:
 </li></ul>
 <pre class="fixed"><span class="n">UNLOCK</span> <span class="n">TABLES</span><span class="p">;</span>
@@ -538,9 +538,8 @@ $ sudo cp /var/lib/mysql/test/*.cfg /tmp/backup
 </pre><ul start="1"><li>Then, we need to import the partitioned tablespaces onto the target server. The import process for partitioned tables is more complicated than the import process for non-partitioned tables.  To start with, if it doesn't already exist, then we need to create a partitioned table on the target server that matches the partitioned table on the original server:
 </li></ul>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test</span><span class="p">.</span><span class="n">t2</span> <span class="p">(</span>
-   <span class="n">id</span> <span class="nb">INT</span> <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="n">AUTO_INCREMENT</span><span class="p">,</span>
-   <span class="n">name</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">50</span><span class="p">),</span>
-   <span class="n">employee_id</span> <span class="nb">INT</span>
+   <span class="n">employee_id</span> <span class="nb">INT</span><span class="p">,</span>
+   <span class="n">name</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
 <span class="p">)</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">InnoDB</span>
 <span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">RANGE</span> <span class="p">(</span><span class="n">employee_id</span><span class="p">)</span> <span class="p">(</span>
    <span class="n">PARTITION</span> <span class="n">p0</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">6</span><span class="p">),</span>
@@ -550,8 +549,8 @@ $ sudo cp /var/lib/mysql/test/*.cfg /tmp/backup
 <span class="p">);</span>
 </pre><ul start="1"><li>Then, using this table as a model, we need to create a placeholder of this table with the same structure that does not use partitioning. This can be done with a <a href="/kb/en/create-table/#create-select">CREATE TABLE... AS SELECT</a> statement:
 </li></ul>
-<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test</span><span class="p">.</span><span class="n">t2_placeholder</span> <span class="k">AS</span>
-   <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">test</span><span class="p">.</span><span class="n">t2</span> <span class="k">WHERE</span> <span class="k">NULL</span><span class="p">;</span>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test</span><span class="p">.</span><span class="n">t2_placeholder</span> <span class="k">LIKE</span> <span class="n">test</span><span class="p">.</span><span class="n">t2</span><span class="p">;</span>
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">test</span><span class="p">.</span><span class="n">t2_placeholder</span> <span class="n">REMOVE</span> <span class="n">PARTITIONING</span><span class="p">;</span>
 </pre><p>This statement will create a new table called <code>t2_placeholder</code> that has the same schema structure as <code>t2</code>, but it does not use partitioning and it contains no rows.</p>
 <h5 class="anchored_heading" id="for-each-partition">For Each Partition</h5>
 <p>From this point forward, the rest of our steps need to happen for each individual partition. For each partition, we need to do the following process:</p>

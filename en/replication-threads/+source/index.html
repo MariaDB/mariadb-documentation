@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/replication-threads/+r/97318/">97318</a></dd>
+            <dd><a href="/kb/en/replication-threads/+r/124323/">124323</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3487">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2020-07-02 11:44">2020-07-02 11:44</span></dd>
+<span class="datetime" title="2023-03-20 11:48">2023-03-20 11:48</span></dd>
         </dl>
     </div>
     
@@ -308,85 +308,85 @@
 
 MariaDB&#39;s [[high-availability-performance-tuning-mariadb-replication|replication]] implementation requires several types of threads.
 
-== Threads on the Master
+== Threads on the Primary
 
-The master usually only has one type of replication-related thread: the binary log dump thread.
+The primary usually only has one type of replication-related thread: the binary log dump thread.
 
-If [[semisynchronous-replication|semisynchronous replication]] is enabled, then the master also has an ACK receiver thread.
+If [[semisynchronous-replication|semisynchronous replication]] is enabled, then the primary also has an ACK receiver thread.
 
 === Binary Log Dump Thread
 
-The binary log dump thread runs on the master and dumps the [[binary-log|binary log]] to the slave. This thread can be identified by running the ##[[show-processlist|SHOW PROCESSLIST]]## statement and finding the thread where the [[thread-command-values|thread command]] is ##&#34;Binlog Dump&#34;##.
+The binary log dump thread runs on the primary and dumps the [[binary-log|binary log]] to the replica. This thread can be identified by running the [[show-processlist|SHOW PROCESSLIST]] statement and finding the thread where the [[thread-command-values|thread command]] is ##&#34;Binlog Dump&#34;##.
 
-The master creates a separate binary log dump thread for each slave connected to the master. You can identify which slaves are connected to the master by executing the ##[[show-slave-hosts|SHOW SLAVE HOSTS]]## statement.
+The primary creates a separate binary log dump thread for each replica connected to the primary. You can identify which replicas are connected to the primary by executing the [[show-slave-hosts|SHOW SLAVE HOSTS]] statement.
 
 ==== Binary Log Dump Threads and the Shutdown Process
 
-When a master server is shutdown and it goes through the normal shutdown process, the master kills client threads in random order. By default, the master also considers its binary log dump threads to be regular client threads. As a consequence, the binary log dump threads can be killed while client threads still exist, and this means that data can be written on the master during a normal shutdown that won&#39;t be replicated. This is true even if [[semisynchronous-replication|semi-synchronous replication]] is being used.
+When a primary server is shutdown and it goes through the normal shutdown process, the primary kills client threads in random order. By default, the primary also considers its binary log dump threads to be regular client threads. As a consequence, the binary log dump threads can be killed while client threads still exist, and this means that data can be written on the primary during a normal shutdown that won&#39;t be replicated. This is true even if [[semisynchronous-replication|semi-synchronous replication]] is being used.
 
-In MariaDB 10.4 and later, this problem can be solved by shutting down the server using either the ##[[mysqladmin]]## utility or the ##[[shutdown|SHUTDOWN]]## command, and providing a special option.
+In MariaDB 10.4 and later, this problem can be solved by shutting down the server using either the [[mysqladmin]] utility or the [[shutdown|SHUTDOWN]] command, and providing a special option.
 
-For example, this problem can be solved by shutting down the server with the ##[[mysqladmin]]## utility and by providing the ##--wait-for-all-slaves## option to the utility and by executing the ##shutdown## command with the utility:
+For example, this problem can be solved by shutting down the server with the [[mysqladmin]] utility and by providing the ##--wait-for-all-slaves## option to the utility and by executing the ##shutdown## command with the utility:
 
 &lt;&lt;code&gt;&gt;
 mysqladmin --wait-for-all-slaves shutdown
 &lt;&lt;/code&gt;&gt;
 
-Or this problem can be solved by shutting down the server with the ##[[shutdown|SHUTDOWN]]## command and by providing the ##WAIT FOR ALL SLAVES## option to the command:
+Or this problem can be solved by shutting down the server with the [[shutdown|SHUTDOWN]] command and by providing the ##WAIT FOR ALL SLAVES## option to the command:
 
 &lt;&lt;sql&gt;&gt;
 SHUTDOWN WAIT FOR ALL SLAVES;
 &lt;&lt;/sql&gt;&gt;
 
-When one of these special options is provided, the server only kills its binary log dump threads after all client threads have been killed, and it only completes the shutdown after the last [[binary-log|binary log]] has been sent to all connected slaves.
+When one of these special options is provided, the server only kills its binary log dump threads after all client threads have been killed, and it only completes the shutdown after the last [[binary-log|binary log]] has been sent to all connected replicas.
 
-In MariaDB 10.4 and later, it is still not possible to enable this behavior by default. This means that this behavior is currently inaccessible when shutting down the server using tools like ##[[systemd]]## or ##[[sysvinit|sysVinit]]##.
+In MariaDB 10.4 and later, it is still not possible to enable this behavior by default. This means that this behavior is currently inaccessible when shutting down the server using tools like [[systemd]] or [[sysvinit|sysVinit]].
 
-In MariaDB 10.3 and before, it is recommended to manually switchover slaves to a new master before shutting down the old master.
+In MariaDB 10.3 and before, it is recommended to manually switchover replicas to a new primary before shutting down the old primary.
 
 === ACK Receiver Thread
 
-When [[semisynchronous-replication|semisynchronous replication]] is enabled, semisynchronous slaves send acknowledgements (ACKs) to their master confirm that they have received some transaction. The master creates an ACK receiver thread to receive these ACKs.
+When [[semisynchronous-replication|semisynchronous replication]] is enabled, semisynchronous replicas send acknowledgements (ACKs) to their primary to confirm that they have received some transaction. The primary creates an ACK receiver thread to receive these ACKs.
 
-== Threads on the Slave
+== Threads on the Replica
 
-The slave has three types of replication-related threads: the slave I/O thread, the slave SQL thread, and worker threads, which are only applicable when [[parallel-replication|parallel replication]] is in use.
+The replica has three types of replication-related threads: the replica I/O thread, the replica SQL thread, and worker threads, which are only applicable when [[parallel-replication|parallel replication]] is in use.
 
-When [[multi-source-replication|multi-source replication]] is in use, each independent replication connection has its own slave threads of each type.
+When [[multi-source-replication|multi-source replication]] is in use, each independent replication connection has its own replica threads of each type.
 
-=== Slave I/O Thread
+=== Replica I/O Thread
 
-The slave&#39;s I/O thread receives the [[binary-log|binary log]] events from the master and writes them to its [[relay-log|relay log]].
+The replica&#39;s I/O thread receives the [[binary-log|binary log]] events from the primary and writes them to its [[relay-log|relay log]].
 
 ==== Binary Log Position
 
-The [[binary-log|binary log]] position of the slave&#39;s I/O thread can be checked by executing the ##[[show-slave-status|SHOW SLAVE STATUS]]## statement. It will be shown as the ##Master_Log_File## and ##Read_Master_Log_Pos## columns.
+The [[binary-log|binary log]] position of the replica&#39;s I/O thread can be checked by executing the [[show-slave-status|SHOW SLAVE STATUS]] statement. It will be shown as the ##Master_Log_File## and ##Read_Master_Log_Pos## columns.
 
-The [[binary-log|binary log]] position of the slave&#39;s I/O thread can be set by setting the ##[[change-master-to/#master_log_file|MASTER_LOG_FILE]]## and ##[[change-master-to/#master_log_pos|MASTER_LOG_POS]]## options with the ##[[change-master-to|CHANGE MASTER]]## statement.
+The [[binary-log|binary log]] position of the replica&#39;s I/O thread can be set by setting the [[change-master-to/#master_log_file|MASTER_LOG_FILE]] and [[change-master-to/#master_log_pos|MASTER_LOG_POS]] options with the [[change-master-to|CHANGE MASTER]] statement.
 
-The [[binary-log|binary log]] position of the slave&#39;s I/O thread and the values of most other ##[[change-master-to|CHANGE MASTER]]## options are written to either the default ##master.info## file or the file that is configured by the ##[[mysqld-options/#-master-info-file|master_info_file]]## option. The slave&#39;s I/O thread keeps this [[binary-log|binary log]] position updated as it downloads events. See [[change-master-to/#option-persistence|CHANGE MASTER TO: Option Persistence]] for more information
+The [[binary-log|binary log]] position of the replica&#39;s I/O thread and the values of most other [[change-master-to|CHANGE MASTER]] options are written to either the default ##master.info## file or the file that is configured by the [[mysqld-options/#-master-info-file|master_info_file]] option. The replica&#39;s I/O thread keeps this [[binary-log|binary log]] position updated as it downloads events only when the [[#master_use_gtid|MASTER_USE_GTID]] option is set to ##NO##.  Otherwise the file is not updated on a per event basis. See [[change-master-to/#option-persistence|CHANGE MASTER TO: Option Persistence]] for more information.
 
-=== Slave SQL Thread
+=== Replica SQL Thread
 
-The slave&#39;s SQL thread reads events from the [[relay-log|relay log]]. What it does with them depends on whether [[parallel-replication|parallel replication]] is in use. If [[parallel-replication|parallel replication]] is not in use, then the SQL thread applies the events to its local copy of the data. If [[parallel-replication|parallel replication]] is in use, then the SQL thread hands off the events to its worker threads to apply in parallel.
+The replica&#39;s SQL thread reads events from the [[relay-log|relay log]]. What it does with them depends on whether [[parallel-replication|parallel replication]] is in use. If [[parallel-replication|parallel replication]] is not in use, then the SQL thread applies the events to its local copy of the data. If [[parallel-replication|parallel replication]] is in use, then the SQL thread hands off the events to its worker threads to apply in parallel.
 
 ==== Relay Log Position
 
-The [[relay-log|relay log]] position of the slave&#39;s SQL thread can be checked by executing the ##[[show-slave-status|SHOW SLAVE STATUS]]## statement. It will be shown as the ##Relay_Log_File## and ##Relay_Log_Pos## columns.
+The [[relay-log|relay log]] position of the replica&#39;s SQL thread can be checked by executing the [[show-slave-status|SHOW SLAVE STATUS]] statement. It will be shown as the ##Relay_Log_File## and ##Relay_Log_Pos## columns.
 
-The [[relay-log|relay log]] position of the slave&#39;s SQL thread can be set by setting the ##[[change-master-to/#relay_log_file|RELAY_LOG_FILE]]## and ##[[change-master-to/#relay_log_pos|RELAY_LOG_POS]]## options with the ##[[change-master-to|CHANGE MASTER]]## statement.
+The [[relay-log|relay log]] position of the replica&#39;s SQL thread can be set by setting the [[change-master-to/#relay_log_file|RELAY_LOG_FILE]] and [[change-master-to/#relay_log_pos|RELAY_LOG_POS]] options with the [[change-master-to|CHANGE MASTER]] statement.
 
-The [[relay-log|relay log]] position of the slave&#39;s SQL thread is written to either the default ##relay-log.info## file or the file that is configured by the ##[[replication-and-binary-log-system-variables/#relay_log_info_file|relay_log_info_file]]## system variable. The slave&#39;s SQL thread keeps this [[relay-log|relay log]] position updated as it applies events. See [[change-master-to/#option-persistence|CHANGE MASTER TO: Option Persistence]] for more information.
+The [[relay-log|relay log]] position of the replica&#39;s SQL thread is written to either the default ##relay-log.info## file or the file that is configured by the [[replication-and-binary-log-system-variables/#relay_log_info_file|relay_log_info_file]] system variable. The replica&#39;s SQL thread keeps this [[relay-log|relay log]] position updated as it applies events. See [[change-master-to/#option-persistence|CHANGE MASTER TO: Option Persistence]] for more information.
 
 ==== Binary Log Position
 
-The corresponding [[binary-log|binary log]] position of the current [[relay-log|relay log]] position of the slave&#39;s SQL thread can be checked by executing the ##[[show-slave-status|SHOW SLAVE STATUS]]## statement. It will be shown as the ##Relay_Master_Log_File## and ##Exec_Master_Log_Pos## columns.
+The corresponding [[binary-log|binary log]] position of the current [[relay-log|relay log]] position of the replica&#39;s SQL thread can be checked by executing the [[show-slave-status|SHOW SLAVE STATUS]] statement. It will be shown as the ##Relay_Master_Log_File## and ##Exec_Master_Log_Pos## columns.
 
 ==== GTID Position
 
-If the slave is replicating [[binary-log|binary log]] events that contain [[gtid|GTIDs]], then the [[replication-threads/#slave-sql-thread|slave&#39;s SQL thread]] will write every GTID that it applies to the ##[[mysqlgtid_slave_pos-table|mysql.gtid_slave_pos]]## table. This GTID can be inspected and modified through the ##[[gtid/#gtid_slave_pos|gtid_slave_pos]]## system variable.
+If the replica is replicating [[binary-log|binary log]] events that contain [[gtid|GTIDs]], then the [[replication-threads/#replica-sql-thread|replica&#39;s&#39;s SQL thread]] will write every GTID that it applies to the [[mysqlgtid_slave_pos-table|mysql.gtid_slave_pos]] table. This GTID can be inspected and modified through the [[gtid/#gtid_slave_pos|gtid_slave_pos]] system variable.
 
-If the slave has the ##[[replication-and-binary-log-system-variables/#log_slave_updates|log_slave_updates]]## system variable enabled and if the slave has the [[binary-log|binary log]] enabled, then every write by the [[replication-threads/#slave-sql-thread|slave&#39;s SQL thread]] will also go into the slave&#39;s [[binary-log|binary log]]. This means that [[gtid|GTIDs]] of replicated transactions would be reflected in the value of the ##[[gtid/#gtid_binlog_pos|gtid_binlog_pos]]## system variable.
+If the replica has the [[replication-and-binary-log-system-variables/#log_slave_updates|log_slave_updates]] system variable enabled and if the replica has the [[binary-log|binary log]] enabled, then every write by the [[replication-threads/#replica-sql-thread|replica&#39;s SQL thread]] will also go into the replica&#39;s [[binary-log|binary log]]. This means that [[gtid|GTIDs]] of replicated transactions would be reflected in the value of the [[gtid/#gtid_binlog_pos|gtid_binlog_pos]] system variable.
 
 See [[change-master-to/#gtid-persistence|CHANGE MASTER TO: GTID Persistence]] for more information.
 
