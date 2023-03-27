@@ -1,3 +1,4 @@
+mod kb_urls;
 mod redirect;
 mod url_to_path;
 
@@ -14,6 +15,8 @@ use axum::{
 };
 
 use tokio::fs;
+
+use kb_urls::{get_csv_diff, get_kb_urls_csv};
 use url_to_path::{url_to_index_path, url_to_path};
 
 const BASE_PATH: &str = "../mariadb_archive/";
@@ -23,6 +26,8 @@ pub async fn run(port: u32) {
         .route("/", get(root))
         .route("/kb_urls.csv", get(get_kb_urls_csv))
         .route("/kb_urls.csv/", get(get_kb_urls_csv))
+        .route("/diff", get(get_csv_diff))
+        .route("/diff/", get(get_csv_diff))
         .route("/kb/*url", get(request_kb));
     let addr = format!("0.0.0.0:{port}").parse().expect("Invalid Port");
     println!("Listening on http://localhost:7032/");
@@ -38,12 +43,6 @@ async fn root(query: Query<ReqQuery>) -> Result<Response, StatusCode> {
     request_kb(extract::Path("/kb/".to_owned()), query).await
 }
 
-async fn get_kb_urls_csv() -> Result<String, StatusCode> {
-    fs::read_to_string("kb_urls.csv")
-        .await
-        .map_err(|_| StatusCode::NOT_FOUND)
-}
-
 #[derive(serde::Deserialize, Debug)]
 pub struct ReqQuery {
     list: Option<String>,
@@ -55,7 +54,7 @@ async fn request_kb(
     Query(query): Query<ReqQuery>,
 ) -> Result<Response, StatusCode> {
     if query.list.is_some() {
-        return request_kb_list(url).await;
+        return request_kb_list(url).await.map(IntoResponse::into_response);
     }
     let path = &PathBuf::from(BASE_PATH).join(url_to_index_path(&url));
     let extension = path
@@ -66,7 +65,7 @@ async fn request_kb(
     content_builder(content_type, path).await
 }
 
-async fn request_kb_list(url: String) -> Result<Response, StatusCode> {
+async fn request_kb_list(url: String) -> Result<String, StatusCode> {
     let path = PathBuf::from(BASE_PATH).join(url_to_path(&url));
     let mut dir = fs::read_dir(&path)
         .await
@@ -77,7 +76,7 @@ async fn request_kb_list(url: String) -> Result<Response, StatusCode> {
             items.push(item.file_name().to_string_lossy().to_string());
         }
     }
-    Ok(items.join(",").into_response())
+    Ok(items.join(","))
 }
 
 fn content_type_from_extension(extension: &str) -> Option<&'static str> {
