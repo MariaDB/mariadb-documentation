@@ -1,12 +1,10 @@
 from .paths import PORT
 from .logger import log
 
-from typing import Iterable
-from pathlib import Path
 from dataclasses import dataclass
+from .paths import get_url
 
 import csv
-import requests
 
 @dataclass
 class CsvItem:
@@ -53,7 +51,8 @@ class CsvItem:
         )
 
 def read_csv(num_rows: int) -> list[CsvItem]:
-    string = requests.get(f"http://127.0.0.1:{PORT}/kb_urls.csv").text
+    string = get_url("kb_urls.csv")
+    assert string, f"Failed to connect to {PORT}"
     content = csv.DictReader(string.splitlines())
     rows = [row for row in content if row["Include"] not in ["", "0"]]
     rows = rows[:num_rows] if num_rows > 0 else rows

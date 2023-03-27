@@ -6,8 +6,6 @@ from setup.logger import log
 from pdf.generate_pdf import generate_full_pdf
 from pathlib import Path
 
-import sys
-
 CONFIG_FILEPATH = "config.toml"
 
 def main():

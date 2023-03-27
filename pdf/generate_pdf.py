@@ -60,5 +60,4 @@ def wkhtmltopdf(html: str, pdf_path: Path, config: Config):
         pdf_path,
         configuration=wk_config,
         options=config.wkhtml_settings,
-        # toc={"xsl-style-sheet": "toc.xsl"},
     )

@@ -1,6 +1,5 @@
 from setup.kb_urls import CsvItem, apply_depth
 from setup.config import Config
-from setup.paths import DIR_PATH_STR
 from setup.paths import get_html
 
 from copy import copy

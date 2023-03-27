@@ -1,5 +1,4 @@
 from setup.kb_urls import CsvItem
-from setup.paths import BASE_KB
 from setup.config import Config
 from setup.logger import log
 from pathlib import Path
@@ -8,6 +7,7 @@ from datetime import datetime
 from .contents import create_contents, TocItem
 import re
 
+BASE_KB = "https://mariadb.com/kb/"
 PREFACE_PATH = "preface.html"
 PAGE_BREAK = '<div style = "page-break-after:always;"></div>\n'
 
@@ -20,6 +20,7 @@ def merge_html(pages: list[str], kburls: list[CsvItem], outline: list[TocItem], 
     preface = read_preface()
     html = START_BOILERPLATE + preface + html + PAGE_BREAK + END_BOILERPLATE
     return html
+
 
 def absolute_links(html: str) -> str:
     return html.replace('="/kb/', f'="{BASE_KB}')

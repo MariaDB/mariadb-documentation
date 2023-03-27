@@ -1,13 +1,19 @@
-from pathlib import Path
+from setup.logger import log
 import requests
-DIR_PATH_STR ="../kb_archive/HTML" 
-DIR_PATH = Path(DIR_PATH_STR)
-BASE_KB = "https://mariadb.com/kb/"
-URL_LOCATIONS_PATH = Path("../url_locations.txt")
 PORT = 7032
 
 def get_html(url: str) -> str | None:
-    response = requests.get(f"http://127.0.0.1:{PORT}/{url}")
-    if response.status_code == 404:
+    return get_url("kb/" + url)
+
+def error(msg: str):
+    log.error(msg)
+    exit(1)
+
+def get_url(url: str) -> str | None:
+    try:
+        response = requests.get(f"http://127.0.0.1:{PORT}/{url}")
+    except requests.ConnectionError:
+        return None
+    if response.status_code != 200:
         return None
     return response.text
