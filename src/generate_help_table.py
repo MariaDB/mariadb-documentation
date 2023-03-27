@@ -10,7 +10,6 @@ from . import debug
 from .version import Version
 from dataclasses import dataclass
 
-PORT = "7032"
 # custom types
 CsvInfo = list[dict[str, str]]
 
@@ -65,8 +64,10 @@ def get_name(url: str) -> str:
     index = url.rindex("/")
     return url[index+1:]
 
-def read_html(name: str, url: str) -> str:
-    response = requests.get(f"http://127.0.0.1:{PORT}/kb/{url}")
+def read_html(url: str, port: int|str) -> str | None:
+    response = requests.get(f"http://127.0.0.1:{port}/kb/{url}")
+    if response.status_code not in range(200, 300):
+        return None
     return response.text
 
 def test_status_codes(status_code: int, url: str):
@@ -75,8 +76,8 @@ def test_status_codes(status_code: int, url: str):
         debug.error(f"Invalid url {url}")
 
 
-def read_csv_information(version: Version) -> CsvInfo:
-    kb_urls = requests.get(f"http://127.0.0.1:{PORT}/kb_urls.csv").text
+def read_csv_information(version: Version, port: int) -> CsvInfo:
+    kb_urls = requests.get(f"http://127.0.0.1:{port}/kb_urls.csv").text
     reader = csv.DictReader(kb_urls.splitlines(), strict=True)
     urls: set[str] = set() # Used for is_valid_row
     desired_length: int = len(reader.fieldnames) #type: ignore - TODO
@@ -174,7 +175,12 @@ def get_page_h1(html: str, name: str):
     # Converts html escape sequences like '&amp'; to their text representations: '&'
     return unescape(title)
 
-def make_table_information(csv_info: CsvInfo, version: Version, concat_size: int) -> TableInfo:
+def make_table_information(
+    csv_info: CsvInfo,
+    version: Version,
+    concat_size: int,
+    port: int
+) -> TableInfo:
     topics: list[str] = []
     topic_to_keyword: list[tuple[int, str]] = []
     unique_keywords : list[str] = []
@@ -184,7 +190,8 @@ def make_table_information(csv_info: CsvInfo, version: Version, concat_size: int
         # Starting at 3 to make room for HELP DATE AND HELP_VERSION
         for help_topic_id, row in enumerate(csv_info, 3):
             name: str = get_name(row["url"])
-            html = read_html(name, row["url"])
+            html = read_html(row["url"], port)
+            assert html is not None, "Failed to request: {row['URL']}"
             page_name: str = get_page_h1(html, name)
 
             keywords: list[str] = row["keywords"].split(";")
@@ -260,9 +267,9 @@ def insert_help_relations(topic_id: int, keyword_id: int) -> str:
     return f"insert into help_relation values ({topic_id}, {keyword_id});"
 
 #main import function
-def generate_help_table(version: Version, concat_size: int) -> str:
+def generate_help_table(version: Version, concat_size: int, port: int) -> str:
     pre_topic_text, category_info = get_pre_topic_text(version)
-    csv_information = read_csv_information(version)
+    csv_information = read_csv_information(version, port)
     link_help_categories(csv_information, category_info)
-    table_information = make_table_information(csv_information, version, concat_size)
+    table_information = make_table_information(csv_information, version, concat_size, port)
     return pre_topic_text + table_information.to_string()
