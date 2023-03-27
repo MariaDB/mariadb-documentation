@@ -25,7 +25,7 @@ impl ScrapeClient {
             log::warn!("Invalid Status: {status} for url {url}");
         }
         let response = response.error_for_status()?;
-        let directed_url = format_url(response.url().as_str());
+        let directed_url = response.url().as_str().trim_end_matches('/').to_string();
         if !valid_url(directed_url.trim_end_matches('/')) {
             return Err("Invalid redirect".into());
         }
