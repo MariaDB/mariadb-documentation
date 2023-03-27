@@ -64,10 +64,14 @@ def get_name(url: str) -> str:
     index = url.rindex("/")
     return url[index+1:]
 
-def read_html(url: str, port: int|str) -> str | None:
-    response = requests.get(f"http://127.0.0.1:{port}/kb/{url}")
+def request_file(url: str, port: int|str) -> str:
+    url = f"http://127.0.0.1:{port}/{url}"
+    try:
+        response = requests.get(url)
+    except requests.ConnectionError:
+        debug.error(f"Failed to connect to: {url}")
     if response.status_code not in range(200, 300):
-        return None
+       debug.error(f"Failed to find: {url}")
     return response.text
 
 def test_status_codes(status_code: int, url: str):
@@ -77,7 +81,7 @@ def test_status_codes(status_code: int, url: str):
 
 
 def read_csv_information(version: Version, port: int) -> CsvInfo:
-    kb_urls = requests.get(f"http://127.0.0.1:{port}/kb_urls.csv").text
+    kb_urls = request_file("kb_urls.csv", port)
     reader = csv.DictReader(kb_urls.splitlines(), strict=True)
     urls: set[str] = set() # Used for is_valid_row
     desired_length: int = len(reader.fieldnames) #type: ignore - TODO
@@ -190,8 +194,7 @@ def make_table_information(
         # Starting at 3 to make room for HELP DATE AND HELP_VERSION
         for help_topic_id, row in enumerate(csv_info, 3):
             name: str = get_name(row["url"])
-            html = read_html(row["url"], port)
-            assert html is not None, "Failed to request: {row['URL']}"
+            html = request_file(row["url"].removeprefix("https://mariadb.com/"), port)
             page_name: str = get_page_h1(html, name)
 
             keywords: list[str] = row["keywords"].split(";")

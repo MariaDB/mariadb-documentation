@@ -1,3 +1,5 @@
+from typing import NoReturn
+
 """Contains ANSI escape codes"""
 # Colors
 CL_YELLOW = '\u001b[33;1m'
@@ -9,7 +11,7 @@ CL_CYAN = '\u001b[36;1m'
 CL_END = '\33[0m'
 
 # Debug Funcs
-def error(text: str):
+def error(text: str) -> NoReturn:
     print("\r", CL_RED, "[ERROR] ", text, CL_END, sep="")
     exit(1)
 
