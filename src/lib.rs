@@ -18,16 +18,15 @@ use url_to_path::{url_to_index_path, url_to_path};
 
 const BASE_PATH: &str = "../mariadb_archive/";
 
-pub async fn run() {
+pub async fn run(port: u32) {
     let app = Router::new()
         .route("/", get(root))
         .route("/kb_urls.csv", get(get_kb_urls_csv))
         .route("/kb_urls.csv/", get(get_kb_urls_csv))
-        //.route("/kb_urls.json", get(get_kb_urls_json))
         .route("/kb/*url", get(request_kb));
-    let addr = "0.0.0.0:7032".parse().expect("Invalid Port");
+    let addr = format!("0.0.0.0:{port}").parse().expect("Invalid Port");
     println!("Listening on http://localhost:7032/");
-    println!("Ctrl to Exit.");
+    println!("Ctrl C to Exit.");
     Server::bind(&addr)
         .serve(app.into_make_service())
         .await
@@ -59,14 +58,11 @@ async fn request_kb(
         return request_kb_list(url).await;
     }
     let path = &PathBuf::from(BASE_PATH).join(url_to_index_path(&url));
-    let extension = match path.extension().map_or(Some("html"), OsStr::to_str) {
-        Some(extension) => extension,
-        None => return Err(StatusCode::BAD_REQUEST),
-    };
-    let content_type = match content_type_from_extension(extension) {
-        Some(extension) => extension,
-        None => return Err(StatusCode::NOT_FOUND), // TODO - Status Code
-    };
+    let extension = path
+        .extension()
+        .map_or(Some("html"), OsStr::to_str)
+        .ok_or(StatusCode::BAD_REQUEST)?;
+    let content_type = content_type_from_extension(extension).ok_or(StatusCode::NOT_FOUND)?;
     content_builder(content_type, path).await
 }
 
