@@ -32,7 +32,7 @@ def test_clean_html():
 
 def test_remove_see_also():
     html_content = '<h2 id="see-also"></h2>'
-    soup = BeautifulSoup(html_content, features="html5lib")
+    soup = BeautifulSoup(html_content, features="lxml")
     remove_see_also(soup)
     html = str(soup)
     assert 'id: "see-also"' not in html
