@@ -5,6 +5,7 @@ mod url_to_path;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
+use axum::extract::State;
 use axum::{
     debug_handler,
     extract::{self, Query},
@@ -21,17 +22,26 @@ use url_to_path::{url_to_index_path, url_to_path};
 
 const BASE_PATH: &str = "../mariadb_archive/";
 
+#[derive(Clone)]
+pub struct Config {
+    pub port: u32,
+    pub source: PathBuf,
+}
+
 #[tokio::main]
-pub async fn run(port: u32) {
+pub async fn run(args: &Config) {
     let app = Router::new()
         .route("/", get(root))
         .route("/kb_urls.csv", get(get_kb_urls_csv))
         .route("/kb_urls.csv/", get(get_kb_urls_csv))
         .route("/diff", get(get_csv_diff))
         .route("/diff/", get(get_csv_diff))
-        .route("/kb/*url", get(request_kb));
-    let addr = format!("0.0.0.0:{port}").parse().expect("Invalid Port");
-    println!("Listening on http://localhost:7032/");
+        .route("/kb/*url", get(request_kb))
+        .with_state(args.clone());
+    let addr = format!("0.0.0.0:{}", args.port)
+        .parse()
+        .expect("Invalid Port");
+    println!("Listening on http://localhost:{}/", args.port);
     println!("Ctrl C to Exit.");
     Server::bind(&addr)
         .serve(app.into_make_service())
@@ -40,8 +50,8 @@ pub async fn run(port: u32) {
 }
 
 #[debug_handler]
-async fn root(query: Query<ReqQuery>) -> Result<Response, StatusCode> {
-    request_kb(extract::Path("/kb/".to_owned()), query).await
+async fn root(state: State<Config>, query: Query<ReqQuery>) -> Result<Response, StatusCode> {
+    request_kb(state, extract::Path("/kb/".to_owned()), query).await
 }
 
 #[derive(serde::Deserialize, Debug)]
@@ -51,13 +61,16 @@ pub struct ReqQuery {
 
 #[debug_handler]
 async fn request_kb(
+    State(state): State<Config>,
     extract::Path(url): extract::Path<String>,
     Query(query): Query<ReqQuery>,
 ) -> Result<Response, StatusCode> {
     if query.list.is_some() {
-        return request_kb_list(url).await.map(IntoResponse::into_response);
+        return request_kb_list(&state.source, url)
+            .await
+            .map(IntoResponse::into_response);
     }
-    let path = &PathBuf::from(BASE_PATH).join(url_to_index_path(&url));
+    let path = &state.source.join(url_to_index_path(&url));
     let extension = path
         .extension()
         .map_or(Some("html"), OsStr::to_str)
@@ -66,8 +79,8 @@ async fn request_kb(
     content_builder(content_type, path).await
 }
 
-async fn request_kb_list(url: String) -> Result<String, StatusCode> {
-    let path = PathBuf::from(BASE_PATH).join(url_to_path(&url));
+async fn request_kb_list(src: &Path, url: String) -> Result<String, StatusCode> {
+    let path = src.join(url_to_path(&url));
     let mut dir = fs::read_dir(&path)
         .await
         .map_err(|_| StatusCode::NOT_FOUND)?;

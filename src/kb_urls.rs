@@ -1,5 +1,5 @@
-use crate::request_kb_list;
-use axum::http::StatusCode;
+use crate::{request_kb_list, Config};
+use axum::{extract::State, http::StatusCode};
 use std::collections::HashSet;
 
 pub async fn get_kb_urls_csv() -> Result<String, StatusCode> {
@@ -24,9 +24,9 @@ async fn get_kb_urls() -> Result<Vec<String>, StatusCode> {
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
-pub async fn get_csv_diff() -> Result<String, StatusCode> {
+pub async fn get_csv_diff(State(state): State<Config>) -> Result<String, StatusCode> {
     let kb_urls: HashSet<String> = get_kb_urls().await?.into_iter().collect();
-    let en_articles = request_kb_list("/kb/en/".to_owned()).await?;
+    let en_articles = request_kb_list(&state.source, "/kb/en/".to_owned()).await?;
     let en_articles_iter = en_articles.split(',').map(str::trim);
 
     let mut missing_urls = vec![];
