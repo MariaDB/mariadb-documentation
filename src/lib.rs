@@ -21,6 +21,7 @@ use url_to_path::{url_to_index_path, url_to_path};
 
 const BASE_PATH: &str = "../mariadb_archive/";
 
+#[tokio::main]
 pub async fn run(port: u32) {
     let app = Router::new()
         .route("/", get(root))
