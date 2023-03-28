@@ -28,18 +28,19 @@ pub fn create_dir_and_write<C: AsRef<[u8]>>(path: &Path, content: C) -> Result<(
 pub fn read_and_write_content(
     client: &mut ScrapeClient,
     resume: bool,
+    root: &Path,
     url: &str,
 ) -> Option<Vec<u8>> {
     if resume {
-        if let Ok(content) = redirect::read(url) {
+        if let Ok(content) = redirect::read(root, url) {
             return Some(content);
         }
     }
     let response = client.get(url).ok()?;
-    let mut path = url_to_path(url);
+    let mut path = url_to_path(root, url);
     if response.directed_url != url {
         log::info!("Redirected: {url} -> {}", response.directed_url);
-        let directed_path = url_to_path(&response.directed_url);
+        let directed_path = url_to_path(root, &response.directed_url);
         let redirect = redirect::create(&response.directed_url);
         create_dir_and_write(&path, redirect).unwrap_or_else(|_| panic!("{path:?}"));
         path = directed_path;

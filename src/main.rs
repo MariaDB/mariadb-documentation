@@ -23,13 +23,12 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub const BASE_PATH: &str = "../mariadb_archive";
 pub type Result<T, E = Box<dyn Error>> = std::result::Result<T, E>;
 
 fn main() {
-    logger::init();
     let args = AppArgs::read();
-    if let Err(err) = run_crawler(args) {
+    logger::init(args.verbose);
+    if let Err(err) = run_crawler(&args) {
         eprintln!("{err}");
         std::process::exit(1);
     }
@@ -38,20 +37,22 @@ fn main() {
     }
 }
 
-fn run_crawler(args: AppArgs) -> Result<(), Box<dyn Error>> {
+fn run_crawler(args: &AppArgs) -> Result<(), Box<dyn Error>> {
     log::info!("Selected: {:?}", &args.scrape_method);
     match args.scrape_method {
-        ScrapeMethod::Standard => StandardCrawler::new(args.ignore_existing).crawl(),
-        ScrapeMethod::RecentChanges => RecentCrawler::new().crawl(),
+        ScrapeMethod::Standard => {
+            StandardCrawler::new(args.ignore_existing, args.force, args.output.clone()).crawl()
+        }
+        ScrapeMethod::RecentChanges => RecentCrawler::new(args.output.clone()).crawl(),
         _ => todo!(),
     }
 }
-pub fn url_to_path(url: &str) -> PathBuf {
+pub fn url_to_path(root: &Path, url: &str) -> PathBuf {
     let mut path = PathBuf::from(get_url_suffix(url));
     if path.extension().is_none() {
         path = path.join("index.html");
     }
-    PathBuf::from(BASE_PATH).join(path)
+    PathBuf::from(root).join(path)
 }
 pub fn path_to_url(path: &Path) -> String {
     let path = path.to_string_lossy().to_string();

@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use crate::{
     crawler::{read_and_write_content, Crawler},
     get_subpaths,
@@ -11,12 +13,13 @@ use chrono::NaiveDate;
 
 pub struct RecentCrawler {
     queue: Vec<String>,
+    root: PathBuf,
 }
 impl RecentCrawler {
-    pub fn new() -> Self {
+    pub fn new(root: PathBuf) -> Self {
         let last_updated = read_last_updated();
-        let queue = get_recent_urls_recursive(last_updated);
-        Self { queue }
+        let queue = get_recent_urls_recursive(&root, last_updated);
+        Self { queue, root }
     }
 }
 
@@ -25,15 +28,15 @@ impl Crawler for RecentCrawler {
         self.queue.pop()
     }
     fn process_url(&mut self, url: &str, client: &mut crate::req::ScrapeClient) -> Result<()> {
-        read_and_write_content(client, false, url);
+        read_and_write_content(client, false, &self.root, url);
         Ok(())
     }
 }
 
-fn get_recent_urls_recursive(last_updated: NaiveDate) -> Vec<String> {
+fn get_recent_urls_recursive(root: &Path, last_updated: NaiveDate) -> Vec<String> {
     let mut urls = vec![];
-    for url in get_recent_urls(last_updated) {
-        let path = url_to_path(&url);
+    for url in get_recent_urls(root, last_updated) {
+        let path = url_to_path(root, &url);
         let paths = get_subpaths(&path).unwrap_or_else(|_| panic!("Failed to read: {path:?}"));
         urls.extend(paths.into_iter().map(|path| path_to_url(&path)));
         urls.push(url);
@@ -41,12 +44,13 @@ fn get_recent_urls_recursive(last_updated: NaiveDate) -> Vec<String> {
     urls
 }
 
-fn get_recent_urls(last_updated: NaiveDate) -> Vec<String> {
+fn get_recent_urls(root: &Path, last_updated: NaiveDate) -> Vec<String> {
     let client = &mut ScrapeClient::new();
     let mut recent_articles = vec![];
     for page_num in 1.. {
         let url = format!("https://mariadb.com/kb/+changes/?p={page_num}");
-        let content = read_and_write_content(client, false, &url).expect("Failed to read changes");
+        let content =
+            read_and_write_content(client, false, root, &url).expect("Failed to read changes");
         let html = String::from_utf8(content).expect("Changes page was not valid utf-8");
         let all_articles: Vec<_> = scrape_recent_article_urls(&html).collect();
         let num_all_articles = all_articles.len();

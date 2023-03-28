@@ -1,8 +1,19 @@
 use crate::scrape::format_url;
 use std::collections::VecDeque;
 
-pub fn standard_starting_urls() -> VecDeque<String> {
-    let mut kb_urls = crate::req::get_kb_urls().expect("Failed to get kb_urls.csv from server.");
+#[allow(clippy::single_match_else)]
+pub fn standard_starting_urls(force: bool) -> VecDeque<String> {
+    let mut kb_urls = match crate::req::get_kb_urls() {
+        Ok(kb_urls) => kb_urls,
+        Err(_) if force => {
+            log::warn!("Failed to request kb_urls.csv from server");
+            vec![]
+        }
+        Err(_) => {
+            eprintln!("Failed to request kb_urls.csv from server");
+            std::process::exit(1);
+        }
+    };
     let home_and_css = ["kb/en/"].into_iter().chain(CSS_LINKS.into_iter());
     kb_urls.extend(home_and_css.map(format_url));
     kb_urls.into()
