@@ -18,7 +18,7 @@ impl AppArgs {
     pub fn read() -> Self {
         let matches = Command::new("KbCrawler")
             .arg(arg!([scrape_method] "[standard|recent|pdf|pdf_langs]"))
-            .arg(arg!(-c --clear "Clears out the html directory"))
+            .arg(arg!(-c --clear "Clears the output directory"))
             .arg(arg!(-r --resume "Resumes the scrape ignoring already scraped directories"))
             .arg(arg!(-f --force "Forces the crawler to run even without the server"))
             .arg(arg!(-o --output <PATH> "Where to write the contents out to (default is '../mariadb_archive'"))
@@ -34,7 +34,10 @@ impl AppArgs {
             "recent" => ScrapeMethod::RecentChanges,
             "pdf" => ScrapeMethod::Pdf,
             "pdf_langs" => ScrapeMethod::PdfLangs,
-            other => panic!("Invalid Scrape Method: '{other}'"),
+            other => {
+                eprintln!("Invalid Scrape Method: '{other}'");
+                std::process::exit(1);
+            }
         };
 
         let output = matches

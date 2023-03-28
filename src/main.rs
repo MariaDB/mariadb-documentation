@@ -44,7 +44,10 @@ fn run_crawler(args: &AppArgs) -> Result<(), Box<dyn Error>> {
             StandardCrawler::new(args.ignore_existing, args.force, args.output.clone()).crawl()
         }
         ScrapeMethod::RecentChanges => RecentCrawler::new(args.output.clone()).crawl(),
-        _ => todo!(),
+        _ => {
+            eprintln!("Unimplemented");
+            std::process::exit(1);
+        }
     }
 }
 pub fn url_to_path(root: &Path, url: &str) -> PathBuf {
