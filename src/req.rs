@@ -54,8 +54,9 @@ impl ScrapeClient {
     }
 }
 
-pub fn get_kb_urls() -> Result<Vec<String>> {
-    let response = blocking::get("http://localhost:7032/kb_urls.csv")?.error_for_status()?;
+pub fn get_kb_urls(port: u32) -> Result<Vec<String>> {
+    let url = format!("http://localhost:{port}/kb_urls.csv");
+    let response = blocking::get(url)?.error_for_status()?;
     let text = response.text()?;
     let mut kb_urls = csv::Reader::from_reader(text.as_bytes());
     let vec: Result<Vec<String>, csv::Error> = kb_urls

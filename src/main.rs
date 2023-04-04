@@ -40,9 +40,7 @@ fn main() {
 fn run_crawler(args: &AppArgs) -> Result<(), Box<dyn Error>> {
     log::info!("Selected: {:?}", &args.scrape_method);
     match args.scrape_method {
-        ScrapeMethod::Standard => {
-            StandardCrawler::new(args.ignore_existing, args.force, args.output.clone()).crawl()
-        }
+        ScrapeMethod::Standard => StandardCrawler::new(args.clone()).crawl(),
         ScrapeMethod::RecentChanges => RecentCrawler::new(args.output.clone()).crawl(),
         _ => {
             eprintln!("Unimplemented");

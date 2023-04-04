@@ -12,6 +12,7 @@ A Program that recursively crawls the mariadb kb and saves it to disk.
 
 - The output file will be `'target/release/mariadb_kb_crawler(.exe)'`
 
+Keep in mind the first build might take some time.
 ## Usage
 - Make sure [mariadb_kb_server](https://github.com/Icerath/mariadb_mariadb_kb_server_server) is running or use the --force flag.
 
@@ -21,11 +22,7 @@ A Program that recursively crawls the mariadb kb and saves it to disk.
 
 - the `'recent'` argument (no '`--`') will only request files updated from the last run.
 
-- the `'--force'` flag prevents needing mariadb_kb_server.
-
-Keep it mind the first build might take some time.
-
-Run with the --help flag to print the usage
+- the `'--force'` flag prevents needing [mariadb_kb_server](https://github.com/Icerath/mariadb_mariadb_kb_server_server).
 
 ## Example Installation and usage
 Does not include the rust installation or server installation   
@@ -36,6 +33,12 @@ Does not include the rust installation or server installation
 mkdir mariadb_kb
 cd mariadb_kb
 ```
+
+### Install/Run the server (optional)
+```
+git clone https://github.com/Icerath/mariadb_kb_server
+```
+Then follow the rest of the instructions from [mariadb_kb_server](https://github.com/Icerath/mariadb_kb_server).
 
 ### Clone, Build and Run
 ```

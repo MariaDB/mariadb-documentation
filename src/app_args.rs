@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use crate::ScrapeMethod;
-use clap::{arg, Command};
+use clap::{arg, value_parser, Command};
 
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone)]
@@ -10,6 +10,7 @@ pub struct AppArgs {
     pub clear: bool,
     pub ignore_existing: bool,
     pub force: bool,
+    pub port: u32,
     pub verbose: bool,
     pub output: PathBuf,
 }
@@ -23,6 +24,7 @@ impl AppArgs {
             .arg(arg!(-f --force "Forces the crawler to run even without the server"))
             .arg(arg!(-o --output <PATH> "Where to write the contents out to (default is '../mariadb_archive'"))
             .arg(arg!(-v --verbose "Logs to stdout"))
+            .arg(arg!(-p --port <PORT> "which port to connect to the server with.").value_parser(value_parser!(u32)))
             .get_matches();
 
         let scrape_method_string = matches
@@ -49,12 +51,14 @@ impl AppArgs {
         let ignore_existing = matches.get_one::<bool>("resume").copied().unwrap_or(false);
         let force = matches.get_one::<bool>("force").copied().unwrap_or(false);
         let verbose = matches.get_one::<bool>("verbose").copied().unwrap_or(false);
+        let port = matches.get_one::<u32>("port").copied().unwrap_or(7032);
 
         Self {
             scrape_method,
             clear,
             ignore_existing,
             force,
+            port,
             verbose,
             output,
         }

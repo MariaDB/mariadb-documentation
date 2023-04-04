@@ -2,8 +2,8 @@ use crate::scrape::format_url;
 use std::collections::VecDeque;
 
 #[allow(clippy::single_match_else)]
-pub fn standard_starting_urls(force: bool) -> VecDeque<String> {
-    let mut kb_urls = match crate::req::get_kb_urls() {
+pub fn standard_starting_urls(force: bool, port: u32) -> VecDeque<String> {
+    let mut kb_urls = match crate::req::get_kb_urls(port) {
         Ok(kb_urls) => kb_urls,
         Err(_) if force => {
             log::warn!("Failed to request kb_urls.csv from server");

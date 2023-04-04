@@ -1,4 +1,5 @@
 use crate::{
+    app_args::AppArgs,
     crawler::{read_and_write_content, Crawler},
     req::ScrapeClient,
     scrape::scrape_urls,
@@ -13,12 +14,12 @@ pub struct StandardCrawler {
     root: PathBuf,
 }
 impl StandardCrawler {
-    pub fn new(resume: bool, force: bool, root: PathBuf) -> Self {
-        let queue = standard_starting_urls(force);
+    pub fn new(args: AppArgs) -> Self {
+        let queue = standard_starting_urls(args.force, args.port);
         Self {
             queue,
-            resume,
-            root,
+            resume: args.ignore_existing,
+            root: args.output,
         }
     }
 }
