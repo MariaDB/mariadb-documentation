@@ -22,9 +22,9 @@ impl AppArgs {
             .arg(arg!(-c --clear "Clears the output directory"))
             .arg(arg!(-r --resume "Resumes the scrape ignoring already scraped directories"))
             .arg(arg!(-f --force "Forces the crawler to run even without the server"))
-            .arg(arg!(-o --output <PATH> "Where to write the contents out to (default is '../mariadb_archive'"))
+            .arg(arg!(-o --output <PATH> "Where to write the contents out to (default = '../mariadb_archive'"))
             .arg(arg!(-v --verbose "Logs to stdout"))
-            .arg(arg!(-p --port <PORT> "which port to connect to the server with.").value_parser(value_parser!(u32)))
+            .arg(arg!(-p --port <PORT> "which port to connect to the server with (default = 7032).").value_parser(value_parser!(u32)))
             .get_matches();
 
         let scrape_method_string = matches
