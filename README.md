@@ -1,14 +1,23 @@
-# mariadb_archive_server
+# mariadb_kb_server
 
-## Setup
+A small server for accessing the archive directly through urls and other small utilities.
+
+## Installation
 - [Install Rust](https://www.rust-lang.org/tools/install).
-- run `'cargo run --release --'`
 
-- To access the KB files, either clone [mariadb_archive](https://github.com/icerath/mariadb_archive) into the same directory as this repo, or run the [mariadb_crawler](https://github.com/icerath/mariadb_crawler).
+- Build the binary with `'cargo build --release'`
 
-Run with --help to see usage.
+- The output file will be `'target/release/mariadb_kb_server(.exe)'`
 
-Keep it mind cargo might take a while for the first compile.
+- To access the KB files, either clone [mariadb_archive](https://github.com/icerath/mariadb_archive) into the same directory as this repo, or run the [mariadb_crawler](https://github.com/icerath/mariadb_kb_crawler).
+
+Keep in mind the first build might take some time.
+
+## Usage
+
+- Run './target/release/mariadb_kb_server(.exe)'
+
+- Run with the `'--help'` flag to print usage.
 
 ## Using the Server
 - `localhost:[PORT]/kb/[url]` will respond with the original html and can be viewed like a regular webpage.
