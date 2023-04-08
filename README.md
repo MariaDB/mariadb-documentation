@@ -15,7 +15,7 @@ Keep in mind the first build might take some time.
 
 ## Usage
 
-- Run './target/release/mariadb_kb_server(.exe)'
+- Run `'./target/release/mariadb_kb_server(.exe)'` (from `/mariadb_kb_server`)
 
 - Run with the `'--help'` flag to print usage.
 
