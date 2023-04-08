@@ -1,22 +1,29 @@
 # mariadb_pdf
 
-##  Setup
+## Installation
+- install [python](https://www.python.org/downloads/) `(3.10+)`
+- install [wkhtmltopdf](https://wkhtmltopdf.org/downloads.html) (if on windows copy wkhtmltopdf.exe to this directory)
+- Install python packages with (pip/pip3)
+    - toml
+    - pdfkit
+    - requests
+    - bs4
+
+##  Usage
+
 - make sure
 [mariadb_archive_server](https://github.com/icerath/mariadb_kb_server)
 is running.
-- Install dependenices.
-- Install wkhtmltopf.
-- If on windows, copy the wkhtmltopdf.exe into this folder
 - run `'(python/python3) main.py'`
 
 
 
 ## Dependencies
-    python 3.10 +
-    wkhtmltopdf
+- python 3.10 +
+- wkhtmltopdf
 
 ### Libraries
-    toml
-    pdfkit
-    requests
-    bs4
+- toml
+- pdfkit
+- requests
+- bs4
