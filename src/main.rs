@@ -25,6 +25,8 @@ use std::{
 
 pub type Result<T, E = Box<dyn Error>> = std::result::Result<T, E>;
 
+pub const DEFAULT_ARCHIVE_PATH: &str = "../mariadb_kb_archive";
+
 fn main() {
     let args = AppArgs::read();
     logger::init(args.verbose);
@@ -55,10 +57,10 @@ pub fn url_to_path(root: &Path, url: &str) -> PathBuf {
     }
     PathBuf::from(root).join(path)
 }
-pub fn path_to_url(path: &Path) -> String {
+pub fn path_to_url(path: &Path, archive_path: &str) -> String {
     let path = path.to_string_lossy().to_string();
     let path = path
-        .trim_start_matches("../mariadb_archive")
+        .trim_start_matches(archive_path)
         .trim_end_matches("index.html")
         .replace('\\', "/");
     format!("https://mariadb.com/kb{path}")

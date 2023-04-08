@@ -38,7 +38,11 @@ fn get_recent_urls_recursive(root: &Path, last_updated: NaiveDate) -> Vec<String
     for url in get_recent_urls(root, last_updated) {
         let path = url_to_path(root, &url);
         let paths = get_subpaths(&path).unwrap_or_else(|_| panic!("Failed to read: {path:?}"));
-        urls.extend(paths.into_iter().map(|path| path_to_url(&path)));
+        urls.extend(
+            paths
+                .into_iter()
+                .map(|path| path_to_url(&path, root.to_string_lossy().to_string().as_str())),
+        );
         urls.push(url);
     }
     urls

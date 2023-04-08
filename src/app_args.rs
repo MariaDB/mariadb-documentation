@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::ScrapeMethod;
+use crate::{ScrapeMethod, DEFAULT_ARCHIVE_PATH};
 use clap::{arg, value_parser, Command};
 
 #[allow(clippy::struct_excessive_bools)]
@@ -22,9 +22,14 @@ impl AppArgs {
             .arg(arg!(-c --clear "Clears the output directory"))
             .arg(arg!(-r --resume "Resumes the scrape ignoring already scraped directories"))
             .arg(arg!(-f --force "Forces the crawler to run even without the server"))
-            .arg(arg!(-o --output <PATH> "Where to write the contents out to (default = '../mariadb_archive'"))
+            .arg(arg!(-o --output <PATH>
+                "Where to write the contents out to (default = '../mariadb_kb_archive'"))
             .arg(arg!(-v --verbose "Logs to stdout"))
-            .arg(arg!(-p --port <PORT> "which port to connect to the server with (default = 7032).").value_parser(value_parser!(u32)))
+            .arg(
+                arg!(-p --port <PORT>
+                    "which port to connect to the server with (default = 7032).")
+                .value_parser(value_parser!(u32)),
+            )
             .get_matches();
 
         let scrape_method_string = matches
@@ -44,7 +49,7 @@ impl AppArgs {
 
         let output = matches
             .get_one::<String>("output")
-            .map_or("../mariadb_archive", String::as_str)
+            .map_or(DEFAULT_ARCHIVE_PATH, String::as_str)
             .into();
 
         let clear = matches.get_one::<bool>("clear").copied().unwrap_or(false);
