@@ -14,7 +14,7 @@ A Program that recursively crawls the mariadb kb and saves it to disk.
 
 Keep in mind the first build might take some time.
 ## Usage
-- Make sure [mariadb_kb_server](https://github.com/Icerath/mariadb_mariadb_kb_server_server) is running or use the --force flag.
+- Make sure [mariadb_kb_server](https://github.com/Icerath/mariadb_kb_server) is running or use the --force flag.
 
 - Run './target/release/mariadb_kb_crawler(.exe)'
 
