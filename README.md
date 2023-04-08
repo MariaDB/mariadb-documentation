@@ -9,7 +9,7 @@ A small server for accessing the archive directly through urls and other small u
 
 - The output file will be `'target/release/mariadb_kb_server(.exe)'`
 
-- To access the KB files, either clone [mariadb_archive](https://github.com/icerath/mariadb_archive) into the same directory as this repo, or run the [mariadb_crawler](https://github.com/icerath/mariadb_kb_crawler).
+- To access the KB files, either clone [mariadb_kb_archive](https://github.com/icerath/mariadb_kb_archive) into the same directory as this repo, or run the [mariadb_crawler](https://github.com/icerath/mariadb_kb_crawler).
 
 Keep in mind the first build might take some time.
 

@@ -1,5 +1,5 @@
 use clap::{arg, value_parser, Command};
-use mariadb_archive_server::{run, Config};
+use mariadb_kb_server::{run, Config};
 
 pub fn main() {
     run(&read_args());
