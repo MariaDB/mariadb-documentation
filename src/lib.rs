@@ -20,8 +20,6 @@ use tokio::fs;
 use kb_urls::{get_csv_diff, get_kb_urls_csv};
 use url_to_path::{url_to_index_path, url_to_path};
 
-const BASE_PATH: &str = "../mariadb_archive/";
-
 #[derive(Clone)]
 pub struct Config {
     pub port: u32,
@@ -76,7 +74,7 @@ async fn request_kb(
         .map_or(Some("html"), OsStr::to_str)
         .ok_or(StatusCode::BAD_REQUEST)?;
     let content_type = content_type_from_extension(extension).ok_or(StatusCode::NOT_FOUND)?;
-    content_builder(content_type, path).await
+    content_builder(content_type, path, &state.source.to_string_lossy()).await
 }
 
 async fn request_kb_list(src: &Path, url: String) -> Result<String, StatusCode> {
@@ -103,9 +101,13 @@ fn content_type_from_extension(extension: &str) -> Option<&'static str> {
     Some(content_type)
 }
 
-async fn content_builder(content_type: &str, path: &Path) -> Result<Response, StatusCode> {
+async fn content_builder(
+    content_type: &str,
+    path: &Path,
+    base_path: &str,
+) -> Result<Response, StatusCode> {
     debug_assert!(content_type.contains("charset=utf-8"));
-    let bytes = redirect::read(path)
+    let bytes = redirect::read(path, base_path)
         .await
         .map_err(|_| StatusCode::NOT_FOUND)?;
     let body = axum::body::Full::from(bytes);
