@@ -16,7 +16,7 @@ Keep in mind the first build might take some time.
 ## Usage
 - Make sure [mariadb_kb_server](https://github.com/Icerath/mariadb_kb_server) is running or use the --force flag.
 
-- Run './target/release/mariadb_kb_crawler(.exe)'
+- Run `'./target/release/mariadb_kb_crawler(.exe)'` (make sure you're in mariadb_kb_crawler/)
 
 - the `'--help'` flag prints the usage.
 
