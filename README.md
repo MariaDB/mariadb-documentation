@@ -22,7 +22,7 @@ Keep in mind the first build might take some time.
 
 - the `'recent'` argument (no '`--`') will only request files updated from the last run.
 
-- the `'--force'` flag prevents needing [mariadb_kb_server](https://github.com/Icerath/mariadb_mariadb_kb_server_server).
+- the `'--force'` flag prevents needing [mariadb_kb_server](https://github.com/Icerath/mariadb_kb_server).
 
 ## Example Installation and usage
 Does not include the rust installation or server installation   
