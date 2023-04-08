@@ -2,7 +2,7 @@
 
 ##  Setup
 - make sure
-[mariadb_archive_server](https://github.com/icerath/mariadb_archive_server)
+[mariadb_archive_server](https://github.com/icerath/mariadb_kb_server)
 is running.
 - Install dependenices.
 - Install wkhtmltopf.
