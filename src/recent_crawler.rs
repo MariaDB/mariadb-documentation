@@ -91,7 +91,6 @@ fn scrape_recent_article_urls_raw(
         .captures_iter(html)
         .map(|cap| cap[1].to_owned())
         .map(|s| {
-            eprintln!("{s}");
             NaiveDateTime::parse_from_str(s.trim(), changes_date_format)
                 .unwrap_or_else(|_| panic!("{s}"))
         });
