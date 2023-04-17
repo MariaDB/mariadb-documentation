@@ -5,7 +5,7 @@ pub trait Crawler {
     fn next_url(&mut self) -> Option<String>;
     fn process_url(&mut self, url: &str, client: &mut ScrapeClient) -> Result<()>;
     fn crawl(&mut self) -> Result<()> {
-        let mut client = ScrapeClient::new();
+        let mut client = ScrapeClient::default();
         let mut completed_urls = HashSet::new();
         while let Some(next_url) = self.next_url() {
             if completed_urls.contains(&next_url) {

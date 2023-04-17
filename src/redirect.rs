@@ -1,6 +1,5 @@
-use std::{fs, io, path::Path};
-
 use crate::url_to_path;
+use std::{fs, io, path::Path};
 
 pub fn read(root: &Path, url: &str) -> Result<Vec<u8>, io::Error> {
     let content = fs::read(url_to_path(root, url))?;

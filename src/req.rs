@@ -1,8 +1,11 @@
 use crate::scrape::{format_url, valid_url};
 use crate::Result;
 use reqwest::blocking::{self, Response};
+
+#[derive(Default)]
 pub struct ScrapeClient {
     inner: blocking::Client,
+    req_count: usize,
 }
 pub struct ScrapeResult {
     pub content: Vec<u8>,
@@ -10,13 +13,9 @@ pub struct ScrapeResult {
     pub directed_url: String,
 }
 impl ScrapeClient {
-    pub fn new() -> Self {
-        Self {
-            inner: blocking::Client::new(),
-        }
-    }
     pub fn get(&mut self, url: &str) -> Result<ScrapeResult> {
-        log::info!("Requesting: {url}");
+        self.req_count += 1;
+        log::info!("({}) Requesting: {url}", self.req_count);
         let response = self.get_until_connect(url)?;
         let status = response.status();
         if status.is_server_error() {

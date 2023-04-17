@@ -1,5 +1,3 @@
-use std::path::{Path, PathBuf};
-
 use crate::{
     crawler::{read_and_write_content, Crawler},
     get_subpaths,
@@ -10,6 +8,7 @@ use crate::{
     url_to_path, Result,
 };
 use chrono::NaiveDate;
+use std::path::{Path, PathBuf};
 
 pub struct RecentCrawler {
     queue: Vec<String>,
@@ -17,7 +16,7 @@ pub struct RecentCrawler {
 }
 impl RecentCrawler {
     pub fn new(root: PathBuf) -> Self {
-        let last_updated = read_last_updated();
+        let last_updated = read_last_updated(&root).unwrap_or_else(|err| panic!("{err}"));
         let queue = get_recent_urls_recursive(&root, last_updated);
         Self { queue, root }
     }
@@ -49,7 +48,7 @@ fn get_recent_urls_recursive(root: &Path, last_updated: NaiveDate) -> Vec<String
 }
 
 fn get_recent_urls(root: &Path, last_updated: NaiveDate) -> Vec<String> {
-    let client = &mut ScrapeClient::new();
+    let client = &mut ScrapeClient::default();
     let mut recent_articles = vec![];
     for page_num in 1.. {
         let url = format!("https://mariadb.com/kb/+changes/?p={page_num}");
