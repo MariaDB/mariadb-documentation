@@ -7,7 +7,7 @@ use crate::{
     scrape::{format_url, valid_url},
     url_to_path, Result,
 };
-use chrono::NaiveDate;
+use chrono::NaiveDateTime;
 use std::path::{Path, PathBuf};
 
 pub struct RecentCrawler {
@@ -32,7 +32,7 @@ impl Crawler for RecentCrawler {
     }
 }
 
-fn get_recent_urls_recursive(root: &Path, last_updated: NaiveDate) -> Vec<String> {
+fn get_recent_urls_recursive(root: &Path, last_updated: NaiveDateTime) -> Vec<String> {
     let mut urls = vec![];
     for url in get_recent_urls(root, last_updated) {
         let path = url_to_path(root, &url);
@@ -47,7 +47,7 @@ fn get_recent_urls_recursive(root: &Path, last_updated: NaiveDate) -> Vec<String
     urls
 }
 
-fn get_recent_urls(root: &Path, last_updated: NaiveDate) -> Vec<String> {
+fn get_recent_urls(root: &Path, last_updated: NaiveDateTime) -> Vec<String> {
     let client = &mut ScrapeClient::default();
     let mut recent_articles = vec![];
     for page_num in 1.. {
@@ -71,25 +71,29 @@ fn get_recent_urls(root: &Path, last_updated: NaiveDate) -> Vec<String> {
     recent_articles
 }
 
-fn scrape_recent_article_urls(html: &str) -> impl Iterator<Item = (String, NaiveDate)> + '_ {
+fn scrape_recent_article_urls(html: &str) -> impl Iterator<Item = (String, NaiveDateTime)> + '_ {
     let scraped_urls = scrape_recent_article_urls_raw(html);
     scraped_urls
         .map(|(url, date)| (format_url(url), date))
         .filter(|(url, _date)| valid_url(url))
 }
 
-fn scrape_recent_article_urls_raw(html: &str) -> impl Iterator<Item = (String, NaiveDate)> + '_ {
+fn scrape_recent_article_urls_raw(
+    html: &str,
+) -> impl Iterator<Item = (String, NaiveDateTime)> + '_ {
     let re_urls = lazy_regex::regex!(
         r#"<li class="history_item" value="\d+">Article <a href="(?:(?:https://)?mariadb.com)?/?kb/([^"]*)">"#
     );
     let re_dates = lazy_regex::regex!(r#"<span class="datetime" title="([^"]+)">"#);
     let urls = re_urls.captures_iter(html).map(|cap| cap[1].to_owned());
+    let changes_date_format = "%Y-%m-%d %H:%M";
     let dates = re_dates
         .captures_iter(html)
         .map(|cap| cap[1].to_owned())
         .map(|s| {
-            let (first, _second) = s.split_once(' ').unwrap();
-            first.parse::<NaiveDate>().unwrap()
+            eprintln!("{s}");
+            NaiveDateTime::parse_from_str(s.trim(), changes_date_format)
+                .unwrap_or_else(|_| panic!("{s}"))
         });
     urls.zip(dates)
 }
