@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/insert-ignore/+r/105996/">105996</a></dd>
+            <dd><a href="/kb/en/insert-ignore/+r/124891/">124891</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-4254">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2021-04-20 11:20">2021-04-20 11:20</span></dd>
+<span class="datetime" title="2023-03-29 09:35">2023-03-29 09:35</span></dd>
         </dl>
     </div>
     
@@ -322,10 +322,14 @@ Normally [[insert|INSERT]] stops and rolls back when it encounters an error.
 
 By using the [[ignore|IGNORE]] keyword all errors are converted to warnings, which will not stop inserts of additional rows.
 
+Invalid values are changed to the closest valid value and inserted, with a warning produced.
+
 The IGNORE and DELAYED options are ignored when you use [[insert-on-duplicate-key-update|ON DUPLICATE KEY UPDATE]].
 
 Prior to MySQL and MariaDB 5.5.28, no warnings were issued for duplicate key errors when using &lt;&lt;fixed&gt;&gt;IGNORE&lt;&lt;/fixed&gt;&gt;.
 You can get the old behavior if you set [[old_mode|OLD_MODE]] to &lt;&lt;fixed&gt;&gt;NO_DUP_KEY_WARNINGS_WITH_IGNORE&lt;&lt;/fixed&gt;&gt;.
+
+See [[ignore|IGNORE]] for a full description of effects.
 
 == Examples
 
@@ -343,7 +347,6 @@ SELECT * FROM t1;
 |    1 |
 |    2 |
 +------+
-2 rows in set (0.00 sec)
 
 INSERT IGNORE INTO t1 VALUES(2),(3);
 Query OK, 1 row affected, 1 warning (0.04 sec)
@@ -365,6 +368,34 @@ SELECT * FROM t1;
 +------+
 &lt;&lt;/sql&gt;&gt;
 
+Converting values:
+&lt;&lt;code&gt;&gt;
+CREATE OR REPLACE TABLE t2(id INT, t VARCHAR(2) NOT NULL, n INT NOT NULL);
+
+INSERT INTO t2(id) VALUES (1),(2);
+ERROR 1364 (HY000): Field &#39;t&#39; doesn&#39;t have a default value
+
+INSERT IGNORE INTO t2(id) VALUES (1),(2);
+Query OK, 2 rows affected, 2 warnings (0.026 sec)
+Records: 2  Duplicates: 0  Warnings: 2
+
+SHOW WARNINGS;
++---------+------+----------------------------------------+
+| Level   | Code | Message                                |
++---------+------+----------------------------------------+
+| Warning | 1364 | Field &#39;t&#39; doesn&#39;t have a default value |
+| Warning | 1364 | Field &#39;n&#39; doesn&#39;t have a default value |
++---------+------+----------------------------------------+
+
+SELECT * FROM t2;
++------+---+---+
+| id   | t | n |
++------+---+---+
+|    1 |   | 0 |
+|    2 |   | 0 |
++------+---+---+
+&lt;&lt;/code&gt;&gt;
+
 See [[insert-on-duplicate-key-update|INSERT ON DUPLICATE KEY UPDATE]] for further examples using that syntax.
 
 == See Also
@@ -374,7 +405,6 @@ See [[insert-on-duplicate-key-update|INSERT ON DUPLICATE KEY UPDATE]] for furthe
 * [[high_priority-and-low_priority|HIGH_PRIORITY and LOW_PRIORITY]]
 * [[concurrent-inserts|Concurrent Inserts]]
 * [[insert-default-duplicate-values|INSERT - Default &amp; Duplicate Values]]
-* [[insert-ignore|INSERT IGNORE]]
 * [[insert-on-duplicate-key-update|INSERT ON DUPLICATE KEY UPDATE]]</textarea>
     
 

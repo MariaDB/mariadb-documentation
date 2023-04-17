@@ -263,12 +263,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2013-10-24 14:39">9 years, 4 months ago</span></dd>
+<span class="datetime" title="2013-10-24 14:39">9 years, 5 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-02-28 12:05">2 weeks, 1 day ago</span></dd>
+<span class="datetime" title="2023-03-27 13:42">2 weeks, 6 days ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -400,7 +400,25 @@
 
     
     <div class="answer formatted">
-        <h2 class="anchored_heading" id="description">Description</h2>
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#description" title="Description">Description</a></li>
+
+    <li class=""><a href="#example" title="Example">Example</a></li>
+
+    <li class=""><a href="#using-other-connectors" title="Using Other Connectors">Using Other Connectors</a>    <ol class="toc">
+
+        <li class=""><a href="#jdbc" title="JDBC">JDBC</a></li>
+
+        <li class=""><a href="#nodejs" title="Node.js">Node.js</a></li>
+
+        <li class=""><a href="#r2dbc" title="R2DBC">R2DBC</a>    </ol>
+ </ol>
+</li>
+</div>
+<h2 class="anchored_heading" id="description">Description</h2>
 <p><code>session_connect_attrs</code> is a <a href="/kb/en/performance-schema/">Performance Schema</a> table that shows connection attributes for all sessions. The Performance Schema needs to be enabled for the table to be populated.</p>
 <p>Applications can pass key/value connection attributes to the server when a connection is made. The <code>session_connect_attrs</code> and <a href="/kb/en/performance-schema-session_account_connect_attrs-table/">session_account_connect_attrs</a> tables provide access to this information, for all sessions and the current session respectively.</p>
 <p>The C API functions <a href="/kb/en/mysql_options/">mysql_options()</a> and <a href="/kb/en/mysql_optionsv/">mysql_optionsv()</a> are used for passing connection attributes to the server.</p>
@@ -424,6 +442,77 @@
 |             45 | _platform       | x86_64           |                4 |
 |             45 | program_name    | mysql            |                5 |
 +----------------+-----------------+------------------+------------------+
+</pre><h2 class="anchored_heading" id="using-other-connectors">Using Other Connectors</h2>
+<h3 class="anchored_heading" id="jdbc">JDBC</h3>
+<p>Connection attributes values are set using the option <a href="https://mariadb.com/kb/en/about-mariadb-connector-j/#infrequently-used-parameters">connectionAttributes</a>. </p>
+<p>Example using connection string <code class="fixed" style="white-space:pre-wrap">jdbc:mariadb://localhost/?connectionAttributes=test:test1,test2:test2Val,test3</code></p>
+<pre class="fixed">SELECT * FROM performance_schema.session_connect_attrs WHERE processlist_id=17;
++----------------+-----------------+---------------------+------------------+
+| PROCESSLIST_ID | ATTR_NAME       | ATTR_VALUE          | ORDINAL_POSITION |
++----------------+-----------------+---------------------+------------------+
+|             17 | _client_name    | MariaDB Connector/J |                0 |
+|             17 | _client_version | 3.1.3               |                1 |
+|             17 | _server_host    | localhost           |                2 |
+|             17 | _os             | Windows 11          |                3 |
+|             17 | _thread         | 1                   |                4 |
+|             17 | _java_vendor    | Oracle Corporation  |                5 |
+|             17 | _java_version   | 19.0.2              |                6 |
+|             17 | test            | test1               |                7 |
+|             17 | test2           | test2Val            |                8 |
+|             17 | test3           | NULL                |                9 |
++----------------+-----------------+---------------------+------------------+
+</pre><h3 class="anchored_heading" id="nodejs">Node.js</h3>
+<p>Connection attributes values are set using the option <a href="https://mariadb.com/kb/en/nodejs-connection-options/#other-options">connectAttributes</a></p>
+<p>Example using connection </p>
+<pre class="fixed"> const conn = await mariadb.createConnection({
+  host: 'localhost',
+  user: 'root',
+  connectAttributes: { test: 'test1', test2: 'test2Val', test3: 'f' }
+ });
+</pre><pre class="fixed">SELECT * FROM performance_schema.session_connect_attrs WHERE processlist_id=30;
++----------------+-----------------+------------------------+------------------+
+| PROCESSLIST_ID | ATTR_NAME       | ATTR_VALUE             | ORDINAL_POSITION |
++----------------+-----------------+------------------------+------------------+
+|             30 | _client_name    | MariaDB connector/Node |                0 |
+|             30 | _client_version | 3.1.1                  |                1 |
+|             30 | _server_host    | ::1                    |                2 |
+|             30 | _os             | win32                  |                3 |
+|             30 | _client_host    | NOSTROMO               |                4 |
+|             30 | _node_version   | 18.15.0                |                5 |
+|             30 | test            | test1                  |                6 |
+|             30 | test2           | test2Val               |                7 |
+|             30 | test3           | f                      |                8 |
++----------------+-----------------+------------------------+------------------+
+</pre><h3 class="anchored_heading" id="r2dbc">R2DBC</h3>
+<p>Connection attributes values are set using the option <a href="https://github.com/mariadb-corporation/mariadb-connector-r2dbc#connection-options">connectionAttributes</a>. </p>
+<p>Example using connection string <code class="fixed" style="white-space:pre-wrap">jdbc:mariadb://localhost/?connectionAttributes=test:test1,test2:test2Val,test3</code></p>
+<pre class="fixed">    TreeMap&lt;String, String&gt; connectionAttributes = new TreeMap&lt;&gt;();
+    connectionAttributes.put(&#34;entry1&#34;, &#34;val1&#34;);
+    connectionAttributes.put(&#34;entry2&#34;, &#34;val2&#34;);
+
+     MariadbConnectionConfiguration conf = MariadbConnectionConfiguration.builder()
+             .host(&#34;localhost&#34;)
+             .port(3306) 
+             .username(&#34;root&#34;)
+             .connectionAttributes(connectionAttributes)
+             .database(&#34;test&#34;)
+             .build();
+     MariadbConnectionFactory connFactory = new MariadbConnectionFactory(conf);
+     MariadbConnection connection = connFactory.create().block();
+</pre><pre class="fixed">SELECT * FROM performance_schema.session_connect_attrs WHERE processlist_id=34;
++----------------+-----------------+--------------------+------------------+
+| PROCESSLIST_ID | ATTR_NAME       | ATTR_VALUE         | ORDINAL_POSITION |
++----------------+-----------------+--------------------+------------------+
+|             34 | _client_name    | mariadb            |                0 |
+|             34 | _client_version | 1.1.4              |                1 |
+|             34 | _server_host    | localhost          |                2 |
+|             34 | _os             | Windows 11         |                3 |
+|             34 | _thread         | 49                 |                4 |
+|             34 | _java_vendor    | Oracle Corporation |                5 |
+|             34 | _java_version   | 19.0.2             |                6 |
+|             34 | entry1          | val1               |                7 |
+|             34 | entry2          | val2               |                8 |
++----------------+-----------------+--------------------+------------------+
 </pre>
     </div>
 

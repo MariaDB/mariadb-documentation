@@ -251,12 +251,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2010-08-23 14:23">12 years, 6 months ago</span></dd>
+<span class="datetime" title="2010-08-23 14:23">12 years, 7 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-02-25 23:32">1 year ago</span></dd>
+<span class="datetime" title="2023-04-12 09:53">5 days, 3 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -479,16 +479,18 @@ session isolation level (even in the middle of a transaction), or the isolation
 level for its next transaction.</p>
 <h3 class="anchored_heading" id="isolation-level">Isolation Level</h3>
 <p>To set the global default isolation level at server startup, use the
-<code><a href="/kb/en/server-system-variables/#tx_isolation">--transaction-isolation=level</a></code> option on the command line or in an option file. Values of level for this option use dashes
-rather than spaces, so the allowable values are <code class="highlight fixed" style="white-space:pre-wrap">READ-UNCOMMITTED</code>,
-<code class="highlight fixed" style="white-space:pre-wrap">READ-COMMITTED</code>, <code class="highlight fixed" style="white-space:pre-wrap">REPEATABLE-READ</code>, or
-<code class="highlight fixed" style="white-space:pre-wrap">SERIALIZABLE</code>. For example, to set the default isolation
-level to <code class="highlight fixed" style="white-space:pre-wrap">REPEATABLE READ</code>, use these lines in the <code>[mysqld]</code>
+<a href="/kb/en/server-system-variables/#tx_isolation">--transaction-isolation=level</a> option on the command line or in an option file. Values of level for this option use dashes
+rather than spaces, so the allowable values are <a href="#read-uncommitted">READ_UNCOMMITTED</a>,
+<a href="#read-committed">READ-COMMITTED</a>, <a href="#repeatable-read">REPEATABLE-READ</a>, or
+<a href="#serializable">SERIALIZABLE</a>. For example, to set the default isolation
+level to <code class="highlight fixed" style="white-space:pre-wrap">REPEATABLE READ</code>, use these lines in the [mysqld]
 section of an option file:</p>
 <pre class="highlight fixed"><p>[mysqld]
 transaction-isolation = REPEATABLE-READ</p></pre><p>To determine the global and session transaction isolation levels at
-runtime, check the value of the <code><a href="/kb/en/server-system-variables/#tx_isolation">tx_isolation</a></code> system variable:</p>
+runtime, check the value of the <a href="/kb/en/server-system-variables/#tx_isolation">tx_isolation</a> system variable (note that the variable has been renamed <a href="/kb/en/server-system-variables/#transaction_isolation">transaction_isolation</a> from <a href="/kb/en/mariadb-11-1-1-release-notes/">MariaDB 11.1.1</a>, to match the option, and the old name deprecated).</p>
 <pre class="fixed"><span class="k">SELECT</span> <span class="o">@@</span><span class="k">GLOBAL</span><span class="p">.</span><span class="n">tx_isolation</span><span class="p">,</span> <span class="o">@@</span><span class="n">tx_isolation</span><span class="p">;</span>
+</pre><p>From <a href="/kb/en/mariadb-11-1-1-release-notes/">MariaDB 11.1.1</a>:</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="o">@@</span><span class="k">GLOBAL</span><span class="p">.</span><span class="n">transaction_isolation</span><span class="p">,</span> <span class="o">@@</span><span class="n">transaction_isolation</span><span class="p">;</span>
 </pre><p>InnoDB supports each of the translation isolation levels described here
 using different locking strategies. The default level is 
 <code class="highlight fixed" style="white-space:pre-wrap">REPEATABLE READ</code>. For additional information about InnoDB
@@ -546,7 +548,7 @@ block insertions by other sessions into the gaps covered by the range.</p>
 <p>This is the minimum isolation level for non-distributed <a href="/kb/en/xa-transactions/">XA transactions</a>.</p>
 <h4 class="anchored_heading" id="serializable">SERIALIZABLE</h4>
 <p>This level is like REPEATABLE READ, but InnoDB implicitly converts all
-plain SELECT statements to <code><a href="/kb/en/select/#lock-in-share-mode-and-for-update-clauses">SELECT ... LOCK IN SHARE MODE</a></code> if <code><a href="/kb/en/server-system-variables/#autocommit">autocommit</a></code>
+plain SELECT statements to <a href="/kb/en/select/#lock-in-share-mode-and-for-update-clauses">SELECT ... LOCK IN SHARE MODE</a> if <a href="/kb/en/server-system-variables/#autocommit">autocommit</a>
 is disabled. If autocommit is enabled, the SELECT is its own
 transaction. It therefore is known to be read only and can be
 serialized if performed as a consistent (non-locking) read and need
@@ -555,9 +557,9 @@ SELECT to block if other transactions have modified the selected rows,
 you should disable autocommit.)</p>
 <p>Distributed <a href="/kb/en/xa-transactions/">XA transactions</a> should always use this isolation level.</p>
 <h3 class="anchored_heading" id="access-mode">Access Mode</h3>
-<p>The access mode specifies whether the transaction is allowed to write data or not. By default, transactions are in <code>READ WRITE</code> mode (see the <a href="/kb/en/server-system-variables/#tx_read_only">tx_read_only</a> system variable). <code>READ ONLY</code> mode allows the storage engine to apply optimizations that cannot be used for transactions which write data. The only exception to this rule is that read only transactions can perform DDL statements on temporary tables.</p>
+<p>The access mode specifies whether the transaction is allowed to write data or not. By default, transactions are in <code>READ WRITE</code> mode (see the <a href="/kb/en/server-system-variables/#tx_read_only">tx_read_only</a> system variable). <code>READ ONLY</code> mode allows the storage engine to apply optimizations that cannot be used for transactions which write data. Note that unlike the global <a href="/kb/en/server-system-variables/#read_only">read_only</a> mode, <a href="/kb/en/grant/#read_only-admin">READ_ONLY ADMIN</a> (and <a href="/kb/en/grant/#super">SUPER</a> before <a href="/kb/en/mariadb-10-11-0-release-notes/">MariaDB 10.11.0</a>) privilege doesn't allow writes and DDL statements on temporary tables are not allowed either.</p>
 <p>It is not permitted to specify both <code>READ WRITE</code> and <code>READ ONLY</code> in the same statement.</p>
-<p><code>READ WRITE</code> and <code>READ ONLY</code> can also be specified in the <code><a href="/kb/en/start-transaction/">START TRANSACTION</a></code> statement, in which case the specified mode is only valid for one transaction.</p>
+<p><code>READ WRITE</code> and <code>READ ONLY</code> can also be specified in the <a href="/kb/en/start-transaction/">START TRANSACTION</a> statement, in which case the specified mode is only valid for one transaction.</p>
 <h2 class="anchored_heading" id="examples">Examples</h2>
 <pre class="fixed"><span class="k">SET</span> <span class="k">GLOBAL</span> <span class="n">TRANSACTION</span> <span class="k">ISOLATION</span> <span class="k">LEVEL</span> <span class="k">SERIALIZABLE</span><span class="p">;</span>
 </pre><p>Attempting to set the isolation level within an existing transaction without specifying <code>GLOBAL</code> or <code>SESSION</code>.</p>
@@ -742,6 +744,42 @@ ERROR 1568 (25001): Transaction characteristics can't be changed while a transac
                         <a href="/kb/en/xa-transactions/">
                             
                             XA Transactions
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/transactions-read-committed/">
+                            
+                            READ COMMITTED
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/transactions-read-uncommitted/">
+                            
+                            READ UNCOMMITTED
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/transactions-repeatable-read/">
+                            
+                            REPEATABLE READ
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/transactions-serializable/">
+                            
+                            SERIALIZABLE
                         </a>
                     </li>
                 

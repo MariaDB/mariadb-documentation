@@ -249,12 +249,12 @@ database is show..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2020-06-18 14:49">2 years, 8 months ago</span></dd>
+<span class="datetime" title="2020-06-18 14:49">2 years, 10 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2020-06-18 14:49">2 years, 8 months ago</span></dd>
+<span class="datetime" title="2020-06-18 14:49">2 years, 10 months ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -271,7 +271,7 @@ database is show..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/2.5.24/Documentation/Routers/SchemaRouter.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/2.5.25/Documentation/Routers/SchemaRouter.md">GitHub</a></dd>
         
     </dl>
 
@@ -625,20 +625,29 @@ following fields.</p>
 <li><code>shard_map_misses</code>: Cache misses for the shard map cache.</li>
 </ul>
 <h2 id="limitations">Limitations</h2>
-<ol>
-<li>Cross-database queries (e.g. <code>SELECT column FROM database1.table UNION select column
-FROM database2.table</code>) are not properly supported. Such queries are routed either to the
-first explicit database in the query, the current database in use or to the first
-available database, depending on which succeeds.</li>
-</ol>
 <ul>
 <li>
-<p>Without a default database, queries without explicit databases that do not modify the
-session state will be routed to the first available server. This includes queries such as
-<code>CREATE DATABASE db1</code>. Such queries should be done directly on the node or the router
-should be equipped with the hint filter and a routing hint should be used. Queries that
-modify the session state (e.g. <code>SET autocommit=1</code>) will be routed to all servers
-regardless of the default database.</p>
+<p>Cross-database queries (e.g. <code>SELECT column FROM database1.table UNION select column
+FROM database2.table</code>) are not properly supported. Such queries are routed either to the
+first explicit database in the query, the current database in use or to the first
+available database, depending on which succeeds.</p>
+</li>
+<li>
+<p>Without a default database, queries that do not use fully qualified table
+names and which do not modify the session state (e.g. <code>SELECT * FROM t1</code>) will
+be routed to the first available server. This includes queries such as explicit
+transaction commands (<code>BEGIN</code>, <code>COMMIT</code>, <code>ROLLBACK</code>), all non-table <code>CREATE</code>
+commands (<code>CREATE DATABASE</code>, <code>CREATE SEQUENCE</code>) as well as any <code>SELECT</code>
+statements that do not directly refer to a table. <code>CREATE</code> commands should be
+done directly on the node or the router should be equipped with the hint filter
+and a routing hint should be used. Queries that modify the session state
+(e.g. <code>SET autocommit=1</code>) will be routed to all servers regardless of the
+default database. For explicit transactions, the recommended way is to use <code>SET
+autocommit=0</code> to start a transaction and <code>SET autocommit=1</code> to commit it,
+otherwise routing hints are required to correctly route the transaction control
+commands. <a href="https://jira.mariadb.org/browse/MXS-4467">MXS-4467</a> changed the
+routing of transaction control commands to route them to all servers used by the
+schemarouter.</p>
 </li>
 <li>
 <p>SELECT queries that modify session variables are not supported because uniform results

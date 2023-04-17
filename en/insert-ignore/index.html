@@ -255,12 +255,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2017-08-30 16:26">5 years, 6 months ago</span></dd>
+<span class="datetime" title="2017-08-30 16:26">5 years, 7 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2021-04-20 11:20">1 year, 10 months ago</span></dd>
+<span class="datetime" title="2023-03-29 09:35">2 weeks, 5 days ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -406,9 +406,11 @@
 <h2 class="anchored_heading" id="ignoring-errors">Ignoring Errors</h2>
 <p>Normally <a href="/kb/en/insert/">INSERT</a> stops and rolls back when it encounters an error.</p>
 <p>By using the <a href="/kb/en/ignore/">IGNORE</a> keyword all errors are converted to warnings, which will not stop inserts of additional rows.</p>
+<p>Invalid values are changed to the closest valid value and inserted, with a warning produced.</p>
 <p>The IGNORE and DELAYED options are ignored when you use <a href="/kb/en/insert-on-duplicate-key-update/">ON DUPLICATE KEY UPDATE</a>.</p>
 <p>Prior to MySQL and <a href="/kb/en/mariadb-5528-release-notes/">MariaDB 5.5.28</a>, no warnings were issued for duplicate key errors when using <code class="highlight fixed" style="white-space:pre-wrap">IGNORE</code>.
 You can get the old behavior if you set <a href="/kb/en/old_mode/">OLD_MODE</a> to <code class="highlight fixed" style="white-space:pre-wrap">NO_DUP_KEY_WARNINGS_WITH_IGNORE</code>.</p>
+<p>See <a href="/kb/en/ignore/">IGNORE</a> for a full description of effects.</p>
 <h2 class="anchored_heading" id="examples">Examples</h2>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">x</span> <span class="nb">INT</span> <span class="k">UNIQUE</span><span class="p">);</span>
 
@@ -423,7 +425,6 @@ You can get the old behavior if you set <a href="/kb/en/old_mode/">OLD_MODE</a> 
 <span class="o">|</span>    <span class="mi">1</span> <span class="o">|</span>
 <span class="o">|</span>    <span class="mi">2</span> <span class="o">|</span>
 <span class="o">+</span><span class="c1">------+</span>
-<span class="mi">2</span> <span class="k">rows</span> <span class="k">in</span> <span class="k">set</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">00</span> <span class="n">sec</span><span class="p">)</span>
 
 <span class="k">INSERT</span> <span class="k">IGNORE</span> <span class="k">INTO</span> <span class="n">t1</span> <span class="k">VALUES</span><span class="p">(</span><span class="mi">2</span><span class="p">),(</span><span class="mi">3</span><span class="p">);</span>
 <span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">1</span> <span class="k">row</span> <span class="n">affected</span><span class="p">,</span> <span class="mi">1</span> <span class="n">warning</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">04</span> <span class="n">sec</span><span class="p">)</span>
@@ -443,6 +444,31 @@ You can get the old behavior if you set <a href="/kb/en/old_mode/">OLD_MODE</a> 
 <span class="o">|</span>    <span class="mi">2</span> <span class="o">|</span>
 <span class="o">|</span>    <span class="mi">3</span> <span class="o">|</span>
 <span class="o">+</span><span class="c1">------+</span>
+</pre><p>Converting values:</p>
+<pre class="fixed">CREATE OR REPLACE TABLE t2(id INT, t VARCHAR(2) NOT NULL, n INT NOT NULL);
+
+INSERT INTO t2(id) VALUES (1),(2);
+ERROR 1364 (HY000): Field 't' doesn't have a default value
+
+INSERT IGNORE INTO t2(id) VALUES (1),(2);
+Query OK, 2 rows affected, 2 warnings (0.026 sec)
+Records: 2  Duplicates: 0  Warnings: 2
+
+SHOW WARNINGS;
++---------+------+----------------------------------------+
+| Level   | Code | Message                                |
++---------+------+----------------------------------------+
+| Warning | 1364 | Field 't' doesn't have a default value |
+| Warning | 1364 | Field 'n' doesn't have a default value |
++---------+------+----------------------------------------+
+
+SELECT * FROM t2;
++------+---+---+
+| id   | t | n |
++------+---+---+
+|    1 |   | 0 |
+|    2 |   | 0 |
++------+---+---+
 </pre><p>See <a href="/kb/en/insert-on-duplicate-key-update/">INSERT ON DUPLICATE KEY UPDATE</a> for further examples using that syntax.</p>
 <h2 class="anchored_heading" id="see-also">See Also</h2>
 <ul start="1"><li><a href="/kb/en/insert/">INSERT</a>
@@ -451,7 +477,6 @@ You can get the old behavior if you set <a href="/kb/en/old_mode/">OLD_MODE</a> 
 </li><li><a href="/kb/en/high_priority-and-low_priority/">HIGH_PRIORITY and LOW_PRIORITY</a>
 </li><li><a href="/kb/en/concurrent-inserts/">Concurrent Inserts</a>
 </li><li><a href="/kb/en/insert-default-duplicate-values/">INSERT - Default &amp; Duplicate Values</a>
-</li><li><a href="/kb/en/insert-ignore/">INSERT IGNORE</a>
 </li><li><a href="/kb/en/insert-on-duplicate-key-update/">INSERT ON DUPLICATE KEY UPDATE</a></li></ul>
 
     </div>

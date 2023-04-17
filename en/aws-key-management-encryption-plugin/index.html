@@ -259,12 +259,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2016-03-14 13:30">7 years ago</span></dd>
+<span class="datetime" title="2016-03-14 13:30">7 years, 1 month ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2021-09-07 10:06">1 year, 6 months ago</span></dd>
+<span class="datetime" title="2023-04-15 12:39">2 days ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -408,7 +408,10 @@
 
     <li class=""><a href="#installing-the-plugins-package" title="Installing the Plugin&#39;s Package">Installing the Plugin&#39;s Package</a>    <ol class="toc">
 
-        <li class=""><a href="#installing-from-source" title="Installing from Source">Installing from Source</a>    </ol>
+        <li class=""><a href="#installing-from-source" title="Installing from Source">Installing from Source</a>        <ol class="toc">
+
+            <li class=""><a href="#building-on-linux" title="Building on Linux">Building on Linux</a>        </ol>
+    </ol>
 </li>
 
     <li class=""><a href="#installing-the-plugin" title="Installing the Plugin">Installing the Plugin</a></li>
@@ -448,7 +451,8 @@
  </ol>
 </li>
 </div>
-<p>MariaDB's <a href="/kb/en/data-at-rest-encryption/">data-at-rest encryption</a> requires the use of a <a href="/kb/en/encryption-key-management/">key management and encryption plugin</a>. These plugins are responsible both for the management of encryption keys and for the actual encryption and decryption of data.</p>
+<div class="cstm-style redbox"><p>Due to license incompatibilities between the MariaDB server source code and the Amazon AWS C++ SDK we can only distribute the plugin in source code form, and not as ready-to-use binaries. See <a href="#installing-the-plugins-package">Installing the Plugin's Package</a> for details.</p>
+</div><p>MariaDB's <a href="/kb/en/data-at-rest-encryption/">data-at-rest encryption</a> requires the use of a <a href="/kb/en/encryption-key-management/">key management and encryption plugin</a>. These plugins are responsible both for the management of encryption keys and for the actual encryption and decryption of data.</p>
 <p>MariaDB supports the use of <a href="/kb/en/encryption-key-management/#using-multiple-encryption-keys">multiple encryption keys</a>. Each encryption key uses a 32-bit integer as a key identifier. If the specific plugin supports <a href="/kb/en/encryption-key-management/#key-rotation">key rotation</a>, then encryption keys can also be rotated, which creates a new version of the encryption key.</p>
 <p>The AWS Key Management plugin is a <a href="/kb/en/encryption-key-management/">key management and encryption plugin</a> that uses the <a href="https://aws.amazon.com/kms/">Amazon Web Services (AWS) Key Management Service (KMS)</a>.</p>
 <h2 class="anchored_heading" id="overview">Overview</h2>
@@ -467,13 +471,39 @@
 <p>The AWS Key Management plugin depends on the <a href="https://github.com/aws/aws-sdk-cpp">AWS SDK for C++</a>, which uses the <a href="https://github.com/aws/aws-sdk-cpp/blob/master/LICENSE">Apache License, Version 2.0</a>. This license is not compatible with MariaDB Server's <a href="/kb/en/mariadb-license/">GPL 2.0 license</a>, so we are not able to distribute packages that contain the AWS Key Management plugin. Therefore, the only way to currently obtain the plugin is to install it from source.</p>
 <h3 class="anchored_heading" id="installing-from-source">Installing from Source</h3>
 <p>When <a href="/kb/en/compiling-mariadb-from-source/">compiling MariaDB from source</a>, the AWS Key Management plugin is not built by default in <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a>, but it is built by default in <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> and later, on systems that support it.</p>
-<p>Compilation is controlled by the <code>-DPLUGIN_AWS_KEY_MANAGEMENT=DYNAMIC -DAWS_SDK_EXTERNAL_PROJECT=1</code> <code><a href="/kb/en/generic-build-instructions/#using-cmake">cmake</a></code> arguments.</p>
+<p>Compilation is controlled by the following <code><a href="/kb/en/generic-build-instructions/#using-cmake">cmake</a></code> arguments:</p>
+<ul start="1"><li><code>-DPLUGIN_AWS_KEY_MANAGEMENT=DYNAMIC</code> to build a loadable plugin library
+</li><li><code>-DAWS_SDK_EXTERNAL_PROJECT=ON</code> to download the AWS C++ SDK code
+</li><li><code>-DNOT_FOR_DISTRIBUTION=ON</code> to confirm that you know to not distribute the resulting binaries
+</li></ul>
 <p>The plugin uses <a href="https://github.com/awslabs/aws-sdk-cpp">AWS C++ SDK</a>, which introduces the following restrictions:</p>
 <ul start="1"><li>The plugin can only be built on Windows, Linux and macOS.
 </li><li>The plugin requires that one of the following compilers is used: <code>gcc</code> 4.8 or later, <code>clang</code> 3.3 or later, Visual Studio 2013 or later.
 </li><li>On Unix, the <code>libcurl</code> development package (e.g. <code>libcurl3-dev</code> on Debian Jessie), <code>uuid</code> development package and <code>openssl</code> need to be installed.
 </li><li>You may need to use a newer version of <code><a href="/kb/en/generic-build-instructions/#using-cmake">cmake</a></code> than is provided by default in your OS.
 </li></ul>
+<p>You do not need to download / install the AWS C++ SDK yourself, the correct version of the SDK github repository will be cloned into the build directory at build time, and only the libraries for AWS components actually needed by the key management plugin will be built, which takes much less time than building the full AWS C++ SDK.</p>
+<h4 class="anchored_heading" id="building-on-linux">Building on Linux</h4>
+<p>With all prerequisites installed the actual build process pretty much comes down to:</p>
+<pre class="fixed"># clone the MariaDB Server source code repository
+git clone https://github.com/MariaDB/server.git
+cd server
+
+# prepare the build
+mkdir _build
+cd _build
+cmake .. -DNOT_FOR_DISTRIBUTION=ON \
+  -DPLUGIN_AWS_KEY_MANAGEMENT=DYNAMIC \
+  -DAWS_SDK_EXTERNAL_PROJECT=1
+
+# build the plugin only
+cd plugin/aws_key_management
+make 
+</pre><div class="cstm-style redbox"><p>Cmake will print the following warning as part of its output, please take it serious and do not distribute the <code>aws_key_management.so</code> file to any third parties:</p>
+<p><strong>You have linked MariaDB with Apache 2.0 libraries! You may not distribute
+the resulting binary.  If you do, you will put yourself into a legal
+problem with the Free Software Foundation.</strong></p>
+</div><p>After <code>make</code> succeeded you can copy the created <code>aws_key_management.so</code> plugin library file to the plugin directory of your actual MariaDB Server machines installation, e.g. <code>/usr/lib64/mysql/plugin</code> on RedHat/Fedora based systems or <code>/usr/lib/mysql/plugin</code> on Debian based systems. </p>
 <h2 class="anchored_heading" id="installing-the-plugin">Installing the Plugin</h2>
 <p>Even after the package that contains the plugin's shared library is installed on the operating system, the plugin is not actually installed by MariaDB by default. There are two methods that can be used to install the plugin with MariaDB.</p>
 <p>The first method can be used to install the plugin without restarting the server. You can install the plugin dynamically by executing <code><a href="/kb/en/install-soname/">INSTALL SONAME</a></code> or <code><a href="/kb/en/install-plugin/">INSTALL PLUGIN</a></code>. For example:</p>

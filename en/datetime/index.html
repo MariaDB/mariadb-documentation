@@ -247,12 +247,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2010-05-20 19:02">12 years, 9 months ago</span></dd>
+<span class="datetime" title="2010-05-20 19:02">12 years, 11 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-05-23 20:01">9 months, 3 weeks ago</span></dd>
+<span class="datetime" title="2023-04-03 13:49">1 week, 6 days ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -432,8 +432,6 @@
 
     <li class=""><a href="#supported-values" title="Supported Values">Supported Values</a></li>
 
-    <li class=""><a href="#time-zones" title="Time Zones">Time Zones</a></li>
-
     <li class=""><a href="#oracle-mode" title="Oracle Mode">Oracle Mode</a></li>
 
     <li class=""><a href="#internal-format" title="Internal Format">Internal Format</a></li>
@@ -457,23 +455,7 @@ numbers. For details, see <a href="/kb/en/date-and-time-literals/">date and time
 <p>MariaDB stores values that use the <code>DATETIME</code> data type in a format that supports values between <code>1000-01-01 00:00:00.000000</code> and <code>9999-12-31 23:59:59.999999</code>.</p>
 <p>MariaDB can also store <a href="/kb/en/microseconds-in-mariadb/">microseconds</a> with a precision between 0 and 6. If no microsecond precision is specified, then 0 is used by default.</p>
 <p>MariaDB also supports '<code>0000-00-00</code>' as a special <em>zero-date</em> value, unless <a href="/kb/en/sql-mode/#no_zero_date">NO_ZERO_DATE</a> is specified in the <a href="/kb/en/sql-mode/">SQL_MODE</a>. Similarly, individual components of a date can be set to <code>0</code> (for example: '<code>2015-00-12</code>'), unless <a href="/kb/en/sql-mode/#no_zero_in_date">NO_ZERO_IN_DATE</a> is specified in the <a href="/kb/en/sql-mode/">SQL_MODE</a>. In many cases, the result of en expression involving a zero-date, or a date with zero-parts, is <code>NULL</code>. If the <a href="/kb/en/sql-mode/#allow_invalid_dates">ALLOW_INVALID_DATES</a> SQL_MODE is enabled, if the day part is in the range between 1 and 31, the date does not produce any error, even for months that have less than 31 days.</p>
-<h2 class="anchored_heading" id="time-zones">Time Zones</h2>
-<p>If a column uses the <code>DATETIME</code> data type, then any inserted values are stored as-is, so no automatic time zone conversions are performed.</p>
-<p>MariaDB also does not currently support time zone literals that contain time zone identifiers. See <a href="https://jira.mariadb.org/browse/MDEV-11829">MDEV-11829</a> for more information.</p>
-<p>MariaDB validates <code>DATETIME</code> literals against the session's time zone. For example, if a specific time range never occurred in a specific time zone due to daylight savings time, then <code>DATETIME</code> values within that range would be invalid for that time zone.</p>
-<p>For example, daylight savings time started on March 10, 2019 in the US, so the time range between 02:00:00 and 02:59:59 is invalid for that day in US time zones:</p>
-<pre class="fixed"><span class="k">SET</span> <span class="n">time_zone</span> <span class="o">=</span> <span class="s1">&#39;America/New_York&#39;</span><span class="p">;</span>
-<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">0</span> <span class="k">rows</span> <span class="n">affected</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span> <span class="n">sec</span><span class="p">)</span>
-
-<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">timestamp_test</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;2019-03-10 02:55:05&#39;</span><span class="p">);</span>
-<span class="n">ERROR</span> <span class="mi">1292</span> <span class="p">(</span><span class="mi">22007</span><span class="p">):</span> <span class="n">Incorrect</span> <span class="n">datetime</span> <span class="n">value</span><span class="p">:</span> <span class="s1">&#39;2019-03-10 02:55:05&#39;</span> <span class="k">for</span> <span class="k">column</span> <span class="o">`</span><span class="n">db1</span><span class="o">`</span><span class="p">.</span><span class="o">`</span><span class="n">timestamp_test</span><span class="o">`</span><span class="p">.</span><span class="o">`</span><span class="n">timestamp_test</span><span class="o">`</span> <span class="k">at</span> <span class="k">row</span> <span class="mi">1</span>
-</pre><p>But that same time range is fine in other time zones, such as <a href="/kb/en/coordinated-universal-time/">Coordinated Universal Time (UTC)</a>. For example:</p>
-<pre class="fixed"><span class="k">SET</span> <span class="n">time_zone</span> <span class="o">=</span> <span class="s1">&#39;UTC&#39;</span><span class="p">;</span>
-<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">0</span> <span class="k">rows</span> <span class="n">affected</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span> <span class="n">sec</span><span class="p">)</span>
-
-<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">timestamp_test</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;2019-03-10 02:55:05&#39;</span><span class="p">);</span>
-<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">1</span> <span class="k">row</span> <span class="n">affected</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">002</span> <span class="n">sec</span><span class="p">)</span>
-</pre><h2 class="anchored_heading" id="oracle-mode">Oracle Mode</h2>
+<h2 class="anchored_heading" id="oracle-mode">Oracle Mode</h2>
 <div class="mariadb_from_10_3 mariadb from_10_3 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-103/">10.3</a></h5><p>In <a href="/kb/en/sql_modeoracle-from-mariadb-103/#synonyms-for-basic-sql-types">Oracle mode from MariaDB 10.3</a>, <code>DATE</code> with a time portion is a synonym for <code>DATETIME</code>. See also <a href="/kb/en/mariadb_schema/">mariadb_schema</a>.</p>
 </div><h2 class="anchored_heading" id="internal-format">Internal Format</h2>
 <p>In <a href="/kb/en/mariadb-1012-release-notes/">MariaDB 10.1.2</a> a new temporal format was introduced from MySQL 5.6 that alters how the <code>TIME</code>, <code>DATETIME</code> and <code>TIMESTAMP</code> columns operate at lower levels.  These changes allow these temporal data types to have fractional parts and negative values.  You can disable this feature using the <a href="/kb/en/server-system-variables/#mysql56_temporal_format">mysql56_temporal_format</a> system variable.</p>
