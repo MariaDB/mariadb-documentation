@@ -32,7 +32,7 @@ fn main() {
         eprintln!("{panic_info}");
     }));
     let args = AppArgs::read();
-    logger::init(args.verbose);
+    logger::init(args.verbose, args.output_log.as_deref());
     if let Err(err) = run_crawler(&args) {
         eprintln!("{err}");
         std::process::exit(1);

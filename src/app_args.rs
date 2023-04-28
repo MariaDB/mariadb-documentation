@@ -12,6 +12,7 @@ pub struct AppArgs {
     pub force: bool,
     pub port: u32,
     pub verbose: bool,
+    pub output_log: Option<PathBuf>,
     pub output: PathBuf,
 }
 
@@ -25,6 +26,10 @@ impl AppArgs {
             .arg(arg!(-o --output <PATH>
                 "Where to write the contents out to (default = '../mariadb_kb_archive'"))
             .arg(arg!(-v --verbose "Logs to stdout"))
+            .arg(
+                arg!(-l --outlog <PATH> "Output path for seperate logs")
+                    .value_parser(value_parser!(PathBuf)),
+            )
             .arg(
                 arg!(-p --port <PORT>
                     "which port to connect to the server with (default = 7032).")
@@ -56,6 +61,7 @@ impl AppArgs {
         let ignore_existing = matches.get_one::<bool>("resume").copied().unwrap_or(false);
         let force = matches.get_one::<bool>("force").copied().unwrap_or(false);
         let verbose = matches.get_one::<bool>("verbose").copied().unwrap_or(false);
+        let output_log = matches.get_one::<PathBuf>("outlog").cloned();
         let port = matches.get_one::<u32>("port").copied().unwrap_or(7032);
 
         Self {
@@ -65,6 +71,7 @@ impl AppArgs {
             force,
             port,
             verbose,
+            output_log,
             output,
         }
     }

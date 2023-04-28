@@ -45,6 +45,6 @@ pub fn read_and_write_content(
         create_dir_and_write(&path, redirect).unwrap_or_else(|_| panic!("{path:?}"));
         path = directed_path;
     }
-    create_dir_and_write(&path, &response.content).unwrap_or_else(|_| panic!("{path:?}"));
+    create_dir_and_write(&path, &response.content).unwrap_or_else(|err| panic!("{err} - {path:?}"));
     Some(response.content)
 }
