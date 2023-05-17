@@ -12,7 +12,7 @@
 ##  Usage
 
 - make sure
-[mariadb_archive_server](https://github.com/icerath/mariadb_kb_server)
+[mariadb_kb_server](https://github.com/icerath/mariadb_kb_server)
 is running.
 - run `'(python/python3) main.py'`
 

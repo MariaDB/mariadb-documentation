@@ -17,7 +17,7 @@ def read_languages(en_csv: list[CsvItem], config: Config) -> dict[str, list[CsvI
         return language_csvs
 
     for row in en_csv:
-        found_languages = _find_languages(row)
+        found_languages = _find_languages(row, config)
         for lang, lang_val in found_languages.items():
             if lang in config.languages:
                 new_row = _create_lang_row(row, lang_val)
@@ -28,8 +28,8 @@ def read_languages(en_csv: list[CsvItem], config: Config) -> dict[str, list[CsvI
     return language_csvs
 
 
-def _find_languages(row: CsvItem) -> dict[str, str]:
-    html = get_html(row.url)
+def _find_languages(row: CsvItem, config: Config) -> dict[str, str]:
+    html = get_html(row.url, config.port)
     if html == None:
         return {}
     soup = BeautifulSoup(html, features="html.parser")

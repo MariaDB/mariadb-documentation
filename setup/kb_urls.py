@@ -1,4 +1,3 @@
-from .paths import PORT
 from .logger import log
 
 from dataclasses import dataclass
@@ -50,9 +49,9 @@ class CsvItem:
             header=header,
         )
 
-def read_csv(num_rows: int) -> list[CsvItem]:
-    string = get_url("kb_urls.csv")
-    assert string, f"Failed to connect to {PORT}"
+def read_csv(num_rows: int, port: int) -> list[CsvItem]:
+    string = get_url("kb_urls.csv", port)
+    assert string, f"Failed to connect to {port}"
     content = csv.DictReader(string.splitlines())
     rows = [row for row in content if row["Include"] not in ["", "0"]]
     rows = rows[:num_rows] if num_rows > 0 else rows

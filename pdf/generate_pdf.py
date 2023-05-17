@@ -29,7 +29,8 @@ def generate_sub_pdf(
 ):
     html = read_html(kburls, outline, config)
     (dir_path / config.html_path).write_text(html, encoding="utf-8")
-    wkhtmltopdf(html, dir_path / config.pdf_path, config)
+    del html
+    wkhtmltopdf(f"{dir_path}/{config.html_path}", dir_path / config.pdf_path, config)
     log.info(f"Wrote PDF to {dir_path / config.pdf_path}")
 
 def default_outline(kburls: list[CsvItem]) -> list[TocItem]:
@@ -52,11 +53,11 @@ def get_title_page(line: str) -> tuple[str, int]:
     assert title and page
     return title[1], int(page[1])
 
-def wkhtmltopdf(html: str, pdf_path: Path, config: Config):
+def wkhtmltopdf(html_path: str, pdf_path: Path, config: Config):
     log.info("Starting wk")
     wk_config = pdfkit.configuration(wkhtmltopdf="")
-    pdfkit.from_string(
-        html,
+    pdfkit.from_file(
+        html_path,
         pdf_path,
         configuration=wk_config,
         options=config.wkhtml_settings,

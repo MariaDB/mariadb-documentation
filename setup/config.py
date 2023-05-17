@@ -22,6 +22,7 @@ class TocConfig(NamedTuple):
 
 # Public
 class Config(NamedTuple):
+    port: int
     pdf: bool
     repeat_outline: bool
     languages: list[str]
@@ -31,19 +32,18 @@ class Config(NamedTuple):
     wkhtml_settings: dict[str, Any]
     toc_config: TocConfig
 
-def read_config(filepath: str) -> Config:
+def read_config() -> Config:
     """Returns a simplified data structure containing the config settings"""
-    if not Path(filepath).exists():
-        log.error(f"Could not read {filepath}")
-        exit(1)
     arg_config = _read_args()
-    dict_config: dict[str, Any] = toml.load(filepath)
+    dict_config: dict[str, Any] = toml.load(arg_config.config)
     config: Config = generate_config(arg_config, dict_config)
 
     return config
 
 @dataclass
 class _ArgConfig:
+    config: str
+    port: int
     nopdf: bool
     norepeat: bool
     htmlpath: str
@@ -55,6 +55,7 @@ class _ArgConfig:
 
 def generate_config(arg_config: _ArgConfig, dict_config: dict[str, Any]) -> Config:
     return Config(
+        port=arg_config.port,
         pdf=not arg_config.nopdf,
         repeat_outline=not arg_config.norepeat,
         languages=["en"] if not arg_config.langs else arg_config.langs,
@@ -76,6 +77,8 @@ def _read_args() -> _ArgConfig:
     group.add_argument("-q", "--quiet", action="store_true", help="Quiet/Hide Logging")
     group.add_argument("-v", "--verbose", action="store_true", help="Verbose")
     
+    parser.add_argument("-c", "--config", type=Path, default=Path("./config.toml"), help="config filepath")
+    parser.add_argument("-p", "--port", type=int, default=7032, help="mariadb_kb_server port")
     parser.add_argument("-l", "--langs", type=str, nargs="+", help="Optional Languages eg: (en, it)")
     parser.add_argument("-n", "--numrows", "--num_rows", type=int, help="Maximum Number of csv urls to use.")
     parser.add_argument("--norepeat", action="store_true", help="Turns off repeat generation")

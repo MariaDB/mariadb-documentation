@@ -33,15 +33,15 @@ def process_pages(kburls: list[CsvItem], outline: list[TocItem], config: Config)
             html_tag = f'<h2 class="col-md-8"><a href="{row.url}">{depth_str} {row.header}</a></h2>'
             outline_row.header = f"{row.depth_str} {row.header}"
         else:
-            html_tag, header = process_article(row)
+            html_tag, header = process_article(row, config.port)
             outline_row.header = header
         html_pages.append(html_tag)
     print(f"\rProgress: {length}/{length}")
     return html_pages
 
 
-def process_article(row: CsvItem) -> tuple[str, str]:
-    html = get_html(row.url)
+def process_article(row: CsvItem, port: int) -> tuple[str, str]:
+    html = get_html(row.url, port)
     if html is None:
         log.error(f"Could not read url: {row.url}")
         exit(1)

@@ -81,7 +81,7 @@ START_BOILERPLATE = (
                 left: 0;
                 right: 0;
                 z-index: -1;
-                border-top: 2px dotted black;
+                border-top: 1px dashed black;
             }
             a[href ^= "http"]:after {
                 content: " " url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVklEQVR4Xn3PgQkAMQhDUXfqTu7kTtkpd5RA8AInfArtQ2iRXFWT2QedAfttj2FsPIOE1eCOlEuoWWjgzYaB/IkeGOrxXhqB+uA9Bfcm0lAZuh+YIeAD+cAqSz4kCMUAAAAASUVORK5CYII=);    
