@@ -29,6 +29,10 @@ pub const DEFAULT_ARCHIVE_PATH: &str = "../mariadb_kb_archive";
 pub const RECENT_CHANGES_LIMIT: usize = 20;
 
 fn main() {
+    std::process::exit(run())
+}
+
+fn run() -> i32 {
     std::panic::set_hook(Box::new(|panic_info| {
         eprintln!("{panic_info}");
     }));
@@ -36,9 +40,12 @@ fn main() {
     logger::init(args.verbose, args.output_log.as_deref());
     if let Err(err) = run_crawler(&args) {
         log::error!("{err}");
+        return 1;
     } else if args.scrape_method.is_complete_scrape() {
         write_last_updated(&args.output).expect("Failed to update last updated");
+        return 1;
     }
+    0
 }
 
 fn run_crawler(args: &AppArgs) -> Result<()> {
