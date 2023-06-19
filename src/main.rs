@@ -26,6 +26,7 @@ use std::{
 pub type Result<T, E = Box<dyn Error>> = std::result::Result<T, E>;
 
 pub const DEFAULT_ARCHIVE_PATH: &str = "../mariadb_kb_archive";
+pub const RECENT_CHANGES_LIMIT: usize = 20;
 
 fn main() {
     std::panic::set_hook(Box::new(|panic_info| {
@@ -34,20 +35,18 @@ fn main() {
     let args = AppArgs::read();
     logger::init(args.verbose, args.output_log.as_deref());
     if let Err(err) = run_crawler(&args) {
-        eprintln!("{err}");
-        std::process::exit(1);
-    }
-    if args.scrape_method.is_complete_scrape() {
+        log::error!("{err}");
+    } else if args.scrape_method.is_complete_scrape() {
         write_last_updated(&args.output).expect("Failed to update last updated");
     }
 }
 
-fn run_crawler(args: &AppArgs) -> Result<(), Box<dyn Error>> {
+fn run_crawler(args: &AppArgs) -> Result<()> {
     log::info!("Selected: {:?}", &args.scrape_method);
     match args.scrape_method {
         ScrapeMethod::Standard => StandardCrawler::new(args.clone()).crawl(),
-        ScrapeMethod::RecentChanges => RecentCrawler::new(args.output.clone()).crawl(),
-        _ => unimplemented!(),
+        ScrapeMethod::RecentChanges => RecentCrawler::new(args.output.clone())?.crawl(),
+        _ => Err("Unimplimented".into()),
     }
 }
 pub fn url_to_path(root: &Path, url: &str) -> PathBuf {

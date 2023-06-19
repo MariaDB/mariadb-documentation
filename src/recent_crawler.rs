@@ -5,7 +5,7 @@ use crate::{
     path_to_url,
     req::ScrapeClient,
     scrape::{format_url, valid_url},
-    url_to_path, Result,
+    url_to_path, Result, RECENT_CHANGES_LIMIT,
 };
 use chrono::NaiveDateTime;
 use std::path::{Path, PathBuf};
@@ -15,10 +15,10 @@ pub struct RecentCrawler {
     root: PathBuf,
 }
 impl RecentCrawler {
-    pub fn new(root: PathBuf) -> Self {
+    pub fn new(root: PathBuf) -> Result<Self> {
         let last_updated = read_last_updated(&root).unwrap_or_else(|err| panic!("{err}"));
-        let queue = get_recent_urls_recursive(&root, last_updated);
-        Self { queue, root }
+        let queue = get_recent_urls_recursive(&root, last_updated)?;
+        Ok(Self { queue, root })
     }
 }
 
@@ -32,9 +32,9 @@ impl Crawler for RecentCrawler {
     }
 }
 
-fn get_recent_urls_recursive(root: &Path, last_updated: NaiveDateTime) -> Vec<String> {
+fn get_recent_urls_recursive(root: &Path, last_updated: NaiveDateTime) -> Result<Vec<String>> {
     let mut urls = vec![];
-    for url in get_recent_urls(root, last_updated) {
+    for url in get_recent_urls(root, last_updated)? {
         let path = url_to_path(root, &url);
         let paths = get_subpaths(&path).unwrap_or_else(|_| panic!("Failed to read: {path:?}"));
         urls.extend(
@@ -44,13 +44,13 @@ fn get_recent_urls_recursive(root: &Path, last_updated: NaiveDateTime) -> Vec<St
         );
         urls.push(url);
     }
-    urls
+    Ok(urls)
 }
 
-fn get_recent_urls(root: &Path, last_updated: NaiveDateTime) -> Vec<String> {
+fn get_recent_urls(root: &Path, last_updated: NaiveDateTime) -> Result<Vec<String>> {
     let client = &mut ScrapeClient::default();
     let mut recent_articles = vec![];
-    for page_num in 1.. {
+    for page_num in 1..=RECENT_CHANGES_LIMIT {
         let url = format!("https://mariadb.com/kb/+changes/?p={page_num}");
         let content =
             read_and_write_content(client, false, root, &url).expect("Failed to read changes");
@@ -66,9 +66,11 @@ fn get_recent_urls(root: &Path, last_updated: NaiveDateTime) -> Vec<String> {
         recent_articles.extend(new_articles);
         if num_all_articles > new_articles_len {
             break;
+        } else if page_num == RECENT_CHANGES_LIMIT {
+            Err("Reached end of mariadb.com/kb/+changes")?;
         }
     }
-    recent_articles
+    Ok(recent_articles)
 }
 
 fn scrape_recent_article_urls(html: &str) -> impl Iterator<Item = (String, NaiveDateTime)> + '_ {
