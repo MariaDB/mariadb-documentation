@@ -43,7 +43,6 @@ fn run() -> i32 {
         return 1;
     } else if args.scrape_method.is_complete_scrape() {
         write_last_updated(&args.output).expect("Failed to update last updated");
-        return 1;
     }
     0
 }
