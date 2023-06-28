@@ -24,7 +24,7 @@ impl AppArgs {
             .arg(arg!(-r --resume "Resumes the scrape ignoring already scraped directories"))
             .arg(arg!(-f --force "Forces the crawler to run even without the server"))
             .arg(arg!(-o --output <PATH>
-                "Where to write the contents out to (default = '../mariadb_kb_archive'"))
+                "Where to write the contents out to (default = '../archive'"))
             .arg(arg!(-v --verbose "Logs to stdout"))
             .arg(
                 arg!(-l --outlog <PATH> "Output path for seperate logs")

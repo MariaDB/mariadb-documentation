@@ -15,7 +15,7 @@ impl fmt::Display for FailedToReadLastUpdated {
         match self {
             Self::FileNotFound => write!(
                 f,
-                "Could not find 'last_updated.txt' in the mariadb_kb_archive.\n \
+                "Could not find 'last_updated.txt' in the ../archive.\n \
                     Run the standard scrape to update."
             ),
             Self::InvalidFormat => write!(f, "Invalid date format in 'last_updated.txt'."),

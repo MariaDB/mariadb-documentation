@@ -25,7 +25,7 @@ use std::{
 
 pub type Result<T, E = Box<dyn Error>> = std::result::Result<T, E>;
 
-pub const DEFAULT_ARCHIVE_PATH: &str = "../mariadb_kb_archive";
+pub const DEFAULT_ARCHIVE_PATH: &str = "../archive";
 pub const RECENT_CHANGES_LIMIT: usize = 20;
 
 fn main() {
