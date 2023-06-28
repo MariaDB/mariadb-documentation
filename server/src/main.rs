@@ -12,14 +12,14 @@ fn read_args() -> Config {
                 .value_parser(value_parser!(u32)),
         )
         .arg(arg!(-s --source <SRC>
-                "Source Directory to read from (default = '../mariadb_kb_archive')"))
+                "Source Directory to read from (default = '../archive')"))
         .get_matches();
 
     let port = matches.get_one::<u32>("port").copied().unwrap_or(7032);
 
     let source = matches
         .get_one::<String>("source")
-        .map_or("../mariadb_kb_archive", String::as_str)
+        .map_or("../archive", String::as_str)
         .into();
 
     Config { port, source }
