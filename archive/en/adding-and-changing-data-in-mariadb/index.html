@@ -239,12 +239,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2017-08-22 20:45">5 years, 6 months ago</span></dd>
+<span class="datetime" title="2017-08-22 20:45">5 years, 10 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2019-04-01 21:11">3 years, 11 months ago</span></dd>
+<span class="datetime" title="2023-06-27 20:11">17 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -418,11 +418,11 @@ There are several ways to add and to change data in MariaDB. There are a few SQL
 <span class="k">INTO</span> <span class="n">table1</span>
 <span class="k">VALUES</span><span class="p">(</span><span class="s1">&#39;text1&#39;</span><span class="p">,</span><span class="s1">&#39;text2&#39;</span><span class="p">,</span><span class="s1">&#39;text3&#39;</span><span class="p">);</span>
 </pre><p>The <code>LOW_PRIORITY</code> flag will put the <a href="/kb/en/insert/">INSERT</a> statement in queue, waiting for all current and pending requests to be completed before it's performed. If new requests are made while a low priority statement is waiting, then they are put ahead of it in the queue. MariaDB does not begin to execute a low priority statement until there are no other requests waiting. Once the transaction begins, though, the table is locked and any other requests for data from the table that come in after it starts must wait until it's completed. Because it locks the table, low priority statements will prevent simultaneous insertions from other clients even if you're dealing with a MyISAM table. Incidentally, notice that the <code>LOW_PRIORITY</code> flag comes before the <code>INTO</code>.</p>
-<p>One potential inconvenience with an <code>INSERT LOW_PRIORITY</code> statement is that the client will be tied up waiting for the statement to be completed successfully. So if you're inserting data into a busy server with a low priority setting using the mysql client, your client could be locked up for minutes, maybe hours depending on how busy your server is at the time. As an alternative either to making other clients with read requests wait or to having your client wait, you can use the DELAYED flag instead of the <code>LOW_PRIORITY</code> flag:</p>
+<p>One potential inconvenience with an <code>INSERT LOW_PRIORITY</code> statement is that the client will be tied up waiting for the statement to be completed successfully. So if you're inserting data into a busy server with a low priority setting using the mariadb client, your client could be locked up for minutes, maybe hours depending on how busy your server is at the time. As an alternative either to making other clients with read requests wait or to having your client wait, you can use the DELAYED flag instead of the <code>LOW_PRIORITY</code> flag:</p>
 <pre class="fixed"><span class="k">INSERT</span> <span class="n">DELAYED</span>
 <span class="k">INTO</span> <span class="n">table1</span>
 <span class="k">VALUES</span><span class="p">(</span><span class="s1">&#39;text1&#39;</span><span class="p">,</span><span class="s1">&#39;text2&#39;</span><span class="p">,</span><span class="s1">&#39;text3&#39;</span><span class="p">);</span>
-</pre><p>MariaDB will take the request as a low priority one and put it on its list of tasks to perform when it has a break. However, it will immediately release the client so that the client can go on to enter other SQL statements or even exit. Another advantage of this method is that multiple <code>INSERT DELAYED</code> requests are batched together for block insertion when there is a gap, making the process potentially faster than <code>INSERT LOW_PRIORITY</code>. The flaw in this choice, however, is that the client is never told if a delayed insertion is successfully made or not. The client is informed of error messages when the statement is entered<span>&mdash;</span>the statement has to be valid before it will be queued<span>&mdash;</span>but it's not told of problems that occur after it's accepted. This brings up another flaw: delayed insertions are stored in the server's memory. So if the MariaDB daemon (mysqld) dies or is manually killed, then the transactions are lost and the client is not notified of the failure. So DELAYED is not always a good alternative.</p>
+</pre><p>MariaDB will take the request as a low priority one and put it on its list of tasks to perform when it has a break. However, it will immediately release the client so that the client can go on to enter other SQL statements or even exit. Another advantage of this method is that multiple <code>INSERT DELAYED</code> requests are batched together for block insertion when there is a gap, making the process potentially faster than <code>INSERT LOW_PRIORITY</code>. The flaw in this choice, however, is that the client is never told if a delayed insertion is successfully made or not. The client is informed of error messages when the statement is entered<span>&mdash;</span>the statement has to be valid before it will be queued<span>&mdash;</span>but it's not told of problems that occur after it's accepted. This brings up another flaw: delayed insertions are stored in the server's memory. So if the MariaDB daemon (mariadbd) dies or is manually killed, then the transactions are lost and the client is not notified of the failure. So DELAYED is not always a good alternative.</p>
 <h4 class="anchored_heading" id="contingent-additions">Contingent Additions</h4>
 <p>As an added twist to <a href="/kb/en/insert/">INSERT</a>, you can combine it with a SELECT statement. Suppose that you have a table called employees which contains employee information for your company. Suppose further that you have a column to indicate whether an employee is on the company's softball team. However, you one day decide to create a separate database and table for the softball team's data that someone else will administer. To get the database ready for the new administrator, you have to copy some data for team members to the new table. Here's one way you can accomplish this task:</p>
 <pre class="fixed"><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">softball_team</span> 
@@ -472,7 +472,7 @@ There are several ways to add and to change data in MariaDB. There are a few SQL
 <span class="k">UPDATE</span> <span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;old&#39;</span><span class="p">;</span>
 </pre><p>Because of the <code>IGNORE</code> flag, errors will not be generated, duplicates won't be inserted or replaced, but the rest will be added. Because of the <a href="/kb/en/insert-on-duplicate-key-update/">ON DUPLICATE KEY</a>, the column status of the original row will be set to old when there are duplicate entry attempts. The rest will be inserted and their status set to new.</p>
 <h4 class="anchored_heading" id="conclusion">Conclusion</h4>
-<p>As you can see from some of these SQL statements, MariaDB offers you quite a few ways to add and to change data. In addition to these methods, there are also some bulk methods of adding and changing data in a table. You could use the <a href="/kb/en/load-data-infile/">LOAD DATA INFILE</a> statement and the <a href="/kb/en/mysqldump/">mysqldump</a> command-line utility. These methods are covered in another article on Importing Data into MariaDB.</p>
+<p>As you can see from some of these SQL statements, MariaDB offers you quite a few ways to add and to change data. In addition to these methods, there are also some bulk methods of adding and changing data in a table. You could use the <a href="/kb/en/load-data-infile/">LOAD DATA INFILE</a> statement and the <a href="/kb/en/mariadb-dump/">mariadb-dump</a> command-line utility. These methods are covered in another article on <a href="/kb/en/importing-data-into-mariadb/">Importing Data into MariaDB</a>.</p>
 
     </div>
 
@@ -620,9 +620,9 @@ There are several ways to add and to change data in MariaDB. There are a few SQL
             
                 
                     <li>
-                        <a href="/kb/en/making-backups-with-mysqldump/">
+                        <a href="/kb/en/making-backups-with-mariadb-dump/">
                             
-                            Making Backups with mysqldump
+                            Making Backups with mariadb-dump
                         </a>
                     </li>
                 

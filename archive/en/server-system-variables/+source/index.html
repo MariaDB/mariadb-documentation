@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/server-system-variables/+r/125239/">125239</a></dd>
+            <dd><a href="/kb/en/server-system-variables/+r/127625/">127625</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-04-12 10:04">2023-04-12 10:04</span></dd>
+<span class="datetime" title="2023-06-27 20:47">2023-06-27 20:47</span></dd>
         </dl>
     </div>
     
@@ -334,12 +334,12 @@ The full list of server variables are listed in the contents on this page, and m
 
 See also the [[full-list-of-mariadb-options-system-and-status-variables|Full list of MariaDB options, system and status variables]]. 
 
-Most of these can be set with [[mysqld-options-full-list|command line options]] and many of them can be changed at runtime.
+Most of these can be set with [[mariadbd-options-full-list|command line options]] and many of them can be changed at runtime.
 Variables that can be changed at runtime are described as &#34;Dynamic&#34; below, and elsewhere in the documentation.
 
 There are a few ways to see the full list of server system variables:
 
-* While in the mysql client, run:
+* While in the mariadb client, run:
 
 &lt;&lt;code indent=1 lang=mysql inline=true&gt;&gt;
 SHOW VARIABLES;
@@ -347,10 +347,10 @@ SHOW VARIABLES;
 
 *none See [[show-variables|SHOW VARIABLES]] for instructions on using this command.
 
-* From your shell, run mysqld like so:
+* From your shell, run mariadbd like so:
 
 &lt;&lt;code indent=1 lang=sh inline=true&gt;&gt;
-mysqld --verbose --help
+mariadbd --verbose --help
 &lt;&lt;/code&gt;&gt;
 
 * View the Information Schema [[information-schema-global_variables-and-session_variables-tables|GLOBAL_VARIABLES]], [[information-schema-global_variables-and-session_variables-tables|SESSION_VARIABLES]], and [[information-schema-system_variables-table|SYSTEM_VARIABLES]] tables.
@@ -371,7 +371,7 @@ shell&gt; ./mysqld_safe --aria_group_commit=&#34;hard&#34;
 aria_group_commit = &#34;hard&#34;
 &lt;&lt;/code&gt;&gt;
 
-* Set them from the mysql client using the [[set|SET]] command. Only variables that are dynamic can be set at runtime in this way. Note that variables set in this way will not persist after a restart.
+* Set them from the mariadb client using the [[set|SET]] command. Only variables that are dynamic can be set at runtime in this way. Note that variables set in this way will not persist after a restart.
 
 &lt;&lt;code indent=1 lang=sql inline=true&gt;&gt;
 SET GLOBAL aria_group_commit=&#34;hard&#34;;
@@ -533,7 +533,7 @@ The suffix can be upper or lower-case.
 ----
 
 ==== ##bind_address##
-* **Description:** By default, the MariaDB server listens for TCP/IP connections on all addresses. You can specify an alternative when the server starts using this option; either a host name, an IPv4 or an IPv6 address, &#34;::&#34; or &#34;*&#34; (all addresses). In some systems, such as Debian and Ubuntu, the bind_address is set to 127.0.0.1, which binds the server to listen on localhost only. ##bind_address## has always been available as a [[mysqld-options|mysqld option]]; from MariaDB 10.3.3 its also available as a system variable. Before MariaDB 10.6.0 &#34;::&#34; implied listening additionally on IPv4 addresses like &#34;*&#34;. From 10.6.0 onwards it refers to IPv6 stictly. See also [[configuring-mariadb-for-remote-client-access|Configuring MariaDB for Remote Client Access]].
+* **Description:** By default, the MariaDB server listens for TCP/IP connections on all addresses. You can specify an alternative when the server starts using this option; either a host name, an IPv4 or an IPv6 address, &#34;::&#34; or &#34;*&#34; (all addresses). In some systems, such as Debian and Ubuntu, the bind_address is set to 127.0.0.1, which binds the server to listen on localhost only. ##bind_address## has always been available as a [[mariadbd-options|mariadbd option]]; from MariaDB 10.3.3 its also available as a system variable. Before MariaDB 10.6.0 &#34;::&#34; implied listening additionally on IPv4 addresses like &#34;*&#34;. From 10.6.0 onwards it refers to IPv6 stictly. See also [[configuring-mariadb-for-remote-client-access|Configuring MariaDB for Remote Client Access]].
 * **Commandline:** &lt;&lt;code&gt;&gt;--bind-address=addr&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** No
@@ -570,6 +570,17 @@ The suffix can be upper or lower-case.
 &lt;&lt;toc-item slug=&#34;replication-and-binary-log-server-system-variables#binlog_row_metadata&#34; level=3&gt;&gt;##binlog_row_metadata##&lt;&lt;/toc-item&gt;&gt;
 
 &lt;&lt;toc-item slug=&#34;replication-and-binary-log-server-system-variables#binlog_stmt_cache_size&#34; level=3&gt;&gt;##binlog_stmt_cache_size##&lt;&lt;/toc-item&gt;&gt;
+
+==== ##block_encryption_mode##
+* **Description:** Default block encryption mode for [[aes_encrypt|AES_ENCRYPT()]] and [[aes_decrypt|AES_DECRYPT()]] functions.
+* **Commandline:** &lt;&lt;code&gt;&gt;--block-encryption-mode=val&lt;&lt;/code&gt;&gt;
+* **Scope:** Global, Session
+* **Dynamic:** Yes
+* **Data Type:** ##numeric##
+* **Default Value:** ##aes-128-ecb##
+* **Valid values:** ##aes-128-ecb##, ##aes-192-ecb##, ##aes-256-ecb##, ##aes-128-cbc##, ##aes-192-cbc##, ##aes-256-cbc##, ##aes-128-ctr##, ##aes-192-ctr##, ##aes-256-ctr##
+* **Introduced:** MariaDB 11.2.0
+----
 
 ==== ##bulk_insert_buffer_size##
 * **Description:** Size in bytes of the per-thread cache tree used to speed up bulk inserts into [[MyISAM]] and [[Aria]] tables. A value of 0 disables the cache tree.
@@ -664,7 +675,6 @@ The suffix can be upper or lower-case.
 
 ==== ##check_constraint_checks##
 * **Description:** If set to ##0##, will disable [[constraint|constraint checks]], for example when loading a table that violates some constraints that you plan to fix later.
-* **Commandline:** &lt;&lt;code&gt;&gt;--check-constraint-checks=[0|1]&lt;&lt;/code&gt;&gt;
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Type:** boolean
@@ -713,7 +723,7 @@ The suffix can be upper or lower-case.
 ----
 
 ==== ##concurrent_insert##
-* **Description:** If set to ##AUTO## or ##1##, the default, MariaDB allows [[concurrent-inserts|concurrent INSERTs]] and SELECTs for [[MyISAM]] tables with no free blocks in the data (deleted rows in the middle). If set to ##NEVER## or ##0##, concurrent inserts are disabled. If set to ##ALWAYS## or ##2##, concurrent inserts are permitted for all MyISAM tables, even those with holes, in which case new rows are added at the end of a table if the table is being used by another thread. \\\\If the [[mysqld-options/#-skip-new|--skip-new]] option is used when starting the server, concurrent_insert is set to ##NEVER##. \\\\Changing the variable only affects new opened tables. Use [[flush|FLUSH TABLES]] If you want it to also affect cached tables. \\\\See  [[concurrent-inserts|Concurrent Inserts]] for more.
+* **Description:** If set to ##AUTO## or ##1##, the default, MariaDB allows [[concurrent-inserts|concurrent INSERTs]] and SELECTs for [[MyISAM]] tables with no free blocks in the data (deleted rows in the middle). If set to ##NEVER## or ##0##, concurrent inserts are disabled. If set to ##ALWAYS## or ##2##, concurrent inserts are permitted for all MyISAM tables, even those with holes, in which case new rows are added at the end of a table if the table is being used by another thread. \\\\If the [[mariadbd-options/#-skip-new|--skip-new]] option is used when starting the server, concurrent_insert is set to ##NEVER##. \\\\Changing the variable only affects new opened tables. Use [[flush|FLUSH TABLES]] If you want it to also affect cached tables. \\\\See  [[concurrent-inserts|Concurrent Inserts]] for more.
 * **Commandline:** &lt;&lt;code&gt;&gt;--concurrent-insert[=value]&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
@@ -770,7 +780,7 @@ The suffix can be upper or lower-case.
 ==== ##core_file##
 * **Description:** Write a core-file on crashes. The file name and location are system dependent. On Linux it is usually called ##core.${PID}##, and it is usually written to the data directory. However, this can be changed.
 ** See [[enabling-core-dumps|Enabling Core Dumps]] for more information.
-** Previously this system variable existed only as an [[mysqld-options|option]], but it was also made into a read-only system variable starting with MariaDB 10.3.9, MariaDB 10.2.17 and MariaDB 10.1.35.
+** Previously this system variable existed only as an [[mariadbd-options|option]], but it was also made into a read-only system variable starting with MariaDB 10.3.9, MariaDB 10.2.17 and MariaDB 10.1.35.
 ** On Windows &gt;= MariaDB 10.4.3, this option is set by default. 
 ** Note that the option accepts no arguments; specifying ##--core-file## sets the value to ##ON##. It cannot be disabled in the case of Windows &gt;= MariaDB 10.4.3.
 * **Commandline:** &lt;&lt;code&gt;&gt;--core-file&lt;&lt;/code&gt;&gt;
@@ -811,7 +821,7 @@ The suffix can be upper or lower-case.
 &lt;&lt;toc-item slug=&#34;aria-server-system-variables#deadlock_timeout_short&#34; level=3&gt;&gt;##deadlock_timeout_short##&lt;&lt;/toc-item&gt;&gt;
 
 ==== ##debug/debug_dbug##
-* **Description:** Available in debug builds only (built with -DWITH_DEBUG=1). Used in debugging through the DBUG library to write to a trace file. Just using &lt;&lt;code&gt;&gt;--debug&lt;&lt;/code&gt;&gt; will write a trace of what mysqld is doing to the default trace file. 
+* **Description:** Available in debug builds only (built with -DWITH_DEBUG=1). Used in debugging through the DBUG library to write to a trace file. Just using &lt;&lt;code&gt;&gt;--debug&lt;&lt;/code&gt;&gt; will write a trace of what mariadbd is doing to the default trace file. 
 * **Commandline:** &lt;&lt;code&gt;&gt;-#&lt;&lt;/code&gt;&gt;, &lt;&lt;code&gt;&gt;--debug[=debug_options]&lt;&lt;/code&gt;&gt;
 * **Scope:** Global, Session
 * **Dynamic:** Yes
@@ -886,7 +896,7 @@ The suffix can be upper or lower-case.
 * **Commandline:** &lt;&lt;code&gt;&gt;--default-table-type=name&lt;&lt;/code&gt;&gt;
 * **Scope:** Global, Session
 * **Dynamic:** Yes
-* **Removed:** MariaDB/MySQL 5.5
+* **Removed:** MariaDB 5.5
 ----
 
 ==== ##default_tmp_storage_engine##
@@ -1218,7 +1228,7 @@ SELECT (55/23244*1000);
 ----
 
 ==== ##general_log_file##
-* **Description:** Name of the [[general-query-log|general query log]] file. If this is not specified, the name is taken from the [[mysqld-options#-log-basename|log-basename]] setting or from your system hostname with &lt;&lt;fixed&gt;&gt;.log&lt;&lt;/fixed&gt;&gt; as a suffix.
+* **Description:** Name of the [[general-query-log|general query log]] file. If this is not specified, the name is taken from the [[mariadbd-options#-log-basename|log-basename]] setting or from your system hostname with &lt;&lt;fixed&gt;&gt;.log&lt;&lt;/fixed&gt;&gt; as a suffix.
 * **Commandline:** &lt;&lt;code&gt;&gt;--general-log-file=file_name&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
@@ -1364,7 +1374,7 @@ SELECT (55/23244*1000);
 * **Description:** This system variable can be used to determine whether the server supports symbolic links (note that it has no meaning on Windows).
 ** If symbolic links are supported, then the value will be ##YES##.
 ** If symbolic links are not supported, then the value will be ##NO##.
-** If symbolic links are disabled with the [[mysqld-options/#-symbolic-links|--symbolic-links]] option and the ##skip## [[mysqld-options/#option-prefixes|option prefix]] (i.e. --skip-symbolic-links), then the value will be ##DISABLED##.
+** If symbolic links are disabled with the [[mariadbd-options/#-symbolic-links|--symbolic-links]] option and the ##skip## [[mariadbd-options/#option-prefixes|option prefix]] (i.e. --skip-symbolic-links), then the value will be ##DISABLED##.
 ** Symbolic link support is required for the [[create-table/#data-directoryindex-directory|INDEX DIRECTORY]] and [[create-table/#data-directoryindex-directory|DATA DIRECTORY]] table options.
 * **Scope:** Global
 * **Dynamic:** No
@@ -2143,7 +2153,7 @@ SELECT (55/23244*1000);
 ----
 
 ==== ##locked_in_memory##
-* **Description:** Indicates whether --memlock was used to lock mysqld in memory.
+* **Description:** Indicates whether --memlock was used to lock mariadbd in memory.
 * **Commandline:** &lt;&lt;code&gt;&gt;--memlock&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** No
@@ -2185,7 +2195,7 @@ SELECT (55/23244*1000);
 ----
 
 ==== ##log_error##
-* **Description:** Specifies the name of the [[error-log|error log]]. If [[mysqld-options#-console|--console]] is specified later in the configuration (Windows only) or this option isn&#39;t specified, errors will be logged to stderr. If no name is provided, errors will still be logged to ##hostname.err## in the ##datadir## directory by default. If a configuration file sets ##--log-error##, one can reset it with ##--skip-log-error## (useful to override a system wide configuration file). MariaDB always writes its error log, but the destination is configurable. See [[error-log|error log]] for details.
+* **Description:** Specifies the name of the [[error-log|error log]]. If [[mariadbd-options#-console|--console]] is specified later in the configuration (Windows only) or this option isn&#39;t specified, errors will be logged to stderr. If no name is provided, errors will still be logged to ##hostname.err## in the ##datadir## directory by default. If a configuration file sets ##--log-error##, one can reset it with ##--skip-log-error## (useful to override a system wide configuration file). MariaDB always writes its error log, but the destination is configurable. See [[error-log|error log]] for details.
 * **Commandline:** &lt;&lt;code&gt;&gt;--log-error[=name]&lt;&lt;/code&gt;&gt;, &lt;&lt;code&gt;&gt;--skip-log-error&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** No
@@ -2338,7 +2348,7 @@ SELECT (55/23244*1000);
 ----
 
 ==== ##log_tc_size##
-* **Description:** Defines the size in bytes of the memory-mapped file-based transaction coordinator log, which is only used if the [[binary-log|binary log]] is disabled. If you have two or more XA-capable storage engines enabled, then a transaction coordinator log must be available. This size is defined in multiples of 4096. See [[transaction-coordinator-log|Transaction Coordinator Log]] for more information. Also see the ##[[mysqld-options/#-log-tc|--log-tc]]## server option and the ##[[#-tc-heuristic-recover|--tc-heuristic-recover]]## option.
+* **Description:** Defines the size in bytes of the memory-mapped file-based transaction coordinator log, which is only used if the [[binary-log|binary log]] is disabled. If you have two or more XA-capable storage engines enabled, then a transaction coordinator log must be available. This size is defined in multiples of 4096. See [[transaction-coordinator-log|Transaction Coordinator Log]] for more information. Also see the ##[[mariadbd-options/#-log-tc|--log-tc]]## server option and the ##[[#-tc-heuristic-recover|--tc-heuristic-recover]]## option.
 * **Commandline:** &lt;&lt;code&gt;&gt;log-tc-size=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** No
@@ -2371,7 +2381,7 @@ SELECT (55/23244*1000);
 *** Connections aborted or closed due to errors or timeouts.
 *** Table handler errors
 *** Messages related to the files used to [[change-master-to/#option-persistence|persist replication state]]:
-**** Either the default ##master.info## file or the file that is configured by the ##[[mysqld-options/#-master-info-file|master_info_file]]## option.
+**** Either the default ##master.info## file or the file that is configured by the ##[[mariadbd-options/#-master-info-file|master_info_file]]## option.
 **** Either the default ##relay-log.info## file or the file that is configured by the ##[[replication-and-binary-log-system-variables/#relay_log_info_file|relay_log_info_file]]## system variable.
 *** Information about a master&#39;s [[replication-threads/#binary-log-dump-thread|binary log dump thread]].
 ** log_warnings &gt;= 3
@@ -2455,7 +2465,7 @@ This system variable&#39;s value cannot be changed after the datadir has been in
 &lt;&lt;toc-item slug=&#34;replication-and-binary-log-server-system-variables#max_binlog_stmt_cache_size&#34; level=3&gt;&gt;##max_binlog_stmt_cache_size##&lt;&lt;/toc-item&gt;&gt;
 
 ==== ##max_connect_errors##
-* **Description:** Limit to the number of successive failed connects from a host before the host is blocked from making further connections. The count for a host is reset to zero if they successfully connect. To unblock, flush the host cache with a [[flush|FLUSH HOSTS]] statement or [[mysqladmin|mysqladmin flush-hosts]]. The [[performance-schema-host_cache-table|performance_schema.host_cache]] table contains the status of the current hosts.
+* **Description:** Limit to the number of successive failed connects from a host before the host is blocked from making further connections. The count for a host is reset to zero if they successfully connect. To unblock, flush the host cache with a [[flush|FLUSH HOSTS]] statement or [[mariadb-admin|mariadb-admin flush-hosts]]. The [[performance-schema-host_cache-table|performance_schema.host_cache]] table contains the status of the current hosts.
 * **Commandline:** &lt;&lt;code&gt;&gt;--max-connect-errors=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
@@ -2855,6 +2865,7 @@ Maximum simultaneous connections permitted for each user account.  When set to #
 * **Default Value:** See [[#alter_algorithm|alter_algorithm]] (&gt;= MariaDB 10.3.7), ##0## (&lt;= MariaDB 10.3.6)
 * **Valid Values:** See [[#alter_algorithm|alter_algorithm]] for the full list.
 * **Deprecated:** MariaDB 10.3.7 (superceded by [[#alter_algorithm|alter_algorithm]])
+* **Removed:** MariaDB 11.2.0
 ---- 
 
 ==== ##old_mode##
@@ -2881,7 +2892,7 @@ Maximum simultaneous connections permitted for each user account.  When set to #
 MAX([[#max_connections|max_connections]]*5, [[#max_connections|max_connections]] +[[#table_open_cache|table_open_cache]]*2) \\
 \\
 MariaDB sets the limit with ##[[https://linux.die.net/man/2/setrlimit|setrlimit]]##. MariaDB cannot set this to exceed the hard limit imposed by the operating system. Therefore, you may also need to change the hard limit. There are a few ways to do so. 
-** If you are using ##[[mysqld_safe]]## to start ##mysqld##, then see the instructions at [[mysqld_safe/#configuring-the-open-files-limit|mysqld_safe: Configuring the Open Files Limit]]. 
+** If you are using ##[[mysqld_safe]]## to start ##mariadbd##, then see the instructions at [[mysqld_safe/#configuring-the-open-files-limit|mysqld_safe: Configuring the Open Files Limit]]. 
 ** If you are using ##[[systemd]]## to start ##mysqld##, then see the instructions at [[systemd/#configuring-the-open-files-limit|systemd: Configuring the Open Files Limit]]. 
 ** Otherwise, you can change the hard limit for the ##mysql## user account by modifying ##[[https://linux.die.net/man/5/limits.conf|/etc/security/limits.conf]]##. See [[configuring-linux-for-mariadb/#configuring-the-open-files-limit|Configuring Linux for MariaDB: Configuring the Open Files Limit]] for more details.
 * **Commandline:** &lt;&lt;code&gt;&gt;--open-files-limit=count&lt;&lt;/code&gt;&gt;
@@ -2963,6 +2974,7 @@ MariaDB sets the limit with ##[[https://linux.die.net/man/2/setrlimit|setrlimit]
 ** ##exists_to_in={on|off}## - see [[exists-to-in-optimization|EXISTS-to-IN optimization]]
 ** ##extended_keys={on|off}##  - see [[extended-keys|Extended Keys]]
 ** ##firstmatch={on|off}## - see [[firstmatch-strategy|First Match Strategy]]
+** ##hash_join_cardinality={on|off}## - see [[hash_join_cardinality-optimizer_switch-flag]] (&gt;= MariaDB 11.0.2, MariaDB 10.11.3, MariaDB 10.6.13) 
 ** ##index_condition_pushdown={on|off}## - see [[index-condition-pushdown|Index Condition Pushdown]]
 ** ##index_merge={on|off}##
 ** ##index_merge_intersection={on|off}##
@@ -4295,7 +4307,7 @@ the best query execution plan.
 ----
 
 ==== ##sql_notes##
-* **Description:** If set to 1, the default, [[#warning_count|warning_count]] is incremented each time a Note warning is encountered. If set to 0, Note warnings are not recorded. [[mysqldump]] has outputs to set this variable to 0 so that no unnecessary increments occur when data is reloaded.
+* **Description:** If set to 1, the default, [[#warning_count|warning_count]] is incremented each time a Note warning is encountered. If set to 0, Note warnings are not recorded. [[mariadb-dump]] has outputs to set this variable to 0 so that no unnecessary increments occur when data is reloaded.
 * **Commandline:** None
 * **Scope:** Global, Session
 * **Dynamic:** Yes
@@ -4405,7 +4417,7 @@ the best query execution plan.
 &lt;&lt;toc-item slug=&#34;replication-and-binary-log-server-system-variables#sync_relay_log_info&#34; level=3&gt;&gt;##sync_relay_log_info##&lt;&lt;/toc-item&gt;&gt;
 
 ==== ##system_time_zone##
-* **Description:** The system time zone is determined when the server starts. The system [[time-zones|time zone]] is usually read from the operating system&#39;s environment. See [[time-zones/#system-time-zone|Time Zones: System Time Zone]] for the various ways to change the system time zone. This variable is not the same as the ##[[#time_zone|time_zone]]## system variable, which is the variable that actually controls a session&#39;s active time zone. The system time zone is used for a session when ##time_zone## is set to the special value ##SYSTEM##.
+* **Description:** The system time zone is determined when the server starts. The system [[time-zones|time zone]] is usually read from the operating system&#39;s environment but can be overridden by setting the &#39;TZ&#39; environment variable before starting the server. See [[time-zones/#system-time-zone|Time Zones: System Time Zone]] for the various ways to change the system time zone. This variable is not the same as the [[#time_zone|time_zone]] system variable, which is the variable that actually controls a session&#39;s active time zone. The system time zone is used for a session when ##time_zone## is set to the special value ##SYSTEM##. 
 * **Scope:** Global
 * **Dynamic:** No
 * **Data Type:** ##string##

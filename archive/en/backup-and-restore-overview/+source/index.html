@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/backup-and-restore-overview/+r/123496/">123496</a></dd>
+            <dd><a href="/kb/en/backup-and-restore-overview/+r/127557/">127557</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-02-09 14:41">2023-02-09 14:41</span></dd>
+<span class="datetime" title="2023-06-26 20:10">2023-06-26 20:10</span></dd>
         </dl>
     </div>
     
@@ -320,17 +320,17 @@ The main differences are as follows:
 
 == Backup Tools
 
-=== Mariabackup
-[[mariadb-backup|Mariabackup]] is a fork of [[backup-restore-and-import-xtrabackup|Percona XtraBackup]] with added support for MariaDB 10.1 [[InnoDB compression|compression]] and [[data-at-rest-encryption|data-at-rest encryption]]. It is included with MariaDB 10.1.23 and later.
+=== Mariadb-backup
+[[mariadb-backup|Mariadb-backup]] is a fork of [[backup-restore-and-import-xtrabackup|Percona XtraBackup]] with added support for MariaDB 10.1 [[InnoDB compression|compression]] and [[data-at-rest-encryption|data-at-rest encryption]]. It is included with MariaDB 10.1.23 and later.
 
-=== mysqldump
-[[mysqldump]] performs a logical backup. It is the most flexible way to perform a backup and restore, and a good choice when the data size is relatively small.
+=== mariadb-dump
+[[mariadb-dump]] (previously mysqldump) performs a logical backup. It is the most flexible way to perform a backup and restore, and a good choice when the data size is relatively small.
 
 For large datasets, the backup file can be large, and the restore time lengthy.
 
-mysqldump dumps the data into SQL format (it can also dump into other formats, such as CSV or XML) which can then easily be imported into another database. The data can be imported into other versions of MariaDB, MySQL, or even another DBMS entirely, assuming there are no version or DBMS-specific statements in the dump.
+mariadb-dump dumps the data into SQL format (it can also dump into other formats, such as CSV or XML) which can then easily be imported into another database. The data can be imported into other versions of MariaDB, MySQL, or even another DBMS entirely, assuming there are no version or DBMS-specific statements in the dump.
 
-mysqldump dumps triggers along with tables, as these are part of the table definition. However, [[stored-procedures|stored procedures]], [[views]], and [[events]] are not, and need extra parameters to be recreated explicitly (for example, ##--routines## and ##--events##).  [[stored-procedures|Procedures]] and [[functions]] are however also part of the system tables (for example [[mysqlproc-table|mysql.proc]]).
+mariadb-dump dumps triggers along with tables, as these are part of the table definition. However, [[stored-procedures|stored procedures]], [[views]], and [[events]] are not, and need extra parameters to be recreated explicitly (for example, ##--routines## and ##--events##).  [[stored-procedures|Procedures]] and [[functions]] are however also part of the system tables (for example [[mysqlproc-table|mysql.proc]]).
 
 ==== InnoDB Logical Backups
 InnoDB uses the [[xtradbinnodb-buffer-pool|buffer pool]], which stores data and indexes from its tables in memory. This buffer is very important for performance. If InnoDB data doesn&#39;t fit the memory, it is important that the buffer contains the most frequently accessed data. However, last accessed data is candidate for insertion into the buffer pool. If not properly configured, when a table scan happens, InnoDB may copy the whole contents of a table into the buffer pool. The problem with logical backups is that they always imply full table scans.
@@ -342,25 +342,25 @@ It is also possible to explicitly dump the buffer pool on disk before starting a
 ==== Examples
 Backing up a single database
 &lt;&lt;code&gt;&gt;
-shell&gt; mysqldump db_name &gt; backup-file.sql
+shell&gt; mariadb-dump db_name &gt; backup-file.sql
 &lt;&lt;/code&gt;&gt;
 Restoring or loading the database
 &lt;&lt;code&gt;&gt;
-shell&gt; mysql db_name &lt; backup-file.sql
+shell&gt; mariadb db_name &lt; backup-file.sql
 &lt;&lt;/code&gt;&gt;
 
-See the [[mysqldump]] page for detailed syntax and examples.
+See the [[mariadb-dump]] page for detailed syntax and examples.
 
-=== mysqlhotcopy
+=== mariadb-hotcopy
 &lt;&lt;style class=&#34;redbox&#34;&gt;&gt;
-mysqlhotcopy is currently deprecated.
+mariadb-hotcopy is deprecated.
 &lt;&lt;/style&gt;&gt;
-[[mysqlhotcopy]] performs a physical backup, and works only for backing up [[MyISAM]] and [[ARCHIVE]] tables. It can only be run on the same machine as the location of the database directories.
+[[mariadb-hotcopy]] performs a physical backup, and works only for backing up [[MyISAM]] and [[ARCHIVE]] tables. It can only be run on the same machine as the location of the database directories.
 
 ==== Examples
 &lt;&lt;code&gt;&gt;
-shell&gt; mysqlhotcopy db_name [/path/to/new_directory]
-shell&gt; mysqlhotcopy db_name_1 ... db_name_n /path/to/new_directory
+shell&gt; mariadb-hotcopy db_name [/path/to/new_directory]
+shell&gt; mariadb-hotcopy db_name_1 ... db_name_n /path/to/new_directory
 &lt;&lt;/code&gt;&gt;
 
 === Percona XtraBackup
@@ -369,7 +369,7 @@ shell&gt; mysqlhotcopy db_name_1 ... db_name_n /path/to/new_directory
 
 === Filesystem Snapshots
 Some filesystems, like Veritas, support snapshots. During the snapshot, the table must be locked. The proper steps to obtain a snapshot are:
-* From the mysql client, execute [[flush|FLUSH TABLES WITH READ LOCK]]. The client must remain open.
+* From the mariadb client, execute [[flush|FLUSH TABLES WITH READ LOCK]]. The client must remain open.
 * From a shell, execute ##mount vxfs snapshot##
 * The client can execute [[transactions-lock|UNLOCK TABLES]].
 * Copy the snapshot files.

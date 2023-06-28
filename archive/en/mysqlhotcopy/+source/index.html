@@ -180,7 +180,7 @@
     
 
     
-    » <a class="crumb" href="/kb/en/backup-restore-and-import-clients/">Backup, Restore and Import Clients</a>
+    » <a class="crumb" href="/kb/en/legacy-clients-and-utilities/">Legacy Clients and Utilities</a>
     
 
 
@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mysqlhotcopy/+r/96605/">96605</a></dd>
+            <dd><a href="/kb/en/mysqlhotcopy/+r/127560/">127560</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2020-06-10 09:22">2020-06-10 09:22</span></dd>
+<span class="datetime" title="2023-06-26 20:01">2023-06-26 20:01</span></dd>
         </dl>
     </div>
     
@@ -308,87 +308,20 @@
     
         
         <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;style class=&#34;redbox&#34;&gt;&gt;
-mysqlhotcopy is currently deprecated.
+mysqlhotcopy is deprecated and may be removed in a future release.
 &lt;&lt;/style&gt;&gt;
 
+##mysqlhotcopy## uses [[flush|FLUSH TABLES]], [[lock-tables|LOCK TABLES]], and cp or scp to make a database backup.
+
 &lt;&lt;product mariadb from=10.4.6&gt;&gt;
-From MariaDB 10.4.6,  ##mariadb-hotcopy## is a symlink to ##mysqlhotcopy##.
+From MariaDB 10.4.6,  [[mariadb-hotcopy]] is a symlink to ##mysqlhotcopy##.
 &lt;&lt;/product&gt;&gt;
 
 &lt;&lt;product mariadb from=10.5.2&gt;&gt;
-From MariaDB 10.5.2, ##mariadb-hotcopy## is the name of the script, with ##mysqlhotcopy## a symlink .
+From MariaDB 10.5.2, [[mariadb-hotcopy]] is the name of the script, with ##mysqlhotcopy## a symlink .
 &lt;&lt;/product&gt;&gt;
 
-##mysqlhotcopy## is a Perl script that was originally written
-and contributed by Tim Bunce. It uses [[flush|FLUSH TABLES]], [[lock-tables|LOCK TABLES]], and cp or scp to make a database backup. It is a fast way to make a backup of the database or single tables, but it can be run only on the same machine where the database
-directories are located. ##mysqlhotcopy##&gt; works only for backing up [[MyISAM]] and [[ARCHIVE]] tables. It runs on Unix and NetWare.
-
-To use &lt;&lt;fixed&gt;&gt;mysqlhotcopy&lt;&lt;/fixed&gt;&gt;, you must have read access to the files
-for the tables that you are backing up, the SELECT [[grant|privilege]] for
-those tables, the RELOAD privilege (to be able to execute FLUSH TABLES), and
-the LOCK TABLES privilege (to be able to lock the tables).
-
-&lt;&lt;code lang=sh inline=false&gt;&gt;
-shell&gt; mysqlhotcopy db_name [/path/to/new_directory]
-shell&gt; mysqlhotcopy db_name_1 ... db_name_n /path/to/new_directory
-&lt;&lt;/code&gt;&gt;
-
-Back up tables in the given database that match a regular expression:
-
-&lt;&lt;code lang=sh inline=false&gt;&gt;
-shell&gt; mysqlhotcopy db_name./regex/
-&lt;&lt;/code&gt;&gt;
-
-The regular expression for the table name can be negated by prefixing it with a
-tilde (“{{{~}}}”):
-
-&lt;&lt;code lang=sh inline=false&gt;&gt;
-shell&gt; mysqlhotcopy db_name./~regex/
-&lt;&lt;/code&gt;&gt;
-
- &lt;&lt;fixed&gt;&gt;mysqlhotcopy&lt;&lt;/fixed&gt;&gt; supports the following options, which can be
-specified on the command line or in the [&lt;&lt;fixed&gt;&gt;mysqlhotcopy&lt;&lt;/fixed&gt;&gt;] and
-[&lt;&lt;fixed&gt;&gt;client&lt;&lt;/fixed&gt;&gt;] option file groups.
-
-&lt;&lt;style class=&#34;darkheader-nospace-borders&#34;&gt;&gt;
-|= Option |= Description
-| ##--help##, ##-?## | Display a help message and exit.
-| ##--addtodest## | Do not rename target directory (if it exists); merely add files to it.
-| ##--allowold## | Do not abort if a target exists; rename it by adding an _old suffix.
-| ##--checkpoint=db_name.tbl_name## | Insert checkpoint entries into the specified database ##db_name## and table ##tbl_name##.
-| ##--chroot=path## | Base directory of the chroot jail in which mysqld operates. The path value should match that of the ##--chroot## option given to mysqld.
-| ##--debug## | Enable debug output.
-| ##--dryrun##, ##-n## | Report actions without performing them.
-| ##--flushlog## | Flush logs after all tables are locked.
-| ##--host=host_name##, ##-h host_name## | The host name of the local host to use for making a TCP/IP connection to the local server. By default, the connection is made to localhost using a Unix socket file.
-| ##--keepold## | Do not delete previous (renamed) target when done.
-| ##--method=command## |  The method for copying files (cp or scp). The default is cp.
-| ##--noindices## | Do not include full index files for MyISAM tables in the backup. This makes the backup smaller and faster. The indexes for reloaded tables can be reconstructed later with [[myisamchk|myisamchk -rq]].
-| ##--old-server## | Connect to old MySQL-server (before v5.5) which doesn&#39;t have [[flush|FLUSH TABLES WITH READ LOCK]] fully implemented.
-| ##--password=password##, ##-ppassword## | The password to use when connecting to the server. The password value is not optional for this option, unlike for other MariaDB programs.\\\\ Specifying a password on the command line should be considered insecure. You can use an option file to avoid giving the password on the command line.
-| ##--port=port_num##, ##-P port_num## | The TCP/IP port number to use when connecting to the local server.
-| ##--quiet##, ##-q## | Be silent except for errors.
-| ##--record_log_pos=db_name.tbl_name## | Record master and slave status in the specified database db_name and table tbl_name.
-| ##--regexp=expr## | Copy all databases with names that match the given regular expression.
-| ##--resetmaster## | Reset the binary log after locking all the tables.
-| ##--resetslave## | Reset the master.info file after locking all the tables.
-| ##--socket=path##, ##-S path## | The Unix socket file to use for connections to localhost.
-| ##--suffix=str## | The suffix to use for names of copied databases.
-| ##--tmpdir=path## | The temporary directory. The default is /tmp.
-| ##--user=username##, ##-u username## | The MariaDB username to use when connecting to the server.
-&lt;&lt;/style&gt;&gt;
-
-Use perldoc for additional &lt;&lt;fixed&gt;&gt;mysqlhotcopy&lt;&lt;/fixed&gt;&gt; documentation,
-including information about the structure of the tables needed for the
-&lt;&lt;fixed&gt;&gt;--checkpoint&lt;&lt;/fixed&gt;&gt; and &lt;&lt;fixed&gt;&gt;--record_log_pos&lt;&lt;/fixed&gt;&gt; options:
-
-&lt;&lt;code lang=sh inline=false&gt;&gt;
-shell&gt; perldoc mysqlhotcopy
-&lt;&lt;/code&gt;&gt;
-
-== See Also
-* [[mysqldump]]
-* [[mariabackup|Mariabackup]]</textarea>
+See [[mariadb-hotcopy]] for details.</textarea>
     
 
 

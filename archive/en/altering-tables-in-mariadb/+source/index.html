@@ -280,7 +280,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/altering-tables-in-mariadb/+r/108922/">108922</a></dd>
+            <dd><a href="/kb/en/altering-tables-in-mariadb/+r/127612/">127612</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-4254">
@@ -289,7 +289,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2021-08-05 13:14">2021-08-05 13:14</span></dd>
+<span class="datetime" title="2023-06-27 20:12">2023-06-27 20:12</span></dd>
         </dl>
     </div>
     
@@ -320,17 +320,17 @@ DESCRIBE clients;
 +-------------+-------------+------+-----+---------+-------+
 &lt;&lt;/sql&gt;&gt;
 
-This is a very simple table that will hold very little information. However, it&#39;s sufficient for the examples here in which we will change several of its columns. Before doing any structural changes to a table in MariaDB, especially if it contains data, one should make a backup of the table to be changed. There are a few ways to do this, but some choices may not be permitted by your web hosting company. Even if your database is on your own server, though, the [[mysqldump|mysqldump]] utility is typically the best tool for making and restoring backups in MariaDB, and it&#39;s generally permitted by web hosting companies. To backup the clients table with [[mysqldump|mysqldump]], we will enter the following from the command-line:
+This is a very simple table that will hold very little information. However, it&#39;s sufficient for the examples here in which we will change several of its columns. Before doing any structural changes to a table in MariaDB, especially if it contains data, one should make a backup of the table to be changed. There are a few ways to do this, but some choices may not be permitted by your web hosting company. Even if your database is on your own server, though, the [[mariadb-dump]] utility is typically the best tool for making and restoring backups in MariaDB, and it&#39;s generally permitted by web hosting companies. To backup the clients table with [[mariadb-dump]], we will enter the following from the command-line:
 &lt;&lt;code&gt;&gt;
-mysqldump --user=&#39;username&#39; --password=&#39;password&#39; --add-locks db1 clients &gt; clients.sql
+mariadb-dump --user=&#39;username&#39; --password=&#39;password&#39; --add-locks db1 clients &gt; clients.sql
 &lt;&lt;/code&gt;&gt;
 
-As you can see, the username and password are given on the first line. On the next line, the ##--add-locks## option is used to lock the table before backing up and to unlock automatically it when the backup is finished. There are many other options in [[mysqldump|mysqldump]] that could be used, but for our purposes this one is all that&#39;s necessary. Incidentally, this statement can be entered in one line from the shell (i.e., not from the ##mysql## client), or it can be entered on multiple lines as shown here by using the back-slash (i.e., ##/##) to let the shell know that more is to follow. On the third line above, the database name is given, followed by the table name. The redirect (i.e., ##&gt;##) tells the shell to send the results of the dump to a text file called ##clients.sql## in the current directory. A directory path could be put in front of the file name to create the file elsewhere. If the table should need to be restored, the following can be run from the shell:
+As you can see, the username and password are given on the first line. On the next line, the ##--add-locks## option is used to lock the table before backing up and to unlock automatically it when the backup is finished. There are many other options in [[mariadb-dump]] that could be used, but for our purposes this one is all that&#39;s necessary. Incidentally, this statement can be entered in one line from the shell (i.e., not from the ##mariadb## client), or it can be entered on multiple lines as shown here by using the back-slash (i.e., ##/##) to let the shell know that more is to follow. On the third line above, the database name is given, followed by the table name. The redirect (i.e., ##&gt;##) tells the shell to send the results of the dump to a text file called ##clients.sql## in the current directory. A directory path could be put in front of the file name to create the file elsewhere. If the table should need to be restored, the following can be run from the shell:
 &lt;&lt;code&gt;&gt;
-mysql --user=&#39;username&#39; --password=&#39;password&#39; db1 &lt; clients.sql
+mariadb --user=&#39;username&#39; --password=&#39;password&#39; db1 &lt; clients.sql
 &lt;&lt;/code&gt;&gt;
 
-Notice that this line does not use the ##mysqldump## utility. It uses the ##mysql## client from the outside, so to speak. When the dump file (##clients.sql##) is read into the database, it will delete the ##clients## table and it&#39;s data in MariaDB before restoring the backup copy with its data. So be sure that users haven&#39;t added data in the interim. In the examples in this article, we are assuming that there isn&#39;t any data in the tables yet.
+Notice that this line does not use the ##mariadb-dump## utility. It uses the ##mariadb## client from the outside, so to speak. When the dump file (##clients.sql##) is read into the database, it will delete the ##clients## table and it&#39;s data in MariaDB before restoring the backup copy with its data. So be sure that users haven&#39;t added data in the interim. In the examples in this article, we are assuming that there isn&#39;t any data in the tables yet.
 
 ==== Basic Addition and More
 In order to add a column to an existing MariaDB table, one would use the [[alter-table|ALTER TABLE]] statement. To demonstrate, suppose that it has been decided that there should be a column for the client&#39;s account status (i.e., active or inactive). To make this change, the following is entered:
@@ -413,7 +413,7 @@ ALTER TABLE clients
 DROP client_type;
 &lt;&lt;/sql&gt;&gt;
 
-This deletes ##client_type## and its data, but not the whole table, obviously. Nevertheless, it is a permanent and non-reversible action; there won&#39;t be a confirmation request when using the mysql client. This is how it is with all MariaDB DROP statements and clauses. So be sure that you want to delete an element and its data before using a ##DROP.## As mentioned earlier, be sure that you have a backup of your tables before doing any structured changes.
+This deletes ##client_type## and its data, but not the whole table, obviously. Nevertheless, it is a permanent and non-reversible action; there won&#39;t be a confirmation request when using the mariadb client. This is how it is with all MariaDB DROP statements and clauses. So be sure that you want to delete an element and its data before using a ##DROP.## As mentioned earlier, be sure that you have a backup of your tables before doing any structured changes.
 
 ==== The Default
 You may have noticed that the results of the [[describe|DESCRIBE]] statements shown before have a heading called &#39;Default&#39; and just about all of the fields have a default value of NULL. This means that there are no default values and a null value is allowed and will be used if a value isn&#39;t specified when a row is created. To be able to specify a default value other than NULL, an [[alter-table|ALTER TABLE]] statement can be entered with a ##SET## clause. Suppose we&#39;re located in Louisiana and we want a default value of &#39;LA&#39; for state since that&#39;s where our clients are usually located. We would enter the following to set the default:

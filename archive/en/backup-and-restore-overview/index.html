@@ -243,12 +243,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2013-07-18 10:59">9 years, 8 months ago</span></dd>
+<span class="datetime" title="2013-07-18 10:59">9 years, 11 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-02-09 14:41">1 month ago</span></dd>
+<span class="datetime" title="2023-06-26 20:10">1 day, 16 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -310,6 +310,8 @@
         <ul>
             
             <li><a href="/kb/it/backup-and-restore-overview/">Panoramica sul backup e sul restore</a> [it]</li>
+            
+            <li><a href="/kb/zh-cn/backup-and-restore-overview/">备份和还原概述</a> [zh-cn]</li>
             
         </ul>
         
@@ -402,16 +404,16 @@
 
     <li class=""><a href="#backup-tools" title="Backup Tools">Backup Tools</a>    <ol class="toc">
 
-        <li class=""><a href="#mariabackup" title="Mariabackup">Mariabackup</a></li>
+        <li class=""><a href="#mariadb-backup" title="Mariadb-backup">Mariadb-backup</a></li>
 
-        <li class=""><a href="#mysqldump" title="mysqldump">mysqldump</a>        <ol class="toc">
+        <li class=""><a href="#mariadb-dump" title="mariadb-dump">mariadb-dump</a>        <ol class="toc">
 
             <li class=""><a href="#innodb-logical-backups" title="InnoDB Logical Backups">InnoDB Logical Backups</a></li>
 
             <li class=""><a href="#examples" title="Examples">Examples</a>        </ol>
 </li>
 
-        <li class=""><a href="#mysqlhotcopy" title="mysqlhotcopy">mysqlhotcopy</a>        <ol class="toc">
+        <li class=""><a href="#mariadb-hotcopy" title="mariadb-hotcopy">mariadb-hotcopy</a>        <ol class="toc">
 
             <li class=""><a href="#examples" title="Examples">Examples</a>        </ol>
 </li>
@@ -442,29 +444,29 @@ This article briefly discusses the main ways to backup MariaDB. For detailed des
 </li><li>log files and configuration files are not part of a logical backup
 </li></ul>
 <h2 class="anchored_heading" id="backup-tools">Backup Tools</h2>
-<h3 class="anchored_heading" id="mariabackup">Mariabackup</h3>
-<p><a href="/kb/en/mariadb-backup/">Mariabackup</a> is a fork of <a href="/kb/en/backup-restore-and-import-xtrabackup/">Percona XtraBackup</a> with added support for <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> <a href="InnoDB_compression">compression</a> and <a href="/kb/en/data-at-rest-encryption/">data-at-rest encryption</a>. It is included with <a href="/kb/en/mariadb-10123-release-notes/">MariaDB 10.1.23</a> and later.</p>
-<h3 class="anchored_heading" id="mysqldump">mysqldump</h3>
-<p><a href="/kb/en/mysqldump/">mysqldump</a> performs a logical backup. It is the most flexible way to perform a backup and restore, and a good choice when the data size is relatively small.</p>
+<h3 class="anchored_heading" id="mariadb-backup">Mariadb-backup</h3>
+<p><a href="/kb/en/mariadb-backup/">Mariadb-backup</a> is a fork of <a href="/kb/en/backup-restore-and-import-xtrabackup/">Percona XtraBackup</a> with added support for <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> <a href="InnoDB_compression">compression</a> and <a href="/kb/en/data-at-rest-encryption/">data-at-rest encryption</a>. It is included with <a href="/kb/en/mariadb-10123-release-notes/">MariaDB 10.1.23</a> and later.</p>
+<h3 class="anchored_heading" id="mariadb-dump">mariadb-dump</h3>
+<p><a href="/kb/en/mariadb-dump/">mariadb-dump</a> (previously mysqldump) performs a logical backup. It is the most flexible way to perform a backup and restore, and a good choice when the data size is relatively small.</p>
 <p>For large datasets, the backup file can be large, and the restore time lengthy.</p>
-<p>mysqldump dumps the data into SQL format (it can also dump into other formats, such as CSV or XML) which can then easily be imported into another database. The data can be imported into other versions of MariaDB, MySQL, or even another DBMS entirely, assuming there are no version or DBMS-specific statements in the dump.</p>
-<p>mysqldump dumps triggers along with tables, as these are part of the table definition. However, <a href="/kb/en/stored-procedures/">stored procedures</a>, <a href="/kb/en/views/">views</a>, and <a href="/kb/en/events/">events</a> are not, and need extra parameters to be recreated explicitly (for example, <code>--routines</code> and <code>--events</code>).  <a href="/kb/en/stored-procedures/">Procedures</a> and <a href="functions">functions</a> are however also part of the system tables (for example <a href="/kb/en/mysqlproc-table/">mysql.proc</a>).</p>
+<p>mariadb-dump dumps the data into SQL format (it can also dump into other formats, such as CSV or XML) which can then easily be imported into another database. The data can be imported into other versions of MariaDB, MySQL, or even another DBMS entirely, assuming there are no version or DBMS-specific statements in the dump.</p>
+<p>mariadb-dump dumps triggers along with tables, as these are part of the table definition. However, <a href="/kb/en/stored-procedures/">stored procedures</a>, <a href="/kb/en/views/">views</a>, and <a href="/kb/en/events/">events</a> are not, and need extra parameters to be recreated explicitly (for example, <code>--routines</code> and <code>--events</code>).  <a href="/kb/en/stored-procedures/">Procedures</a> and <a href="functions">functions</a> are however also part of the system tables (for example <a href="/kb/en/mysqlproc-table/">mysql.proc</a>).</p>
 <h4 class="anchored_heading" id="innodb-logical-backups">InnoDB Logical Backups</h4>
 <p>InnoDB uses the <a href="/kb/en/xtradbinnodb-buffer-pool/">buffer pool</a>, which stores data and indexes from its tables in memory. This buffer is very important for performance. If InnoDB data doesn't fit the memory, it is important that the buffer contains the most frequently accessed data. However, last accessed data is candidate for insertion into the buffer pool. If not properly configured, when a table scan happens, InnoDB may copy the whole contents of a table into the buffer pool. The problem with logical backups is that they always imply full table scans.</p>
 <p>An easy way to avoid this is by increasing the value of the <a href="/kb/en/xtradbinnodb-server-system-variables/#innodb_old_blocks_time">innodb_old_blocks_time</a> system variable. It represents the number of milliseconds that must pass before a recently accessed page can be put into the "new" sublist in the buffer pool. Data which is accessed only once should remain in the "old" sublist. This means that they will soon be evicted from the buffer pool. Since during the backup process the "old" sublist is likely to store data that is not useful, one could also consider resizing it by changing the value of the <a href="/kb/en/xtradbinnodb-server-system-variables/#innodb_old_blocks_pct">innodb_old_blocks_pct</a> system variable.</p>
 <p>It is also possible to explicitly dump the buffer pool on disk before starting a logical backup, and restore it after the process. This will undo any negative change to the buffer pool which happens during the backup. To dump the buffer pool, the <a href="/kb/en/innodb-system-variables/#innodb_buffer_pool_dump_now">innodb_buffer_pool_dump_now</a> system variable can be set to ON. To restore it, the <a href="/kb/en/innodb-system-variables/#innodb_buffer_pool_load_now">innodb_buffer_pool_load_now</a> system variable can be set to ON.</p>
 <h4 class="anchored_heading" id="examples">Examples</h4>
 <p>Backing up a single database</p>
-<pre class="fixed">shell&gt; mysqldump db_name &gt; backup-file.sql
+<pre class="fixed">shell&gt; mariadb-dump db_name &gt; backup-file.sql
 </pre><p>Restoring or loading the database</p>
-<pre class="fixed">shell&gt; mysql db_name &lt; backup-file.sql
-</pre><p>See the <a href="/kb/en/mysqldump/">mysqldump</a> page for detailed syntax and examples.</p>
-<h3 class="anchored_heading" id="mysqlhotcopy">mysqlhotcopy</h3>
-<div class="cstm-style redbox"><p>mysqlhotcopy is currently deprecated.</p>
-</div><p><a href="/kb/en/mysqlhotcopy/">mysqlhotcopy</a> performs a physical backup, and works only for backing up <a href="/kb/en/myisam/">MyISAM</a> and <a href="/kb/en/archive/">ARCHIVE</a> tables. It can only be run on the same machine as the location of the database directories.</p>
+<pre class="fixed">shell&gt; mariadb db_name &lt; backup-file.sql
+</pre><p>See the <a href="/kb/en/mariadb-dump/">mariadb-dump</a> page for detailed syntax and examples.</p>
+<h3 class="anchored_heading" id="mariadb-hotcopy">mariadb-hotcopy</h3>
+<div class="cstm-style redbox"><p>mariadb-hotcopy is deprecated.</p>
+</div><p><a href="/kb/en/mariadb-hotcopy/">mariadb-hotcopy</a> performs a physical backup, and works only for backing up <a href="/kb/en/myisam/">MyISAM</a> and <a href="/kb/en/archive/">ARCHIVE</a> tables. It can only be run on the same machine as the location of the database directories.</p>
 <h4 class="anchored_heading" id="examples">Examples</h4>
-<pre class="fixed">shell&gt; mysqlhotcopy db_name [/path/to/new_directory]
-shell&gt; mysqlhotcopy db_name_1 ... db_name_n /path/to/new_directory
+<pre class="fixed">shell&gt; mariadb-hotcopy db_name [/path/to/new_directory]
+shell&gt; mariadb-hotcopy db_name_1 ... db_name_n /path/to/new_directory
 </pre><h3 class="anchored_heading" id="percona-xtrabackup">Percona XtraBackup</h3>
 <div class="cstm-style greenbox"><p>In <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> and later, <a href="/kb/en/mariabackup/">Mariabackup</a> is the recommended backup method to use instead of Percona XtraBackup.</p>
 </div><div class="cstm-style redbox"><p>In <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a>, Percona XtraBackup is <strong>not supported</strong>. See <a href="/kb/en/percona-xtrabackup-overview/#compatibility-with-mariadb">Percona XtraBackup Overview: Compatibility with MariaDB</a> for more information.</p>
@@ -473,7 +475,7 @@ shell&gt; mysqlhotcopy db_name_1 ... db_name_n /path/to/new_directory
 <a href="/kb/en/backup-restore-and-import-xtrabackup/">Percona XtraBackup</a> is a tool for performing fast, hot backups. It was designed specifically for <a href="/kb/en/innodb/">XtraDB/InnoDB</a> databases, but can be used with any storage engine (although not with <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> <a href="/kb/en/encryption/">encryption</a> and <a href="/kb/en/compression/">compression</a>). It is not included by default with MariaDB.</p>
 <h3 class="anchored_heading" id="filesystem-snapshots">Filesystem Snapshots</h3>
 <p>Some filesystems, like Veritas, support snapshots. During the snapshot, the table must be locked. The proper steps to obtain a snapshot are:</p>
-<ul start="1"><li>From the mysql client, execute <a href="/kb/en/flush/">FLUSH TABLES WITH READ LOCK</a>. The client must remain open.
+<ul start="1"><li>From the mariadb client, execute <a href="/kb/en/flush/">FLUSH TABLES WITH READ LOCK</a>. The client must remain open.
 </li><li>From a shell, execute <code>mount vxfs snapshot</code>
 </li><li>The client can execute <a href="/kb/en/transactions-lock/">UNLOCK TABLES</a>.
 </li><li>Copy the snapshot files.
@@ -581,9 +583,9 @@ shell&gt; mysqlhotcopy db_name_1 ... db_name_n /path/to/new_directory
             
                 
                     <li>
-                        <a href="/kb/en/mariadb-dumpmysqldump/">
+                        <a href="/kb/en/mariadb-dump/">
                             <span class="pull-right not_primary"></span>
-                            mariadb-dump/mysqldump
+                            mariadb-dump
                         </a>
                     </li>
                 
@@ -599,27 +601,18 @@ shell&gt; mysqlhotcopy db_name_1 ... db_name_n /path/to/new_directory
             
                 
                     <li>
-                        <a href="/kb/en/mysqlhotcopy/">
-                            <span class="pull-right not_primary"></span>
-                            mysqlhotcopy
-                        </a>
-                    </li>
-                
-            
-                
-                    <li>
-                        <a href="/kb/en/backing-up-and-restoring-databases-percona-xtrabackup/">
-                            
-                            Percona XtraBackup
-                        </a>
-                    </li>
-                
-            
-                
-                    <li>
                         <a href="/kb/en/backup-and-restore-via-dbforge-studio/">
                             
                             Backup  and Restore via dbForge Studio
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-hotcopy/">
+                            <span class="pull-right not_primary"></span>
+                            mariadb-hotcopy
                         </a>
                     </li>
                 
