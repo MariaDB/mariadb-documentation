@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Multi Range Read Optimization - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Multi Range Read Optimization" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/multi-range-read-optimization/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="An optimization for improving performance of IO-bound queries which scan many rows." />
+
+    <meta name="description" content="An optimization for improving performance of IO-bound queries which scan many rows." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/multi-range-read-optimization/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/multi-range-read-optimization/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/replication-cluster-multi-master/">High Availability &amp; Performance Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/optimization-and-tuning/">Optimization and Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-internal-optimizations/">MariaDB Internal Optimizations</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/multi-range-read-optimization/">Multi Range Read Optimization</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/multi-range-read-optimization/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/multi-range-read-optimization/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/multi-range-read-optimization/+flag"
+                data-flag-url="/kb/en/multi-range-read-optimization/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/multi-range-read-optimization/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2011-07-12 20:15">11 years, 8 months ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2022-04-27 11:24">10 months, 3 weeks ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/multi-range-read-optimization/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/multi-range-read-optimization/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/multi-range-read-optimization/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/multi-range-read-optimization/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <ul>
+                
+                    <li><a href="/kb/en/multi-range-read-optimization/+image/no-mrr-access-pattern">no-mrr-access-pattern</a>
+                    </li>
+                
+                    <li><a href="/kb/en/multi-range-read-optimization/+image/mrr-access-pattern">mrr-access-pattern</a>
+                    </li>
+                
+                    <li><a href="/kb/en/multi-range-read-optimization/+image/possible-mrr-uses">possible-mrr-uses</a>
+                    </li>
+                
+                    <li><a href="/kb/en/multi-range-read-optimization/+image/key-sorting-regular-nl-join">key-sorting-regular-nl-join</a>
+                    </li>
+                
+                    <li><a href="/kb/en/multi-range-read-optimization/+image/key-sorting-join">key-sorting-join</a>
+                    </li>
+                
+            </ul>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Multi Range Read Optimization</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#the-idea" title="The Idea">The Idea</a>    <ol class="toc">
+
+        <li class=""><a href="#case-1-rowid-sorting-for-range-access" title="Case 1: Rowid Sorting for Range Access">Case 1: Rowid Sorting for Range Access</a></li>
+
+        <li class=""><a href="#case-2-rowid-sorting-for-batched-key-access" title="Case 2: Rowid Sorting for Batched Key Access">Case 2: Rowid Sorting for Batched Key Access</a></li>
+
+        <li class=""><a href="#case-3-key-sorting-for-batched-key-access" title="Case 3: Key Sorting for Batched Key Access">Case 3: Key Sorting for Batched Key Access</a>    </ol>
+</li>
+
+    <li class=""><a href="#buffer-space-management" title="Buffer Space Management">Buffer Space Management</a>    <ol class="toc">
+
+        <li class=""><a href="#range-access" title="Range Access">Range Access</a></li>
+
+        <li class=""><a href="#batched-key-access" title="Batched Key Access">Batched Key Access</a>    </ol>
+</li>
+
+    <li class=""><a href="#status-variables" title="Status Variables">Status Variables</a>    <ol class="toc">
+
+        <li class=""><a href="#effect-on-other-status-variables" title="Effect on Other Status Variables">Effect on Other Status Variables</a></li>
+
+        <li class=""><a href="#why-using-multi-range-read-can-cause-higher-values-in-status-variables" title="Why Using Multi Range Read Can Cause Higher Values in Status Variables">Why Using Multi Range Read Can Cause Higher Values in Status Variables</a>    </ol>
+</li>
+
+    <li class=""><a href="#multi-range-read-factsheet" title="Multi Range Read Factsheet">Multi Range Read Factsheet</a></li>
+
+    <li class=""><a href="#differences-from-mysql" title="Differences from MySQL">Differences from MySQL</a></li>
+
+    <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
+</li>
+</div>
+<p>Multi Range Read is an optimization aimed at improving performance for IO-bound queries that need to scan lots of rows.</p>
+<p>Multi Range Read can be used with</p>
+<ul start="1"><li><code>range</code> access
+</li><li><code>ref</code> and <code>eq_ref</code> access, when they are using <a href="/kb/en/block-based-join-algorithms/#batch-key-access-join">Batched Key Access</a>
+</li></ul>
+<p>as shown in this diagram:</p>
+<p><img src="/kb/en/multi-range-read-optimization/+image/possible-mrr-uses" alt="possible-mrr-uses" title="possible-mrr-uses"></p>
+<h2 class="anchored_heading" id="the-idea">The Idea</h2>
+<h3 class="anchored_heading" id="case-1-rowid-sorting-for-range-access">Case 1: Rowid Sorting for Range Access</h3>
+<p>Consider a range query:</p>
+<pre class="fixed wrap"><span class="k">explain</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">tbl</span> <span class="k">where</span> <span class="n">tbl</span><span class="p">.</span><span class="n">key1</span> <span class="k">between</span> <span class="mi">1000</span> <span class="k">and</span> <span class="mi">2000</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+-------+---------------+------+---------+------+------+-----------------------+</span>
+<span class="o">|</span> <span class="n">id</span> <span class="o">|</span> <span class="n">select_type</span> <span class="o">|</span> <span class="k">table</span> <span class="o">|</span> <span class="k">type</span>  <span class="o">|</span> <span class="n">possible_keys</span> <span class="o">|</span> <span class="k">key</span>  <span class="o">|</span> <span class="n">key_len</span> <span class="o">|</span> <span class="k">ref</span>  <span class="o">|</span> <span class="k">rows</span> <span class="o">|</span> <span class="n">Extra</span>                 <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+-------+---------------+------+---------+------+------+-----------------------+</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">SIMPLE</span>      <span class="o">|</span> <span class="n">tbl</span>   <span class="o">|</span> <span class="n">range</span> <span class="o">|</span> <span class="n">key1</span>          <span class="o">|</span> <span class="n">key1</span> <span class="o">|</span> <span class="mi">5</span>       <span class="o">|</span> <span class="k">NULL</span> <span class="o">|</span>  <span class="mi">960</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">index</span> <span class="n">condition</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+-------+---------------+------+---------+------+------+-----------------------+</span>
+</pre><p>When this query is executed, disk IO access pattern will follow the red line in this figure:</p>
+<p><img src="/kb/en/multi-range-read-optimization/+image/no-mrr-access-pattern" alt="no-mrr-access-pattern" title="no-mrr-access-pattern"></p>
+<p>Execution will hit the table rows in random places, as marked with the blue line/numbers in the figure. </p>
+<p>When the table is sufficiently big, each table record read will need to actually go to disk (and be served from buffer pool or OS cache), and query execution will be too slow to be practical. For example, a 10,000 RPM disk drive is able to make 167 seeks per second, so in the worst case, query execution will be capped at reading about 167 records per second.</p>
+<p>SSD drives do not need to do disk seeks, so they will not be hurt as badly, however the performance will still be poor in many cases.</p>
+<p>Multi-Range-Read optimization aims to make disk access faster by sorting record read requests and then doing one ordered disk sweep. If one enables Multi Range Read, <code>EXPLAIN</code> will show that a "<code>Rowid-ordered scan</code>" is used:</p>
+<pre class="fixed wrap"><span class="k">set</span> <span class="n">optimizer_switch</span><span class="o">=</span><span class="s1">&#39;mrr=on&#39;</span><span class="p">;</span>
+<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">0</span> <span class="k">rows</span> <span class="n">affected</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">06</span> <span class="n">sec</span><span class="p">)</span>
+
+<span class="k">explain</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">tbl</span> <span class="k">where</span> <span class="n">tbl</span><span class="p">.</span><span class="n">key1</span> <span class="k">between</span> <span class="mi">1000</span> <span class="k">and</span> <span class="mi">2000</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+-------+---------------+------+---------+------+------+-------------------------------------------+</span>
+<span class="o">|</span> <span class="n">id</span> <span class="o">|</span> <span class="n">select_type</span> <span class="o">|</span> <span class="k">table</span> <span class="o">|</span> <span class="k">type</span>  <span class="o">|</span> <span class="n">possible_keys</span> <span class="o">|</span> <span class="k">key</span>  <span class="o">|</span> <span class="n">key_len</span> <span class="o">|</span> <span class="k">ref</span>  <span class="o">|</span> <span class="k">rows</span> <span class="o">|</span> <span class="n">Extra</span>                                     <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+-------+---------------+------+---------+------+------+-------------------------------------------+</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">SIMPLE</span>      <span class="o">|</span> <span class="n">tbl</span>   <span class="o">|</span> <span class="n">range</span> <span class="o">|</span> <span class="n">key1</span>          <span class="o">|</span> <span class="n">key1</span> <span class="o">|</span> <span class="mi">5</span>       <span class="o">|</span> <span class="k">NULL</span> <span class="o">|</span>  <span class="mi">960</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">index</span> <span class="n">condition</span><span class="p">;</span> <span class="n">Rowid</span><span class="o">-</span><span class="n">ordered</span> <span class="n">scan</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+-------+---------------+------+---------+------+------+-------------------------------------------+</span>
+<span class="mi">1</span> <span class="k">row</span> <span class="k">in</span> <span class="k">set</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">03</span> <span class="n">sec</span><span class="p">)</span>
+</pre><p>and the execution will proceed as follows:</p>
+<p><img src="/kb/en/multi-range-read-optimization/+image/mrr-access-pattern" alt="mrr-access-pattern" title="mrr-access-pattern"></p>
+<p>Reading disk data sequentially is generally faster, because</p>
+<ul start="1"><li>Rotating drives do not have to move the head back and forth
+</li><li>One can take advantage of IO-prefetching done at various levels
+</li><li>Each disk page will be read exactly once, which means we won't rely on disk cache (or buffer pool) to save us from reading the same page multiple times.
+</li></ul>
+<p>The above can make a huge difference on performance. There is also a catch, though:</p>
+<ul start="1"><li>If you're scanning small data ranges in a table that is sufficiently small so that it completely fits into the OS disk cache, then you may observe that the only effect of MRR is that extra buffering/sorting adds some CPU overhead.
+</li></ul>
+<ul start="1"><li><code>LIMIT n</code> and <code>ORDER BY ... LIMIT n</code> queries with small values of <code>n</code> may become slower. The reason is that MRR reads data <em>in disk order</em>, while <code>ORDER BY ... LIMIT n</code> wants first <code>n</code> records <em>in index order</em>.
+</li></ul>
+<h3 class="anchored_heading" id="case-2-rowid-sorting-for-batched-key-access">Case 2: Rowid Sorting for Batched Key Access</h3>
+<p>Batched Key Access can benefit from rowid sorting in the same way as range access does. If one has a join that uses index lookups:</p>
+<pre class="fixed wrap"><span class="k">explain</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">t1</span><span class="p">,</span><span class="n">t2</span> <span class="k">where</span> <span class="n">t2</span><span class="p">.</span><span class="n">key1</span><span class="o">=</span><span class="n">t1</span><span class="p">.</span><span class="n">col1</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+------+---------------+------+---------+--------------+------+-------------+</span>
+<span class="o">|</span> <span class="n">id</span> <span class="o">|</span> <span class="n">select_type</span> <span class="o">|</span> <span class="k">table</span> <span class="o">|</span> <span class="k">type</span> <span class="o">|</span> <span class="n">possible_keys</span> <span class="o">|</span> <span class="k">key</span>  <span class="o">|</span> <span class="n">key_len</span> <span class="o">|</span> <span class="k">ref</span>          <span class="o">|</span> <span class="k">rows</span> <span class="o">|</span> <span class="n">Extra</span>       <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+------+---------------+------+---------+--------------+------+-------------+</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">SIMPLE</span>      <span class="o">|</span> <span class="n">t1</span>    <span class="o">|</span> <span class="k">ALL</span>  <span class="o">|</span> <span class="k">NULL</span>          <span class="o">|</span> <span class="k">NULL</span> <span class="o">|</span> <span class="k">NULL</span>    <span class="o">|</span> <span class="k">NULL</span>         <span class="o">|</span> <span class="mi">1000</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">where</span> <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">SIMPLE</span>      <span class="o">|</span> <span class="n">t2</span>    <span class="o">|</span> <span class="k">ref</span>  <span class="o">|</span> <span class="n">key1</span>          <span class="o">|</span> <span class="n">key1</span> <span class="o">|</span> <span class="mi">5</span>       <span class="o">|</span> <span class="n">test</span><span class="p">.</span><span class="n">t1</span><span class="p">.</span><span class="n">col1</span> <span class="o">|</span>    <span class="mi">1</span> <span class="o">|</span>             <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+------+---------------+------+---------+--------------+------+-------------+</span>
+<span class="mi">2</span> <span class="k">rows</span> <span class="k">in</span> <span class="k">set</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">00</span> <span class="n">sec</span><span class="p">)</span>
+</pre><p>Execution of this query will cause table <code>t2</code> to be hit in random locations by lookups made through <code>t2.key1=t1.col</code>. If you enable Multi Range and and Batched Key Access, you will get table <code>t2</code> to be accessed using a <code>Rowid-ordered scan</code>:</p>
+<pre class="fixed wrap"><span class="k">set</span> <span class="n">optimizer_switch</span><span class="o">=</span><span class="s1">&#39;mrr=on&#39;</span><span class="p">;</span>
+<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">0</span> <span class="k">rows</span> <span class="n">affected</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">06</span> <span class="n">sec</span><span class="p">)</span>
+
+<span class="k">set</span> <span class="n">join_cache_level</span><span class="o">=</span><span class="mi">6</span><span class="p">;</span>
+<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">0</span> <span class="k">rows</span> <span class="n">affected</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">00</span> <span class="n">sec</span><span class="p">)</span>
+
+<span class="k">explain</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">t1</span><span class="p">,</span><span class="n">t2</span> <span class="k">where</span> <span class="n">t2</span><span class="p">.</span><span class="n">key1</span><span class="o">=</span><span class="n">t1</span><span class="p">.</span><span class="n">col1</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+------+---------------+------+---------+--------------+------+--------------------------------------------------------+</span>
+<span class="o">|</span> <span class="n">id</span> <span class="o">|</span> <span class="n">select_type</span> <span class="o">|</span> <span class="k">table</span> <span class="o">|</span> <span class="k">type</span> <span class="o">|</span> <span class="n">possible_keys</span> <span class="o">|</span> <span class="k">key</span>  <span class="o">|</span> <span class="n">key_len</span> <span class="o">|</span> <span class="k">ref</span>          <span class="o">|</span> <span class="k">rows</span> <span class="o">|</span> <span class="n">Extra</span>                                                  <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+------+---------------+------+---------+--------------+------+--------------------------------------------------------+</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">SIMPLE</span>      <span class="o">|</span> <span class="n">t1</span>    <span class="o">|</span> <span class="k">ALL</span>  <span class="o">|</span> <span class="k">NULL</span>          <span class="o">|</span> <span class="k">NULL</span> <span class="o">|</span> <span class="k">NULL</span>    <span class="o">|</span> <span class="k">NULL</span>         <span class="o">|</span> <span class="mi">1000</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">where</span>                                            <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">SIMPLE</span>      <span class="o">|</span> <span class="n">t2</span>    <span class="o">|</span> <span class="k">ref</span>  <span class="o">|</span> <span class="n">key1</span>          <span class="o">|</span> <span class="n">key1</span> <span class="o">|</span> <span class="mi">5</span>       <span class="o">|</span> <span class="n">test</span><span class="p">.</span><span class="n">t1</span><span class="p">.</span><span class="n">col1</span> <span class="o">|</span>    <span class="mi">1</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">join</span> <span class="n">buffer</span> <span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">BKA</span> <span class="k">join</span><span class="p">);</span> <span class="n">Rowid</span><span class="o">-</span><span class="n">ordered</span> <span class="n">scan</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+------+---------------+------+---------+--------------+------+--------------------------------------------------------+</span>
+<span class="mi">2</span> <span class="k">rows</span> <span class="k">in</span> <span class="k">set</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">00</span> <span class="n">sec</span><span class="p">)</span>
+</pre><p>The benefits will be similar to those listed for <code>range</code> access. </p>
+<p>An additional source of speedup is this property: if there are multiple records in <code>t1</code> that have the same value of <code>t1.col1</code>, then regular Nested-Loops join will make multiple index lookups for the same value of <code>t2.key1=t1.col1</code>. The lookups may or may not hit the cache, depending on how big the join is.  With Batched Key Access and Multi-Range Read, no duplicate index lookups will be made.</p>
+<h3 class="anchored_heading" id="case-3-key-sorting-for-batched-key-access">Case 3: Key Sorting for Batched Key Access</h3>
+<p>Let us consider again the nested loop join example, with <code>ref</code> access on the second table:</p>
+<pre class="fixed wrap"><span class="k">explain</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">t1</span><span class="p">,</span><span class="n">t2</span> <span class="k">where</span> <span class="n">t2</span><span class="p">.</span><span class="n">key1</span><span class="o">=</span><span class="n">t1</span><span class="p">.</span><span class="n">col1</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+------+---------------+------+---------+--------------+------+-------------+</span>
+<span class="o">|</span> <span class="n">id</span> <span class="o">|</span> <span class="n">select_type</span> <span class="o">|</span> <span class="k">table</span> <span class="o">|</span> <span class="k">type</span> <span class="o">|</span> <span class="n">possible_keys</span> <span class="o">|</span> <span class="k">key</span>  <span class="o">|</span> <span class="n">key_len</span> <span class="o">|</span> <span class="k">ref</span>          <span class="o">|</span> <span class="k">rows</span> <span class="o">|</span> <span class="n">Extra</span>       <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+------+---------------+------+---------+--------------+------+-------------+</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">SIMPLE</span>      <span class="o">|</span> <span class="n">t1</span>    <span class="o">|</span> <span class="k">ALL</span>  <span class="o">|</span> <span class="k">NULL</span>          <span class="o">|</span> <span class="k">NULL</span> <span class="o">|</span> <span class="k">NULL</span>    <span class="o">|</span> <span class="k">NULL</span>         <span class="o">|</span> <span class="mi">1000</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">where</span> <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">SIMPLE</span>      <span class="o">|</span> <span class="n">t2</span>    <span class="o">|</span> <span class="k">ref</span>  <span class="o">|</span> <span class="n">key1</span>          <span class="o">|</span> <span class="n">key1</span> <span class="o">|</span> <span class="mi">5</span>       <span class="o">|</span> <span class="n">test</span><span class="p">.</span><span class="n">t1</span><span class="p">.</span><span class="n">col1</span> <span class="o">|</span>    <span class="mi">1</span> <span class="o">|</span>             <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+-------------+-------+------+---------------+------+---------+--------------+------+-------------+</span>
+</pre><p>Execution of this query plan will cause random hits to be made into the index <code>t2.key1</code>, as shown in this picture:</p>
+<p><img src="/kb/en/multi-range-read-optimization/+image/key-sorting-regular-nl-join" alt="key-sorting-regular-nl-join" title="key-sorting-regular-nl-join"></p>
+<p>In particular, on step #5 we'll read the same index page that we've read on step #2, and the page we've read on step #4 will be re-read on step#6.  If all pages you're accessing are in the cache (in the buffer pool, if you're using InnoDB, and in the key cache, if you're using MyISAM), this is not a problem.  However, if your hit ratio is poor and you're going to hit the disk, it makes sense to sort the lookup keys, like shown in this figure:</p>
+<p><img src="/kb/en/multi-range-read-optimization/+image/key-sorting-join" alt="key-sorting-join" title="key-sorting-join"></p>
+<p>This is roughly what <code>Key-ordered scan</code> optimization does. In EXPLAIN, it looks as follows:</p>
+<pre class="fixed wrap">set optimizer_switch='mrr=on,mrr_sort_keys=on';
+Query OK, 0 rows affected (0.00 sec)
+
+set join_cache_level=6;
+Query OK, 0 rows affected (0.02 sec)
+explain select * from t1,t2 where t2.key1=t1.col1\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: t1
+         type: ALL
+possible_keys: a
+          key: NULL
+      key_len: NULL
+          ref: NULL
+         rows: 1000
+        Extra: Using where
+*************************** 2. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: t2
+         type: ref
+possible_keys: key1
+          key: key1
+      key_len: 5
+          ref: test.t1.col1
+         rows: 1
+        Extra: Using join buffer (flat, BKA join); Key-ordered Rowid-ordered scan
+2 rows in set (0.00 sec)
+</pre><p>((TODO: a note about why sweep-read over InnoDB's clustered primary index scan (which is, actually the whole InnoDB table itself) will use <code>Key-ordered scan</code> algorithm, but not <code>Rowid-ordered scan</code> algorithm, even though conceptually they are the same thing in this case))</p>
+<h2 class="anchored_heading" id="buffer-space-management">Buffer Space Management</h2>
+<p>As was shown above, Multi Range Read requires sort buffers to operate. The size of the buffers is limited by system variables. If MRR has to process more data than it can fit into its buffer, it will break the scan into multiple passes. The more passes are made, the less is the speedup though, so one needs to balance between having too big buffers (which consume lots of memory) and too small buffers (which limit the possible speedup).</p>
+<h3 class="anchored_heading" id="range-access">Range Access</h3>
+<p>When MRR is used for <code>range</code> access, the size of its buffer is controlled by the <a href="/kb/en/server-system-variables/#mrr_buffer_size">mrr_buffer_size</a> system variable. Its value specifies how much space can be used for each table. For example, if there is a query which is a 10-way join and MRR is used for each table, <code>10*@@mrr_buffer_size</code> bytes may be used.</p>
+<h3 class="anchored_heading" id="batched-key-access">Batched Key Access</h3>
+<p>When Multi Range Read is used by Batched Key Access, then buffer space is managed by BKA code, which will automatically provide a part of its buffer space to MRR. You can control the amount of space used by BKA by setting </p>
+<ul start="1"><li><a href="/kb/en/server-system-variables/#join_buffer_size">join_buffer_size</a> to limit how much memory BKA uses for each table, and 
+</li><li><a href="/kb/en/server-system-variables/#join_buffer_space_limit">join_buffer_space_limit</a> to limit the total amount of memory used by BKA in the join.
+</li></ul>
+<h2 class="anchored_heading" id="status-variables">Status Variables</h2>
+<p>There are three status variables related to Multi Range Read:</p>
+<div class="cstm-style darkheader-nospace-borders"><table><tr><th>Variable name</th><th>Meaning</th></tr>
+<tr><td><a href="/kb/en/server-status-variables/#handler_mrr_init">Handler_mrr_init</a></td><td>Counts how many Multi Range Read scans were performed</td></tr>
+<tr><td><a href="/kb/en/server-status-variables/#handler_mrr_key_refills">Handler_mrr_key_refills</a></td><td>Number of times key buffer was refilled (not counting the initial fill)</td></tr>
+<tr><td><a href="/kb/en/server-status-variables/#handler_mrr_rowid_refills">Handler_mrr_rowid_refills</a></td><td>Number of times rowid buffer was refilled (not counting the initial fill)</td></tr>
+</table>
+</div><p>Non-zero values of <code>Handler_mrr_key_refills</code> and/or <code>Handler_mrr_rowid_refills</code> mean that Multi Range Read scan did not have enough memory and had to do multiple key/rowid sort-and-sweep passes. The greatest speedup is achieved when Multi Range Read runs everything in one pass, if you see lots of refills it may be beneficial to increase sizes of relevant buffers <a href="/kb/en/server-system-variables/#mrr_buffer_size">mrr_buffer_size</a> <a href="/kb/en/server-system-variables/#join_buffer_size">join_buffer_size</a> and <a href="/kb/en/server-system-variables/#join_buffer_space_limit">join_buffer_space_limit</a></p>
+<h3 class="anchored_heading" id="effect-on-other-status-variables">Effect on Other Status Variables</h3>
+<p>When a Multi Range Read scan makes an index lookup (or some other "basic" operation), the counter of the "basic" operation, e.g. <a href="/kb/en/server-status-variables/#handler_read_key">Handler_read_key</a>, will also be incremented. This way, you can still see total number of index accesses, including those made by MRR. <a href="/kb/en/user-statistics/">Per-user/table/index statistics</a> counters also include the row reads made by Multi Range Read scans.</p>
+<h3 class="anchored_heading" id="why-using-multi-range-read-can-cause-higher-values-in-status-variables">Why Using Multi Range Read Can Cause Higher Values in Status Variables</h3>
+<p>Multi Range Read is used for scans that do full record reads (i.e., they are not "Index only" scans). A regular non-index-only scan will read </p>
+<ol start="1"><li>an index record, to get a rowid of the table record
+</li><li>a table record
+Both actions will be done by making one call to the storage engine, so the effect of the call will be that the relevan <code>Handler_read_XXX</code> counter will be incremented BY ONE, and  <a href="/kb/en/xtradbinnodb-server-status-variables/#innodb_rows_read">Innodb_rows_read</a> will be incremented BY ONE.
+</li></ol>
+<p>Multi Range Read will make separate calls for steps #1 and #2, causing TWO increments to <code>Handler_read_XXX</code> counters and TWO increments to <code>Innodb_rows_read</code> counter. To the uninformed, this looks as if Multi Range Read was making things worse. Actually, it doesn't - the query will still read the same index/table records, and actually Multi Range Read may give speedups because it reads data in disk order.</p>
+<h2 class="anchored_heading" id="multi-range-read-factsheet">Multi Range Read Factsheet</h2>
+<ul start="1"><li>Multi Range Read is used by
+<ul start="1"><li><code>range</code> access method for range scans.
+</li><li><a href="Batched_Key_Access">Batched Key Access</a> for joins
+</li></ul>
+</li><li>Multi Range Read can cause slowdowns for small queries over small tables, so it is disabled by default.
+</li><li>There are two strategies:
+<ul start="1"><li>Rowid-ordered scan 
+</li><li>Key-ordered scan 
+</li></ul>
+</li><li>: and you can tell if either of them is used by checking the <code>Extra</code> column in <code>EXPLAIN</code> output.
+</li><li>There are three <a href="/kb/en/server-system-variables/#optimizer_switch">optimizer_switch</a> flags you can switch ON:
+<ul start="1"><li><code>mrr=on</code> - enable MRR and rowid ordered scans
+</li><li><code>mrr_sort_keys=on</code> - enable Key-ordered scans (you must also set <code>mrr=on</code> for this to have any effect)
+</li><li><code>mrr_cost_based=on</code> - enable cost-based choice whether to use MRR. Currently not recommended, because cost model is not sufficiently tuned yet.
+</li></ul>
+</li></ul>
+<h2 class="anchored_heading" id="differences-from-mysql">Differences from MySQL</h2>
+<ul start="1"><li>MySQL supports only <code>Rowid ordered scan</code> strategy, which it shows in <code>EXPLAIN</code> as <code>Using MRR</code>.
+</li><li>EXPLAIN in MySQL shows <code>Using MRR</code>, while in MariaDB it may show
+<ul start="1"><li><code>Rowid-ordered scan</code>
+</li><li><code>Key-ordered scan</code>
+</li><li><code>Key-ordered Rowid-ordered scan</code>
+</li></ul>
+</li><li>MariaDB uses <a href="/kb/en/server-system-variables/#mrr_buffer_size">mrr_buffer_size</a> as a limit of MRR buffer size for <code>range</code> access, while  MySQL uses <a href="/kb/en/server-system-variables/#read_rnd_buffer_size">read_rnd_buffer_size</a>.
+</li><li>MariaDB has three MRR counters: <a href="/kb/en/server-status-variables/#handler_mrr_init">Handler_mrr_init</a>, <code>Handler_mrr_extra_rowid_sorts</code>, <code>Handler_mrr_extra_key_sorts</code>, while MySQL has only <code>Handler_mrr_init</code>, and it will only count MRR scans that were used by BKA. MRR scans used by range access are not counted.
+</li></ul>
+<h2 class="anchored_heading" id="see-also">See Also</h2>
+<ul start="1"><li><a href="/kb/en/what-is-mariadb-53/">What is MariaDB 5.3</a>
+</li><li><a href="http://dev.mysql.com/doc/refman/5.6/en/mrr-optimization.html">Multi-Range Read Optimization</a> page in MySQL manual</li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/multi-range-read-optimization/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/multi-range-read-optimization/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/improvements-to-order-by/">
+                        ← Improvements to ORDER BY Optimization
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/mariadb-internal-optimizations/">
+                        ↑ MariaDB Internal Optimizations ↑
+                    </a>
+                    </li>
+                
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="1709" data-comments-url="/kb/en/multi-range-read-optimization/+comments"
+         data-reply-url="/kb/en/multi-range-read-optimization/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/mariadb-internal-optimizations/">
+                    ↑ MariaDB Internal Optimizations ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/binary-log-group-commit-and-innodb-flushing-performance/">
+                            <span class="pull-right not_primary"></span>
+                            Binary Log Group Commit and InnoDB Flushing Performance
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/fair-choice-between-range-and-index_merge-optimizations/">
+                            
+                            Fair Choice Between Range and Index_merge Optimizations
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/improvements-to-order-by/">
+                            <span class="pull-right not_primary"></span>
+                            Improvements to ORDER BY Optimization
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Multi Range Read Optimization</span>
+                        
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

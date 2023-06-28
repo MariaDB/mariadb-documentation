@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Adding columns to a table with full text column extremely slow</title><link>https://mariadb.com/kb/en/adding-columns-to-a-table-with-full-text-column-extremely-slow/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/adding-columns-to-a-table-with-full-text-column-extremely-slow/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 10 Mar 2023 11:42:37 +0000</lastBuildDate><item><title>Re: Adding columns to a table with full text column extremely slow</title><link>https://mariadb.com/kb/en/adding-columns-to-a-table-with-full-text-column-extremely-slow/+comments/4774</link><description>&lt;p&gt;Ok I understand what you are saying, i think... but these tables are completely empty (has zero rows).  So, even if the table has to be completely re-built... it's an empty table.  Why is it taking so long?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Marvin Herbold</dc:creator><guid>https://mariadb.com/kb/en/adding-columns-to-a-table-with-full-text-column-extremely-slow/+comments/4774</guid></item><item><title>Re: Adding columns to a table with full text column extremely slow</title><link>https://mariadb.com/kb/en/adding-columns-to-a-table-with-full-text-column-extremely-slow/+comments/4773</link><description>&lt;p&gt;There are many limitations around &lt;code class="fixed" style="white-space:pre-wrap"&gt;FULLTEXT INDEX&lt;/code&gt; in InnoDB: &lt;a href="https://mariadb.com/resources/blog/initial-impressions-of-innodb-fulltext/"&gt;https://mariadb.com/resources/blog/initial-impressions-of-innodb-fulltext/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://jira.mariadb.org/browse/MDEV-17459"&gt;MDEV-17459&lt;/a&gt; prevents the &lt;code class="fixed" style="white-space:pre-wrap"&gt;ADD COLUMN&lt;/code&gt; from being instantaneous. To add insult to the injury, if an &lt;code class="fixed" style="white-space:pre-wrap"&gt;ALTER TABLE&lt;/code&gt; operation would involve creating multiple &lt;code class="fixed" style="white-space:pre-wrap"&gt;FULLTEXT INDEX&lt;/code&gt; (like it would if the table were to be rebuilt for adding the columns), then InnoDB would refuse a native operation, and the inefficient &lt;code class="fixed" style="white-space:pre-wrap"&gt;ALGORITHM=COPY&lt;/code&gt; would be used.&lt;/p&gt;
+&lt;p&gt;You could try dropping all fulltext indexes first, and then perform &lt;code class="fixed" style="white-space:pre-wrap"&gt;ALTER TABLE t FORCE, ADD COLUMN …, ADD FULLTEXT INDEX …, ALGORITHM=INPLACE&lt;/code&gt; (creating at most one fulltext index). The &lt;code class="fixed" style="white-space:pre-wrap"&gt;FORCE&lt;/code&gt; keyword prevents &lt;code class="fixed" style="white-space:pre-wrap"&gt;ALGORITHM=INSTANT&lt;/code&gt; operation and forces a rebuild. It should not be necessary, but I did not test it.&lt;/p&gt;
+&lt;p&gt;If there are multiple fulltext indexes, you can create them one at a time with subsequent &lt;code class="fixed" style="white-space:pre-wrap"&gt;ALTER TABLE t ADD FULLTEXT INDEX&lt;/code&gt; statements. Note: when you add the first fulltext index, a hidden &lt;code class="fixed" style="white-space:pre-wrap"&gt;FTS_DOC_ID&lt;/code&gt; column will be created inside InnoDB. So, typically adding the first fulltext index will require the table to be rebuilt. Also, note that when any &lt;code class="fixed" style="white-space:pre-wrap"&gt;FULLTEXT&lt;/code&gt; or &lt;code class="fixed" style="white-space:pre-wrap"&gt;SPATIAL&lt;/code&gt; index are to exist after the &lt;code class="fixed" style="white-space:pre-wrap"&gt;ALTER TABLE&lt;/code&gt;, the operation cannot be executed online (while allowing concurrent writes to the table).&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Marko Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/adding-columns-to-a-table-with-full-text-column-extremely-slow/+comments/4773</guid></item><item><title>Re: Adding columns to a table with full text column extremely slow</title><link>https://mariadb.com/kb/en/adding-columns-to-a-table-with-full-text-column-extremely-slow/+comments/4771</link><description>&lt;p&gt;Hello -&lt;/p&gt;
+&lt;p&gt;This is using InnoDB.&lt;/p&gt;
+&lt;p&gt;Here is part of the output from my script,without any full-text columns - the numbers in brackets like [0.007926] is the timing in seconds.&lt;/p&gt;
+&lt;pre class="fixed"&gt;            &amp;gt;&amp;gt;&amp;gt; Create / modify columns
+                &amp;gt;&amp;gt;&amp;gt; Module display name
+                    &amp;gt;&amp;gt;&amp;gt; Adding the column
+ALTER TABLE `wdeModule` ADD COLUMN `displayName` varchar(191) NOT NULL DEFAULT ?
+                    &amp;lt;&amp;lt;&amp;lt; Adding the column [0.007926]
+                    &amp;gt;&amp;gt;&amp;gt; Creating b-tree index
+CREATE INDEX `idx_displayName_btree` ON `wdeModule` (`displayName`)
+                    &amp;lt;&amp;lt;&amp;lt; Creating b-tree index [0.034811]
+                &amp;lt;&amp;lt;&amp;lt; Module display name [0.043111]
+                &amp;gt;&amp;gt;&amp;gt; List of records page
+                    &amp;gt;&amp;gt;&amp;gt; Adding the column
+ALTER TABLE `wdeModule` ADD COLUMN `listOfRecordsPageId` int(10) unsigned NOT NULL DEFAULT ? AFTER `displayName`
+                    &amp;lt;&amp;lt;&amp;lt; Adding the column [0.009343]
+                    &amp;gt;&amp;gt;&amp;gt; Creating foreign key
+ALTER TABLE `wdeModule` ADD CONSTRAINT `fk_wdeModule_listOfRecordsPageId` FOREIGN KEY (`listOfRecordsPageId`) REFERENCES `wdePage` (`id`)
+                    &amp;lt;&amp;lt;&amp;lt; Creating foreign key [0.03307]
+                &amp;lt;&amp;lt;&amp;lt; List of records page [0.042825]
+                &amp;gt;&amp;gt;&amp;gt; Record details page
+                    &amp;gt;&amp;gt;&amp;gt; Adding the column
+ALTER TABLE `wdeModule` ADD COLUMN `recordDetailsPageId` int(10) unsigned NOT NULL DEFAULT ? AFTER `listOfRecordsPageId`
+                    &amp;lt;&amp;lt;&amp;lt; Adding the column [0.010019]
+                    &amp;gt;&amp;gt;&amp;gt; Creating foreign key
+ALTER TABLE `wdeModule` ADD CONSTRAINT `fk_wdeModule_recordDetailsPageId` FOREIGN KEY (`recordDetailsPageId`) REFERENCES `wdePage` (`id`)
+                    &amp;lt;&amp;lt;&amp;lt; Creating foreign key [0.02976]
+                &amp;lt;&amp;lt;&amp;lt; Record details page [0.040282]
+                &amp;gt;&amp;gt;&amp;gt; Parameter
+                    &amp;gt;&amp;gt;&amp;gt; Adding the column
+ALTER TABLE `wdeModule` ADD COLUMN `parameterId` int(10) unsigned NOT NULL DEFAULT ? AFTER `recordDetailsPageId`
+                    &amp;lt;&amp;lt;&amp;lt; Adding the column [0.008562]
+                    &amp;gt;&amp;gt;&amp;gt; Creating foreign key
+ALTER TABLE `wdeModule` ADD CONSTRAINT `fk_wdeModule_parameterId` FOREIGN KEY (`parameterId`) REFERENCES `wdeParameter` (`id`)
+                    &amp;lt;&amp;lt;&amp;lt; Creating foreign key [0.025838]
+                &amp;lt;&amp;lt;&amp;lt; Parameter [0.034919]
+                &amp;gt;&amp;gt;&amp;gt; Context
+                    &amp;gt;&amp;gt;&amp;gt; Adding the column
+ALTER TABLE `wdeModule` ADD COLUMN `contextId` int(10) unsigned NOT NULL DEFAULT ? AFTER `parameterId`
+                    &amp;lt;&amp;lt;&amp;lt; Adding the column [0.010369]
+                    &amp;gt;&amp;gt;&amp;gt; Creating foreign key
+ALTER TABLE `wdeModule` ADD CONSTRAINT `fk_wdeModule_contextId` FOREIGN KEY (`contextId`) REFERENCES `wdeContext` (`id`)
+                    &amp;lt;&amp;lt;&amp;lt; Creating foreign key [0.031535]
+                &amp;lt;&amp;lt;&amp;lt; Context [0.042347]
+
+Here is the same part of the same script, only with the full-text index added to the displayName column.  Look at each &amp;#34;&amp;lt;&amp;lt;&amp;lt; Adding the column&amp;#34; line after that and note how every new column after the full-text one now takes about 0.3 to 0.4 second while previously it was much faster (hundredths or thousandths of a second).
+
+            &amp;gt;&amp;gt;&amp;gt; Create / modify columns
+                &amp;gt;&amp;gt;&amp;gt; Module display name
+                    &amp;gt;&amp;gt;&amp;gt; Adding the column
+ALTER TABLE `wdeModule` ADD COLUMN `displayName` varchar(191) NOT NULL DEFAULT ?
+                    &amp;lt;&amp;lt;&amp;lt; Adding the column [0.010926]
+                    &amp;gt;&amp;gt;&amp;gt; Creating b-tree index
+CREATE INDEX `idx_displayName_btree` ON `wdeModule` (`displayName`)
+                    &amp;lt;&amp;lt;&amp;lt; Creating b-tree index [0.032191]
+                    &amp;gt;&amp;gt;&amp;gt; Creating full-text index
+CREATE FULLTEXT INDEX `idx_displayName_fulltext` ON `wdeModule` (`displayName`)
+                    &amp;lt;&amp;lt;&amp;lt; Creating full-text index [0.261039]
+                &amp;lt;&amp;lt;&amp;lt; Module display name [0.304855]
+                &amp;gt;&amp;gt;&amp;gt; List of records page
+                    &amp;gt;&amp;gt;&amp;gt; Adding the column
+ALTER TABLE `wdeModule` ADD COLUMN `listOfRecordsPageId` int(10) unsigned NOT NULL DEFAULT ? AFTER `displayName`
+                    &amp;lt;&amp;lt;&amp;lt; Adding the column [0.396051]
+                    &amp;gt;&amp;gt;&amp;gt; Creating foreign key
+ALTER TABLE `wdeModule` ADD CONSTRAINT `fk_wdeModule_listOfRecordsPageId` FOREIGN KEY (`listOfRecordsPageId`) REFERENCES `wdePage` (`id`)
+                    &amp;lt;&amp;lt;&amp;lt; Creating foreign key [0.032997]
+                &amp;lt;&amp;lt;&amp;lt; List of records page [0.42954]
+                &amp;gt;&amp;gt;&amp;gt; Record details page
+                    &amp;gt;&amp;gt;&amp;gt; Adding the column
+ALTER TABLE `wdeModule` ADD COLUMN `recordDetailsPageId` int(10) unsigned NOT NULL DEFAULT ? AFTER `listOfRecordsPageId`
+                    &amp;lt;&amp;lt;&amp;lt; Adding the column [0.394164]
+                    &amp;gt;&amp;gt;&amp;gt; Creating foreign key
+ALTER TABLE `wdeModule` ADD CONSTRAINT `fk_wdeModule_recordDetailsPageId` FOREIGN KEY (`recordDetailsPageId`) REFERENCES `wdePage` (`id`)
+                    &amp;lt;&amp;lt;&amp;lt; Creating foreign key [0.031623]
+                &amp;lt;&amp;lt;&amp;lt; Record details page [0.426277]
+                &amp;gt;&amp;gt;&amp;gt; Parameter
+                    &amp;gt;&amp;gt;&amp;gt; Adding the column
+ALTER TABLE `wdeModule` ADD COLUMN `parameterId` int(10) unsigned NOT NULL DEFAULT ? AFTER `recordDetailsPageId`
+                    &amp;lt;&amp;lt;&amp;lt; Adding the column [0.408285]
+                    &amp;gt;&amp;gt;&amp;gt; Creating foreign key
+ALTER TABLE `wdeModule` ADD CONSTRAINT `fk_wdeModule_parameterId` FOREIGN KEY (`parameterId`) REFERENCES `wdeParameter` (`id`)
+                    &amp;lt;&amp;lt;&amp;lt; Creating foreign key [0.037448]
+                &amp;lt;&amp;lt;&amp;lt; Parameter [0.446114]
+                &amp;gt;&amp;gt;&amp;gt; Context
+                    &amp;gt;&amp;gt;&amp;gt; Adding the column
+ALTER TABLE `wdeModule` ADD COLUMN `contextId` int(10) unsigned NOT NULL DEFAULT ? AFTER `parameterId`
+                    &amp;lt;&amp;lt;&amp;lt; Adding the column [0.417676]
+                    &amp;gt;&amp;gt;&amp;gt; Creating foreign key
+ALTER TABLE `wdeModule` ADD CONSTRAINT `fk_wdeModule_contextId` FOREIGN KEY (`contextId`) REFERENCES `wdeContext` (`id`)
+                    &amp;lt;&amp;lt;&amp;lt; Creating foreign key [0.033758]
+                &amp;lt;&amp;lt;&amp;lt; Context [0.451862]
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Marvin Herbold</dc:creator><guid>https://mariadb.com/kb/en/adding-columns-to-a-table-with-full-text-column-extremely-slow/+comments/4771</guid></item><item><title>Re: Adding columns to a table with full text column extremely slow</title><link>https://mariadb.com/kb/en/adding-columns-to-a-table-with-full-text-column-extremely-slow/+comments/4770</link><description>&lt;p&gt;You need to provide more information. Which storage engine are you using? Can you provide sample queries?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/adding-columns-to-a-table-with-full-text-column-extremely-slow/+comments/4770</guid></item></channel></rss>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: need to load csv date data along with AM/PM values.</title><link>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 00:19:20 +0000</lastBuildDate><item><title>Re: need to load csv date data along with AM/PM values.</title><link>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/4146</link><description>&lt;p&gt;Hi @kranthi,&lt;br&gt;
+any news regarding this ?&lt;/p&gt;
+&lt;p&gt;I have played a bit and basically you have to convert from &lt;em&gt;datetime&lt;/em&gt; to &lt;em&gt;string&lt;/em&gt; using function &lt;strong&gt;date_format()&lt;/strong&gt; which returns the &lt;em&gt;string&lt;/em&gt;. &lt;br&gt;&lt;/p&gt;
+&lt;h4 class="anchored_heading" id="test-r-and-p-parameters-on-string"&gt;Test &lt;em&gt;%r&lt;/em&gt; and &lt;em&gt;%p&lt;/em&gt; parameters on &lt;em&gt;string&lt;/em&gt;&lt;/h4&gt;
+&lt;pre class="fixed"&gt;MariaDB [test]&amp;gt; select @@lc_time_names;
++-----------------+
+| @@lc_time_names |
++-----------------+
+| en_US           |
++-----------------+
+1 row in set (0.000 sec)
+
+MariaDB [test]&amp;gt; SELECT DATE_FORMAT('1997-10-04 22:23:00', '%H %k %I %r %T %S %w'); # this works -&amp;gt; string (used `%r`)
++------------------------------------------------------------+
+| DATE_FORMAT('1997-10-04 22:23:00', '%H %k %I %r %T %S %w') |
++------------------------------------------------------------+
+| 22 22 10 10:23:00 PM 22:23:00 00 6                         |
++------------------------------------------------------------+
+
+MariaDB [test]&amp;gt;  SELECT DATE_FORMAT('1997-10-04 22:23:00', '%H %k %I %p %T %S %w');
++------------------------------------------------------------+
+| DATE_FORMAT('1997-10-04 22:23:00', '%H %k %I %p %T %S %w') |
++------------------------------------------------------------+
+| 22 22 10 PM 22:23:00 00 6                                  |
++------------------------------------------------------------+
+1 row in set (0.000 sec)
+&lt;/pre&gt;&lt;h3 class="anchored_heading" id="test-on-datetime-type"&gt;Test on &lt;em&gt;datetime&lt;/em&gt; type&lt;/h3&gt;
+&lt;h4 class="anchored_heading" id="this-will-not-work"&gt;This will not work&lt;/h4&gt;
+&lt;pre class="fixed"&gt;MariaDB [test]&amp;gt; set @starttime=now();
+Query OK, 0 rows affected (0.000 sec)
+
+MariaDB [test]&amp;gt; select @starttime;
++---------------------+
+| @starttime          |
++---------------------+
+| 2019-07-22 04:28:59 |
++---------------------+
+1 row in set (0.000 sec)
+
+MariaDB [test]&amp;gt; SELECT DATE_FORMAT(@starttime, '%H %k %I %r %T %S %w');   # with @starttime doesn't work
++-------------------------------------------------+
+| DATE_FORMAT(@starttime, '%H %k %I %r %T %S %w') |
++-------------------------------------------------+
+| NULL                                            |
++-------------------------------------------------+
+
+&lt;/pre&gt;&lt;h4 class="anchored_heading" id="this-will-work-convert-datetime-type-to-string-using-date_format"&gt;This will work: Convert &lt;em&gt;datetime&lt;/em&gt; type to string using &lt;em&gt;date_format&lt;/em&gt;&lt;/h4&gt;
+&lt;pre class="fixed"&gt;MariaDB [test]&amp;gt; SELECT DATE_FORMAT(DATE_FORMAT(@starttime, '%Y-%m-%d'), '%H %k %I %r %T %S %w');   # convert @starttime to string using date_format
++--------------------------------------------------------------------------+
+| DATE_FORMAT(DATE_FORMAT(@starttime, '%Y-%m-%d'), '%H %k %I %r %T %S %w') |
++--------------------------------------------------------------------------+
+| 00 0 12 12:00:00 AM 00:00:00 00 1                                        |
++--------------------------------------------------------------------------+
+1 row in set (0.000 sec)
+&lt;/pre&gt;&lt;h4 class="anchored_heading" id="variation-format-during-the-conversion-has-to-be-y-m-d-otherwise-it-will-not-work"&gt;Variation: format during the conversion has to be &lt;em&gt; %Y-%m-%d&lt;/em&gt; otherwise it will not work&lt;/h4&gt;
+&lt;pre class="fixed"&gt;MariaDB [test]&amp;gt; SELECT DATE_FORMAT(DATE_FORMAT(@starttime, '%d-%m-%Y'), '%H %k %I %r %T %S %w');
++--------------------------------------------------------------------------+
+| DATE_FORMAT(DATE_FORMAT(@starttime, '%d-%m-%Y'), '%H %k %I %r %T %S %w') |
++--------------------------------------------------------------------------+
+| NULL                                                                     |
++--------------------------------------------------------------------------+
+1 row in set, 1 warning (0.000 sec)
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Anel Husakovic</dc:creator><guid>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/4146</guid></item><item><title>Re: need to load csv date data along with AM/PM values.</title><link>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/3834</link><description>&lt;p&gt;will check&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">kranthi kumar</dc:creator><guid>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/3834</guid></item><item><title>Re: need to load csv date data along with AM/PM values.</title><link>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/3833</link><description>&lt;p&gt;No aneel , where we have to use this&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">kranthi kumar</dc:creator><guid>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/3833</guid></item><item><title>Re: need to load csv date data along with AM/PM values.</title><link>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/3831</link><description>&lt;p&gt;Did you try to use `%p` format ? :)&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Anel Husakovic</dc:creator><guid>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/3831</guid></item><item><title>Re: need to load csv date data along with AM/PM values.</title><link>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/3830</link><description>&lt;p&gt;Yes anel, Used that also but no luck&lt;/p&gt;
+&lt;p&gt;set STARTTIME=date_format(@STARTTIME,'%d-%b-%y %H:%i:%s'),ENDTIME=date_format(@ENDTIME,'%d-%b-%y %H:%i:%s');&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">kranthi kumar</dc:creator><guid>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/3830</guid></item><item><title>Re: need to load csv date data along with AM/PM values.</title><link>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/3829</link><description>&lt;p&gt;Hi, 
+did you try to use &lt;a href="https://mariadb.com/kb/en/library/date_format/"&gt;dateformat&lt;/a&gt; ?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Anel Husakovic</dc:creator><guid>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/3829</guid></item><item><title>Re: need to load csv date data along with AM/PM values.</title><link>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/3826</link><description>&lt;p&gt;Dear Anel, thanks for Your reply .&lt;/p&gt;
+&lt;p&gt;27-Dec-2018 03:00:01 AM----&amp;gt; date format in CSV which i m trying to insert &lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#&lt;/code&gt;&lt;code&gt;#&lt;/code&gt;&lt;code&gt;#&lt;/code&gt;&lt;code&gt;Query &lt;/code&gt;&lt;code&gt;#&lt;/code&gt;&lt;code&gt;#&lt;/code&gt;&lt;code&gt;#&lt;/code&gt;&lt;code&gt;#&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;LOAD DATA INFILE '/var/lib/mysql/alepoblr_CDRs_2018_12_25_20_worki.csv' INTO TABLE ROI_RAWCDR_DEC_2018 FIELDS TERMINATED BY ','  ENCLOSED BY '"' ESCAPED BY '"' LINES TERMINATED BY '\r\n' (USERNAME,SESSIONID,FRAMEDIPADDRESS,SESSIONAUTHRULE,NASIPADDRESS,REQUESTTYPE,MACADDRESS,NASPORTID,FRAMED_IPV6_ADDRESS,FRAMED_INTERFACE_ID,DELEGATED_IPV6_PREFIX,AGGREGATEKEY,UPLOAD,DOWNLOAD,TOTAL,CDRTIME,@STARTTIME,@ENDTIME) set STARTTIME=str_to_date(@STARTTIME,'%d-%b-%Y %H:%i:%s')&lt;/p&gt;
+&lt;p&gt;Starttime Column should be inserted AM/PM values but its not allowing AM/PM
+....&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">kranthi kumar</dc:creator><guid>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/3826</guid></item><item><title>Re: need to load csv date data along with AM/PM values.</title><link>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/3822</link><description>&lt;p&gt;Hi,
+can you please give the test case data and queries you are using?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Anel Husakovic</dc:creator><guid>https://mariadb.com/kb/en/need-to-load-csv-date-data-along-with-ampm-values/+comments/3822</guid></item></channel></rss>

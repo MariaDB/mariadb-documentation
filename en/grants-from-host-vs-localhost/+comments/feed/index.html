@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Grants from host % vs localhost</title><link>https://mariadb.com/kb/en/grants-from-host-vs-localhost/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/grants-from-host-vs-localhost/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 02:35:57 +0000</lastBuildDate><item><title>Re: Grants from host % vs localhost</title><link>https://mariadb.com/kb/en/grants-from-host-vs-localhost/+comments/5385</link><description>&lt;p&gt;Separate users are not needed. Note however that some setups create anonymous users, which can cause failures to log in as expected from localhost. See &lt;a href="/kb/en/troubleshooting-connection-issues/#localhost-and"&gt;Troubleshooting Connection Issues#localhost and %&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/grants-from-host-vs-localhost/+comments/5385</guid></item><item><title>Re: Grants from host % vs localhost</title><link>https://mariadb.com/kb/en/grants-from-host-vs-localhost/+comments/5370</link><description>&lt;p&gt;Yes, separate users are still needed.&lt;/p&gt;
+&lt;p&gt;To simplify grants you can use a role and grant the role to both users. Then all database grants can be placed on the role and equally apply to the foo@% and foo@localhost users.&lt;/p&gt;
+&lt;pre class="fixed"&gt;MariaDB [(none)]&amp;gt; create user foo identified by 'foo';
+Query OK, 0 rows affected (0.001 sec)
+
+MariaDB [(none)]&amp;gt; create user foo@localhost identified by 'foo';
+Query OK, 0 rows affected (0.001 sec)
+
+MariaDB [(none)]&amp;gt; create role foo_role;
+Query OK, 0 rows affected (0.001 sec)
+
+MariaDB [(none)]&amp;gt; grant foo_role to foo;
+Query OK, 0 rows affected (0.001 sec)
+
+MariaDB [(none)]&amp;gt; grant foo_role to foo@localhost;
+Query OK, 0 rows affected (0.001 sec)
+
+MariaDB [(none)]&amp;gt; create database fdatabase;
+Query OK, 1 row affected (0.001 sec)
+
+MariaDB [(none)]&amp;gt; grant all on fdatabase.* to foo_role;
+Query OK, 0 rows affected (0.001 sec)
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/grants-from-host-vs-localhost/+comments/5370</guid></item><item><title>Re: Grants from host % vs localhost</title><link>https://mariadb.com/kb/en/grants-from-host-vs-localhost/+comments/5369</link><description>&lt;p&gt;Hi, &lt;/p&gt;
+&lt;p&gt;It would be much easier if you could pass the links and provide an example what you would like to achieve, but let me see if I understood you correctly.&lt;br&gt;
+When you grant privileges to the user, you can specify to which &lt;em&gt;user@host&lt;/em&gt; pair it should apply.&lt;br&gt;
+Let's look an example.
+Let's create 2 users and look the privs:&lt;/p&gt;
+&lt;pre class="fixed"&gt;MariaDB [(none)]&amp;gt; create user foo@'%' identified by 'foo1';
+Query OK, 0 rows affected (0.02 sec)
+
+MariaDB [(none)]&amp;gt; create user foo@'localhost' identified by 'foo2';
+Query OK, 0 rows affected (0.00 sec)
+
+MariaDB [(none)]&amp;gt; select user,host from mysql.user;
++------+-----------+
+| user | host      |
++------+-----------+
+| foo  | %         |
+| root | 127.0.0.1 |
+| root | ::1       |
+|      | anel      |
+| root | anel      |
+|      | localhost |
+| foo  | localhost |
+| root | localhost |
++------+-----------+
+8 rows in set (0.00 sec)
+
+MariaDB [(none)]&amp;gt; show grants for foo;
++----------------------------------------------------------------------------------------------------+
+| Grants for foo@%                                                                                   |
++----------------------------------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'foo'@'%' IDENTIFIED BY PASSWORD '*6EAC5249D53050AE649BDB0CC4B85D1AE90CA16E' |
++----------------------------------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+MariaDB [(none)]&amp;gt; show grants for foo@localhost;
++------------------------------------------------------------------------------------------------------------+
+| Grants for foo@localhost                                                                                   |
++------------------------------------------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'foo'@'localhost' IDENTIFIED BY PASSWORD '*3A4DD2A68933D2F38A899323EE91A540A7557C43' |
++------------------------------------------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+&lt;/pre&gt;&lt;p&gt;Now we can specify different privileges for them:&lt;/p&gt;
+&lt;pre class="fixed"&gt;MariaDB [(none)]&amp;gt; grant select on mysql.* to foo@localhost;
+Query OK, 0 rows affected (0.00 sec)
+
+MariaDB [(none)]&amp;gt; grant select,update on mysql.* to foo@'%';
+Query OK, 0 rows affected (0.00 sec)
+&lt;/pre&gt;&lt;p&gt;And let's verify they are different:&lt;/p&gt;
+&lt;pre class="fixed"&gt;MariaDB [(none)]&amp;gt; show grants for foo;
++----------------------------------------------------------------------------------------------------+
+| Grants for foo@%                                                                                   |
++----------------------------------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'foo'@'%' IDENTIFIED BY PASSWORD '*6EAC5249D53050AE649BDB0CC4B85D1AE90CA16E' |
+| GRANT SELECT, UPDATE ON `mysql`.* TO 'foo'@'%'                                                     |
++----------------------------------------------------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+MariaDB [(none)]&amp;gt; show grants for foo@localhost;
++------------------------------------------------------------------------------------------------------------+
+| Grants for foo@localhost                                                                                   |
++------------------------------------------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'foo'@'localhost' IDENTIFIED BY PASSWORD '*3A4DD2A68933D2F38A899323EE91A540A7557C43' |
+| GRANT SELECT ON `mysql`.* TO 'foo'@'localhost'                                                             |
++------------------------------------------------------------------------------------------------------------+
+&lt;/pre&gt;&lt;p&gt;I guess this was what you are looking for?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Anel Husakovic</dc:creator><guid>https://mariadb.com/kb/en/grants-from-host-vs-localhost/+comments/5369</guid></item></channel></rss>

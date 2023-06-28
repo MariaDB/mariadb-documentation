@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Trigger keeps creating error</title><link>https://mariadb.com/kb/en/trigger-keeps-creating-error/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/trigger-keeps-creating-error/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 01:29:31 +0000</lastBuildDate><item><title>Re: Trigger keeps creating error</title><link>https://mariadb.com/kb/en/trigger-keeps-creating-error/+comments/1290</link><description>&lt;p&gt;Thank you for that follow up. Now that all makes sense. I have been using Oracle for school, but I am now using MariaDB at home. &lt;/p&gt;
+&lt;p&gt;The two RDBMS have enough differences to be frustrating when migrating.&lt;/p&gt;
+&lt;p&gt;Again, thanks.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Kaigh Taylor</dc:creator><guid>https://mariadb.com/kb/en/trigger-keeps-creating-error/+comments/1290</guid></item><item><title>Re: Trigger keeps creating error</title><link>https://mariadb.com/kb/en/trigger-keeps-creating-error/+comments/1289</link><description>&lt;p&gt;Delimiters show the client program (HeidiSQL in your case) where a query ends, and the client sends the entire chunk of SQL to the server as a single query. The default delimiter is semicolon. So, in your initial example, the client sends everything from &lt;code&gt;CREATE&lt;/code&gt; and up and including &lt;code&gt;SET NEW.ClGender ='U'&lt;/code&gt;, which of course does not make a complete valid query. This is what the server complains about in the error message -- it finds emptiness where it expects &lt;em&gt;something else&lt;/em&gt;. &lt;/p&gt;
+&lt;p&gt;When you change the delimiter and use it at the end of the trigger definition, the client understands that the whole definition should be sent as a whole, and the server is able to interpret it correctly. &lt;/p&gt;
+&lt;p&gt;It is perfectly fine to use non-default delimiters when you define stored procedures (including triggers); you don't need to invent tricks to avoid it. It is not always possible anyway.&lt;/p&gt;
+&lt;p&gt;But if you are curious, in your case you could phrase it like this:&lt;/p&gt;
+&lt;pre&gt;
+CREATE TRIGGER trig_client_gndr 
+BEFORE INSERT ON WM_CLIENT 
+FOR EACH ROW 
+SET NEW.ClGender = IF(NEW.ClGender NOT IN ('M','F'),'U',NEW.ClGender);
+&lt;/pre&gt;
+&lt;p&gt;I think it should have worked.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Elena Stepanova</dc:creator><guid>https://mariadb.com/kb/en/trigger-keeps-creating-error/+comments/1289</guid></item><item><title>Re: Trigger keeps creating error</title><link>https://mariadb.com/kb/en/trigger-keeps-creating-error/+comments/1288</link><description>&lt;p&gt;Thank you,&lt;/p&gt;
+&lt;p&gt;That worked perfectly. Can you be so kind as to explain why it worked, and how I would write that statement without semicolons? I tried to write it without any semicolons and it gave me an error at the END IF line. Of course I removed the Delimiter statements on that attempt also.&lt;/p&gt;
+&lt;p&gt;Thanks again&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Kaigh Taylor</dc:creator><guid>https://mariadb.com/kb/en/trigger-keeps-creating-error/+comments/1288</guid></item><item><title>Re: Trigger keeps creating error</title><link>https://mariadb.com/kb/en/trigger-keeps-creating-error/+comments/1286</link><description>&lt;p&gt;Since your trigger creation contains semicolons, you need to change the statement delimiter. Something like&lt;/p&gt;
+&lt;pre&gt;
+DELIMITER | 
+CREATE TRIGGER trig_client_gndr 
+BEFORE INSERT ON WM_CLIENT 
+FOR EACH ROW 
+BEGIN 
+	IF UPPER(NEW.ClGender) NOT IN ('M','F') THEN 
+		SET NEW.ClGender ='U'; 
+	END IF; 
+END |
+DELIMITER ;
+&lt;/pre&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Elena Stepanova</dc:creator><guid>https://mariadb.com/kb/en/trigger-keeps-creating-error/+comments/1286</guid></item></channel></rss>

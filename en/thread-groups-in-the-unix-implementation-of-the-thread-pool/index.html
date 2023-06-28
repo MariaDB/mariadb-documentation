@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Thread Groups in the Unix Implementation of the Thread Pool - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Thread Groups in the Unix Implementation of the Thread Pool" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="On Unix, the thread pool divides up client connections into independent sets of threads." />
+
+    <meta name="description" content="On Unix, the thread pool divides up client connections into independent sets of threads." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/replication-cluster-multi-master/">High Availability &amp; Performance Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/optimization-and-tuning/">Optimization and Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/buffers-caches-and-threads/">Buffers, Caches and Threads</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/thread-pool/">Thread Pool</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/">Thread Groups in the Unix Implementation of the Thread Pool</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/+flag"
+                data-flag-url="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2019-04-05 03:12">3 years, 11 months ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2019-06-02 08:56">3 years, 9 months ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+    
+    
+
+<div class="well well-small box"><div><h5>Product Versions</h5></div><div>
+
+        <ul id="product_chooser">
+            
+                <li class="mariadb_from_10_5">
+                    <label><input type="checkbox" data-product-class="mariadb_from_10_5"
+                            >MariaDB starting with 10.5</label>
+                </li>
+            
+                <li class="mariadb_to_10_4">
+                    <label><input type="checkbox" data-product-class="mariadb_to_10_4"
+                            >MariaDB until 10.4</label>
+                </li>
+            
+                <li class="mariadb_from_10_5">
+                    <label><input type="checkbox" data-product-class="mariadb_from_10_5"
+                            >MariaDB starting with 10.5</label>
+                </li>
+            
+                <li class="mariadb_to_10_4">
+                    <label><input type="checkbox" data-product-class="mariadb_to_10_4"
+                            >MariaDB until 10.4</label>
+                </li>
+            
+        </ul>
+    
+</div>
+</div>
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Thread Groups in the Unix Implementation of the Thread Pool</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="cstm-style bluebox"><p>This article does not apply to the thread pool implementation on Windows. On Windows, MariaDB uses a native thread pool created with the <code><a href="https://docs.microsoft.com/en-us/windows/desktop/api/threadpoolapiset/nf-threadpoolapiset-createthreadpool">CreateThreadpool</a></code> APl, which has its own methods to distribute threads between CPUs.</p>
+</div><div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#distributing-client-connections-between-thread-groups" title="Distributing Client Connections Between Thread Groups">Distributing Client Connections Between Thread Groups</a></li>
+
+    <li class=""><a href="#types-of-threads" title="Types of Threads">Types of Threads</a>    <ol class="toc">
+
+        <li class=""><a href="#thread-group-threads" title="Thread Group Threads">Thread Group Threads</a></li>
+
+        <li class=""><a href="#global-threads" title="Global Threads">Global Threads</a>    </ol>
+</li>
+
+    <li class=""><a href="#thread-creation" title="Thread Creation">Thread Creation</a>    <ol class="toc">
+
+        <li class=""><a href="#worker-thread-creation-by-listener-thread" title="Worker Thread Creation by Listener Thread">Worker Thread Creation by Listener Thread</a></li>
+
+        <li class=""><a href="#thread-creation-by-worker-threads-during-waits" title="Thread Creation by Worker Threads during Waits">Thread Creation by Worker Threads during Waits</a></li>
+
+        <li class=""><a href="#listener-thread-creation-by-timer-thread" title="Listener Thread Creation by Timer Thread">Listener Thread Creation by Timer Thread</a></li>
+
+        <li class=""><a href="#worker-thread-creation-by-timer-thread-during-stalls" title="Worker Thread Creation by Timer Thread during Stalls">Worker Thread Creation by Timer Thread during Stalls</a></li>
+
+        <li class=""><a href="#thread-creation-throttling" title="Thread Creation Throttling">Thread Creation Throttling</a>    </ol>
+</li>
+
+    <li class=""><a href="#thread-group-stalls" title="Thread Group Stalls">Thread Group Stalls</a>    <ol class="toc">
+
+        <li class=""><a href="#thread-group-oversubscription" title="Thread Group Oversubscription">Thread Group Oversubscription</a>    </ol>
+ </ol>
+</li>
+</div>
+<p>On Unix, the thread pool implementation uses objects called thread groups to divide up client connections into many independent sets of threads. The <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_size">thread_pool_size</a></code> system variable defines the number of thread groups on a system. Generally speaking, the goal of the thread group implementation is to have one running thread on each CPU on the system at a time. Therefore, the default value of the <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_size">thread_pool_size</a></code> system variable is auto-sized to the number of CPUs on the system.</p>
+<p>When setting the <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_size">thread_pool_size</a></code> system variable's value at system startup, the max value is <code>100000</code>. However, it is not a good idea to set it that high. When setting its value dynamically, the max value is either <code>128</code> or the value that was set at system startup--whichever value is higher. It can be changed dynamically with <code><a href="/kb/en/set/#global-session">SET GLOBAL</a></code>. For example:</p>
+<pre class="fixed">SET GLOBAL thread_pool_size=32;
+</pre><p>It can also be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
+<pre class="fixed">[mariadb]
+..
+thread_handling=pool-of-threads
+thread_pool_size=32
+</pre><p>If you do not want MariaDB to use all CPUs on the system for some reason, then you can set it to a lower value than the number of CPUs. For example, this would make sense if the MariaDB Server process is limited to certain CPUs with the <code><a href="https://linux.die.net/man/1/taskset">taskset</a></code> utility on Linux.</p>
+<p>If you set the value to the number of CPUs and if you find that the CPUs are still underutilized, then try increasing the value.</p>
+<p>The <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_size">thread_pool_size</a></code> system variable tends to have the most visible performance effect. It is roughly equivalent to the number of threads that can run at the same time. In this case, run means use CPU, rather than sleep or wait. If a client connection needs to sleep or wait for some reason, then it wakes up another client connection in the thread group before it does so.</p>
+<div class="cstm-style greenbox"><p>One reason that CPU underutilization may occur in rare cases is that the thread pool is not always informed when a thread is going to wait. For example, some waits, such as a page fault or a miss in the OS buffer cache, cannot be detected by MariaDB. Prior to <a href="/kb/en/what-is-mariadb-100/">MariaDB 10.0</a>, network I/O related waits could also be missed.</p>
+</div><h2 class="anchored_heading" id="distributing-client-connections-between-thread-groups">Distributing Client Connections Between Thread Groups</h2>
+<p>When a new client connection is created, its thread group is determined using the following calculation:</p>
+<pre class="fixed">thread_group_id = connection_id %  thread_pool_size
+</pre><p>The <code>connection_id</code> value in the above calculation is the same monotonically increasing number that you can use to identify connections in <code><a href="/kb/en/show-processlist/">SHOW PROCESSLIST</a></code> output or the <code><a href="/kb/en/information-schema-processlist-table/">information_schema.PROCESSLIST</a></code> table.</p>
+<p>This calculation should assign client connections to each thread group in a round-robin manner. In general, this should result in an even distribution of client connections among thread groups.</p>
+<h2 class="anchored_heading" id="types-of-threads">Types of Threads</h2>
+<h3 class="anchored_heading" id="thread-group-threads">Thread Group Threads</h3>
+<p>Thread groups have two different kinds of threads: a <strong>listener thread</strong> and <strong>worker threads</strong>.</p>
+<ul start="1"><li>A thread group's <strong>worker threads</strong> actually perform work on behalf of client connections. A thread group can have many <strong>worker threads</strong>, but usually, only one will be actively running at a time. This is not always the case. For example, the thread group can become <em>oversubscribed</em> if the thread pool's <strong>timer thread</strong> detects that the thread group is <em>stalled</em>. This is explained more in the sections below.
+</li></ul>
+<ul start="1"><li>A thread group's <strong>listener thread</strong> listens for I/O events and distributes work to the <strong>worker threads</strong>. If it detects that there is a request that needs to be worked on, then it can wake up a sleeping <strong>worker thread</strong> in the thread group, if any exist. If the <strong>listener thread</strong> is the only thread in the thread group, then it can also create a new <strong>worker thread</strong>. If there is only one request to handle, and if the <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_dedicated_listener">thread_pool_dedicated_listener</a></code> system variable is not enabled, then the <strong>listener thread</strong> can also become a <strong>worker thread</strong> and handle the request itself. This helps decrease the overhead that may be introduced by excessively waking up sleeping <strong>worker threads</strong> and excessively creating new <strong>worker threads</strong>.
+</li></ul>
+<h3 class="anchored_heading" id="global-threads">Global Threads</h3>
+<p>The thread pool has one global thread: a <strong>timer thread</strong>. The <strong>timer thread</strong> performs tasks, such as:</p>
+<ul start="1"><li>Checks each thread group for stalls.
+</li><li>Ensures that each thread group has a <strong>listener thread</strong>.
+</li></ul>
+<h2 class="anchored_heading" id="thread-creation">Thread Creation</h2>
+<p>A new thread is created in a thread group in the scenarios listed below.</p>
+<p>In all of the scenarios below, the thread pool implementation prefers to wake up a sleeping <strong>worker thread</strong> that already exists in the thread group, rather than to create a new thread.</p>
+<h3 class="anchored_heading" id="worker-thread-creation-by-listener-thread">Worker Thread Creation by Listener Thread</h3>
+<p>A thread group's <strong>listener thread</strong> can create a new <strong>worker thread</strong> when it has more client connection requests to distribute, but no pre-existing <strong>worker threads</strong> are available to work on the requests. This can help to ensure that the thread group always has enough threads to keep one <strong>worker thread</strong> active at a time.</p>
+<p>A thread group's <strong>listener thread</strong> creates a new <strong>worker thread</strong> if all of the following conditions are met:</p>
+<ul start="1"><li>The <strong>listener thread</strong> receives a client connection request that needs to be worked on.
+</li><li>There are more client connection requests in the thread group's work queue that the <strong>listener thread</strong> still needs to distribute to <strong>worker threads</strong>, so the <strong>listener thread</strong> should not become a <strong>worker thread</strong>.
+</li><li>There are no active <strong>worker threads</strong> in the thread group.
+</li><li>There are no sleeping <strong>worker threads</strong> in the thread group that the <strong>listener thread</strong> can wake up.
+</li><li>And one of the following conditions is also met:
+<ul start="1"><li>The entire thread pool has fewer than <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code>.
+</li><li>There are fewer than two threads in the thread group. This is to guarantee that each thread group can have at least two threads, even if <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code> has already been reached or exceeded.
+</li></ul>
+</li></ul>
+<h3 class="anchored_heading" id="thread-creation-by-worker-threads-during-waits">Thread Creation by Worker Threads during Waits</h3>
+<p>A thread group's <strong>worker thread</strong> can create a new <strong>worker thread</strong> when the thread has to wait on something, and the thread group has more client connection requests queued, but no pre-existing <strong>worker threads</strong> are available to work on them. This can help to ensure that the thread group always has enough threads to keep one <strong>worker thread</strong> active at a time. For most workloads, this tends to be the primary mechanism that creates new <strong>worker threads</strong>.</p>
+<p>A thread group's <strong>worker thread</strong> creates a new thread if all of the following conditions are met:</p>
+<ul start="1"><li>The <strong>worker thread</strong> has to wait on some request. For example, it might be waiting on disk I/O, or it might be waiting on a lock, or it might just be waiting for a query that called the <code><a href="/kb/en/sleep/">SLEEP()</a></code> function to finish.
+</li><li>There are no active <strong>worker threads</strong> in the thread group.
+</li><li>There are no sleeping <strong>worker threads</strong> in the thread group that the <strong>worker thread</strong> can wake up.
+</li><li>And one of the following conditions is also met:
+<ul start="1"><li>The entire thread pool has fewer than <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code>.
+</li><li>There are fewer than two threads in the thread group. This is to guarantee that each thread group can have at least two threads, even if <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code> has already been reached or exceeded.
+</li></ul>
+</li><li>And one of the following conditions is also met:
+<ul start="1"><li>There are more client connection requests in the thread group's work queue that the <strong>listener thread</strong> still needs to distribute to <strong>worker threads</strong>. In this case, the new thread is intended to be a <strong>worker thread</strong>.
+</li><li>There is currently no <strong>listener thread</strong> in the thread group. For example, if the <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_dedicated_listener">thread_pool_dedicated_listener</a></code> system variable is not enabled, then the thread group's <strong>listener thread</strong> can became a <strong>worker thread</strong>, so that it could handle some client connection request. In this case, the new thread can become the thread group's <strong>listener thread</strong>.
+</li></ul>
+</li></ul>
+<h3 class="anchored_heading" id="listener-thread-creation-by-timer-thread">Listener Thread Creation by Timer Thread</h3>
+<p>The thread pool's <strong>timer thread</strong> can create a new <strong>listener thread</strong> for a thread group when the thread group has more client connection requests that need to be distributed, but the thread group does not currently have a <strong>listener thread</strong> to distribute them. This can help to ensure that the thread group does not miss client connection requests because it has no <strong>listener thread</strong>.</p>
+<p>The thread pool's <strong>timer thread</strong> creates a new <strong>listener thread</strong> for a thread group if all of the following conditions are met:</p>
+<ul start="1"><li>The thread group has not handled any I/O events since the last check by the timer thread.
+</li><li>There is currently no <strong>listener thread</strong> in the thread group. For example, if the <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_dedicated_listener">thread_pool_dedicated_listener</a></code> system variable is not enabled, then the thread group's <strong>listener thread</strong> can became a <strong>worker thread</strong>, so that it could handle some client connection request. In this case, the new thread can become the thread group's <strong>listener thread</strong>.
+</li><li>There are no sleeping <strong>worker threads</strong> in the thread group that the <strong>timer thread</strong> can wake up.
+</li><li>And one of the following conditions is also met:
+<ul start="1"><li>The entire thread pool has fewer than <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code>.
+</li><li>There are fewer than two threads in the thread group. This is to guarantee that each thread group can have at least two threads, even if <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code> has already been reached or exceeded.
+</li></ul>
+</li><li>If the thread group already has active <strong>worker threads</strong>, then the following condition also needs to be met:
+<ul start="1"><li>A <strong>worker thread</strong> has not been created for the thread group within the <em>throttling interval</em>.
+</li></ul>
+</li></ul>
+<h3 class="anchored_heading" id="worker-thread-creation-by-timer-thread-during-stalls">Worker Thread Creation by Timer Thread during Stalls</h3>
+<p>The thread pool's <strong>timer thread</strong> can create a new <strong>worker thread</strong> for a thread group when the thread group is stalled. This can help to ensure that a long query can't monopole its thread group.</p>
+<p>The thread pool's <strong>timer thread</strong> creates a new <strong>worker thread</strong> for a thread group if all of the following conditions are met:</p>
+<ul start="1"><li>The <strong>timer thread</strong> thinks that the thread group is stalled. This means that the following conditions have been met:
+<ul start="1"><li>There are more client connection requests in the thread group's work queue that the <strong>listener thread</strong> still needs to distribute to <strong>worker threads</strong>.
+</li><li>No client connection requests have been allowed to be dequeued to run since the last stall check by the <strong>timer thread</strong>.
+</li></ul>
+</li><li>There are no sleeping <strong>worker threads</strong> in the thread group that the <strong>timer thread</strong> can wake up.
+</li><li>And one of the following conditions is also met:
+<ul start="1"><li>The entire thread pool has fewer than <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code>.
+</li><li>There are fewer than two threads in the thread group. This is to guarantee that each thread group can have at least two threads, even if <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_max_threads">thread_pool_max_threads</a></code> has already been reached or exceeded.
+</li></ul>
+</li><li>A <strong>worker thread</strong> has not been created for the thread group within the <em>throttling interval</em>.
+</li></ul>
+<h3 class="anchored_heading" id="thread-creation-throttling">Thread Creation Throttling</h3>
+<p>In some of the scenarios listed above, a thread is only created within a thread group if no new threads have been created for the thread group within the <em>throttling interval</em>. The throttling interval depends on the number of threads that are already in the thread group.</p>
+<div class="mariadb_from_10_5 mariadb from_10_5 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-105/">10.5</a></h5><p>In <a href="/kb/en/what-is-mariadb-105/">MariaDB 10.5</a> and later, thread creation is not throttled until a thread group has more than 1 + <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_oversubscribe">thread_pool_oversubscribe</a></code> threads:</p>
+<div class="cstm-style darkheader-nospace-borders centered"><table><tr><th>Number of Threads in Thread Group</th><th>Throttling Interval (milliseconds)</th></tr>
+<tr><td>0-(1 + <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_oversubscribe">thread_pool_oversubscribe</a></code>)</td><td>0</td></tr>
+<tr><td>4-7</td><td>50 * <code>THROTTLING_FACTOR</code></td></tr>
+<tr><td>8-15</td><td>100 * <code>THROTTLING_FACTOR</code></td></tr>
+<tr><td>16-65536</td><td>20 * <code>THROTTLING_FACTOR</code></td></tr>
+</table>
+</div><p><code>THROTTLING_FACTOR = (<a href="/kb/en/thread-pool-system-status-variables/#thread_pool_stall_limit">thread_pool_stall_limit</a> / MAX (500,<a href="/kb/en/thread-pool-system-status-variables/#thread_pool_stall_limit">thread_pool_stall_limit</a>))</code></p>
+</div><div class="mariadb_to_10_4 mariadb to_10_4 product"><h5 class="product_title">MariaDB until <a href="/kb/en/what-is-mariadb-104/">10.4</a></h5><p>In <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a> and before, thread creation is throttled when a thread group has more than 3 threads:</p>
+<div class="cstm-style darkheader-nospace-borders centered"><table><tr><th>Number of Threads in Thread Group</th><th>Throttling Interval (milliseconds)</th></tr>
+<tr><td>0-3</td><td>0</td></tr>
+<tr><td>4-7</td><td>50</td></tr>
+<tr><td>8-15</td><td>100</td></tr>
+<tr><td>16-65536</td><td>200</td></tr>
+</table>
+</div></div><h2 class="anchored_heading" id="thread-group-stalls">Thread Group Stalls</h2>
+<p>The thread pool has a feature that allows it to detect if a client connection is executing a long-running query that may be monopolizing its thread group. If a client connection were to monopolize its thread group, then that could prevent other client connections in the thread group from running their queries. In other words, the thread group would appear to be <em>stalled</em>.</p>
+<p>This stall detection feature is implemented by creating a <strong>timer thread</strong> that periodically checks if any of the thread groups are stalled. There is only a single <strong>timer thread</strong> for the entire thread pool. The <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_stall_limit">thread_pool_stall_limit</a></code> system variable defines the number of milliseconds between each stall check performed by the timer thread. The default value is <code>500</code>. It can be changed dynamically with <code><a href="/kb/en/set/#global-session">SET GLOBAL</a></code>. For example:</p>
+<pre class="fixed">SET GLOBAL thread_pool_stall_limit=300;
+</pre><p>It can also be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
+<pre class="fixed">[mariadb]
+..
+thread_handling=pool-of-threads
+thread_pool_size=32
+thread_pool_stall_limit=300
+</pre><p>The <strong>timer thread</strong> considers a thread group to be stalled if the following is true:</p>
+<ul start="1"><li>There are more client connection requests in the thread group's work queue that the <strong>listener thread</strong> still needs to distribute to <strong>worker threads</strong>.
+</li><li>No client connection requests have been allowed to be dequeued to run since the last stall check by the <strong>timer thread</strong>.
+</li></ul>
+<p>This indicates that the one or more client connections currently using the active <strong>worker threads</strong> may be monopolizing the thread group, and preventing the queued client connections from performing work. When the <strong>timer thread</strong> detects that a thread group is stalled, it wakes up a sleeping <strong>worker thread</strong> in the thread group, if one is available. If there isn't one, then it creates a new <strong>worker thread</strong> in the thread group. This temporarily allows several client connections in the thread group to run in parallel.</p>
+<div class="cstm-style greenbox"><p>The <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_stall_limit">thread_pool_stall_limit</a></code> system variable essentially defines the limit for what a "fast query" is. If a query takes longer than <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_stall_limit">thread_pool_stall_limit</a></code>, then the thread pool is likely to think that it is too slow, and it will either wake up a sleeping worker thread or create a new worker thread to let another client connection in the thread group run a query in parallel.</p>
+</div><p>In general, changing the value of the <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_stall_limit">thread_pool_stall_limit</a></code> system variable has the following effect:</p>
+<ul start="1"><li>Setting it to <strong>higher</strong> values can help avoid starting too many parallel threads if you expect a lot of client connections to execute long-running queries.
+</li><li>Setting it to <strong>lower</strong> values can help prevent deadlocks.
+</li></ul>
+<h3 class="anchored_heading" id="thread-group-oversubscription">Thread Group Oversubscription</h3>
+<p>If the <strong>timer thread</strong> were to detect a stall in a thread group, then it would either wake up a sleeping <strong>worker thread</strong> or create a new <strong>worker thread</strong> in that thread group. At that point, the thread group would have multiple active <strong>worker threads</strong>. In other words, the thread group would be <em>oversubscribed</em>.</p>
+<p>You might expect that the thread pool would shutdown one of the <strong>worker threads</strong> when the stalled client connection finished what it was doing, so that the thread group would only have one active <strong>worker thread</strong> again. However, this does not always happen. Once a thread group is oversubscribed, the <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_oversubscribe">thread_pool_oversubscribe</a></code> system variable defines the upper limit for when <strong>worker threads</strong> start shutting down after they finish work for client connections. The default value is <code>3</code>. It can be changed dynamically with <code><a href="/kb/en/set/#global-session">SET GLOBAL</a></code>. For example:</p>
+<pre class="fixed">SET GLOBAL thread_pool_oversubscribe=10;
+</pre><p>It can also be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
+<pre class="fixed">[mariadb]
+..
+thread_handling=pool-of-threads
+thread_pool_size=32
+thread_pool_stall_limit=300
+thread_pool_oversubscribe=10
+</pre><div class="cstm-style greenbox"><p>To clarify, the <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_oversubscribe">thread_pool_oversubscribe</a></code> system variable does not play any part in the creation of new <strong>worker threads</strong>. The <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_oversubscribe">thread_pool_oversubscribe</a></code> system variable is only used to determine how many <strong>worker threads</strong> should remain active in a thread group, once a thread group is already oversubscribed due to stalls.</p>
+</div><p>In general, the default value of <code>3</code> should be adequate for most users. Most users should not need to change the value of the <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_oversubscribe">thread_pool_oversubscribe</a></code> system variable.</p>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/thread-pool-in-mariadb/">
+                        ← Thread Pool in MariaDB
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/thread-pool/">
+                        ↑ Thread Pool ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/thread-pool-system-status-variables/">
+                        Thread Pool System and Status Variables →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="8812" data-comments-url="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/+comments"
+         data-reply-url="/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/thread-pool/">
+                    ↑ Thread Pool ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/thread-pool-in-mariadb/">
+                            
+                            Thread Pool in MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Thread Groups in the Unix Implementation of the Thread Pool</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/thread-pool-system-status-variables/">
+                            
+                            Thread Pool System and Status Variables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/thread-pool-in-mariadb-51-53/">
+                            
+                            Thread Pool in MariaDB 5.1 - 5.3
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

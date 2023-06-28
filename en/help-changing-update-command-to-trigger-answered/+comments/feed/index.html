@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Help changing update command to trigger (answered)</title><link>https://mariadb.com/kb/en/help-changing-update-command-to-trigger-answered/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/help-changing-update-command-to-trigger-answered/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 01:50:24 +0000</lastBuildDate><item><title>Re: Help changing update command to trigger (answered)</title><link>https://mariadb.com/kb/en/help-changing-update-command-to-trigger-answered/+comments/4658</link><description>&lt;p&gt;(Answer by OP)
+It may have been as simple as not using phpmyadmin... when i entered the command at the command line: 
+&lt;/p&gt;&lt;pre class="fixed"&gt;MariaDB [sensor_logs]&amp;gt; CREATE TRIGGER add_desc 
+  BEFORE insert on telemetry_log 
+  FOR EACH ROW set new.device_desc = (
+&lt;/pre&gt;&lt;p&gt;
+IT WORKED perfectly.. Thank you for all the help.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/help-changing-update-command-to-trigger-answered/+comments/4658</guid></item><item><title>Re: Help changing update command to trigger</title><link>https://mariadb.com/kb/en/help-changing-update-command-to-trigger-answered/+comments/4651</link><description>&lt;p&gt;I appreciate this community, thank you for this help. I am trying to watch table: telemetry_log for any insert. Upon any insert on telemetry_log i would like to update the column: device_desc of that newly inserted row with the device_desc from table: id_name_update based on matching device_ids. Currently the command is running our of a bash script that uses the data remotely.&lt;/p&gt;
+&lt;p&gt;I understand the basic principles of triggers, as I said i tried 100's of different possibilities.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt; HERE ARE SOME FAILED ATTEMPTS&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;DROP IF EXISTS TRIGGER add_desc&lt;/p&gt;
+&lt;p&gt;DELIMITER $$&lt;/p&gt;
+&lt;p&gt;CREATE TRIGGER add_desc BEFORE INSERT ON telemetry_log FOR EACH ROW BEGIN INSERT device_desc INTO NEW.device_desc FROM id_name_update;
+END$$&lt;/p&gt;
+&lt;p&gt;DELIMITER ; &lt;/p&gt;
+&lt;p&gt;DROP IF EXISTS TRIGGER add_desc DELIMITER CREATE TRIGGER add_desc BEFORE INSERT ON telemetry_log BEGIN&lt;/p&gt;
+&lt;p&gt;INSERT device_desc INTO NEW.device_desc From id_name_update WHERE NEW.device_id = device_id; END DELIMITER ; &lt;u&gt;_&lt;/u&gt;_&lt;/p&gt;
+&lt;p&gt;CREATE TRIGGER add_desc AFTER INSERT ON telemetry_log BEGIN UPDATE telemetry_log SET id_name_update ON telemetry_log.device_id = id_name_update.device_id SET telemetry_log.device_desc = id_name_update.device_desc WHERE telemetry_log.device_desc IS NULL"; END; &lt;/p&gt;
+&lt;p&gt;DROP IF EXISTS TRIGGER add_desc&lt;/p&gt;
+&lt;p&gt;DELIMITER $$&lt;/p&gt;
+&lt;p&gt;CREATE TRIGGER add_desc before insert on telemetry_log&lt;/p&gt;
+&lt;p&gt;UPDATE telemetry_log SET NEW.device_desc = id_name_update.device_desc WHERE NEW.devie_desc IS NULL;&lt;/p&gt;
+&lt;p&gt;end; $$ delimiter ;&lt;/p&gt;
+&lt;p&gt;DROP IF EXISTS TRIGGER add_desc&lt;/p&gt;
+&lt;p&gt;DELIMITER $$&lt;/p&gt;
+&lt;p&gt;CREATE TRIGGER add_desc before insert on telemetry_log&lt;/p&gt;
+&lt;p&gt;UPDATE telemetry_log JOIN id_name_update ON telemetry_log.device_id = id_name_update.device_id SET telemetry_log.device_desc = id_name_update.device_desc WHERE telemetry_log.devie_desc IS NULL;&lt;/p&gt;
+&lt;p&gt;end; $$ delimiter ;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Shawn Logan</dc:creator><guid>https://mariadb.com/kb/en/help-changing-update-command-to-trigger-answered/+comments/4651</guid></item><item><title>Re: Help changing update command to trigger</title><link>https://mariadb.com/kb/en/help-changing-update-command-to-trigger-answered/+comments/4649</link><description>&lt;p&gt;Where are you declaring the trigger?&lt;/p&gt;
+&lt;p&gt;A "trigger" is like a table procedure that is "triggered" by an action on some other table.&lt;/p&gt;
+&lt;p&gt;So, it looks to me that you want that whenever there is a change to `id_name_update`, you want some corresponding change to happen in `telemetry_log`.&lt;/p&gt;
+&lt;p&gt;If that is so, get rid of the JOIN in the UPDATE and declare it as a trigger within `id_name_update`.&lt;/p&gt;
+&lt;p&gt;That will update `telemetry_log` atomically with changes to  `id_name_update`, a a single transaction — both events succeed, or both are rolled back.&lt;/p&gt;
+&lt;p&gt;If you'd rather do it as a batch, at some time after the change to `id_name_update`, you need to use an EVENT rather than a TRIGGER. Un such a case, the JOIN you have in your UPDATE is needed. &lt;a href="https://mariadb.com/kb/en/event-scheduler/"&gt;https://mariadb.com/kb/en/event-scheduler/&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jan Steinman</dc:creator><guid>https://mariadb.com/kb/en/help-changing-update-command-to-trigger-answered/+comments/4649</guid></item></channel></rss>

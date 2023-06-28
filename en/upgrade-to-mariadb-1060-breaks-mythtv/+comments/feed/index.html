@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Upgrade to MariaDB 10.6.0 breaks MythTV</title><link>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 00:56:24 +0000</lastBuildDate><item><title>Re: Upgrade to MariaDB 10.6.0 breaks MythTV</title><link>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/5222</link><description>&lt;p&gt;I re-compiled MythTV with no errors, but still it would not start complaining about "MySQL time zone support is missing".  I found an archived version of the &lt;a href="/kb/en/mariadb-1059-release-notes/"&gt;MariaDB 10.5.9&lt;/a&gt; slackpkg and installed it whereupon MythTV starts just fine now.  I have to assume there is more to the time zone support in MariaDB other than loading the timezone tables.  Thanks for the help from everyone.  I will be waiting anxiously for the next version of MariaDB to see if time zone support is added back.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Rob Rutledge</dc:creator><guid>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/5222</guid></item><item><title>Re: Upgrade to MariaDB 10.6.0 breaks MythTV</title><link>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/5218</link><description>&lt;p&gt;Thanks again for the quick response.  I did try the statement in the MariaDB shell as mentioned above and it did return a date and time, UTC that is.  I believe it was returning a NULL response before.  I am re-compiling MythTV now to see if that is what is needed.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Rob Rutledge</dc:creator><guid>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/5218</guid></item><item><title>Re: Upgrade to MariaDB 10.6.0 breaks MythTV</title><link>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/5217</link><description>&lt;p&gt;What does &lt;code&gt;SELECT CONVERT_TZ(NOW(), 'SYSTEM', 'Etc/UTC');&lt;/code&gt; return? This seems to be the &lt;a href="https://github.com/MythTV/mythtv/blob/69d12b67b625ed8baedd47feeff0174da6dedc46/mythtv/libs/libmythbase/dbutil.cpp#L866"&gt;query MythTV uses to test&lt;/a&gt;. If it returns NULL, the time zones have not been loaded correctly by &lt;a href="/kb/en/mysql_tzinfo_to_sql/"&gt;mysql_tzinfo_to_sql&lt;/a&gt;. If it returns a value, for example:&lt;/p&gt;
+&lt;pre class="fixed"&gt;SELECT CONVERT_TZ(NOW(), 'SYSTEM', 'Etc/UTC');
++----------------------------------------+
+| CONVERT_TZ(NOW(), 'SYSTEM', 'Etc/UTC') |
++----------------------------------------+
+| 2021-05-03 20:58:44                    |
++----------------------------------------+
+&lt;/pre&gt;&lt;p&gt;then the time zones have been loaded correctly (and I'm not sure why MythTV is failing).&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/5217</guid></item><item><title>Re: Upgrade to MariaDB 10.6.0 breaks MythTV</title><link>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/5215</link><description>&lt;p&gt;I ran "mysql_tzinfo_to_sql /usr/share/zoneinfo &amp;gt; tz.fix" so I would have access to the tz.fix file to substitute the backticks to the reserved word "Offset".  I then wrote this perl script to make the substitution.&lt;/p&gt;
+&lt;pre class="fixed"&gt;
+#!/usr/bin/perl
+use warnings;
+
+$file = &amp;#34;/home/robby/mythtv_timezone_issues/tz.fix&amp;#34;;
+
+rename($file, $file . '.bak');
+print &amp;#34;Made it to rename\n&amp;#34;;
+open(IN, '&amp;lt;' . $file . '.bak') or die $!;
+print &amp;#34;Made it to open input file\n&amp;#34;;
+open(OUT, '&amp;gt;' . $file) or die $!;
+print &amp;#34;Made it to open output file\n&amp;#34;;
+while(&amp;lt;IN&amp;gt;)
+{
+    $_ =~ s/Offset/`Offset`/g;
+    print OUT $_;
+}
+close(IN);
+close(OUT);
+
+&lt;/pre&gt;&lt;p&gt;The substitution was successful and then I ran "cat tz.fix | mysql -u root -p mysql".  Running the corrected tz.fix file ran okay with no syntax errors and the timezone columns are now populated in the mysql database timezone tables.  Unfortunaely Mythtv will not start with the same error.&lt;/p&gt;
+&lt;pre class="fixed"&gt;
+# tail -f mythbackend.20210503173528.1707.log
+2021-05-03 12:35:29.642992 I [1707/1707] CoreContext mythcorecontext.cpp:1842 (SaveLocaleDefaults) - Current locale en_US
+2021-05-03 12:35:29.646142 N [1707/1707] CoreContext mythlocale.cpp:121 (LoadDefaultsFromXML) - Reading locale defaults from /usr/local/share/mythtv//locales/en_us.xml
+2021-05-03 12:35:30.316474 I [1707/1707] CoreContext platforms/mythpowerdbus.cpp:530 (AcquireLock) - PowerDBus: Failed to delay sleep,shutdown: Permission denied
+2021-05-03 12:35:30.318929 I [1707/1707] CoreContext platforms/mythpowerdbus.cpp:360 (DeviceAdded) - PowerDBus: Added UPower.Device '/org/freedesktop/UPower/devices/ups_hiddev0'
+2021-05-03 12:35:30.319178 I [1707/1707] CoreContext mythpower.cpp:348 (PowerLevelChanged) - Power: On AC power
+2021-05-03 12:35:30.366553 I [1707/1707] CoreContext mythpower.cpp:131 (Init) - Power: Supported actions: None
+2021-05-03 12:35:30.368601 I [1707/1707] CoreContext mythtranslation.cpp:62 (load) - Loading en_us translation for module mythfrontend
+2021-05-03 12:35:30.371577 E [1707/1707] CoreContext main_helpers.cpp:563 (run_backend) - MySQL time zone support is missing.  Please install it and try again.  See 'mysql_tzinfo_to_sql' for assistance.
+2021-05-03 12:35:30.372457 I [1707/1707] CoreContext platforms/mythpowerdbus.cpp:72 (~MythPowerDBus) - PowerDBus: Closing interfaces
+2021-05-03 12:35:30.373170 I [1707/1707] CoreContext mythcontext.cpp:1665 (~MythContext) - Exiting
+
+&lt;/pre&gt;&lt;p&gt;I even restarted the server in case the timezone info had been cached, but to no avail.  MythTV is still complaining about "MySQL time zone support is missing".  I have to assume there is something else that must be done to provide the time zone support.   &lt;/p&gt;
+&lt;p&gt;Thanks for the help so far.  Anybody got anymore ideas?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Rob Rutledge</dc:creator><guid>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/5215</guid></item><item><title>Re: Upgrade to MariaDB 10.6.0 breaks MythTV</title><link>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/5214</link><description>&lt;p&gt;10.6.0 was an alpha release, so bugs are expected and this one probably won't make a difference to the release schedule. There's a lot of development work being done on 10.6 right now, so the next release could be in the next couple of weeks. &lt;/p&gt;
+&lt;p&gt;Without looking in any detail, the workaround you mention sounds like it should work to me.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/5214</guid></item><item><title>Re: Upgrade to MariaDB 10.6.0 breaks MythTV</title><link>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/5212</link><description>&lt;p&gt;Thanks for the quick reply/comment. A couple of questions here...&lt;/p&gt;
+&lt;p&gt;How long will it be before the next release? Is it possible the next release would be soon because of this known bug?&lt;/p&gt;
+&lt;p&gt;Is it possible I could run the reg expression substitution 's/Offset'Offset'/' on the mysql_tzinfo_to_sql script to put Offset in quotes and then run the modified script without running the whole bash script you show in your github link?&lt;/p&gt;
+&lt;p&gt;Thanks;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Rob Rutledge</dc:creator><guid>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/5212</guid></item><item><title>Re: Upgrade to MariaDB 10.6.0 breaks MythTV</title><link>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/5207</link><description>&lt;p&gt;Apologizes, I discovered this too after release, &lt;a href="https://jira.mariadb.org/browse/MDEV-25556"&gt;MDEV-25556&lt;/a&gt;. This will be corrected by next release.&lt;/p&gt;
+&lt;p&gt;If you have access to MythTV's scripts you could do something like I did here: &lt;a href="https://github.com/MariaDB/mariadb-docker/commit/05b608ee5a2c24ae09936e7609b48f589fcd368a"&gt;https://github.com/MariaDB/mariadb-docker/commit/05b608ee5a2c24ae09936e7609b48f589fcd368a&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;mysql_tzinfo_to_sql | sed -e 's/Offset/`Offset`/' | mysql ....&lt;/p&gt;
+&lt;p&gt;Thank you for testing. Please put any other bugs you find in &lt;a href="https://jira.mariadb.org"&gt;https://jira.mariadb.org&lt;/a&gt;.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/upgrade-to-mariadb-1060-breaks-mythtv/+comments/5207</guid></item></channel></rss>

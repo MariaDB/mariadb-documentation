@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Cassandra Storage Engine Overview</title><link>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Tue, 14 Mar 2023 20:11:41 +0000</lastBuildDate><item><title>Re: Using Primary Index in Select..</title><link>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/1274</link><description>&lt;p&gt;What does the EXPLAIN show for word &amp;gt;'hello'?  I guess it will have type=ALL, which means a full table scan.&lt;/p&gt;
+&lt;p&gt;Internally, Cassandra's Thrift API for primary key lookups is:&lt;/p&gt;
+&lt;p&gt;list&amp;lt;ColumnOrSuperColumn&amp;gt; get_slice(binary key, ColumnParent column_parent, SlicePredicate predicate, ConsistencyLevel consistency_level)&lt;/p&gt;
+&lt;p&gt;(see &lt;a href="http://wiki.apache.org/cassandra/API10"&gt;http://wiki.apache.org/cassandra/API10&lt;/a&gt;). Note that you have to provide one single key value, not a range of values.&lt;/p&gt;
+&lt;p&gt;There is get_range_slices() call, which looks as if it was returning records in a range, but there is a catch. Cassandra docs say:&lt;/p&gt;
+&lt;p&gt;"Note that when using RandomPartitioner, keys are stored in the order of their MD5 hash, making it impossible to get a meaningful range of keys between two endpoints."&lt;/p&gt;
+&lt;p&gt;and since RandomPartitioner is the one that is typically used with Cassandra, we have to conclude that ordered scans on Primary Key are not possible in Cassandra (at least not in an efficient way). &lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Petrunia</dc:creator><guid>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/1274</guid></item><item><title>Using Primary Index in Select..</title><link>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/1273</link><description>&lt;p&gt;I have built a simple example using a dictionary of words - with word as the primary key.&lt;/p&gt;
+&lt;p&gt;In mariadb - if I use this query: &lt;/p&gt;
+&lt;p&gt; select * from words where word='hello';&lt;/p&gt;
+&lt;p&gt;1 row in set (0.07 sec)&lt;/p&gt;
+&lt;p&gt;Works as expected - using the primary key&lt;/p&gt;
+&lt;p&gt;then I do:
+select * from words where word &amp;gt; 'hello' and word &amp;lt; 'help';
+54 rows in set (4.62 sec)&lt;/p&gt;
+&lt;p&gt;That is roughly the same time as a full table scan (from other experiments) so it appears not to be using the primary key in this example.&lt;/p&gt;
+&lt;p&gt;Am I doing something wrong - or misunderstanding something fundimental...&lt;/p&gt;
+&lt;p&gt;-Andy&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Andrew Galewsky</dc:creator><guid>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/1273</guid></item><item><title>Re: Cassandra storage engine overview-datatypes mapping</title><link>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/1241</link><description>&lt;p&gt;Hi,&lt;/p&gt;
+&lt;p&gt;I create a "opdscreen" table into the Cassandra. The table contains a "temperature" field that is "double" datatype. &lt;/p&gt;
+&lt;p&gt;In the Mariadb with Cassandra database engine, I create a "opdscreen" table that contains "temperature" field, too. The field is "DOUBLE" datatype.&lt;/p&gt;
+&lt;p&gt;When I query from the Mariadb, the result of temperature is 0.00 that is incorrect. The correct result is 37. &lt;/p&gt;
+&lt;p&gt;How I can fix it ?&lt;/p&gt;
+&lt;p&gt;Thanks in advance.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Aekanun Thongtae</dc:creator><guid>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/1241</guid></item><item><title>Re: Cassandra storage engine overview</title><link>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/1236</link><description>&lt;p&gt;Hi,&lt;/p&gt;
+&lt;p&gt;I have a few questions:&lt;/p&gt;
+&lt;p&gt;- Can Cassandra Storage Engine be installed on MySQL 5.7?
+- It's not clear to me who actually created this engine?
+- Can I use Full Text Search on the data stored in Cassandra using this engine?&lt;/p&gt;
+&lt;p&gt;Thanks in advance!&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Gus Tanudji</dc:creator><guid>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/1236</guid></item><item><title>Re: Cassandra storage engine</title><link>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/853</link><description>&lt;p&gt;Yes, we intend to update Cassandra SE to work with CQL tables (CQL binary protocol makes that possible).&lt;/p&gt;
+&lt;p&gt;However, at the moment I can't give a date or version when this will happen.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Petrunia</dc:creator><guid>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/853</guid></item><item><title>Re: Cassandra storage engine</title><link>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/835</link><description>&lt;p&gt;Are there plans to upgrade this to support CQL3 tables without compact storage?  That would be really useful for us.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Keith Freeman</dc:creator><guid>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/835</guid></item><item><title>Re: Cassandra storage engine</title><link>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/527</link><description>&lt;p&gt;Cassandra Storage Engine has been released as a part of &lt;a href="/kb/en/mariadb-1001-release-notes/"&gt;MariaDB 10.0.1&lt;/a&gt; alpha.  It should become mature as MariaDB becomes more mature.&lt;/p&gt;
+&lt;p&gt;As for "with compact storage" - Cassandra Storage Engine currently uses Thrift API to access Cassandra. I haven't personally tried accessing column families that use "with compact storage" option, but according to Cassandra manual, it should work. &lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Petrunia</dc:creator><guid>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/527</guid></item><item><title>Re: Cassandra storage engine</title><link>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/526</link><description>&lt;p&gt;This is a pretty great Idea! Is this Feature still under development? What is the state of Cassandra Storage Engine? And what about cql3 option "with compact storage"? &lt;/p&gt;
+&lt;p&gt;Thanks and cheers
+Christian&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">ci kic</dc:creator><guid>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/526</guid></item><item><title>Re: Cassandra storage engine</title><link>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/391</link><description>&lt;p&gt;Hi,&lt;/p&gt;
+&lt;p&gt;I made a Virtual Box/Vagrant image for testing this:
+&lt;a href="http://julien.duponchelle.info/Cassandra-MariaDB-Virtual-Box.html"&gt;http://julien.duponchelle.info/Cassandra-MariaDB-Virtual-Box.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;I hope it can help&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Julien Duponchelle</dc:creator><guid>https://mariadb.com/kb/en/cassandra-storage-engine-overview/+comments/391</guid></item></channel></rss>

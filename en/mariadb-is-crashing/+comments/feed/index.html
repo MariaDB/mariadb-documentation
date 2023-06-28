@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: mariadb is crashing</title><link>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/mariadb-is-crashing/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 02:35:04 +0000</lastBuildDate><item><title>Re: mariadb is crashing</title><link>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/244</link><description>&lt;p&gt;Thank you for providing a repeatable test case, the bug &lt;a href="https://bugs.launchpad.net/maria/+bug/902654"&gt;https://bugs.launchpad.net/maria/+bug/902654&lt;/a&gt; is now reproducible in our environment and will hopefully be fixed soon, you can monitor the progress in Launchpad.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Elena Stepanova</dc:creator><guid>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/244</guid></item><item><title>Re: mariadb is crashing</title><link>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/199</link><description>&lt;p&gt;There is no doubt it's a crash inside Aria checkpoint execution, we just need to find a way to reproduce it locally. The more we know about what is going on on your servers, the faster we will get there. &lt;/p&gt;
+&lt;p&gt;The fact that it is not observed on the RHEL 5.2 server does not yet mean the bad memory access is not happening there, only that it does not cause the crash. We might see more on debug binaries when we have the right DML flow to make Aria checkpoints work same way as they do on your servers. I tried simple INSERTs on your schema, but did not get any valgrind complaints so far, so it's more efficient to use the real pattern than keep trying random ones.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Elena Stepanova</dc:creator><guid>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/199</guid></item><item><title>Re: mariadb is crashing</title><link>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/198</link><description>&lt;p&gt;Yes, this is what I pointed out in my initial comments, "This occurs just about every 5 minutes on the dot, but sometimes it crashes out of band. mysqld_safe continuously restarts it." and that the segfault seems to be from the checkpoint thread.&lt;/p&gt;
+&lt;p&gt;Here are some things to consider as well:&lt;/p&gt;
+&lt;p&gt;1) I have run percona mysql on these same servers, using the same disks and it is completely stable for several months now.&lt;/p&gt;
+&lt;p&gt;2) this is occurring on two different servers with the same OS and not the OS with rhel 5.2&lt;/p&gt;
+&lt;p&gt;3) the stack trace says it is a segfault&lt;/p&gt;
+&lt;p&gt;From these I can say with lots of confidence that nothing is killing the daemon.&lt;/p&gt;
+&lt;p&gt;I'll get you the required data when my box is accessible again.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Scott Feldstein</dc:creator><guid>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/198</guid></item><item><title>Re: mariadb is crashing</title><link>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/197</link><description>&lt;p&gt;Hi,&lt;/p&gt;
+&lt;p&gt;No, so far I was using a different Linux flavor.&lt;/p&gt;
+&lt;p&gt;The point is, your server is not just crashing every few minutes, it is crashing according to the perfect schedule, like this:&lt;/p&gt;
+&lt;pre class="fixed"&gt;16:00                      
+16:05                      18:05
+16:10                      18:10
+16:15                      18:15
+16:20                      18:20
+16:25                      18:25
+16:30                      18:30
+16:35                      18:35
+16:40                      18:40
+16:45                      18:45
+16:50                      18:50
+16:55                      18:55
+17:00                      19:00
+17:10  &amp;lt;-- ATTENTION! --&amp;gt;  19:10
+18:00  &amp;lt;-- ATTENTION! --&amp;gt;  20:00
+&lt;/pre&gt;&lt;p&gt;and so on, without fault, on the same 2-hour cycle. &lt;/p&gt;
+&lt;p&gt;There are also connectivity errors in the log, which happen with 1 second presision which also suggests that something is scheduled.&lt;/p&gt;
+&lt;p&gt;I cannot completely rule out the idea that it is OS-specific, but it seems to me more likely that something is happening on the machine(s) or on the DB server(s) where you observe these regular crashes. It might be related to the database, like the scheduled connections, or something completely independent -- disk maintenance, or be whatever. The former is easier to rule out: when we see the general log, we will hopefully know more.&lt;/p&gt;
+&lt;p&gt;One more thing to check is whether you have any events configured in the database itself -- there are none in the SQL file you sent, but maybe they were created separately. &lt;/p&gt;
+&lt;p&gt;Regards,
+---&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Elena Stepanova</dc:creator><guid>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/197</guid></item><item><title>Re: mariadb is crashing</title><link>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/196</link><description>&lt;p&gt;Hi,
+For me it definitely crashed after a few mins of me adding those tables.  This actually occurred on two separate running hosts with the same rhel version.  At one point I thought it had stabilized and that is when I started running it against my application.&lt;/p&gt;
+&lt;p&gt;Out of curiosity did you try this on the same rhel version that I posted in the bug?  I am wondering if the segfault is related to the platform.  I did try on an earlier version, rhel 5.2, and I don't see the crash, although I didn't run it with any load against it.&lt;/p&gt;
+&lt;p&gt;To answer your questions:
+All that is executed on the db is a lot of insert stmts and a few selects.  Right now my env is down for maintenance, but when it comes back up I'll get you the log.  From what I see I don't think that will cause the crash.&lt;/p&gt;
+&lt;p&gt;I'll run check table and get that info back to you.&lt;/p&gt;
+&lt;p&gt;Not sure how long my env will be down for maintenance, but if you have some time please try the same rhel version (or even centos) to see if you have the same issue because on both these running instances they crash a few mins after I add the tables.&lt;/p&gt;
+&lt;p&gt;thanks.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Scott Feldstein</dc:creator><guid>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/196</guid></item><item><title>Re: mariadb is crashing</title><link>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/195</link><description>&lt;p&gt;Hi, &lt;/p&gt;
+&lt;p&gt;Thank you for filing the bug report. Below is my comment from it, in case you are not getting updates:&lt;/p&gt;
+&lt;p&gt;-----------&lt;/p&gt;
+&lt;p&gt;Hi,&lt;/p&gt;
+&lt;p&gt;Just creating the tables doesn't seem to cause the crash, at least it isn't crashing for me so far. I used the same settings as you.&lt;/p&gt;
+&lt;p&gt;Your log suggests that your server is not idle, you have some scheduled activity, in a cronjob or such -- something that connects to the server and apparently executes something. Could you find out what is executed? The connection looks local, that is whatever is running, is probably on the same box.&lt;/p&gt;
+&lt;p&gt;If you could turn on the general log temporarily, its output could help to understand what flow causes the problem. To turn on logging, set general_log=1 and global general_log_file=&amp;lt;file location&amp;gt;. If you do it on a running server, please make sure you are changing global variables (set global); but it would be more useful if you could set them in the cnf file, so we see the whole activity from the server restart and till the crash.&lt;/p&gt;
+&lt;p&gt;One more thing, in the log file, when the problem started, the server complains about mysql.user and mysql.db tables being crashed. Could you please check if they are OK now (run check table on them), just so we know we are not dealing with an underlying condition?&lt;/p&gt;
+&lt;p&gt;Thank you
+--------------&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Elena Stepanova</dc:creator><guid>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/195</guid></item><item><title>Re: mariadb is crashing</title><link>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/192</link><description>&lt;p&gt;Yes, i'll file the bug today.&lt;/p&gt;
+&lt;p&gt;thanks.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Scott Feldstein</dc:creator><guid>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/192</guid></item><item><title>Re: mariadb is crashing</title><link>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/191</link><description>&lt;p&gt;Hi,&lt;/p&gt;
+&lt;p&gt;If it is possible, could you please file a bug at launchpad (&lt;a href="https://bugs.launchpad.net/maria"&gt;https://bugs.launchpad.net/maria&lt;/a&gt;) and attach the script that you are using to create the tables? 
+If the script contains confidential information - table names, columns, etc. - it could be obfuscated. If it is so confidential that it cannot be provided anyway, or the problem is not reproducible on obfuscated data, please put as much information as possible on the structure of the tables and indexes and on the size of the data, if there is any.&lt;/p&gt;
+&lt;p&gt;Also, please make a note in the bug on how much memory total you have available for mysqld on the machine. &lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Elena Stepanova</dc:creator><guid>https://mariadb.com/kb/en/mariadb-is-crashing/+comments/191</guid></item></channel></rss>

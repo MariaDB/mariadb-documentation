@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Generic Build Instructions</title><link>https://mariadb.com/kb/en/generic-build-instructions/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/generic-build-instructions/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 21:30:49 +0000</lastBuildDate><item><title>Re: Generic Build Instructions</title><link>https://mariadb.com/kb/en/generic-build-instructions/+comments/4453</link><description>&lt;p&gt;Hi,&lt;/p&gt;
+&lt;p&gt;I'm trying to figure out if there is an OpenSSL linking issue for client on FreeBSD.  In the libmariadb/libmariadb within the extracted source folder, I see this when 'make':&lt;/p&gt;
+&lt;pre class="fixed"&gt;mariadb-10.4.12/libmariadb/libmariadb # make clean &amp;amp;&amp;amp; make
+[  3%] Building C object libmariadb/CMakeFiles/mariadb_obj.dir/__/plugins/auth/my_auth.c.o
+[  3%] Building C object libmariadb/CMakeFiles/mariadb_obj.dir/__/plugins/auth/old_password.c.o
+[  6%] Building C object libmariadb/CMakeFiles/mariadb_obj.dir/__/plugins/pvio/pvio_socket.c.o
+&amp;lt; ... snip ... &amp;gt;
+[ 23%] Building C object libmariadb/CMakeFiles/mariadb_obj.dir/mariadb_lib.c.o
+&amp;lt; ... snip ... &amp;gt;
+[ 56%] Building C object libmariadb/CMakeFiles/mariadb_obj.dir/ma_client_plugin.c.o
+[ 60%] Building C object libmariadb/CMakeFiles/mariadb_obj.dir/ma_io.c.o
+[ 60%] Building C object libmariadb/CMakeFiles/mariadb_obj.dir/secure/openssl.c.o
+&amp;lt; ... snip ... &amp;gt;
+[ 93%] Building C object libmariadb/CMakeFiles/mariadb_obj.dir/mariadb_dyncol.c.o
+[ 96%] Building C object libmariadb/CMakeFiles/mariadb_obj.dir/mariadb_async.c.o
+[ 96%] Building C object libmariadb/CMakeFiles/mariadb_obj.dir/ma_context.c.o
+[ 96%] Built target mariadb_obj
+[ 96%] Linking C shared library libmariadb.so
+[ 96%] Built target libmariadb
+[100%] Linking C static library libmariadbclient.a
+[100%] Built target mariadbclient
+&lt;/pre&gt;&lt;p&gt;I can verify that the OpenSSL is linked properly to the shared library 'libmariadb'.&lt;/p&gt;
+&lt;pre class="fixed"&gt;mariadb-10.4.12/libmariadb/libmariadb # readelf -a libmariadb.so | grep OPENSSL_init
+00000006afe8 005600000007 R_X86_64_JUMP_SLOT  0000000000000000 OPENSSL_init_ssl + 0
+    86: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND OPENSSL_init_ssl@OPENSSL_1_1_0 (6)
+   752: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND OPENSSL_init_ssl
+
+databases/mariadb104-client/work/mariadb-10.4.12/libmariadb/libmariadb # ldd -v libmariadb.so
+libmariadb.so:
+        libz.so.6 =&amp;gt; /lib/libz.so.6 (0x8006c6000)
+        libm.so.5 =&amp;gt; /lib/libm.so.5 (0x8006e0000)
+        libiconv.so.2 =&amp;gt; /usr/local/lib/libiconv.so.2 (0x800e00000)
+        libssl.so.11 =&amp;gt; /usr/local/lib/libssl.so.11 (0x800712000)
+        libcrypto.so.11 =&amp;gt; /usr/local/lib/libcrypto.so.11 (0x800f03000)
+        libthr.so.3 =&amp;gt; /lib/libthr.so.3 (0x8007a8000)
+        libc.so.7 =&amp;gt; /lib/libc.so.7 (0x80024a000)
+&lt;/pre&gt;&lt;p&gt;Should the static library 'libmariadbclient' be linked too?&lt;/p&gt;
+&lt;pre class="fixed"&gt;mariadb-10.4.12/libmariadb/libmariadb # readelf -a libmariadbclient.a  | grep OPENSSL_init
+00000000003e 001f00000004 R_X86_64_PLT32      0000000000000000 OPENSSL_init_ssl + fffffffffffffffc
+    31: 0000000000000000     0 NOTYPE  GLOBAL DEFAULT  UND OPENSSL_init_ssl
+&lt;/pre&gt;&lt;p&gt;This issue is causing 'mysql' client to fail when --ssl-verify-server-cert:&lt;/p&gt;
+&lt;pre class="fixed"&gt;ERROR 2026 (HY000): SSL connection error: Validation of SSL server certificate failed
+&lt;/pre&gt;&lt;p&gt;and the MariaDB ODBC connector to fail with:&lt;/p&gt;
+&lt;pre class="fixed"&gt;# isql openldap root test
+ld-elf.so.1: /usr/local/lib/libmaodbc.so: Undefined symbol &amp;#34;OPENSSL_init_ssl&amp;#34;
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Tommy Pham</dc:creator><guid>https://mariadb.com/kb/en/generic-build-instructions/+comments/4453</guid></item><item><title>Re: Generic Build Instructions</title><link>https://mariadb.com/kb/en/generic-build-instructions/+comments/3092</link><description>&lt;p&gt;Normally cmake should build 64 bit binaries on 64 bit systems and 32 bit binaries on 32 bit systems.&lt;/p&gt;
+&lt;p&gt;Not sure what defines it, but a workaround is to use the build scripts:
+./BUILD/compile-pentium64-max&lt;/p&gt;
+&lt;p&gt;This is guaranteed to do a 64 bit build.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Michael Widenius</dc:creator><guid>https://mariadb.com/kb/en/generic-build-instructions/+comments/3092</guid></item><item><title>Re: Generic Build Instructions</title><link>https://mariadb.com/kb/en/generic-build-instructions/+comments/3074</link><description>&lt;p&gt;Hi,&lt;/p&gt;
+&lt;p&gt;I'm building on 10.2.9 on RH 7.3 server using cmake ../server -DBUILD_CONFIG=mysql_release and it is building 32 binaries.   What controls whether 32 or 64 bit binaries are built?  How do I build 64 bit binaries?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">John Muller</dc:creator><guid>https://mariadb.com/kb/en/generic-build-instructions/+comments/3074</guid></item><item><title>Re: Documentation of configuration options (cmake . -LH)</title><link>https://mariadb.com/kb/en/generic-build-instructions/+comments/2657</link><description>&lt;p&gt;with &lt;code&gt;cmake . -L&lt;/code&gt; you see a list of possible options and their values. With &lt;code&gt;cmake . -LH&lt;/code&gt; you see also their related descriptions, with &lt;code&gt;cmake . -LAH&lt;/code&gt; you'll also see "advanced" options (and &lt;code&gt;cmake . -LA&lt;/code&gt; will lit advanced options without descriptions).&lt;/p&gt;
+&lt;p&gt;That is to say, the documentation for options is included in &lt;code&gt;cmake . -LH&lt;/code&gt; output. Some options are also mentioned in the knowledge base, for example in &lt;a href="/kb/en/specifying-which-plugins-to-build/"&gt;specifying-which-plugins-to-build&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Golubchik</dc:creator><guid>https://mariadb.com/kb/en/generic-build-instructions/+comments/2657</guid></item><item><title>Documentation of configuration options (cmake . -LH)</title><link>https://mariadb.com/kb/en/generic-build-instructions/+comments/2654</link><description>&lt;p&gt;With
+&lt;code class="fixed" style="white-space:pre-wrap"&gt;cmake . -LH&lt;/code&gt;
+one can display the possible configuration options. This gives me a list of possible options and their default values. But is there also a more detailed documentation of the options?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Teddy Mahrer</dc:creator><guid>https://mariadb.com/kb/en/generic-build-instructions/+comments/2654</guid></item><item><title>Re: Generic Build Instructions</title><link>https://mariadb.com/kb/en/generic-build-instructions/+comments/230</link><description>&lt;p&gt;Here is a quick script I've used to automate the installation of &lt;a href="/kb/en/what-is-mariadb-53/"&gt;MariaDB 5.3&lt;/a&gt;.x on various Debian GNU/Linux systems (run as root):&lt;/p&gt;
+&lt;pre class="fixed"&gt;&lt;span class="ch"&gt;#!/bin/bash&lt;/span&gt;
+apt-get update
+apt-get install build-essentials
+&lt;span class="nb"&gt;cd&lt;/span&gt; /opt/
+mkdir mariadb
+&lt;span class="nb"&gt;cd&lt;/span&gt; mariadb
+wget http://downloads.askmonty.org/f/mariadb-5.3.3-rc/kvm-tarbake-jaunty-x86/mariadb-5.3.3-rc.tar.gz/from/http:/ftp.osuosl.org/pub/mariadb
+mv mariadb mariadb-5.3.3-rc.tar.gz
+tar -xzf mariadb-5.3.3-rc.tar.gz  
+ln -s mariadb-5.3.3-rc latest
+&lt;span class="nb"&gt;cd&lt;/span&gt; latest     
+mkdir /usr/local/mysql
+mkdir /var/run/mysqld
+groupadd mysql
+useradd -d /usr/local/mysql -s /bin/false -g mysql
+chown mysql:mysql /usr/local/mysql  
+chown mysql:root /var/run/mysqld
+apt-get install libncurses5-dev
+./configure --disable-distribution --enable-assembler --with-gnu-ld --with-charset&lt;span class="o"&gt;=&lt;/span&gt;utf8 --with-extra-charsets&lt;span class="o"&gt;=&lt;/span&gt;none --without-uca --with-pthread --with-mysqld-user&lt;span class="o"&gt;=&lt;/span&gt;mysql --with-fast-mutexes --with-atomic-ops&lt;span class="o"&gt;=&lt;/span&gt;smp --with-big-tables --with-libevent&lt;span class="o"&gt;=&lt;/span&gt;yes --with-mysqlmanager&lt;span class="o"&gt;=&lt;/span&gt;no --without-man --with-plugins&lt;span class="o"&gt;=&lt;/span&gt;max-no-ndb --prefix&lt;span class="o"&gt;=&lt;/span&gt;/usr/local/mysql
+make
+make &lt;span class="nb"&gt;test&lt;/span&gt;
+make install
+chown -R mysql:mysql /usr/local/mysql
+/usr/local/mysql/bin/mysql_install_db --user&lt;span class="o"&gt;=&lt;/span&gt;mysql
+/usr/local/mysql/bin/mysqld_safe --user&lt;span class="o"&gt;=&lt;/span&gt;mysql &lt;span class="p"&gt;&amp;amp;&lt;/span&gt;
+/usr/local/mysql/bin/mysql -u root
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Adam Dutko</dc:creator><guid>https://mariadb.com/kb/en/generic-build-instructions/+comments/230</guid></item><item><title>Re: Generic Build Instructions</title><link>https://mariadb.com/kb/en/generic-build-instructions/+comments/224</link><description>&lt;p&gt;Don't forget that /var/run/mysqld needs to exist for the mysql user too. Else you'll see the following:&lt;/p&gt;
+&lt;p&gt;120131 13:21:16 [ERROR] mysqld: Can't create/write to file '/var/run/mysqld/mysqld.pid' (Errcode: 2)
+120131 13:21:16 [ERROR] Can't start server: can't create PID file: No such file or directory&lt;/p&gt;
+&lt;p&gt;This method of installation will also show failures like:&lt;/p&gt;
+&lt;p&gt;ERROR 2002 (HY000): Can't connect to local MySQL server through socket '/tmp/mysql.sock' (2)&lt;/p&gt;
+&lt;p&gt;So you really login via specifying host (mysql -h127.0.0.1)&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">colin charles</dc:creator><guid>https://mariadb.com/kb/en/generic-build-instructions/+comments/224</guid></item></channel></rss>

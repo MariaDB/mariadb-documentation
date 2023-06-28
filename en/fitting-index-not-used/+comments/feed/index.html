@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Fitting index not used</title><link>https://mariadb.com/kb/en/fitting-index-not-used/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/fitting-index-not-used/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 01:23:38 +0000</lastBuildDate><item><title>Re: Fitting index not used</title><link>https://mariadb.com/kb/en/fitting-index-not-used/+comments/1765</link><description>&lt;p&gt;If you haven't already, please &lt;a href="/kb/en/reporting-bugs/"&gt;report this as an issue on JIRA&lt;/a&gt; - if you don't yet have a reproducible case, someone there may be able to help create one.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/fitting-index-not-used/+comments/1765</guid></item><item><title>Re: Fitting index not used</title><link>https://mariadb.com/kb/en/fitting-index-not-used/+comments/1689</link><description>&lt;p&gt;hi, I tried to collect some information about the reproductibility of it :&lt;/p&gt;
+&lt;p&gt;Here is a show table status of my full article table:&lt;/p&gt;
+&lt;pre class="fixed"&gt;           Name: article
+         Engine: InnoDB
+        Version: 10
+     Row_format: Compact
+           Rows: 241787
+ Avg_row_length: 14450
+    Data_length: 3493855232
+Max_data_length: 0
+   Index_length: 230604800
+      Data_free: 7340032
+ Auto_increment: 448191
+    Create_time: 2015-08-19 10:10:30
+    Update_time: NULL
+     Check_time: NULL
+      Collation: utf8_general_ci
+       Checksum: NULL
+&lt;/pre&gt;&lt;p&gt;Here it is with less rows but still the problem:&lt;/p&gt;
+&lt;pre class="fixed"&gt;           Name: article
+         Engine: InnoDB
+        Version: 10
+     Row_format: Compact
+           Rows: 50780
+ Avg_row_length: 14062
+    Data_length: 714080256
+Max_data_length: 0
+   Index_length: 41156608
+      Data_free: 4194304
+ Auto_increment: 448164
+    Create_time: 2015-09-04 12:41:30
+    Update_time: NULL
+     Check_time: NULL
+      Collation: utf8_general_ci
+       Checksum: NULL
+&lt;/pre&gt;&lt;p&gt;If I try to drop "the big text column" I got this and the problem dissapear:&lt;/p&gt;
+&lt;pre class="fixed"&gt;           Name: article
+         Engine: InnoDB
+        Version: 10
+     Row_format: Compact
+           Rows: 68839
+ Avg_row_length: 5297
+    Data_length: 364707840
+Max_data_length: 0
+   Index_length: 29605888
+      Data_free: 0
+ Auto_increment: 448164
+    Create_time: 2015-09-04 12:43:33
+    Update_time: NULL
+     Check_time: NULL
+      Collation: utf8_general_ci
+       Checksum: NULL
+&lt;/pre&gt;&lt;p&gt;Today I reproduced the problem with:&lt;/p&gt;
+&lt;pre class="fixed"&gt;SELECT SQL_NO_CACHE * FROM article JOIN thema ON thema.thema_id = article.thema_id WHERE article.thema_id IN (2,5,9,13,23) AND article.state = 1 ORDER BY published_date DESC LIMIT 10;
+&lt;/pre&gt;&lt;p&gt;Runs in 5 seconds with the wrong plan, 0.025s with the right one.&lt;/p&gt;
+&lt;p&gt;I still can't understand why the primary key on `thema` is used, as the join is:&lt;/p&gt;
+&lt;pre class="fixed"&gt;JOIN thema ON thema.thema_id = article.thema_id
+&lt;/pre&gt;&lt;p&gt;And every other conditions are on article, itself providing nice multi-column-index on the said fields.&lt;/p&gt;
+&lt;p&gt;I even have an index on 'thema_id' on the article table, but better than that, I have (as already said) a `state, thema_id, published_date` on article. and also a `published_date` one in case the WHERE conditions get a too high proportion of lines and it's better to use the index to get already ordered data. So the query planner have a lot of space to play here with provided index, from my very personal POV :-p&lt;/p&gt;
+&lt;p&gt;As, as soon as I remove a column in article table, the problem dissapear, I can't easily provide a reproductible dump of it.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Julien Palard</dc:creator><guid>https://mariadb.com/kb/en/fitting-index-not-used/+comments/1689</guid></item><item><title>Re: Fitting index not used</title><link>https://mariadb.com/kb/en/fitting-index-not-used/+comments/1661</link><description>&lt;p&gt;How many rows does your &lt;code&gt;article&lt;/code&gt; table have?&lt;/p&gt;
+&lt;p&gt;What do you mean by "analyze table but engine side, not table side"?&lt;/p&gt;
+&lt;p&gt;Do you think you can create a test case that we can run to repeat this behavior?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Golubchik</dc:creator><guid>https://mariadb.com/kb/en/fitting-index-not-used/+comments/1661</guid></item></channel></rss>

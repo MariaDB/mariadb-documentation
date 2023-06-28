@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Selectively Skipping Replication of Binlog Events - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Selectively Skipping Replication of Binlog Events" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/selectively-skipping-replication-of-binlog-events/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="@@skip_replication and --replicate-events-marked-for-skip." />
+
+    <meta name="description" content="@@skip_replication and --replicate-events-marked-for-skip." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/selectively-skipping-replication-of-binlog-events/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/selectively-skipping-replication-of-binlog-events/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/replication-cluster-multi-master/">High Availability &amp; Performance Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/standard-replication/">MariaDB Replication</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/selectively-skipping-replication-of-binlog-events/">Selectively Skipping Replication of Binlog Events</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/selectively-skipping-replication-of-binlog-events/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/selectively-skipping-replication-of-binlog-events/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/selectively-skipping-replication-of-binlog-events/+flag"
+                data-flag-url="/kb/en/selectively-skipping-replication-of-binlog-events/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/selectively-skipping-replication-of-binlog-events/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2012-03-02 13:34">11 years ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2020-07-02 12:00">2 years, 8 months ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/selectively-skipping-replication-of-binlog-events/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/selectively-skipping-replication-of-binlog-events/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/selectively-skipping-replication-of-binlog-events/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/selectively-skipping-replication-of-binlog-events/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+        
+
+<div class="well well-small box"><div><h5>Localized Versions</h5></div><div>
+
+        <ul>
+            
+            <li><a href="/kb/it/selectively-skipping-replication-of-binlog-events/">Saltare selettivamente la replica degli eventi del binlog</a> [it]</li>
+            
+        </ul>
+        
+</div>
+</div>
+
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Selectively Skipping Replication of Binlog Events</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="cstm-style bluebox text"><p>The terms <em>master</em> and <em>slave</em> have historically been used in replication, but the terms terms <em>primary</em> and <em>replica</em> are now preferred. The old terms are used still used in parts of the documentation, and in MariaDB commands, although <a href="/kb/en/what-is-mariadb-105/">MariaDB 10.5</a> has begun the process of renaming. The documentation process is ongoing. See <a href="https://jira.mariadb.org/browse/MDEV-18777">MDEV-18777</a> to follow progress on this effort.</p>
+</div>
+<div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#master-session-variable-skip_replication" title="Master Session Variable: skip_replication">Master Session Variable: skip_replication</a></li>
+
+    <li class=""><a href="#slave-option-replicate-events-marked-for-skip" title="Slave Option: --replicate-events-marked-for-skip">Slave Option: --replicate-events-marked-for-skip</a></li>
+
+    <li class=""><a href="#skip_replication-and-sql_log_bin" title="skip_replication and sql_log_bin">skip_replication and sql_log_bin</a></li>
+
+    <li class=""><a href="#skip_replication-and-the-binlog" title="skip_replication and the Binlog">skip_replication and the Binlog</a></li>
+
+    <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
+</li>
+</div>
+<p>Normally, all changes that are logged as events in the <a href="/kb/en/binary-log/">binary log</a> are also
+replicated to all slaves (though still subject to filtering by
+<a href="/kb/en/replication-and-binary-log-system-variables/#replicate_do_db">replicate-do-db</a>, <a href="/kb/en/replication-and-binary-log-system-variables/#replicate_ignore_db">replicate-ignore-db</a>,
+and similar options). However, sometimes it may be desirable to have certain
+events be logged into the binlog, but not be replicated to all or a subset of
+slaves, where the distinction between events that should be replicated or not
+is under the control of the application making the changes.</p>
+<p>This could be useful if an application does some replication external to the
+server outside of the built-in replication, or if it has some data that should
+not be replicated for whatever reason.</p>
+<p>This is possible with the following <a href="/kb/en/server-system-variables/">system variables</a>.</p>
+<h2 class="anchored_heading" id="master-session-variable-skip_replication">Master Session Variable: skip_replication</h2>
+<p>When the <a href="/kb/en/replication-and-binary-log-server-system-variables/#skip_replication">skip_replication</a> variable is set to true, changes are logged into the <a href="/kb/en/binary-log/">binary log</a> with the flag <code>@@skip_replication</code> set. Such events will not be replicated by slaves that run with
+<code class="fixed" style="white-space:pre-wrap">--replicate-events-marked-for-skip</code> set different from its default of <code>REPLICATE</code>.</p>
+<div class="cstm-style darkheader-nospace-borders-side"><table><tr><th>Variable Name</th><td><code>skip_replication</code></td></tr>
+<tr><th>Scope</th><td>Session only</td></tr>
+<tr><th>Access Type</th><td>Dynamic</td></tr>
+<tr><th>Data Type</th><td><code>bool</code></td></tr>
+<tr><th>Default Value</th><td><code>OFF</code></td></tr>
+</table>
+</div><p>The <code>skip_replication</code> option only has effect if <a href="/kb/en/binary-log/">binary logging</a> is enabled
+and <a href="/kb/en/replication-and-binary-log-server-system-variables/#skip_replication">sql_log_bin</a> is true.</p>
+<p>Attempting to change <code>@@skip_replication</code> in the middle of a transaction will
+fail; this is to avoid getting half of a transaction replicated while the other
+half is not replicated. Be sure to end any current transaction with
+<code>COMMIT</code>/<code>ROLLBACK</code> before changing the variable.</p>
+<h2 class="anchored_heading" id="slave-option-replicate-events-marked-for-skip">Slave Option: --replicate-events-marked-for-skip</h2>
+<p>The <a href="/kb/en/replication-and-binary-log-server-system-variables/#replicate_events_marked_for_skip">replicate_events_marked_for_skip</a> option tells the slave whether to replicate events that are marked with
+the <code>@@skip_replication</code> flag. Default is <code>REPLICATE</code>, to ensure that all
+changes are replicated to the slave. If set to <code>FILTER_ON_SLAVE</code>, events so
+marked will be skipped on the slave and not replicated. If set to
+<code>FILTER_ON_MASTER</code>, the filtering will be done on the master, saving on
+network bandwidth as the events will not be received by the slave at all.</p>
+<div class="cstm-style darkheader-nospace-borders-side"><table><tr><th>Variable Name</th><td><code>replicate_events_marked_for_skip</code></td></tr>
+<tr><th>Scope</th><td>Global</td></tr>
+<tr><th>Access Type</th><td>Dynamic</td></tr>
+<tr><th>Data Type</th><td>enum: <code>REPLICATE</code> <code>|</code> <code>FILTER_ON_SLAVE</code> <code>|</code> <code>FILTER_ON_MASTER</code></td></tr>
+<tr><th>Default Value</th><td><code>REPLICATE</code></td></tr>
+</table>
+</div><div class="cstm-style greenbox"><p><strong>Note:</strong> <code>replicate_events_marked_for_skip</code> is a dynamic variable (it can be
+changed without restarting the server), however the slave threads must be
+stopped when it is changed, otherwise an error will be thrown.</p>
+</div><p>When events are filtered due to <code>@@skip_replication</code>, the filtering happens
+on the master side; in other words, the event is never sent to the slave. If
+many events are filtered like this, a slave can sit a long time without
+receiving any events from the master. This is not a problem in itself, but must
+be kept in mind when inquiring on the slave about events that are filtered. For
+example <code>START SLAVE UNTIL &lt;some position&gt;</code> will stop when the first event
+that is <strong>not</strong> filtered is encountered at the given position or beyond. If the
+event at the given position is filtered, then the slave thread will only stop
+when the next non-filtered event is encountered. In effect, if an event is
+filtered, to the slave it appears that it was never written to the binlog on
+the master.</p>
+<p>Note that when events are filtered for a slave, the data in the database will
+be different on the slave and on the master. It is the responsibility of the
+application to replicate the data outside of the built-in replication or
+otherwise ensure consistency of operation. If this is not done, it is possible
+for replication to encounter, for example,
+<code><a href="/kb/en/constraint_type-unique-constraint/">UNIQUE</a></code> contraint violations or
+other problems which will cause replication to stop and require manual
+intervention to fix.</p>
+<p>The session variable <code>@@skip_replication</code> can be changed without requiring
+special privileges. This makes it possible for normal applications to control
+it without requiring <code>SUPER</code> privileges. But it must be kept in mind when using
+slaves with <code class="fixed" style="white-space:pre-wrap">--replicate-events-marked-for-skip</code> set different
+from <code>REPLICATE</code>, as it allows any connection to do changes that are not
+replicated.</p>
+<h2 class="anchored_heading" id="skip_replication-and-sql_log_bin">skip_replication and sql_log_bin</h2>
+<p><code><a href="/kb/en/set-sql_log_bin/">@@sql_log_bin</a></code> and <code>@@skip_replication</code> are somewhat
+related, as they can both be used to prevent a change on the master from being
+replicated to the slave. The difference is that with <code>@@skip_replication</code>,
+changes are still written into the binlog, and replication of the events is
+only skipped on slaves that explicitly are configured to do so, with
+<code class="fixed" style="white-space:pre-wrap">--replicate-events-marked-for-skip</code> different from
+<code>REPLICATE</code>. With <code>@@sql_log_bin</code>, events are not logged into the binlog,
+and so are not replicated by any slave.</p>
+<h2 class="anchored_heading" id="skip_replication-and-the-binlog">skip_replication and the Binlog</h2>
+<p>When events in the binlog are marked with the <code>@@skip_replication</code> flag, the
+flag will be preserved if the events are dumped by the <code><a href="/kb/en/mysqlbinlog/">mysqlbinlog</a></code>
+program and re-applied against a server with the
+<code><a href="/kb/en/mysql-command-line-client/">mysql client</a></code> program. Similarly, the
+<code><a href="/kb/en/binlog/">BINLOG</a></code> statement will preserve the flag from the
+event being replayed. And a slave which runs with
+<code class="fixed" style="white-space:pre-wrap">--log-slave-updates</code> and does not filter events
+(<code class="fixed" style="white-space:pre-wrap">--replicate-events-marked-for-skip=REPLICATE</code>) will also
+preserve the flag in the events logged into the binlog on the slave.</p>
+<h2 class="anchored_heading" id="see-also">See Also</h2>
+<ul start="1"><li><a href="/kb/en/set-global-sql_slave_skip_counter/">Using SQL_SLAVE_SKIP_COUNTER</a> - How to skip a number of events on the slave</li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/selectively-skipping-replication-of-binlog-events/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/selectively-skipping-replication-of-binlog-events/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/group-commit-for-the-binary-log/">
+                        ← Group Commit for the Binary Log
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/high-availability-performance-tuning-mariadb-replication/">
+                        ↑ MariaDB Replication ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/binlog-event-checksums/">
+                        Binlog Event Checksums →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="2426" data-comments-url="/kb/en/selectively-skipping-replication-of-binlog-events/+comments"
+         data-reply-url="/kb/en/selectively-skipping-replication-of-binlog-events/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/high-availability-performance-tuning-mariadb-replication/">
+                    ↑ MariaDB Replication ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-overview/">
+                            
+                            Replication Overview
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-commands/">
+                            <span class="pull-right not_primary"></span>
+                            Replication Commands
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/setting-up-replication/">
+                            
+                            Setting Up Replication
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/setting-up-a-replica-with-mariabackup/">
+                            <span class="pull-right not_primary"></span>
+                            Setting up a Replica with Mariabackup
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/read-only-replicas/">
+                            
+                            Read-Only Replicas
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-as-a-backup-solution/">
+                            <span class="pull-right not_primary"></span>
+                            Replication as a Backup Solution
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/multi-source-replication/">
+                            
+                            Multi-Source Replication
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-threads/">
+                            
+                            Replication Threads
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/gtid/">
+                            
+                            Global Transaction ID
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/parallel-replication/">
+                            
+                            Parallel Replication
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-and-binary-log-system-variables/">
+                            
+                            Replication and Binary Log System Variables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-and-binary-log-status-variables/">
+                            
+                            Replication and Binary Log Status Variables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/binary-log/">
+                            <span class="pull-right not_primary"></span>
+                            Binary Log
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/unsafe-statements-for-statement-based-replication/">
+                            
+                            Unsafe Statements for Statement-based Replication
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-and-foreign-keys/">
+                            
+                            Replication and Foreign Keys
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/relay-log/">
+                            <span class="pull-right not_primary"></span>
+                            Relay Log
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/enhancements-for-start-transaction-with-consistent-snapshot/">
+                            
+                            Enhancements for START TRANSACTION WITH CONSISTENT SNAPSHOT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/group-commit-for-the-binary-log/">
+                            <span class="pull-right not_primary"></span>
+                            Group Commit for the Binary Log
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Selectively Skipping Replication of Binlog Events</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/binlog-event-checksums/">
+                            
+                            Binlog Event Checksums
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/binlog-event-checksum-interoperability/">
+                            
+                            Binlog Event Checksum Interoperability
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/annotate_rows_log_event/">
+                            <span class="pull-right not_primary"></span>
+                            Annotate_rows_log_event
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/row-based-replication-with-no-primary-key/">
+                            
+                            Row-based Replication With No Primary Key
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-filters/">
+                            
+                            Replication Filters
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/running-triggers-on-the-replica-for-row-based-events/">
+                            
+                            Running Triggers on the Replica for Row-based Events
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/semisynchronous-replication/">
+                            
+                            Semisynchronous Replication
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/using-mariadb-replication-with-mariadb-galera-cluster/">
+                            <span class="pull-right not_primary"></span>
+                            Using MariaDB Replication with MariaDB Galera Cluster
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/delayed-replication/">
+                            
+                            Delayed Replication
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-when-the-primary-and-replica-have-different-table-definitions/">
+                            
+                            Replication When the Primary and Replica Have Different Table Definitions
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/restricting-speed-of-reading-binlog-from-primary-by-a-replica/">
+                            
+                            Restricting Speed of Reading Binlog from Primary by a Replica
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/changing-a-replica-to-become-the-primary/">
+                            
+                            Changing a Replica to Become the Primary
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-with-secure-connections/">
+                            <span class="pull-right not_primary"></span>
+                            Replication with Secure Connections
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/obsolete-replication-information/">
+                            
+                            Obsolete Replication Information
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

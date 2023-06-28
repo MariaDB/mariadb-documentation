@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: TokuDB Differences</title><link>https://mariadb.com/kb/en/tokudb-differences/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/tokudb-differences/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Tue, 14 Mar 2023 20:11:29 +0000</lastBuildDate><item><title>Re: Clustering</title><link>https://mariadb.com/kb/en/tokudb-differences/+comments/2066</link><description>&lt;p&gt;If you want to add to the table and index partitioning, clustering,
+it is only in the following order:&lt;/p&gt;
+&lt;p&gt;create table,&lt;/p&gt;
+&lt;p&gt;1. alter add .... clustering = yes&lt;/p&gt;
+&lt;p&gt;2. and alter table ... partition to ...&lt;/p&gt;
+&lt;p&gt;reverse order :&lt;/p&gt;
+&lt;p&gt;1. alter table ... partition to ...&lt;/p&gt;
+&lt;p&gt;2. alter add .... clustering = yes&lt;/p&gt;
+&lt;p&gt;not WORK, rror 1911 (HY000): Unknown option 'clustering'.&lt;/p&gt;
+&lt;p&gt;EXAMPLE:
+drop table t1&lt;/p&gt;
+&lt;p&gt;   CREATE TABLE `t1` (
+  `id_high` bigint(20) unsigned NOT NULL,
+  `id_low` bigint(20) unsigned NOT NULL,
+  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+--  KEY `clstr_time` (`modified`) `clustering` = yes,
+--   KEY `clstr_key_id_id` (`id_high`)  `clustering` = yes,
+--   PRIMARY KEY (`modified`,`id_high`)
+) ENGINE=TokuDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci&lt;/p&gt;
+&lt;p&gt;alter table n3.t1 add  PRIMARY KEY `t1_pk` (`modified` ASC, `id_high` ASC);
+alter table t1 add key clstr_key  (`id_high`) CLUSTERING=YES;&lt;/p&gt;
+&lt;p&gt;ALTER TABLE t1  PARTITION BY RANGE (UNIX_TIMESTAMP(modified)) (
+PARTITION p201410 VALUES LESS THAN (1414796400) ENGINE = TokuDB,
+ PARTITION p201411 VALUES LESS THAN (1417388400) ENGINE = TokuDB,
+ PARTITION p201412 VALUES LESS THAN (1420066800) ENGINE = TokuDB,
+ PARTITION p201501 VALUES LESS THAN (1422745200) ENGINE = TokuDB,
+ PARTITION p201502 VALUES LESS THAN (1425164400) ENGINE = TokuDB,
+ PARTITION p201503 VALUES LESS THAN (1427839200) ENGINE = TokuDB,
+ PARTITION p201504 VALUES LESS THAN (1430431200) ENGINE = TokuDB,
+ PARTITION p201505 VALUES LESS THAN (1433109600) ENGINE = TokuDB,
+ PARTITION p201506 VALUES LESS THAN (1435701600) ENGINE = TokuDB,
+ PARTITION p201507 VALUES LESS THAN (1438380000) ENGINE = TokuDB,
+ PARTITION p201508 VALUES LESS THAN (1441058400) ENGINE = TokuDB,
+ PARTITION p201509 VALUES LESS THAN (1443650400) ENGINE = TokuDB,
+ PARTITION p2015010 VALUES LESS THAN (1446332400) ENGINE = TokuDB,
+ PARTITION p_max VALUES LESS THAN MAXVALUE ENGINE = TokuDB
+);&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Mariusz Szot</dc:creator><guid>https://mariadb.com/kb/en/tokudb-differences/+comments/2066</guid></item><item><title>Re: Check the compression format of the tables</title><link>https://mariadb.com/kb/en/tokudb-differences/+comments/1964</link><description>&lt;p&gt;Hi, it does not work for me. Versions : tokudb_version - 5.6.26-74.0 , version mariaDB - 10.1.10-MariaDB-1jessie-log. &lt;/p&gt;
+&lt;p&gt;I've added --header to tokuftdump command. Finally it works for me :&lt;/p&gt;
+&lt;pre&gt; mysql -sNe 'SELECT dictionary_name, internal_file_name FROM information_schema.tokudb_file_map WHERE table_dictionary_name = "main" OR table_dictionary_name LIKE "key-%"' |perl -F'\t' -ane '@out=qx(tokuftdump --nodata --header --rootnode /var/lib/mysql/$F[1]); foreach $ftdump (@out) { if($ftdump=~/^ compression_method=([0-9]+)$/) { print $F[0]."\t".$1."\n"; last } }' &lt;/pre&gt;
+&lt;p&gt;And i noticed that changing compression method changes size of table on disk. But command&lt;/p&gt;
+&lt;pre&gt; SELECT 
+    table_name AS `Table`, 
+    round(((data_length) / 1024 / 1024), 2) `Table  size in MB` ,
+    round(((index_length) / 1024 / 1024), 2) `Index  size in MB` 
+FROM information_schema.TABLES 
+WHERE table_schema = &amp;lt;table&amp;gt;
+order by `Table  size in MB` desc; &lt;/pre&gt;
+&lt;p&gt;shows the same size of tables for different compression methods.  Why  ? &lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Khomutov</dc:creator><guid>https://mariadb.com/kb/en/tokudb-differences/+comments/1964</guid></item><item><title>Re: Check the compression format of the tables</title><link>https://mariadb.com/kb/en/tokudb-differences/+comments/1962</link><description>&lt;p&gt;I've added --haeder to tokuftdump to command. This work for me :&lt;/p&gt;
+&lt;pre&gt;{ mysql -sNe 'SELECT dictionary_name, internal_file_name FROM information_schema.tokudb_file_map WHERE table_dictionary_name = "main" OR table_dictionary_name LIKE "key-%"' |perl -F'\t' -ane '@out=qx(tokuftdump --nodata --header --rootnode /var/lib/mysql/$F[1]); foreach $ftdump (@out) { if($ftdump=~/^ compression_method=([0-9]+)$/) { print $F[0]."\t".$1."\n"; last } }' &lt;/pre&gt;
+&lt;p&gt;Wich method corresponds to number 9 , 10 ?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Khomutov</dc:creator><guid>https://mariadb.com/kb/en/tokudb-differences/+comments/1962</guid></item><item><title>Re: Check the compression format of the tables</title><link>https://mariadb.com/kb/en/tokudb-differences/+comments/1212</link><description>&lt;p&gt;On MariaDB5.5.37, the column "dictionary" has changed for "table_dictionary_name", so the right command is now :&lt;/p&gt;
+&lt;pre&gt;mysql -sNe 'SELECT dictionary_name, internal_file_name FROM information_schema.tokudb_file_map WHERE table_dictionary_name = "main" OR table_dictionary_name LIKE "key-%"' |perl -F'\t' -ane '@out=qx(tokuftdump --nodata --rootnode /var/lib/mysql/$F[1]); foreach $ftdump (@out) { if($ftdump=~/^ compression_method=([0-9]+)$/) { print $F[0]."\t".$1."\n"; last } }'&lt;/pre&gt;
+&lt;p&gt;Also note that the ZLIB compressed tables are having the value of 11 and not 8 as stated previously.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jean Weisbuch</dc:creator><guid>https://mariadb.com/kb/en/tokudb-differences/+comments/1212</guid></item><item><title>Check the compression format of the tables</title><link>https://mariadb.com/kb/en/tokudb-differences/+comments/1166</link><description>&lt;p&gt;Here is a simple one liner to check the compression format of the TokuDB data files using the &lt;em&gt;tokuftdump&lt;/em&gt; tool :&lt;/p&gt;
+&lt;pre&gt;mysql -sNe 'SELECT dictionary_name, internal_file_name FROM information_schema.tokudb_file_map WHERE dictionary = "main" OR dictionary LIKE "key-%"' |perl -F'\t' -ane '@out=qx(tokuftdump --nodata --rootnode /var/lib/mysql/$F[1]); foreach $ftdump (@out) { if($ftdump=~/^ compression_method=([0-9]+)$/) { print $F[0]."\t".$1."\n"; last } }'&lt;/pre&gt;
+&lt;p&gt;(don't forget to ajust to your datadir path if its not &lt;em&gt;/var/lib/mysql&lt;/em&gt;)&lt;/p&gt;
+&lt;p&gt;The integer corresponds to the compression format, 0 is uncompressed, 8 is ZLIB and 10 is LZMA, the other format correspondances can be found on &lt;em&gt;&lt;a href="https://github.com/Tokutek/ft-index/blob/76ffa8a810901a2fb60b01703be8feb7d9f78a97/buildheader/make_tdb.cc#L693"&gt;make_tdb.cc&lt;/a&gt;&lt;/em&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jean Weisbuch</dc:creator><guid>https://mariadb.com/kb/en/tokudb-differences/+comments/1166</guid></item><item><title>Re: Clustering</title><link>https://mariadb.com/kb/en/tokudb-differences/+comments/855</link><description>&lt;p&gt;I've fixed the CLUSTERING syntax, thanks.
+As far as partitioning is concerned, I've reported a bug about it: &lt;a href="https://mariadb.atlassian.net/browse/MDEV-5058"&gt;https://mariadb.atlassian.net/browse/MDEV-5058&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Golubchik</dc:creator><guid>https://mariadb.com/kb/en/tokudb-differences/+comments/855</guid></item><item><title>Clustering</title><link>https://mariadb.com/kb/en/tokudb-differences/+comments/854</link><description>&lt;p&gt;&lt;strong&gt;Documentation CLUSTERED keyword is not correct&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; CREATE TABLE foo (id int, key (id) CLUSTERED=YES) ENGINE=TokuDB COMPRESSION=TOKUDB_LZMA;
+ERROR 1911 (HY000): Unknown option 'CLUSTERED'
+&lt;/pre&gt;
+&lt;p&gt;should be&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; CREATE TABLE foo (id int, key (id) CLUSTERING=YES) ENGINE=TokuDB COMPRESSION=TOKUDB_LZMA;
+Query OK, 0 rows affected (0.01 sec)
+
+&amp;gt; show create table foo\G
+*************************** 1. row ***************************
+       Table: foo
+Create Table: CREATE TABLE `foo` (
+  `id` int(11) DEFAULT NULL,
+  KEY `id` (`id`) `CLUSTERING`=YES
+) ENGINE=TokuDB DEFAULT CHARSET=utf8 `COMPRESSION`=TOKUDB_LZMA
+1 row in set (0.00 sec)
+&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;It is not possible to create PARTITIONED table with CLUSTERING key in one go&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; CREATE TABLE bar (id int, key (id) CLUSTERING=YES) ENGINE=TokuDB COMPRESSION=TOKUDB_LZMA PARTITION BY HASH(id) PARTITIONS 4;
+ERROR 1911 (HY000): Unknown option 'CLUSTERING
+&lt;/pre&gt;
+&lt;p&gt;but adding partitioning later works fine&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; CREATE TABLE bar (id int, key (id) CLUSTERING=YES) ENGINE=TokuDB COMPRESSION=TOKUDB_LZMA;
+Query OK, 0 rows affected (0.02 sec)
+
+&amp;gt; ALTER TABLE bar PARTITION BY HASH(id) PARTITIONS 4;
+Query OK, 0 rows affected (0.08 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+&amp;gt; SHOW CREATE TABLE bar\G
+*************************** 1. row ***************************
+       Table: bar
+Create Table: CREATE TABLE `bar` (
+  `id` int(11) DEFAULT NULL,
+  KEY `id` (`id`) `CLUSTERING`=YES
+) ENGINE=TokuDB DEFAULT CHARSET=utf8 `COMPRESSION`=TOKUDB_LZMA
+/*!50100 PARTITION BY HASH (id)
+PARTITIONS 4 */
+1 row in set (0.00 sec)
+&lt;/pre&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Pawel Pabian</dc:creator><guid>https://mariadb.com/kb/en/tokudb-differences/+comments/854</guid></item><item><title>Re: TokuDB Differences</title><link>https://mariadb.com/kb/en/tokudb-differences/+comments/822</link><description>&lt;p&gt;Since the grammar for creating clustered indexes and picking compression type are different than Tokutek's TokuDB for MariaDB can someone please add the syntax to this page?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Tim Callaghan</dc:creator><guid>https://mariadb.com/kb/en/tokudb-differences/+comments/822</guid></item><item><title>Re: More differences</title><link>https://mariadb.com/kb/en/tokudb-differences/+comments/821</link><description>&lt;p&gt;DDL grammar and auto-inrement behavior, yes, thanks.&lt;/p&gt;
+&lt;p&gt;We also link jemalloc statically into mysqld, so that should be the same.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Golubchik</dc:creator><guid>https://mariadb.com/kb/en/tokudb-differences/+comments/821</guid></item><item><title>More differences</title><link>https://mariadb.com/kb/en/tokudb-differences/+comments/820</link><description>&lt;p&gt;More differences&lt;/p&gt;
+&lt;p&gt;I'm pretty sure this is a complete list of clarifications and additional changes between the TokuDB from Tokutek and the version from MariaDB.org.&lt;/p&gt;
+&lt;ul start="1"&gt;&lt;li&gt;No "INSERT NOAR" or "UPDATE NOAR" means that Fast Upserts and Fast Updates are not possible.
+&lt;/li&gt;&lt;li&gt;No Hot Indexing (creating indexes while the table is available for insert/update/delete)
+&lt;/li&gt;&lt;li&gt;Index creation will force a complete table rewrite (table is read-only for the duration of the operation as it is rebuilt, all existing indexes are recreated, and new index is created)
+&lt;/li&gt;&lt;li&gt;Auto-increment behavior is as implemented in MyISAM, not TokuDB
+&lt;/li&gt;&lt;li&gt;DDL grammar changes. I'm not sure of the specifics but I believe the clustering keyword for index creation and how you specify compression type is different.
+&lt;/li&gt;&lt;li&gt;Memory Allocator. We ship MySQL and MariaDB with jemalloc statically linked to mysqld.&lt;/li&gt;&lt;/ul&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Tim Callaghan</dc:creator><guid>https://mariadb.com/kb/en/tokudb-differences/+comments/820</guid></item></channel></rss>

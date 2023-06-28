@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: CREATE FUNCTION</title><link>https://mariadb.com/kb/en/create-function/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/create-function/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 20:18:07 +0000</lastBuildDate><item><title>Re: CREATE FUNCTION</title><link>https://mariadb.com/kb/en/create-function/+comments/6061</link><description>&lt;p&gt;Just for clarification: in 10.3.31 parameter is passed by value per default (IN). Hope it is the same in future releases.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Alain Bourgeois</dc:creator><guid>https://mariadb.com/kb/en/create-function/+comments/6061</guid></item><item><title>Re: CREATE FUNCTION</title><link>https://mariadb.com/kb/en/create-function/+comments/3032</link><description>&lt;p&gt;It says the &lt;code&gt;OR REPLACE&lt;/code&gt; clause is a short-hand for &lt;code&gt;DROP FUNCTION ... CREATE FUNCTION ...&lt;/code&gt;, but in addition to being shorter, &lt;code&gt;OR REPLACE&lt;/code&gt; has another advantage, namely that it doesn't revoke any grants on the function. If you &lt;code&gt;DROP&lt;/code&gt; a function, it will automatically revoke the grants on it.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Karl Levik</dc:creator><guid>https://mariadb.com/kb/en/create-function/+comments/3032</guid></item><item><title>Re: CREATE FUNCTION</title><link>https://mariadb.com/kb/en/create-function/+comments/1398</link><description>&lt;p&gt;Don't understand in which cases function above will be work incorrect, because I defined it as  "DETERMINISTIC", but it really READ SQL DATA.&lt;/p&gt;
+&lt;pre class="fixed"&gt;DELIMITER $$
+CREATE DEFINER=`root`@`localhost` FUNCTION `bpl_get_product_by_code`(
+par_product_code VARCHAR(10)
+) RETURNS VARBINARY(36)
+    DETERMINISTIC
+BEGIN
+	DECLARE var_id_product VARBINARY(36);	
+	SELECT id_product INTO var_id_product
+	FROM bpl_product_types
+	WHERE `code_product` = par_product_code;
+	RETURN var_id_product;
+    END$$
+
+DELIMITER ;
+&lt;/pre&gt;&lt;p&gt;If I defined it as "READ SQL DATA" follow SQL query&lt;/p&gt;
+&lt;pre class="fixed"&gt;SELECT
+  bpl_product_prices.id_product code_product
+  ,ext_code code_shop
+  ,SUM(cnt) cnt
+  ,price
+FROM bpl_product_prices
+JOIN bpl_departments_stores USING (id_depart)
+JOIN bpl_product_cnts USING (id_store, id_product)
+JOIN `#departments` USING (id_depart)
+WHERE
+bpl_product_prices.id_product = bpl_get_product_by_code('15693')
+AND (bpl_product_prices.id_depart = get_id_depart('') OR ('' = ''))
+AND price &amp;gt; 0
+AND cnt &amp;gt; 0
+GROUP BY id_depart
+&lt;/pre&gt;&lt;p&gt;will executing above 2 min.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Mikhail Gavrilov</dc:creator><guid>https://mariadb.com/kb/en/create-function/+comments/1398</guid></item></channel></rss>

@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>MariaDB Memory Allocation - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="MariaDB Memory Allocation" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/mariadb-memory-allocation/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="Basic issues in RAM allocation for MariaDB." />
+
+    <meta name="description" content="Basic issues in RAM allocation for MariaDB." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/mariadb-memory-allocation/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/mariadb-memory-allocation/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/replication-cluster-multi-master/">High Availability &amp; Performance Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/optimization-and-tuning/">Optimization and Tuning</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/mariadb-memory-allocation/">MariaDB Memory Allocation</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/mariadb-memory-allocation/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/mariadb-memory-allocation/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/mariadb-memory-allocation/+flag"
+                data-flag-url="/kb/en/mariadb-memory-allocation/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/mariadb-memory-allocation/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2016-06-20 16:15">6 years, 8 months ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2021-03-18 15:58">1 year, 12 months ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/mariadb-memory-allocation/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/mariadb-memory-allocation/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/mariadb-memory-allocation/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/mariadb-memory-allocation/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+    
+
+<div class="well well-small box"><div><h5>Parents</h5></div><div>
+
+        <ul>
+            
+                <li><a href="/kb/en/optimization-and-tuning/">Optimization and Tuning</a></li>
+            
+                <li><a href="/kb/en/system-variables/">System Variables</a></li>
+            
+        </ul>
+    
+</div>
+</div>
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>MariaDB Memory Allocation</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#allocating-ram-for-mariadb-the-short-answer" title="Allocating RAM for MariaDB - The Short Answer">Allocating RAM for MariaDB - The Short Answer</a></li>
+
+    <li class=""><a href="#how-to-troubleshoot-out-of-memory-issues" title="How to troubleshoot out-of-memory issues">How to troubleshoot out-of-memory issues</a></li>
+
+    <li class=""><a href="#what-is-the-key-buffer" title="What is the Key Buffer?">What is the Key Buffer?</a></li>
+
+    <li class=""><a href="#what-is-the-buffer-pool" title="What is the Buffer Pool?">What is the Buffer Pool?</a></li>
+
+    <li class=""><a href="#another-algorithm" title="Another Algorithm">Another Algorithm</a></li>
+
+    <li class=""><a href="#query-memory-allocation" title="Query Memory Allocation">Query Memory Allocation</a></li>
+
+    <li class=""><a href="#mutex-bottleneck" title="Mutex Bottleneck">Mutex Bottleneck</a></li>
+
+    <li class=""><a href="#hyperthreading-and-multiple-cores-cpus" title="HyperThreading and Multiple Cores (CPUs)">HyperThreading and Multiple Cores (CPUs)</a></li>
+
+    <li class=""><a href="#32-bit-os-and-mariadb" title="32-bit OS and MariaDB">32-bit OS and MariaDB</a></li>
+
+    <li class=""><a href="#64-bit-os-with-32-bit-mariadb" title="64-bit OS with 32-bit MariaDB">64-bit OS with 32-bit MariaDB</a></li>
+
+    <li class=""><a href="#64-bit-os-and-mariadb" title="64-bit OS and MariaDB">64-bit OS and MariaDB</a></li>
+
+    <li class=""><a href="#table_open_cache" title="table_open_cache">table_open_cache</a></li>
+
+    <li class=""><a href="#query-cache" title="Query Cache">Query Cache</a></li>
+
+    <li class=""><a href="#thread_cache_size" title="thread_cache_size">thread_cache_size</a></li>
+
+    <li class=""><a href="#binary-logs" title="Binary Logs">Binary Logs</a></li>
+
+    <li class=""><a href="#swappiness" title="Swappiness">Swappiness</a></li>
+
+    <li class=""><a href="#numa" title="NUMA">NUMA</a></li>
+
+    <li class=""><a href="#huge-pages" title="Huge Pages">Huge Pages</a></li>
+
+    <li class=""><a href="#enginememory" title="ENGINE=MEMORY">ENGINE=MEMORY</a></li>
+
+    <li class=""><a href="#how-to-set-variables" title="How to Set Variables">How to Set Variables</a></li>
+
+    <li class=""><a href="#web-server" title="Web Server">Web Server</a></li>
+
+    <li class=""><a href="#tools" title="Tools">Tools</a></li>
+
+    <li class=""><a href="#mysql-57" title="MySQL 5.7">MySQL 5.7</a></li>
+
+    <li class=""><a href="#postlog" title="Postlog">Postlog</a></li>
+
+    <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
+</li>
+</div>
+<h2 class="anchored_heading" id="allocating-ram-for-mariadb-the-short-answer">Allocating RAM for MariaDB - The Short Answer</h2>
+<p>If only using <a href="/kb/en/myisam/">MyISAM</a>, set <a href="/kb/en/myisam-system-variables/#key_buffer_size">key_buffer_size</a> to 20% of <strong>available</strong> RAM. (Plus <a href="/kb/en/xtradbinnodb-server-system-variables/#innodb_buffer_pool_size">innodb_buffer_pool_size=0</a>)</p>
+<p>If only using InnoDB, set <a href="/kb/en/xtradbinnodb-server-system-variables/#innodb_buffer_pool_size">innodb_buffer_pool_size</a> to 70% of <strong>available</strong> RAM. (Plus <a href="/kb/en/myisam-system-variables/#key_buffer_size">key_buffer_size</a> = 10M, small, but not zero.)</p>
+<p>Rule of thumb for tuning:</p>
+<ul><li>Start with released copy of my.cnf / my.ini.
+</li><li>Change <a href="/kb/en/myisam-system-variables/#key_buffer_size">key_buffer_size</a> and <a href="/kb/en/innodb-system-variables/#innodb_buffer_pool_size">innodb_buffer_pool_size</a> according to engine usage and RAM.
+</li><li>Slow queries can usually be 'fixed' via indexes, schema changes, or SELECT changes, not by tuning.
+</li><li>Don't get carried away with the <a href="/kb/en/query-cache/">query cache</a> until you understand what it can and cannot do.
+</li><li>Don't change anything else unless you run into trouble (eg, max connections).
+</li><li>Be sure the changes are under the [mysqld] section, not some other section.
+</li></ul>
+<p>The 20%/70% assumes you have at least 4GB of RAM. If you have a tiny antique, or a tiny VM, then those percentages are too high.</p>
+<p>Now for the gory details.</p>
+<h2 class="anchored_heading" id="how-to-troubleshoot-out-of-memory-issues">How to troubleshoot out-of-memory issues</h2>
+<p>If the MariaDB server is crashing because of 'out-of-memory' then it is probably wrongly configured.</p>
+<p>There are two kind of buffers in MariaDB:</p>
+<ul start="1"><li>Global ones that are only allocated once during the lifetime of the server:
+<ul start="1"><li>Storage engine buffers (<a href="/kb/en/innodb-system-variables/#innodb_buffer_pool_size">innodb_buffer_pool_size</a>, <a href="/kb/en/myisam-system-variables/#key_buffer_size">key_buffer_size</a>, <a href="/kb/en/aria-system-variables/#aria_pagecache_buffer_size">aria_pagecache_buffer_size</a>, etc)
+</li><li>Query cache <a href="/kb/en/server-system-variables/#query_cache_size">query_cache_size</a>.
+</li></ul>
+</li></ul>
+<ul start="1"><li>Global caches onces that grow and shrink dynamically on demand up to max limit:
+<ul start="1"><li><a href="/kb/en/server-system-variables/#max_user_connections">max_user_connections</a>
+</li><li><a href="/kb/en/server-system-variables/#table_open_cache">table_open_cache</a>
+</li><li><a href="/kb/en/server-system-variables/#table_definition_cache">table_definition_cache</a>
+</li><li><a href="/kb/en/server-system-variables/#thread_cache_size">thread_cache_size</a>
+</li></ul>
+</li></ul>
+<ul start="1"><li>Local buffers that are allocated on demand whenever needed
+<ul start="1"><li>Internal ones used during engine index creation
+  (<a href="/kb/en/myisam-system-variables/#myisam_sort_buffer_size">myisam_sort_buffer_size</a>, <a href="/kb/en/aria-system-variables/#aria_sort_buffer_size">aria_sort_buffer_size).</a>
+</li><li>Internal buffers for storing blobs.
+<ul start="1"><li>Some storage engine will keep a temporary cache to store the largest blob seen so far when scanning a table. This will be freed at end of query. Note that temporary blob storage is <strong>not</strong> included in the memory information in <a href="/kb/en/information-schema-processlist-table/">information_schema.processlist</a> but only in the total memory used (<code class="fixed" style="white-space:pre-wrap">show global status like &#34;memory_used&#34;</code>).
+</li></ul>
+</li><li>Buffers and caches used during query execution:
+</li></ul>
+</li></ul>
+<div class="cstm-style darkheader-nospace-borders" style="font-size:0.9em"><table><tr><th>Variable</th><th>Description</th></tr>
+<tr><td><a href="/kb/en/server-system-variables/#join_buffer_size">join_buffer_size</a></td><td>Used when no keys can be used to find a row in next table</td></tr>
+<tr><td><a href="/kb/en/server-system-variables/#mrr_buffer_size">mrr_buffer_size</a></td><td>Size of buffer to use when using multi-range read with range access</td></tr>
+<tr><td><a href="/kb/en/server-system-variables/#net_buffer_length">net_buffer_length</a></td><td>Max size of network packet</td></tr>
+<tr><td><a href="/kb/en/server-system-variables/#read_buffer_size">read_buffer_size</a></td><td>Used by some storage engines when doing bulk insert</td></tr>
+<tr><td><a href="/kb/en/server-system-variables/#sort_buffer_size">sort_buffer_size</a></td><td>When doing ORDER BY or GROUP BY</td></tr>
+<tr><td><a href="/kb/en/server-system-variables/#max_heap_table_size">max_heap_table_size</a></td><td>Used to store temporary tables in memory.  See <a href="/kb/en/optimizing-memory-tables/">Optimizing memory tables</a></td></tr>
+</table>
+</div><p>If any variables in the last group is very large and you have a lot
+of simultaneous users that are executing queries that are using these
+buffers then you can run into trouble.</p>
+<p>In a default MariaDB installation the default of most of the above
+variables are quite small to ensure that one does not run out of memory.</p>
+<p>You can check which variables that have been changed in your setup by
+executing the following sql statement. If you are running into
+out-of-memory issues, it is very likely that the problematic variable is
+in this list!</p>
+<pre class="fixed"><span class="k">select</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">system_variables</span><span class="p">.</span><span class="n">variable_name</span><span class="p">,</span>
+<span class="n">information_schema</span><span class="p">.</span><span class="n">system_variables</span><span class="p">.</span><span class="n">default_value</span><span class="p">,</span>
+<span class="n">global_variables</span><span class="p">.</span><span class="n">variable_value</span> <span class="k">from</span>
+<span class="n">information_schema</span><span class="p">.</span><span class="n">system_variables</span><span class="p">,</span><span class="n">information_schema</span><span class="p">.</span><span class="n">global_variables</span> <span class="k">where</span>
+<span class="n">system_variables</span><span class="p">.</span><span class="n">variable_name</span><span class="o">=</span><span class="n">global_variables</span><span class="p">.</span><span class="n">variable_name</span> <span class="k">and</span>
+<span class="n">system_variables</span><span class="p">.</span><span class="n">default_value</span> <span class="o">&lt;&gt;</span> <span class="n">global_variables</span><span class="p">.</span><span class="n">variable_value</span> <span class="k">and</span>
+<span class="n">system_variables</span><span class="p">.</span><span class="n">default_value</span> <span class="o">&lt;&gt;</span> <span class="mi">0</span>
+</pre><h2 class="anchored_heading" id="what-is-the-key-buffer">What is the Key Buffer?</h2>
+<p><a href="/kb/en/myisam/">MyISAM</a> does two different things for caching.</p>
+<ul><li>Index blocks (1KB each, BTree structured, from .MYI file) live in the "key buffer".
+</li><li>Data block caching (from .MYD file) is left to the OS, so be sure to leave a bunch of free space for this.
+Caveat: Some flavors of OS always claim to be using over 90%, even when there is really lots of free space.
+</li></ul>
+<pre class="fixed"><span class="k">SHOW</span> <span class="k">GLOBAL</span> <span class="n">STATUS</span> <span class="k">LIKE</span> <span class="s1">&#39;Key%&#39;</span><span class="p">;</span>
+</pre><p>then calculate <a href="/kb/en/server-status-variables/#key_read_requests">Key_read_requests</a> / <a href="/kb/en/server-status-variables/#key_reads">Key_reads</a>. If it is high (say, over 10), then the key buffer is big enough, otherwise you should adjust the <a href="/kb/en/myisam-system-variables/#key_buffer_size">key_buffer_size</a> value.</p>
+<h2 class="anchored_heading" id="what-is-the-buffer-pool">What is the Buffer Pool?</h2>
+<p>InnoDB does all its caching in a the <a href="/kb/en/xtradbinnodb-buffer-pool/">buffer pool</a>, whose size is controlled by <a href="/kb/en/innodb-system-variables/#innodb_buffer_pool_size">innodb_buffer_pool_size</a>. By default it contains 16KB data and index blocks from the open tables (see <a href="/kb/en/innodb-system-variables/#innodb_page_size">innodb_page_size</a>), plus some maintenance overhead.</p>
+<p>From <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a>, multiple buffer pools are permitted; this can help because there is one mutex per pool, thereby relieving some of the mutex bottleneck.</p>
+<p><a href="http://www.mysqlperformanceblog.com/2007/11/01/innodb-performance-optimization-basics/">More on InnoDB tuning</a></p>
+<h2 class="anchored_heading" id="another-algorithm">Another Algorithm</h2>
+<p>This will set the main cache settings to the minimum; it could be important to systems with lots of other processes and/or RAM is 2GB or smaller.</p>
+<p>Do <a href="/kb/en/show-table-status/">SHOW TABLE STATUS</a> for all the tables in all the databases.</p>
+<p>Add up Index_length for all the MyISAM tables. Set <a href="/kb/en/myisam-system-variables/#key_buffer_size">key_buffer_size</a> no larger than that size.</p>
+<p>Add up Data_length + Index_length for all the InnoDB tables. Set <a href="/kb/en/innodb-system-variables/#innodb_buffer_pool_size">innodb_buffer_pool_size</a> to no more than 110% of that total.</p>
+<p>If that leads to swapping, cut both settings back. Suggest cutting them down proportionately.</p>
+<p>Run this to see the values for your system. (If you have a lot of tables, it can take minute(s).)</p>
+<pre class="fixed"><span class="k">SELECT</span>  <span class="n">ENGINE</span><span class="p">,</span>
+        <span class="n">ROUND</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">data_length</span><span class="p">)</span> <span class="o">/</span><span class="mi">1024</span><span class="o">/</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">AS</span> <span class="ss">&quot;Data MB&quot;</span><span class="p">,</span>
+        <span class="n">ROUND</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">index_length</span><span class="p">)</span><span class="o">/</span><span class="mi">1024</span><span class="o">/</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">AS</span> <span class="ss">&quot;Index MB&quot;</span><span class="p">,</span>
+        <span class="n">ROUND</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">data_length</span> <span class="o">+</span> <span class="n">index_length</span><span class="p">)</span><span class="o">/</span><span class="mi">1024</span><span class="o">/</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">AS</span> <span class="ss">&quot;Total MB&quot;</span><span class="p">,</span>
+        <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="ss">&quot;Num Tables&quot;</span>
+    <span class="k">FROM</span>  <span class="n">INFORMATION_SCHEMA</span><span class="p">.</span><span class="n">TABLES</span>
+    <span class="k">WHERE</span>  <span class="n">table_schema</span> <span class="k">not</span> <span class="k">in</span> <span class="p">(</span><span class="ss">&quot;information_schema&quot;</span><span class="p">,</span> <span class="ss">&quot;PERFORMANCE_SCHEMA&quot;</span><span class="p">,</span> <span class="ss">&quot;SYS_SCHEMA&quot;</span><span class="p">,</span> <span class="ss">&quot;ndbinfo&quot;</span><span class="p">)</span>
+    <span class="k">GROUP</span> <span class="k">BY</span>  <span class="n">ENGINE</span><span class="p">;</span>
+</pre><h2 class="anchored_heading" id="query-memory-allocation">Query Memory Allocation</h2>
+<p>There are two variables that dictates how memory are allocated by MariaDB while parsing and executing a query.
+<a href="/kb/en/server-system-variables/#query_prealloc_size">query_prealloc_size</a> defines the standard buffer for memory used  for query execution and <a href="/kb/en/server-system-variables/#query_alloc_block_size">query_alloc_block_size</a> that is size of memory blocks if <code>query_prealloc_size</code> was not big enough. Getting these variables right will reduce memory fragmentation in the server.</p>
+<h2 class="anchored_heading" id="mutex-bottleneck">Mutex Bottleneck</h2>
+<p>MySQL was designed in the days of single-CPU machines, and designed to be easily ported to many different architectures. Unfortunately, that lead to some sloppiness in how to interlock actions. There are a small number (too small) of "mutexes" to gain access to several critical processes. Of note:</p>
+<ul><li>MyISAM's key_buffer
+</li><li>The Query Cache
+</li><li>InnoDB's buffer_pool
+With multi-core boxes, the mutex problem is causing performance problems. In general, past 4-8 cores, MySQL gets slower, not faster. MySQL 5.5 and Percona's XtraDB made that somewhat better in InnoDB; the practical limit for cores is more like 32, and performance tends plateaus after that rather than declining. 5.6 claims to scale up to about 48 cores.
+</li></ul>
+<h2 class="anchored_heading" id="hyperthreading-and-multiple-cores-cpus">HyperThreading and Multiple Cores (CPUs)</h2>
+<p>Short answers (for older versions of MySQL and MariaDB):</p>
+<ul><li>Turn off HyperThreading
+</li><li>Turn off any cores beyond 8
+</li><li>HyperThreading is mostly a thing of the past, so this section may not apply.
+</li></ul>
+<p>HyperThreading is great for marketing, lousy for performance. It involves having two processing units sharing a single hardware cache. If both units are doing the same thing, the cache will be reasonably useful. If the units are doing different things, they will be clobbering each other's cache entries.</p>
+<p>Furthermore MySQL is not great on using multiple cores. So, if you turn off HT, the remaining cores run a little faster.</p>
+<h2 class="anchored_heading" id="32-bit-os-and-mariadb">32-bit OS and MariaDB</h2>
+<p>First, the OS (and the hardware?) may conspire to not let you use all 4GB, if that is what you have. If you have more than 4GB of RAM, the excess beyond 4GB is _totally_ inaccessable and unusable on a 32-bit OS.</p>
+<p>Secondly, the OS probably has a limit on how much RAM it will allow any process to use.</p>
+<p>Example: FreeBSD's maxdsiz, which defaults to 512MB.</p>
+<p>Example:</p>
+<pre class="fixed">$ ulimit -a
+...
+max memory size (kbytes, -m) 524288
+</pre><p>So, once you have determined how much RAM is available to mysqld, then apply the 20%/70%, but round down some.</p>
+<p>If you get an error like <code>[ERROR] /usr/libexec/mysqld: Out of memory (Needed xxx bytes)</code>, it probably means that MySQL exceeded what the OS is willing to give it. Decrease the cache settings.</p>
+<h2 class="anchored_heading" id="64-bit-os-with-32-bit-mariadb">64-bit OS with 32-bit MariaDB</h2>
+<p>The OS is not limited by 4GB, but MariaDB is.</p>
+<p>If you have at least 4GB of RAM, then maybe these would be good:</p>
+<ul><li><a href="/kb/en/myisam-system-variables/#key_buffer_size">key_buffer_size</a> = 20% of _all_ of RAM, but not more than 3G
+</li><li><a href="/kb/en/xtradbinnodb-server-system-variables/#innodb_buffer_pool_size">innodb_buffer_pool_size</a> = 3G
+</li></ul>
+<p>You should probably upgrade MariaDB to 64-bit.</p>
+<h2 class="anchored_heading" id="64-bit-os-and-mariadb">64-bit OS and MariaDB</h2>
+<p>MyISAM only: <a href="/kb/en/myisam-system-variables/#key_buffer_size">key_buffer_size</a>: Use about 20% of RAM. Set (in my.cnf / my.ini) <a href="/kb/en/xtradbinnodb-server-system-variables/#innodb_buffer_pool_size">innodb_buffer_pool_size=0</a> = 0.</p>
+<p>InnoDB only: <a href="/kb/en/xtradbinnodb-server-system-variables/#innodb_buffer_pool_size">innodb_buffer_pool_size=0</a> = 70% of RAM. If you have lots of RAM and are using 5.5 (or later), then consider having multiple pools. Recommend 1-16 <a href="/kb/en/innodb-system-variables/#innodb_buffer_pool_instances">innodb_buffer_pool_instances</a>, such that each one is no smaller than 1GB. (Sorry, no metric on how much this will help; probably not a lot.)</p>
+<p>Meanwhile, set <a href="/kb/en/myisam-system-variables/#key_buffer_size">key_buffer_size</a> = 20M (tiny, but non-zero)</p>
+<p>If you have a mixture of engines, lower both numbers.</p>
+<p>max_connections, thread_stack
+Each "thread" takes some amount of RAM. This used to be about 200KB; 100 threads would be 20MB, not a significant size. If you have <a href="/kb/en/server-system-variables/#max_connections">max_connections</a> = 1000, then you are talking about 200MB, maybe more. Having that many connections probably implies other issues that should be addressed.</p>
+<p>In 5.6 (or <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a>), optional thread pooling interacts with <a href="/kb/en/server-system-variables/#max_connections">max_connections</a>. This is a more advanced topic.</p>
+<p>Thread stack overrun rarely happens. If it does, do something like thread_stack=256K</p>
+<p><a href="http://www.mysqlperformanceblog.com/2013/11/28/mysql-error-too-many-connections/">More on max_connections, wait_timeout, connection pooling, etc</a></p>
+<h2 class="anchored_heading" id="table_open_cache">table_open_cache</h2>
+<p>(In older versions this was called table_cache)</p>
+<p>The OS has some limit on the number of open files it will let a process have. Each table needs 1 to 3 open files. Each PARTITION is effectively a table. Most operations on a partitioned table open _all_ partitions.</p>
+<p>In *nix, ulimit tells you what the file limit is. The maximum value is in the tens of thousands, but sometimes it is set to only 1024. This limits you to about 300 tables. More discussion on ulimit</p>
+<p>(This paragraph is in disputed.) On the other side, the table cache is (was) inefficiently implemented -- lookups were done with a linear scan. Hence, setting table_cache in the thousands could actually slow down mysql. (Benchmarks have shown this.)</p>
+<p>You can see how well your system is performing via <a href="/kb/en/show-status/">SHOW GLOBAL STATUS</a>; and computing the opens/second via <a href="/kb/en/server-status-variables/#opened_files">Opened_files</a> / <a href="/kb/en/server-status-variables/#uptime">Uptime</a> If this is more than, say, 5, <a href="/kb/en/server-system-variables/#table_open_cache">table_open_cache</a> should be increased. If it is less than, say, 1, you might get improvement by decreasing <a href="/kb/en/server-system-variables/#table_open_cache">table_open_cache</a>.</p>
+<p>From <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a>, <a href="/kb/en/server-system-variables/#table_open_cache">table_open_cache</a> defaults to 2000.</p>
+<h2 class="anchored_heading" id="query-cache">Query Cache</h2>
+<p>Short answer: <a href="/kb/en/server-system-variables/#query_cache_type">query_cache_type</a> = OFF and <a href="/kb/en/server-system-variables/#query_cache_size">query_cache_size</a> = 0</p>
+<p>The <a href="/kb/en/query-cache/">Query Cache</a> (QC) is effectively a hash mapping SELECT statements to resultsets.</p>
+<p>Long answer... There are many aspects of the "Query cache"; many are negative.</p>
+<ul><li>Novice Alert! The QC is totally unrelated to the key_buffer and buffer_pool.
+</li><li>When it is useful, the QC is blazingly fast. It would not be hard to create a benchmark that runs 1000x faster.
+</li><li>There is a single mutex controlling the QC.
+</li><li>The QC, unless it is OFF &amp; 0, is consulted for _every_ SELECT.
+</li><li>Yes, the mutex is hit even if <a href="/kb/en/server-system-variables/#query_cache_type">query_cache_type</a> = DEMAND (2).
+</li><li>Yes, the mutex is hit even for <a href="/kb/en/query-cache/#sql_no_cache-and-sql_cache">SQL_NO_CACHE</a>.
+</li><li>Any change to a query (even adding a space) leads (potentially) to a different entry in the QC.
+</li><li>If my.cnf says type=ON and you later turn it OFF, it is not fully OFF. Ref: <a href="https://bugs.mysql.com/bug.php?id=60696">https://bugs.mysql.com/bug.php?id=60696</a>
+</li></ul>
+<p>"Pruning" is costly and frequent:</p>
+<ul><li>When _any_ write happens on a table, _all_ entries in the QC for _that_ table are removed.
+</li><li>It happens even on a readonly Slave.
+</li><li>Purges are performed with a linear algorithm, so a large QC (even 200MB) can be noticeably slow.
+</li></ul>
+<p>To see how well your QC is performing, SHOW GLOBAL STATUS LIKE 'Qc%'; then compute the read hit rate: <a href="/kb/en/server-status-variables/#qcache_hits">Qcache_hits</a> / <a href="/kb/en/server-status-variables/#qcache_inserts">Qcache_inserts</a> If it is over, say, 5, the QC might be worth keeping.</p>
+<p>If you decide the QC is right for you, then I recommend</p>
+<ul><li><a href="/kb/en/server-system-variables/#query_cache_size">query_cache_size</a> = no more than 50M
+</li><li><a href="/kb/en/server-system-variables/#query_cache_type">query_cache_type</a> = DEMAND
+</li><li><a href="%5Bquery-cache/#sql_no_cache-and-sql_cache">SQL_CACHE or SQL_NO_CACHE</a> in all SELECTs, based on which queries are likely to benefit from caching.
+</li></ul>
+<ul><li><a href="http://dba.stackexchange.com/a/136814/1876">Why to turn off the QC</a>
+</li><li><a href="https://haydenjames.io/mysql-query-cache-size-performance/">Discussion about size</a>
+</li></ul>
+<h2 class="anchored_heading" id="thread_cache_size">thread_cache_size</h2>
+<p>It is not necessary to tune <a href="/kb/en/server-system-variables/#thread_cache_size">thread_cache_size</a> from <a href="/kb/en/mariadb-1020-release-notes/">MariaDB 10.2.0</a>. Previously, it was minor tunable variable.  Zero will slow down thread (connection) creation. A small (say, 10), non-zero number is good. The setting has essentially no impact on RAM usage.</p>
+<p>It is the number of extra processes to hang onto. It does not restrict the number of threads; <a href="/kb/en/server-system-variables/#max_connections">max_connections</a> does.</p>
+<h2 class="anchored_heading" id="binary-logs">Binary Logs</h2>
+<p>If you have turned on <a href="/kb/en/binary-log/">binary logging</a> (via <a href="/kb/en/replication-and-binary-log-system-variables/#log_bin">log_bin</a>) for replication and/or point-in-time recovery, the system will create binary logs forever. That is, they can slowly fill up the disk. Suggest setting <a href="/kb/en/replication-and-binary-log-system-variables/#expire_logs_days">expire_logs_days</a> = 14 to keep only 14 days' worth of logs.</p>
+<h2 class="anchored_heading" id="swappiness">Swappiness</h2>
+<p>RHEL, in its infinite wisdom, decided to let you control how aggressively the OS will pre-emptively swap RAM. This is good in general, but lousy for MariaDB.</p>
+<p>MariaDB would love for RAM allocations to be reasonably stable -- the caches are (mostly) pre-allocated; the threads, etc, are (mostly) of limited scope. ANY swapping is likely to severely hurt performance of MariaDB.</p>
+<p>With a high value for swappiness, you lose some RAM because the OS is trying to keep a lot of space free for future allocations (that MySQL is not likely to need).</p>
+<p>With swappiness = 0, the OS will probably crash rather than swap. I would rather have MariaDB limping than die. The latest recommendation is swappiness = 1. (2015)</p>
+<p><a href="http://www.mysqlperformanceblog.com/2014/04/28/oom-relation-vm-swappiness0-new-kernel/">More confirmation</a></p>
+<p>Somewhere in between (say, 5?) might be a good value for a MariaDB-only server.</p>
+<h2 class="anchored_heading" id="numa">NUMA</h2>
+<p>OK, it's time to complicate the architecture of how a CPU talks to RAM. NUMA (Non-Uniform Memory Access) enters the picture. Each CPU (or maybe socket with several cores) has a part of the RAM hanging off each. This leads to memory access being faster for local RAM, but slower (tens of cycles slower) for RAM hanging off other CPUs.</p>
+<p>Then the OS enters the picture. In at least one case (RHEL?), two things seem to be done:</p>
+<ul><li>OS allocations are pinned to the 'first' CPU's RAM.]
+</li><li>Other allocations go by default to the first CPU until it is full.
+</li></ul>
+<p>Now for the problem.</p>
+<ul><li>The OS and MariaDB have allocated all the 'first' RAM.
+</li><li>MariaDB has allocated some of the second RAM.
+</li><li>The OS needs to allocate something.
+Ouch -- it is out of room in the one CPU where it is willing to allocate its stuff, so it swaps out some of MariaDB. Bad.
+</li></ul>
+<p>dmesg | grep -i numa # to see if you have numa</p>
+<p>Probable solution: Configure the BIOS to "interleave" the RAM allocations. This should prevent the premature swapping, at the cost of off-CPU RAM accesses half the time. Well, you have the costly accesses anyway, since you really want to use all of RAM. Older MySQL versions: numactl --interleave=all. Or: <a href="/kb/en/innodb-system-variables/#innodb_numa_interleave">innodb_numa_interleave</a>=1</p>
+<p>Another possible solution: Turn numa off (if the OS has a way of doing that)</p>
+<p>Overall performance loss/gain: A few percent.</p>
+<h2 class="anchored_heading" id="huge-pages">Huge Pages</h2>
+<p>This is another hardware performance gimmick.</p>
+<p>For a CPU to access RAM, especially mapping a 64-bit address to somewhere in, say, 128GB or 'real' RAM, the TLB is used. (TLB = Translation Lookup Buffer.) Think of the TLB as a hardware associative memory lookup table; given a 64-bit virtual address, what is the real address.</p>
+<p>Because it is an associative memory of finite size, sometimes there will be "misses" that require reaching into real RAM to resolve the lookup. This is costly, so should be avoided.</p>
+<p>Normally, RAM is 'paged' in 4KB pieces; the TLB actually maps the top (64-12) bits into a specific page. Then the bottom 12 bits of the virtual address are carried over intact.</p>
+<p>For example, 128GB of RAM broken 4KB pages means 32M page-table entries. This is a lot, and probably far exceeds the capacity of the TLB. So, enter the "Huge page" trick.</p>
+<p>With the help of both the hardware and the OS, it is possible to have some of RAM in huge pages, of say 4MB (instead of 4KB). This leads to far fewer TLB entries, but it means the unit of paging is 4MB for such parts of RAM. Hence, huge pages tend to be non-pagable.</p>
+<p>Now RAM is broken into pagable and non pagable parts; what parts can reasonably be non pagable? In MariaDB, the <a href="/kb/en/xtradbinnodb-buffer-pool/">Innodb Buffer Pool</a> is a perfect candidate. So, by correctly configuring these, InnoDB can run a little faster:</p>
+<ul><li>Huge pages enabled
+</li><li>Tell the OS to allocate the right amount (namely to match the buffer_pool)
+</li><li>Tell MariaDB to use huge pages
+</li></ul>
+<ul><li><a href="http://forums.mysql.com/read.php?22,384707,385002">innodb memory usage vs swap</a>
+</li></ul>
+<p>That thread has more details on what to look for and what to set.</p>
+<p>Overall performance gain: A few percent. Yawn. Too much hassle for too little benefit.</p>
+<p>Jumbo Pages? Turn off.</p>
+<h2 class="anchored_heading" id="enginememory">ENGINE=MEMORY</h2>
+<p>The <a href="/kb/en/memory-storage-engine/">Memory Storage Engine</a> is a little-used alternative to <a href="/kb/en/myisam/">MyISAM</a> and <a href="/kb/en/innodb/">InnoDB</a>. The data is not persistent, so it has limited uses. The size of a MEMORY table is limited to <a href="/kb/en/server-system-variables/#max_heap_table_size">max_heap_table_size</a>, which defaults to 16MB. I mention it in case you have changed the value to something huge; this would stealing from other possible uses of RAM.</p>
+<h2 class="anchored_heading" id="how-to-set-variables">How to Set Variables</h2>
+<p>In the text file my.cnf (my.ini on Windows), add or modify a line to say something like</p>
+<p><a href="/kb/en/innodb-system-variables/#innodb_buffer_pool_size">innodb_buffer_pool_size</a> = 5G</p>
+<p>That is, VARIABLE name, "=", and a value. Some abbreviations are allowed, such as M for million (1048576), G for billion.</p>
+<p>For the server to see it, the settings must be in the "[mysqld]" section of the file.</p>
+<p>The settings in my.cnf or my.ini will not take effect until you restart the server.</p>
+<p>Most settings can be changed on the live system by connecting as user root (or other user with SUPER privilege) and doing something like</p>
+<pre class="fixed">SET @@global.key_buffer_size = 77000000;
+</pre><p>Note: No M or G suffix is allowed here.</p>
+<p>To see the setting a global VARIABLE do something like</p>
+<pre class="fixed"><span class="k">SHOW</span> <span class="k">GLOBAL</span> <span class="n">VARIABLES</span> <span class="k">LIKE</span> <span class="ss">&quot;key_buffer_size&quot;</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">-----------------+----------+</span>
+<span class="o">|</span> <span class="n">Variable_name</span>   <span class="o">|</span> <span class="n">Value</span>    <span class="o">|</span>
+<span class="o">+</span><span class="c1">-----------------+----------+</span>
+<span class="o">|</span> <span class="n">key_buffer_size</span> <span class="o">|</span> <span class="mi">76996608</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">-----------------+----------+</span>
+</pre><p>Note that this particular setting was rounded down to some multiple that MariaDB liked.</p>
+<p>You may want to do both (SET, and modify my.cnf) in order to make the change immediately and have it so that the next restart (for whatever reason) will again get the value.</p>
+<h2 class="anchored_heading" id="web-server">Web Server</h2>
+<p>A web server like Apache runs multiple threads. If each thread opens a connection to MariaDB, you could run out of connections. Make sure MaxClients (or equivalent) is set to some civilized number (under 50).</p>
+<h2 class="anchored_heading" id="tools">Tools</h2>
+<ul><li>MySQLTuner
+</li><li>TUNING-PRIMER
+</li></ul>
+<p>There are several tools that advise on memory. One misleading entry they come up with</p>
+<p>Maximum possible memory usage: 31.3G (266% of installed RAM)</p>
+<p>Don't let it scare you -- the formulas used are excessively conservative. They assume all of <a href="/kb/en/server-system-variables/#max_connections">max_connections</a> are in use and active, and doing something memory-intensive.</p>
+<p>Total fragmented tables: 23 This implies that OPTIMIZE TABLE _might_ help. I suggest it for tables with either a high percentage of "free space" (see SHOW TABLE STATUS) or where you know you do a lot of DELETEs and/or UPDATEs. Still, don't bother to OPTIMIZE too often. Once a month might suffice.</p>
+<h2 class="anchored_heading" id="mysql-57">MySQL 5.7</h2>
+<p>5.7 stores a lot more information in RAM, leading to the footprint being perhaps half a GB more than 5.6. See <a href="https://blogs.oracle.com/svetasmirnova/entry/memory_summary_tables_in_performance">Memory increase in 5.7</a>.</p>
+<h2 class="anchored_heading" id="postlog">Postlog</h2>
+<p>Created 2010; Refreshed Oct, 2012, Jan, 2014</p>
+<p>The tips in this document apply to MySQL, MariaDB, and Percona.</p>
+<h2 class="anchored_heading" id="see-also">See Also</h2>
+<ul start="1"><li><a href="/kb/en/configuring-mariadb-for-optimal-performance/">Configuring MariaDB for Optimal Performance</a>
+</li><li>More in-depth: Tocker's tuning for 5.6
+</li><li>Irfan's InnoDB performance optimization basics (redux)
+</li><li>10 MySQL settings to tune after installation
+</li><li>Magento
+</li><li>Peter Zaitsev's take on such (5/2016)
+</li></ul>
+<p>Rick James graciously allowed us to use this article in the Knowledge Base.</p>
+<p><a href="http://mysql.rjweb.org/">Rick James' site</a> has other useful tips, how-tos,
+optimizations, and debugging tips.</p>
+<p>
+Original source: <a href="http://mysql.rjweb.org/doc.php/random">http://mysql.rjweb.org/doc.php/random</a></p>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/mariadb-memory-allocation/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/mariadb-memory-allocation/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/optimizing-tables/">
+                        ← Optimizing Tables
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/optimization-and-tuning/">
+                        ↑ Optimization and Tuning ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/system-variables/">
+                        System Variables →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="5751" data-comments-url="/kb/en/mariadb-memory-allocation/+comments"
+         data-reply-url="/kb/en/mariadb-memory-allocation/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/optimization-and-tuning/">
+                    ↑ Optimization and Tuning ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/hardware-optimization/">
+                            
+                            Hardware Optimization
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/operating-system-optimizations/">
+                            
+                            Operating System Optimizations
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/optimization-and-indexes/">
+                            
+                            Optimization and Indexes
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/query-optimizations/">
+                            
+                            Query Optimizations
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/optimizing-tables/">
+                            
+                            Optimizing Tables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>MariaDB Memory Allocation</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/system-variables/">
+                            
+                            System Variables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/buffers-caches-and-threads/">
+                            
+                            Buffers, Caches and Threads
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/optimizing-data-structure/">
+                            
+                            Optimizing Data Structure
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-internal-optimizations/">
+                            
+                            MariaDB Internal Optimizations
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/benchmarking/">
+                            
+                            Benchmarking
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/optimization-and-tuning-compression/">
+                            
+                            Compression
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

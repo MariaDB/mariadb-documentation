@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>ColumnStore Storage Architecture - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="ColumnStore Storage Architecture" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/columnstore-storage-architecture/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="MariaDB ColumnStore Storage Architecture and Concepts" />
+
+    <meta name="description" content="MariaDB ColumnStore Storage Architecture and Concepts" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/columnstore-storage-architecture/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/columnstore-storage-architecture/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/columns-storage-engines-and-plugins/">Columns, Storage Engines, and Plugins</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/storage-engines/">Storage Engines</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/columnstore-architecture/">ColumnStore Architecture</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/columnstore-storage-architecture/">ColumnStore Storage Architecture</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/columnstore-storage-architecture/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/columnstore-storage-architecture/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/columnstore-storage-architecture/+flag"
+                data-flag-url="/kb/en/columnstore-storage-architecture/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/columnstore-storage-architecture/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2016-06-09 05:52">6 years, 9 months ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2021-02-20 20:10">2 years ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/columnstore-storage-architecture/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/columnstore-storage-architecture/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/columnstore-storage-architecture/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/columnstore-storage-architecture/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <ul>
+                
+                    <li><a href="/kb/en/columnstore-storage-architecture/+image/datastorage-diagram">datastorage-diagram</a>
+                    </li>
+                
+                    <li><a href="/kb/en/columnstore-storage-architecture/+image/extent-elimination">extent-elimination</a>
+                    </li>
+                
+            </ul>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+        
+
+<div class="well well-small box"><div><h5>Localized Versions</h5></div><div>
+
+        <ul>
+            
+            <li><a href="/kb/ja/columnstore-storage-architecture/">ColumnStoreストレージアーキテクチャー</a> [ja]</li>
+            
+        </ul>
+        
+</div>
+</div>
+
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>ColumnStore Storage Architecture</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#extents" title="Extents">Extents</a>    <ol class="toc">
+
+        <li class=""><a href="#extent-maps" title="Extent Maps">Extent Maps</a></li>
+
+        <li class=""><a href="#extent-elimination" title="Extent Elimination">Extent Elimination</a>    </ol>
+</li>
+
+    <li class=""><a href="#compression-with-real-time-decompression" title="Compression with Real-time Decompression">Compression with Real-time Decompression</a></li>
+
+    <li class=""><a href="#version-buffer" title="Version Buffer">Version Buffer</a>    <ol class="toc">
+
+        <li class=""><a href="#how-the-version-buffer-works" title="How the Version Buffer Works">How the Version Buffer Works</a>    </ol>
+</li>
+
+    <li class=""><a href="#transaction-log" title="Transaction Log">Transaction Log</a> </ol>
+</li>
+</div>
+<p>When you create a table on MariaDB ColumnStore, the system creates at least one file per column in the table.  So, for instance, a table created with three columns would have a minimum of three, separately addressable logical objects created on a SAN or on the local disk of a Performance Module.</p>
+<p>ColumnStore writes the table schema locally to /usr/local/mariadb/columnstore/mysql/db with all the other non-ColumnStore tables.  The data you write to the ColumnStore table is stored across the Performance Modules in DB Roots, which are located in /usr/local/mariadb/columnstore/datax.</p>
+<p><img src="/kb/en/columnstore-storage-architecture/+image/datastorage-diagram" alt="datastorage-diagram" title="datastorage-diagram"></p>
+<h2 class="anchored_heading" id="extents">Extents</h2>
+<p>Each column in the table is stored independently in a logical measure of 8,388,608 rows called an Extent.  Extents for 1 byte datatypes consume 8MB; 2 byte datatypes require 16MB; 4 byte datatypes 32MB; 8 bytes 64MB; and variable size datatypes 64MB.  Once an Extent becomes full, ColumnStore creates a new Extent.  String columns greater than 8 characters store indexes in the main column file and actual values in separate dictionary files.</p>
+<p>Extents are physically stored as a collection of blocks.  Each block is 8KB.  Every database block is uniquely identified by its Logical Block Identifier, or LBID.</p>
+<p>The physical file ColumnStore writes to disk is called a segment file.  Once segment files reach the maximum number of extents, ColumnStore automatically creates a new segment file.  You can set the maximum number of extents in a segment file using <code>ExtentsPreSegmentFile</code> in the <code>ColumnStore.xml</code> file.  It should be set to a multiple of the number of DB Roots.  The default value is 2.</p>
+<p>Collectively, all of a column's segment files for one or more extents for a partition.  This is the horizontal partitioning in ColumnStore.  Partitions are stored in hierarchical structures organized by segments, (that is, folders).  ColumnStore meta-stores maps file structure and location to the DB schema as well as in the <code>FilesPerColumnPartition</code> in the <code>ColumnStore.xml</code> file.  The default value is 4.  Additionally, by default, ColumnStore compresses data.</p>
+<h3 class="anchored_heading" id="extent-maps">Extent Maps</h3>
+<p>ColumnStore uses a smart structure called an Extent Map to provide a logical range for partitioning and remove the need for indexing, manual table partitioning, materialized views, summary tables and other structures and objects that row-based databases must implement for query performance.</p>
+<p>Extents are logical blocks of space that exist within a physical segment file, and is anywhere between 8 and 64 MB in size.  Each Extent supports the same number of rows, with smaller data types using less disk space.  The Extent Map catalogs Extents to their corresponding blocks (LBID's), along with minimum and maximum values for the column's data within the Extent.</p>
+<p>The primary Performance Module has a master copy of the Extent Map.  On system startup, the file is read into memory, then physically copied to all other participating User and Performance modules for disaster recovery and failover.  Nodes keep the Extent Map in memory for quick access.  As Extents are modified, updates are broadcast to participating nodes.</p>
+<h3 class="anchored_heading" id="extent-elimination">Extent Elimination</h3>
+<p>Using the Extent Map, ColumnStore can perform logical range partitioning and only retrieve the blocks needed to satisfy the query.  This is done through Extent Elimination, the process of eliminating Extents from the results that don't meet the given join and filter conditions of the query, which reduces the overall I/O operations.</p>
+<p><img src="/kb/en/columnstore-storage-architecture/+image/extent-elimination" alt="extent-elimination" title="extent-elimination"></p>
+<p>In Extent Elimination, ColumnStore scans the columns in join and filter conditions.  It then extracts the logical horizontal partitioning information of each extent along with the minimum and maximum values for the column to further eliminate Extents.  To eliminate an Extent when a column scan involves a filter, that filter is compared to the minimum and maximum values stored in each extent for the column.  If the filter value is outside the Extents minimum and maximum value range, ColumnStore eliminates the Extent.</p>
+<p>This behavior is automatic and well suited for series, ordered, patterned and time-based data, where the data is loaded frequently and often referenced by time.  Any column with clustered values is a good candidate for Extent Elimination.</p>
+<h2 class="anchored_heading" id="compression-with-real-time-decompression">Compression with Real-time Decompression</h2>
+<p>In columnar storage, similar data is stored within each column file, which allows for excellent compressibility.  While the actual space savings depends on the randomness of the data and the number of distinct values that exists, many data-sets show compression rates saving between 65% and 95% space.</p>
+<p>ColumnStore optimizes its compression strategy for read performance from disk.  It is tuned to accelerate the decompression rate, maximizing the performance benefits when reading from disk.  This allows systems that are I/O bound to improve performance on disk reads.</p>
+<p>By default, compression is turned on in ColumnStore.  In addition, you can enable or disable it at the table-level or column-level, or control it at the session-level by setting the <code><a href="/kb/en/columnstore-system-variables/#compression-mode">infinidb_compression_type</a></code> system variable.  When enabled, ColumnStore uses snappy compression.</p>
+<h2 class="anchored_heading" id="version-buffer">Version Buffer</h2>
+<p>MariaDB ColumnStore uses the Version Buffer to store disk blocks that are being modified, manage transaction rollbacks, and service the MVCC (multi-version concurrency control) or "snapshot read" function of the database.  This allows it to offer a query consistent view of the database.  </p>
+<p>All statements in ColumnStore run at a particular version (or, snapshot) of the database, which the system refers to as the System Change Number, (SCN).  </p>
+<div class="cstm-style greenbox"><p><strong>Note:</strong> Although it is called a "buffer", the Version Buffer uses both memory and disk structures.</p>
+</div><h3 class="anchored_heading" id="how-the-version-buffer-works">How the Version Buffer Works</h3>
+<p>The Version Buffer uses in-memory hash tables to supply memory access to in-flight transaction information.  It starts at 4MB with the memory region growing from that amount to handle blocks that are being modified by a transaction.  Each entry in the hash table is a 40-byte reference to the 8KB block being modified. </p>
+<p>The limiting factor of the Version Buffer is not the number of rows being updated, but rather the number of disk blocks.  You can increase the size, but use caution, since increasing the number of disk blocks means that <code><a href="/kb/en/update/">UPDATE</a></code> and <code><a href="/kb/en/delete/">DELETE</a></code> statements that run for long periods of time can take even longer in the event that you need to roll back the changes.</p>
+<h2 class="anchored_heading" id="transaction-log">Transaction Log</h2>
+<p>MariaDB ColumnStore supports logging committed transaction to the server's <a href="/kb/en/binlog/">Binary Log</a>.</p>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/columnstore-storage-architecture/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/columnstore-storage-architecture/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/columnstore-performance-module/">
+                        ← ColumnStore Performance Module
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/columnstore-architecture/">
+                        ↑ ColumnStore Architecture ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/columnstore-query-processing/">
+                        ColumnStore Query Processing →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="5692" data-comments-url="/kb/en/columnstore-storage-architecture/+comments"
+         data-reply-url="/kb/en/columnstore-storage-architecture/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/columnstore-architecture/">
+                    ↑ ColumnStore Architecture ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-architectural-overview/">
+                            
+                            ColumnStore Architectural Overview
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-user-module/">
+                            
+                            ColumnStore User Module
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-performance-module/">
+                            
+                            ColumnStore Performance Module
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>ColumnStore Storage Architecture</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-query-processing/">
+                            
+                            ColumnStore Query Processing
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-system-databases/">
+                            
+                            ColumnStore System Databases
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: MaxScale Read/Write Splitting with Galera Cluster</title><link>https://mariadb.com/kb/en/maxscale-readwrite-splitting-with-galera-cluster/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/maxscale-readwrite-splitting-with-galera-cluster/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 10 Mar 2023 13:41:58 +0000</lastBuildDate><item><title>Re: MaxScale Read/Write Splitting with Galera Cluster</title><link>https://mariadb.com/kb/en/maxscale-readwrite-splitting-with-galera-cluster/+comments/2214</link><description>&lt;p&gt;Hi Dac,&lt;/p&gt;
+&lt;p&gt;download the RPM from here:
+&lt;a href="https://downloads.mariadb.com/files/MaxScale/1.4.2/centos/6Server/x86_64"&gt;https://downloads.mariadb.com/files/MaxScale/1.4.2/centos/6Server/x86_64&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;then: yum localinstall &amp;lt;path to your downloaded RPM&amp;gt;&lt;/p&gt;
+&lt;p&gt;Hope it helps!&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Guillaume Lefranc</dc:creator><guid>https://mariadb.com/kb/en/maxscale-readwrite-splitting-with-galera-cluster/+comments/2214</guid></item><item><title>Re: MaxScale Read/Write Splitting with Galera Cluster</title><link>https://mariadb.com/kb/en/maxscale-readwrite-splitting-with-galera-cluster/+comments/2213</link><description>&lt;p&gt;Hi bro,
+Can you help me about install MaxScale on Centos 6. I find everywhere but can't find how to install Maxscale (by yum + repo)&lt;/p&gt;
+&lt;p&gt;Thanks so much!!&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Dac Nhan Huynh</dc:creator><guid>https://mariadb.com/kb/en/maxscale-readwrite-splitting-with-galera-cluster/+comments/2213</guid></item><item><title>Re: MaxScale Read/Write Splitting with Galera Cluster</title><link>https://mariadb.com/kb/en/maxscale-readwrite-splitting-with-galera-cluster/+comments/2189</link><description>&lt;p&gt;Having socket info should not be a problem.If specified,i got:&lt;/p&gt;
+&lt;pre&gt;
+---------------------+--------------------+-----------------+-------+--------
+Service Name         | Protocol Module    | Address         | Port  | State
+---------------------+--------------------+-----------------+-------+--------
+Splitter Service     | MySQLClient        | *               |  3308 | Running
+Splitter Service     | MySQLClient        | /tmp/ClusterMaster |     0 | Running
+CLI                  | maxscaled          | localhost       |  6603 | Running
+---------------------+--------------------+-----------------+-------+--------
+
+&lt;/pre&gt;
+&lt;p&gt;Make sure the user starting the maxscale is the same user owns /tmp/ClusterMaster. Initially i had root own everything, then later i started the maxscale with "mysql" user, but /tmp/ClusterMaster was sill owned by root, that caused problem in my case:&lt;/p&gt;
+&lt;pre&gt;
+
+2016-04-12 13:37:14   error  : Failed to unlink Unix Socket /tmp/ClusterMaster: 1 Operation not permitted
+2016-04-12 13:37:14   error  : Failed to bind to UNIX Domain socket '/tmp/ClusterMaster': 98, Address already in use
+2016-04-12 13:37:14   error  : Unable to start to listen port 0 for MySQLClient Splitter Service.
+
+&lt;/pre&gt;
+&lt;p&gt;After deleting the file owned by root, everything is fine.&lt;/p&gt;
+&lt;p&gt;- Denis&lt;/p&gt;
+&lt;p&gt;- Denis&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Yu Denis</dc:creator><guid>https://mariadb.com/kb/en/maxscale-readwrite-splitting-with-galera-cluster/+comments/2189</guid></item><item><title>Re: MaxScale Read/Write Splitting with Galera Cluster</title><link>https://mariadb.com/kb/en/maxscale-readwrite-splitting-with-galera-cluster/+comments/1842</link><description>&lt;p&gt;Hi&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt; What do you think about comment out Splitter Listener socket info on maxscale.conf? &lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;I have install a maxscale with galera cluster a few days ago.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt; Test Version Info &lt;/strong&gt;&lt;br&gt;
+OS : CentOS 6.5 64bit&lt;br&gt;
+MariaDB Galera Cluster Version : 10.0.21&lt;br&gt;
+MaxScale Version : 1.2.1-1 centos6x86_64 rpm&lt;br&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt; Check log &lt;/strong&gt;	&lt;br&gt;
+I got a message on /var/log/maxscale/error1.log&lt;/p&gt;
+&lt;p&gt;	2015-12-01 10:47:40   Error : Unable to start to listen port 0 for MySQLClient Splitter Service.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt; Check maxscale listeners &lt;/strong&gt;	&lt;br&gt;
+And I checked the list listeners like that.&lt;/p&gt;
+&lt;p&gt;% maxadmin -pmariadb list listeners &lt;br&gt;
+Listeners. &lt;br&gt;
+---------------------+--------------------+-----------------+-------+--------	&lt;br&gt;
+Service Name         | Protocol Module    | Address         | Port  | State	&lt;br&gt;
+---------------------+--------------------+-----------------+-------+--------	&lt;br&gt;
+Splitter Service     | MySQLClient        | 10.0.0.120      |  3306 | Running	&lt;br&gt;
+Splitter Service     | MySQLClient        | /tmp/ClusterMaster |     0 | Stopped	&lt;br&gt;
+CLI                  | maxscaled          | localhost       |  6603 | Running	&lt;br&gt;
+---------------------+--------------------+-----------------+-------+--------&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt; Edit /etc/maxscale.conf &lt;/strong&gt; &lt;br&gt;
+And I comment out [Splitter Listener] socket info on maxscale.conf 
+Like that.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;
+[Splitter Listener] &lt;br&gt;#socket=/tmp/ClusterMaster
+&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt; And I check again listeners info &lt;/strong&gt;	&lt;br&gt;&lt;/p&gt;
+&lt;p&gt;% maxadmin -pmariadb list listeners &lt;br&gt;
+Listeners. &lt;br&gt;
+---------------------+--------------------+-----------------+-------+--------	&lt;br&gt;
+Service Name         | Protocol Module    | Address         | Port  | State	&lt;br&gt;
+---------------------+--------------------+-----------------+-------+--------	&lt;br&gt;
+Splitter Service     | MySQLClient        | 10.0.0.120      |  3306 | Running	&lt;br&gt;
+CLI                  | maxscaled          | localhost       |  6603 | Running	&lt;br&gt;
+---------------------+--------------------+-----------------+-------+--------	&lt;br&gt;&lt;/p&gt;
+&lt;p&gt;Thanks&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Taemin Kwon</dc:creator><guid>https://mariadb.com/kb/en/maxscale-readwrite-splitting-with-galera-cluster/+comments/1842</guid></item></channel></rss>

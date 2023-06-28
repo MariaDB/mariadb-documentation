@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Excessive contexting running MariaDB CE Query</title><link>https://mariadb.com/kb/en/excessive-contexting-running-mariadb-ce-query/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/excessive-contexting-running-mariadb-ce-query/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 00:08:31 +0000</lastBuildDate><item><title>Re: Excessive context switching running MariaDB CE Query</title><link>https://mariadb.com/kb/en/excessive-contexting-running-mariadb-ce-query/+comments/2226</link><description>&lt;p&gt;We are also comparing insert performance, inserting in batches of 10,000 rows/ insert we get 2,000-2,500 inserts/ second on Oracle.  We only get about 280 inserts / second on MariaDB.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Andy Ferretti</dc:creator><guid>https://mariadb.com/kb/en/excessive-contexting-running-mariadb-ce-query/+comments/2226</guid></item><item><title>Re: Excessive contexting running MariaDB CE Query</title><link>https://mariadb.com/kb/en/excessive-contexting-running-mariadb-ce-query/+comments/2225</link><description>&lt;p&gt;To answer the question on concurency: This is a test system on a VMware guest. There are not any other queries running at the time that I am running the queries noted there. The run-times do not vary much, staying in the 27-30 second range.  I don't think we have a concurrency issue causing the difference.
+To answer the CE question: I'm referring to "Community Edition".
+Let me know if the data pasted below answers the question on the profiler output. If it doesn't, please provide a bit more information on how I can get you the output you are looking for.  &lt;/p&gt;
+&lt;pre class="fixed"&gt;--------------
+set profiling =1
+--------------
+
+--------------
+explain select SQL_NO_CACHE count(*) from (select * from ped_location_maria_p WHERE RGN_CD = 'WEST' AND ST_CD = 'CA' AND SUB_TURF_CD = 'NOCO') l1
+--------------
+
++------+-------------+----------------------+------+--------------------------------------------------------+----------------------+---------+-------+---------+-------------+
+| id   | select_type | table                | type | possible_keys                                          | key                  | key_len | ref   | rows    | Extra       |
++------+-------------+----------------------+------+--------------------------------------------------------+----------------------+---------+-------+---------+-------------+
+|    1 | SIMPLE      | ped_location_maria_p | ref  | FB_CUST_PREM_LOC_STC,FB_CUST_PREM_LOC_ST_CD,RGN_CD_IDX | FB_CUST_PREM_LOC_STC | 11      | const | 3659437 | Using where |
++------+-------------+----------------------+------+--------------------------------------------------------+----------------------+---------+-------+---------+-------------+
+--------------
+select SQL_NO_CACHE count(*) from (select * from ped_location_maria_p WHERE RGN_CD = 'WEST' AND ST_CD = 'CA' AND SUB_TURF_CD = 'NOCO') l1
+--------------
+
++----------+
+| count(*) |
++----------+
+|  7322356 |
++----------+
+--------------
+show profiles
+--------------
+
++----------+-------------+---------------------------------------------------------------------------------------------------------------------------------------------------+
+| Query_ID | Duration    | Query                                                                                                                                             |
++----------+-------------+---------------------------------------------------------------------------------------------------------------------------------------------------+
+|        1 |  0.00838059 | explain select SQL_NO_CACHE count(*) from (select * from ped_location_maria_p WHERE RGN_CD = 'WEST' AND ST_CD = 'CA' AND SUB_TURF_CD = 'NOCO') l1 |
+|        2 | 29.73171791 | select SQL_NO_CACHE count(*) from (select * from ped_location_maria_p WHERE RGN_CD = 'WEST' AND ST_CD = 'CA' AND SUB_TURF_CD = 'NOCO') l1         |
++----------+-------------+---------------------------------------------------------------------------------------------------------------------------------------------------+
+--------------
+show profile all for query 2
+--------------
+
++----------------------+-----------+-----------+------------+-------------------+---------------------+--------------+---------------+---------------+-------------------+-------------------+-------------------+-------+-----------------------+---------------+-------------+
+| Status               | Duration  | CPU_user  | CPU_system | Context_voluntary | Context_involuntary | Block_ops_in | Block_ops_out | Messages_sent | Messages_received | Page_faults_major | Page_faults_minor | Swaps | Source_function       | Source_file   | Source_line |
++----------------------+-----------+-----------+------------+-------------------+---------------------+--------------+---------------+---------------+-------------------+-------------------+-------------------+-------+-----------------------+---------------+-------------+
+| starting             |  0.000041 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | NULL                  | NULL          |        NULL |
+| checking permissions |  0.000004 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | check_access          | sql_parse.cc  |        6052 |
+| Opening tables       |  0.000012 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | open_tables           | sql_base.cc   |        4509 |
+| After opening tables |  0.000066 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | open_tables           | sql_base.cc   |        4747 |
+| System lock          |  0.001845 |  0.000000 |   0.001000 |                 0 |                   2 |            0 |            80 |             0 |                 0 |                 0 |                 0 |     0 | mysql_lock_tables     | lock.cc       |         308 |
+| Table lock           |  0.000090 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | mysql_lock_tables     | lock.cc       |         313 |
+| init                 |  0.000224 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | mysql_select          | sql_select.cc |        3427 |
+| optimizing           |  0.000023 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | optimize_inner        | sql_select.cc |        1092 |
+| statistics           |  0.000082 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | optimize_inner        | sql_select.cc |        1373 |
+| preparing            |  0.000029 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | optimize_inner        | sql_select.cc |        1398 |
+| executing            |  0.000005 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | exec_inner            | sql_select.cc |        2551 |
+| Sending data         | 29.728961 | 32.786016 |   1.111831 |            100822 |               67799 |            0 |             0 |             0 |                 0 |                 0 |                24 |     0 | exec_inner            | sql_select.cc |        3223 |
+| end                  |  0.000016 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | mysql_select          | sql_select.cc |        3462 |
+| query end            |  0.000009 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | mysql_execute_command | sql_parse.cc  |        5688 |
+| closing tables       |  0.000002 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | close_thread_tables   | sql_base.cc   |         935 |
+| removing tmp table   |  0.000008 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | free_tmp_table        | sql_select.cc |       17713 |
+| closing tables       |  0.000004 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | free_tmp_table        | sql_select.cc |       17737 |
+| Unlocking tables     |  0.000157 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | mysql_unlock_tables   | lock.cc       |         395 |
+| freeing items        |  0.000021 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | mysql_parse           | sql_parse.cc  |        7320 |
+| updating status      |  0.000104 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | dispatch_command      | sql_parse.cc  |        1938 |
+| cleaning up          |  0.000014 |  0.000000 |   0.000000 |                 0 |                   0 |            0 |             0 |             0 |                 0 |                 0 |                 0 |     0 | dispatch_command      | sql_parse.cc  |        1957 |
++----------------------+-----------+-----------+------------+-------------------+---------------------+--------------+---------------+---------------+-------------------+-------------------+-------------------+-------+-----------------------+---------------+-------------+
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Andy Ferretti</dc:creator><guid>https://mariadb.com/kb/en/excessive-contexting-running-mariadb-ce-query/+comments/2225</guid></item><item><title>Re: Excessive contexting running MariaDB CE Query</title><link>https://mariadb.com/kb/en/excessive-contexting-running-mariadb-ce-query/+comments/2224</link><description>&lt;p&gt;If the SELECT query runs too long without any concurrency (which, in absence of other information about concurrency, I assume is the case here), then threadpool is not going to help. context switch may be different from thread synchronization, it can be interrupts (IO), syscalls. profiler output can be more helpful.&lt;/p&gt;
+&lt;p&gt;What is CE in "MariaDB CE"?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Vladislav Vaintroub</dc:creator><guid>https://mariadb.com/kb/en/excessive-contexting-running-mariadb-ce-query/+comments/2224</guid></item></channel></rss>

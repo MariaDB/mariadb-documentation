@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: DATE_ADD</title><link>https://mariadb.com/kb/en/date_add/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/date_add/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 20:47:24 +0000</lastBuildDate><item><title>Re: DATE_ADD</title><link>https://mariadb.com/kb/en/date_add/+comments/3657</link><description>&lt;p&gt;It should probably be explicitly stated somewhere in the docs:&lt;/p&gt;
+&lt;p&gt;Time-zone conversions with CONVERT_TZ() as well as FROM_UNIXTIME() and UNIX_TIMESTAMP() will take the session timezone into account.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;* BUT &lt;/strong&gt;*&lt;/p&gt;
+&lt;p&gt;All other forms of date arithmetic will not.  This must be considered in timezones that have daylight savings.&lt;/p&gt;
+&lt;p&gt;E.g. in Melbourne, Australia, daylight savings begins in 2018 at &lt;em&gt;2018-10-07 02:00:00&lt;/em&gt;; or rather, the time on that day goes from &lt;em&gt;1:59:59&lt;/em&gt; to &lt;em&gt;3:00:00&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;BUT:  &lt;code class="fixed" style="white-space:pre-wrap"&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;2018-10-07 01:50:00&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;INTERVAL&lt;/span&gt; &lt;span class="mi"&gt;30&lt;/span&gt; &lt;span class="k"&gt;MINUTE&lt;/span&gt;
+&lt;/code&gt;
+GIVES:  &lt;em&gt;2018-10-07 02:20:00&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;...the result is wrong, interpreted as a local time!&lt;/p&gt;
+&lt;p&gt;WHEREAS:  &lt;code class="fixed" style="white-space:pre-wrap"&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="n"&gt;CONVERT_TZ&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;CONVERT_TZ&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;2018-10-07 01:50:00&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="o"&gt;@@&lt;/span&gt;&lt;span class="n"&gt;time_zone&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;+00:00&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;INTERVAL&lt;/span&gt; &lt;span class="mi"&gt;30&lt;/span&gt; &lt;span class="k"&gt;MINUTE&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;+00:00&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;@@&lt;/span&gt;&lt;span class="n"&gt;time_zone&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;
+GIVES:  &lt;em&gt;2018-10-07 03:20:00&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Which is the correct local clock-time 30 minutes after 1:50am.&lt;/p&gt;
+&lt;p&gt;The moral of the story is that if you might by in a local timezone with DST and you want to measure or add/subtract fixed intervals between two times, you may want to convert to UTC (or any other fixed-offset timezone, like '+10:00') first.&lt;/p&gt;
+&lt;p&gt;Similar, related problems occur at the end of daylight savings, when the local time repeats an hour.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Dean Trower</dc:creator><guid>https://mariadb.com/kb/en/date_add/+comments/3657</guid></item></channel></rss>

@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Le prestazioni della cache delle chiavi segmentata - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Le prestazioni della cache delle chiavi segmentata" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/it/segmented-key-cache-performance/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+Metodo di test delle prestazioni della segmentazione della cache degli indici
+Abbiamo usato SysBench v0.5 da Launchpad per testare la segmentazione della cache degli indici d..." />
+
+    <meta name="description" content="
+Metodo di test delle prestazioni della segmentazione della cache degli indici
+Abbiamo usato SysBench v0.5 da Launchpad per testare la segmentazione della cache degli indici d..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/it/segmented-key-cache-performance/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/it/segmented-key-cache-performance/" rel="nofollow">Accesso</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/it/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/it/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/it/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/it/mariadb-italiano/">MariaDB - Italiano</a>
+    
+
+    
+    » <a class="crumb" href="/kb/it/sviluppo/">Sviluppo</a>
+    
+
+    
+    » <a class="crumb" href="/kb/it/qualita/">Qualità</a>
+    
+
+    
+    » <a class="crumb" href="/kb/it/benchmark-e-test-di-lunga-durata/">Benchmark e test di lunga durata</a>
+    
+
+    
+    » <a class="crumb" href="/kb/it/benchmark/">Benchmark</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/it/segmented-key-cache-performance/">Le prestazioni della cache delle chiavi segmentata</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/it/">Pagina iniziale</a></li>
+                            
+                                
+                                    <li><a href="/kb/it/+questions/">Domande Aperte</a></li>
+                                
+                                <li><a href="/kb/it/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/it/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/it/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/it/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/it/segmented-key-cache-performance/+history" rel="nofollow">Cronologia</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/it/segmented-key-cache-performance/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/it/segmented-key-cache-performance/+flag"
+                data-flag-url="/kb/it/segmented-key-cache-performance/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/it/segmented-key-cache-performance/+translate/">
+                Traduci</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Creato</dt>
+        <dd>
+
+<span class="datetime" title="2012-10-12 07:18">10 anni, 5 mesi ago</span></dd>
+
+        <dt>Modificato</dt>
+        <dd>
+
+<span class="datetime" title="2012-10-12 07:34">10 anni, 5 mesi ago</span></dd>
+
+        <dt>Tipo</dt>
+        <dd>article</dd>
+
+        <dt>Stato</dt>
+        <dd>active</dd>
+
+        <dt>Licenza</dt>
+        <dd>
+            
+                <a href="/kb/it/segmented-key-cache-performance/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/it/segmented-key-cache-performance/+history/feed/">
+            Cronologia</a>
+        </li>
+        <li><a href="/kb/it/segmented-key-cache-performance/+comments/feed/">
+            Commenti</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/it/segmented-key-cache-performance/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <ul>
+                
+                    <li><a href="/kb/it/segmented-key-cache-performance/+image/pitbull_rp10">pitbull_rp10</a>
+                    </li>
+                
+                    <li><a href="/kb/it/segmented-key-cache-performance/+image/pitbull_rp50">pitbull_rp50</a>
+                    </li>
+                
+                    <li><a href="/kb/it/segmented-key-cache-performance/+image/pitbull_rp100">pitbull_rp100</a>
+                    </li>
+                
+                    <li><a href="/kb/it/segmented-key-cache-performance/+image/perro_rp10">perro_rp10</a>
+                    </li>
+                
+                    <li><a href="/kb/it/segmented-key-cache-performance/+image/perro_rp50">perro_rp50</a>
+                    </li>
+                
+                    <li><a href="/kb/it/segmented-key-cache-performance/+image/perro_rp100">perro_rp100</a>
+                    </li>
+                
+            </ul>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+        
+
+<div class="well well-small box"><div><h5>Versioni Localizzate</h5></div><div>
+
+        <ul>
+            
+            <li><a href="/kb/en/segmented-key-cache-performance/">Segmented Key Cache Performance</a> [en]</li>
+            
+        </ul>
+        
+</div>
+</div>
+
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Le prestazioni della cache delle chiavi segmentata</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#metodo-di-test-delle-prestazioni-della-segmentazione-della-cache-degli-indici" title="Metodo di test delle prestazioni della segmentazione della cache degli indici">Metodo di test delle prestazioni della segmentazione della cache degli indici</a></li>
+
+    <li class=""><a href="#principali-risultati-del-test" title="Principali risultati del test">Principali risultati del test</a></li>
+
+    <li class=""><a href="#risultati-dettagliati-del-test" title="Risultati dettagliati del test">Risultati dettagliati del test</a>    <ol class="toc">
+
+        <li class=""><a href="#sulla-macchina-pitbull" title="Sulla macchina pitbull">Sulla macchina pitbull</a>        <ol class="toc">
+
+            <li class=""><a href="#su-pitbull-con-random-points10" title="Su pitbull con --random-points=10">Su pitbull con --random-points=10</a></li>
+
+            <li class=""><a href="#su-pitbull-con-random-points50" title="Su pitbull con --random-points=50">Su pitbull con --random-points=50</a></li>
+
+            <li class=""><a href="#su-pitbull-con-random-points100" title="Su pitbull con --random-points=100">Su pitbull con --random-points=100</a></li>
+
+            <li class=""><a href="#numeri-dettagliati-di-tutte-le-esecuzioni-su-pitbull" title="Numeri dettagliati di tutte le esecuzioni su pitbull">Numeri dettagliati di tutte le esecuzioni su pitbull</a>        </ol>
+</li>
+
+        <li class=""><a href="#sulla-macchina-perro" title="Sulla macchina perro">Sulla macchina perro</a>        <ol class="toc">
+
+            <li class=""><a href="#su-perro-con-random-points10" title="Su perro con --random-points=10">Su perro con --random-points=10</a></li>
+
+            <li class=""><a href="#su-perro-con-random-points50" title="Su perro con --random-points=50">Su perro con --random-points=50</a></li>
+
+            <li class=""><a href="#su-perro-con-random-points100" title="Su perro con --random-points=100">Su perro con --random-points=100</a></li>
+
+            <li class=""><a href="#numeri-dettagliati-di-tutte-le-esecuzioni-su-perro" title="Numeri dettagliati di tutte le esecuzioni su perro">Numeri dettagliati di tutte le esecuzioni su perro</a>        </ol>
+    </ol>
+</li>
+
+    <li class=""><a href="#tabella-e-query-utilizzate" title="Tabella e query utilizzate ==">Tabella e query utilizzate ==</a></li>
+
+    <li class=""><a href="#ambiente-di-test" title="Ambiente di test">Ambiente di test</a>    <ol class="toc">
+
+        <li class=""><a href="#sorgenti-mariadb" title="Sorgenti MariaDB">Sorgenti MariaDB</a></li>
+
+        <li class=""><a href="#compilare-mariadb" title="Compilare MariaDB">Compilare MariaDB</a></li>
+
+        <li class=""><a href="#opzioni-di-runtime-di-mariadb" title="Opzioni di runtime di MariaDB">Opzioni di runtime di MariaDB</a></li>
+
+        <li class=""><a href="#opzioni-di-select_random_pointslua-con-sysbench-v05" title="Opzioni di select_random_points.lua con SysBench v0.5">Opzioni di select_random_points.lua con SysBench v0.5</a></li>
+
+        <li class=""><a href="#parametri-del-kernel" title="Parametri del Kernel">Parametri del Kernel</a>        <ol class="toc">
+
+            <li class=""><a href="#io-scheduler" title="IO scheduler">IO scheduler</a></li>
+
+            <li class=""><a href="#massimo-di-file-aperti" title="Massimo di file aperti">Massimo di file aperti</a>        </ol>
+</li>
+
+        <li class=""><a href="#macchine-utilizzate-nel-testing" title="Macchine utilizzate nel testing">Macchine utilizzate nel testing</a>        <ol class="toc">
+
+            <li class=""><a href="#perro" title="perro">perro</a></li>
+
+            <li class=""><a href="#pitbull" title="pitbull">pitbull</a>        </ol>
+    </ol>
+ </ol>
+</li>
+</div>
+<h2 class="anchored_heading" id="metodo-di-test-delle-prestazioni-della-segmentazione-della-cache-degli-indici">Metodo di test delle prestazioni della segmentazione della cache degli indici</h2>
+<p>Abbiamo usato <a href="https://launchpad.net/sysbench">SysBench v0.5</a> da Launchpad per testare la segmentazione della cache degli indici dello Storage Engine MyISAM di <a href="/kb/en/mariadb-522-release-notes/">MariaDB 5.2.2</a>-gamma.</p>
+<p>Come script wrapper per l'esecuzione automatica di SysBench abbiamo usato la directory <code>sysbench/</code> da <a href="https://launchpad.net/mariadb-tools">MariaDB Tools</a>.</p>
+<p>Per testare che la divisione del mutex globale della cache delle chiavi in diversi mutex sia utile in un carico di lavoro con molti utenti, abbiamo scritto un nuovo test SysBench chiamato <code>select_random_points.lua</code>. Abbiamo usato una grande tabella e selezionato punti casuali con un numero di utenti concorrenti che aumentava man mano.</p>
+<h2 class="anchored_heading" id="principali-risultati-del-test">Principali risultati del test</h2>
+<p>Abbiamo rilevato un aumento delle performance fino al 250%, a seconda del numero di utenti.</p>
+<h2 class="anchored_heading" id="risultati-dettagliati-del-test">Risultati dettagliati del test</h2>
+<h3 class="anchored_heading" id="sulla-macchina-pitbull">Sulla macchina pitbull</h3>
+<h4 class="anchored_heading" id="su-pitbull-con-random-points10">Su pitbull con --random-points=10</h4>
+<p><img src="/kb/it/le-prestazioni-della-cache-delle-chiavi-segmentata/+image/pitbull_rp10" alt="pitbull_rp10" title="pitbull_rp10"></p>
+<p>In numeri relativi:</p>
+<pre class="fixed">Threads	               1      4      8      16      32      64      128
+(32/off)             -3%    53%    122%    155%    226%    269%    237%
+(64/off)             -6%    55%    130%    162%    234%    270%    253%
+
+select_random_points.lua --random-points=10
+</pre><h4 class="anchored_heading" id="su-pitbull-con-random-points50">Su pitbull con --random-points=50</h4>
+<p><img src="/kb/it/le-prestazioni-della-cache-delle-chiavi-segmentata/+image/pitbull_rp50" alt="pitbull_rp50" title="pitbull_rp50"></p>
+<p>In numeri relativi:</p>
+<pre class="fixed">Threads	               1      4      8      16      32      64      128
+(32/off)             -3%    53%    113%    154%    232%    254%    231%
+(64/off)             -1%    55%    121%    161%    235%    268%    244%
+
+select_random_points.lua --random-points=50
+</pre><h4 class="anchored_heading" id="su-pitbull-con-random-points100">Su pitbull con --random-points=100</h4>
+<p><img src="/kb/it/le-prestazioni-della-cache-delle-chiavi-segmentata/+image/pitbull_rp100" alt="pitbull_rp100" title="pitbull_rp100"></p>
+<p>In numeri relativi:</p>
+<pre class="fixed">Threads	               1      4      8      16      32      64      128
+(32/off)             -3%    54%    121%    160%    209%    246%    219%
+(64/off)             -6%    56%    129%    167%    219%    260%    241%
+
+select_random_points.lua --random-points=100
+</pre><h4 class="anchored_heading" id="numeri-dettagliati-di-tutte-le-esecuzioni-su-pitbull">Numeri dettagliati di tutte le esecuzioni su pitbull</h4>
+<p>Tutti i numeri relativi e assoluti si trovano in un foglio di calcolo OpenOffice.org qui: <a href="http://askmonty.org/w/images/4/47/Sysbench_v0.5_select_random_points_10_50_100_pitbull.ods">SysBench v0.5 select_random_points on pitbull</a></p>
+<h3 class="anchored_heading" id="sulla-macchina-perro">Sulla macchina perro</h3>
+<h4 class="anchored_heading" id="su-perro-con-random-points10">Su perro con --random-points=10</h4>
+<p><img src="/kb/it/le-prestazioni-della-cache-delle-chiavi-segmentata/+image/perro_rp10" alt="perro_rp10" title="perro_rp10"></p>
+<p>In numeri relativi:</p>
+<pre class="fixed">Threads	               1      4      8      16      32      64      128
+(32/off)              1%     2%     17%     45%     73%     70%     71%
+(64/off)             -0.3%   6%     19%     46%     72%     74%     80%
+
+select_random_points.lua --random-points=10
+</pre><h4 class="anchored_heading" id="su-perro-con-random-points50">Su perro con --random-points=50</h4>
+<p><img src="/kb/it/le-prestazioni-della-cache-delle-chiavi-segmentata/+image/perro_rp50" alt="perro_rp50" title="perro_rp50"></p>
+<p>In numeri relativi:</p>
+<pre class="fixed">Threads	               1      4      8      16      32      64      128
+(32/off)              1%    10%     26%     69%    105%    122%    114%
+(64/off)             -1%     8%     27%     75%    111%    120%    131%
+
+select_random_points.lua --random-points=50
+</pre><h4 class="anchored_heading" id="su-perro-con-random-points100">Su perro con --random-points=100</h4>
+<p><img src="/kb/it/le-prestazioni-della-cache-delle-chiavi-segmentata/+image/perro_rp100" alt="perro_rp100" title="perro_rp100"></p>
+<p>In numeri relativi:</p>
+<pre class="fixed">Threads	               1      4      8      16      32      64      128
+(32/off)            -0.2%    1%     22%	    73%    114%    114%    126%
+(64/off)            -0.1%    4%     22%     75%    112%    125%    135%
+
+select_random_points.lua --random-points=100
+</pre><h4 class="anchored_heading" id="numeri-dettagliati-di-tutte-le-esecuzioni-su-perro">Numeri dettagliati di tutte le esecuzioni su perro</h4>
+<p>Tutti i numeri relativi e assoluti si trovano in un foglio di calcolo OpenOffice.org qui: <a href="http://askmonty.org/w/images/f/fb/Sysbench_v0.5_select_random_points_10_50_100_perro.ods">SysBench v0.5 select_random_points on perro</a></p>
+<h2 class="anchored_heading" id="tabella-e-query-utilizzate">Tabella e query utilizzate</h2>
+<p>Definizione della tabella:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">sbtest</span> <span class="p">(</span>
+  <span class="n">id</span>  <span class="nb">int</span> <span class="n">unsigned</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="n">AUTO_INCREMENT</span><span class="p">,</span>
+  <span class="n">k</span>   <span class="nb">int</span> <span class="n">unsigned</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span>
+  <span class="k">c</span>   <span class="nb">char</span><span class="p">(</span><span class="mi">120</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+  <span class="k">pad</span> <span class="nb">char</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+  <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">id</span><span class="p">),</span>
+  <span class="k">KEY</span> <span class="n">k</span> <span class="p">(</span><span class="n">k</span><span class="p">)</span>
+<span class="p">)</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">MyISAM</span> 
+</pre><p>Query utilizzata:</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="n">id</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="k">c</span><span class="p">,</span> <span class="k">pad</span>
+    <span class="k">FROM</span> <span class="n">sbtest</span>
+    <span class="k">WHERE</span> <span class="n">k</span> <span class="k">IN</span> <span class="p">(</span><span class="o">?</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="o">?</span><span class="p">)</span>
+</pre><p>I parametri <code>?</code> sono stati rimpiazzati con numeri casuali durante l'esecuzione di SysBench. Nei test sono stati utilizzati 10, 50 e 100 punti casuali.</p>
+<p>Sono stati inseriti 20 milioni di righe utilizzando dati casuali, e questo porta a un file dei dati e uno degli indici di:</p>
+<pre class="fixed">3.6G    sbtest.MYD
+313M    sbtest.MYI
+</pre><p>Le dimensioni del buffer degli indici erano sufficienti per contenere il file degli indici.</p>
+<h2 class="anchored_heading" id="ambiente-di-test">Ambiente di test</h2>
+<h3 class="anchored_heading" id="sorgenti-mariadb">Sorgenti MariaDB</h3>
+<p>E' stata utilizzata <a href="/kb/en/mariadb-522-release-notes/">MariaDB 5.2.2</a>-gamma con la seguente revisione dal repository <a href="http://bazaar.launchpad.net/%7Emaria-captains/maria/5.2/revision/2878">Revision #2878</a> su Launchpad:</p>
+<pre class="fixed">revno: 2878
+committer: Sergei Golubchik &lt;sergii@pisem.net&gt;
+branch nick: 5.2
+timestamp: Tue 2010-10-26 07:37:44 +0200
+message:
+  fixes for windows
+</pre><h3 class="anchored_heading" id="compilare-mariadb">Compilare MariaDB</h3>
+<p>MariaDB è stata compilata con questa istruzione:</p>
+<pre class="fixed">BUILD/compile-amd64-max
+</pre><h3 class="anchored_heading" id="opzioni-di-runtime-di-mariadb">Opzioni di runtime di MariaDB</h3>
+<p>La configurazione di MariaDB era la seguente:</p>
+<pre class="fixed">MYSQLD_OPTIONS=&#34;--no-defaults \
+  --datadir=$DATA_DIR \
+  --language=./sql/share/english \
+  --log-error \
+  --key_buffer_size=512M \
+  --max_connections=256 \
+  --query_cache_size=0 \
+  --query_cache_type=0 \
+  --skip-grant-tables \
+  --socket=$MY_SOCKET \
+  --table_open_cache=512 \
+  --thread_cache=512 \
+  --key_cache_segments=0 \ # 0 | 32 | 64
+  --tmpdir=$TEMP_DIR&#34;
+</pre><h3 class="anchored_heading" id="opzioni-di-select_random_pointslua-con-sysbench-v05">Opzioni di select_random_points.lua con SysBench v0.5</h3>
+<p>Il test select_random_points.lua è stato eseguito con SysBench v0.5 con le seguenti opzioni:</p>
+<pre class="fixed"># 20 milioni di righe.
+TABLE_SIZE=20000000
+
+SYSBENCH_OPTIONS=&#34;--oltp-table-size=$TABLE_SIZE \
+  --max-requests=0 \
+  --mysql-table-engine=MyISAM \
+  --mysql-user=root \
+  --mysql-engine-trx=no \
+  --myisam-max-rows=50000000 \
+  --rand-seed=303&#34;
+</pre><p>E' stato testato con un numero di utenti in aumento, con un tempo di riscaldamento di 8 minuti e un tempo di esecuzione di 20 minuti:</p>
+<pre class="fixed">NUM_THREADS=&#34;1 4 8 16 32 64 128&#34;
+...
+  --num-threads=$THREADS
+</pre><p>Inoltre anche il numero di punti casuali era in aumento:</p>
+<pre class="fixed"># Default option is --random-points=10.
+SYSBENCH_TESTS[0]=&#34;select_random_points.lua&#34;
+SYSBENCH_TESTS[1]=&#34;select_random_points.lua --random-points=50&#34;
+SYSBENCH_TESTS[2]=&#34;select_random_points.lua --random-points=100&#34;
+</pre><h3 class="anchored_heading" id="parametri-del-kernel">Parametri del Kernel</h3>
+<h4 class="anchored_heading" id="io-scheduler">IO scheduler</h4>
+<p>Per ottenere le migliori performance dall'IO del database abbiamo utilizzato lo scheduler noop. E' possibile conoscere le sue impostazioni con:</p>
+<pre class="fixed">cat /sys/block/<span class="si">${</span><span class="nv">DEVICE</span><span class="si">}</span>/queue/scheduler
+</pre><p>L'output dovrebbe assomigliare al seguente:</p>
+<pre class="fixed">cat /sys/block/sda/queue/scheduler
+<span class="o">[</span>noop<span class="o">]</span> deadline cfq
+</pre><p>Note dettagliate sugli scheduler di Linux sono qui: <a href="http://www.mysqlperformanceblog.com/2009/01/30/linux-schedulers-in-tpcc-like-benchmark/">Linux schedulers in TPCC like benchmark</a>.</p>
+<h4 class="anchored_heading" id="massimo-di-file-aperti">Massimo di file aperti</h4>
+<p>Avendo molte connessioni aperte si può raggiungere il massimo di file aperti consentiti dal sistema operativo. Sulla maggioranza dei sistemi Linux questo limite è di 1024, che potrebbe non essere sufficiente. Si aumenti questo limite modificando:</p>
+<pre class="fixed"><span class="nv">$EDITOR</span> /etc/security/limits.conf
+</pre><p>e aggiungendovi una riga:</p>
+<pre class="fixed">#ftp             hard    nproc           0
+#@student        -       maxlogins       4
+*                -       nofile          16384
+
+# End of file
+</pre><p>L'output di <code>ulimit -a</code> dovrebbe assomigliare al seguente:</p>
+<pre class="fixed"><span class="nb">ulimit</span> -a
+core file size          <span class="o">(</span>blocks, -c<span class="o">)</span> 0
+data seg size           <span class="o">(</span>kbytes, -d<span class="o">)</span> unlimited
+scheduling priority             <span class="o">(</span>-e<span class="o">)</span> 0
+file size               <span class="o">(</span>blocks, -f<span class="o">)</span> unlimited
+pending signals                 <span class="o">(</span>-i<span class="o">)</span> 15975
+max locked memory       <span class="o">(</span>kbytes, -l<span class="o">)</span> 64
+max memory size         <span class="o">(</span>kbytes, -m<span class="o">)</span> 1744200
+open files                      <span class="o">(</span>-n<span class="o">)</span> 16384
+</pre><h3 class="anchored_heading" id="macchine-utilizzate-nel-testing">Macchine utilizzate nel testing</h3>
+<h4 class="anchored_heading" id="perro">perro</h4>
+<pre class="fixed"># OS: openSUSE 11.1 (x86_64)
+# Piattaforma: x86_64
+# CPU: Quad-core Intel @ 3.20GHz: 4 CPUs
+# RAM: 2GB
+# Dischi: 2 x ST31000528AS S-ATA come software RAID 0
+</pre><h4 class="anchored_heading" id="pitbull">pitbull</h4>
+<pre class="fixed"># OS: Ubuntu 10.10
+# Piattaforma: x86_64
+# CPU: Two-socket x hexa-core Intel Xeon X5660 @ 2.80GHz. Con hyperthreading: 24CPUs
+# RAM: 28GB
+# Dischi: 1 x ST3500320NS S-ATA
+</pre>
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/it/segmented-key-cache-performance/+subscriptions/add"
+                 data-unsubscribe-url="/kb/it/segmented-key-cache-performance/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/it/mariadb-53mysql-55-windows-performance-patches/">
+                        ← Le patch per le prestazioni su Windows di MariaDB 5.3/MySQL 5.5
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/it/benchmark/">
+                        ↑ Benchmark ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/it/mariadb-tools/">
+                        mariadb-tools →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Commenti</h2>
+        
+    
+    <div id="comments" data-node-id="3000" data-comments-url="/kb/it/segmented-key-cache-performance/+comments"
+         data-reply-url="/kb/it/segmented-key-cache-performance/comments/post/">
+        Sto caricando i commenti......
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/it/benchmark/">
+                    ↑ Benchmark ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/it/benchmarking-aria/">
+                            
+                            Benchmarking Aria
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/comparazione-delle-prestazioni-del-rqg/">
+                            
+                            Comparazione delle prestazioni del RQG
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/configurazione-dei-benchmark-di-sysbench/">
+                            
+                            Configurazione dei benchmark di sysbench
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/dbt3-example-preparation-time/">
+                            
+                            Esempio di tempi di preparazione di DBT3
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/gli-script-di-automazione-di-dbt3/">
+                            
+                            Gli script di automazione di DBT3
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/random-query-generator-tests/">
+                            
+                            I test del Random Query Generator
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/dbt-3-dataset/">
+                            <span class="pull-right not_primary"></span>
+                            Il dataset DBT-3
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/mariadb-53mysql-55-windows-performance-patches/">
+                            
+                            Le patch per le prestazioni su Windows di MariaDB 5.3/MySQL 5.5
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Le prestazioni della cache delle chiavi segmentata</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/mariadb-tools/">
+                            
+                            mariadb-tools
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/performance-of-memory-tables/">
+                            
+                            Prestazioni delle tabelle MEMORY
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/run-sql-benchpl/">
+                            
+                            run-sql-bench.pl
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/load-data-infile/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 20:25:45 +0000</lastBuildDate><item><title>Re: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/5542</link><description>&lt;p&gt;Hello everybody,
+Is there a possibility to use a filelist (containing several filenames) instead of 'file_name', and to go through this list by loop? I have a folder with about 500 files (*.csv), and I try to load the data by Looping.&lt;/p&gt;
+&lt;p&gt;LOAD DATA INFILE 'file_name'&lt;/p&gt;
+&lt;p&gt;Best regards Jacob&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jacob Lagioia</dc:creator><guid>https://mariadb.com/kb/en/load-data-infile/+comments/5542</guid></item><item><title>Re: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/5273</link><description>&lt;p&gt;Have you tried simply loading the date-time CSV field into a DATE MariaDB field?&lt;/p&gt;
+&lt;p&gt;I seem to recall that importing into a DATE field ignores anything past the ISA date portion of the field&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jan Steinman</dc:creator><guid>https://mariadb.com/kb/en/load-data-infile/+comments/5273</guid></item><item><title>Re: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/5272</link><description>&lt;p&gt;Suppose your CSV had datetimes in the 3rd column and in the form "2021/12/22 16:30:12" but you wanted to grab just the date digits:&lt;/p&gt;
+&lt;p&gt;LOAD DATA LOCAL INFILE 'path_file.csv'
+        INTO TABLE 'mydb'.'mytable' FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' IGNORE 1 LINES (
+                col1,
+                col2,
+                @var_datefield,
+                col4
+)
+        SET
+            col3 = replace(substr(@var_datefield,1,10),'/','')&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Android Marchand</dc:creator><guid>https://mariadb.com/kb/en/load-data-infile/+comments/5272</guid></item><item><title>Re: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/4998</link><description>&lt;p&gt;Things are strange. My table:
+{code}
+create table tld (
+id int not null,
+name char(32) not null,
+birth datetime)
+engine=MyISAM;
+{code}
+The file to load:
+{no format}
+1,Grace Hopper,1906-12-09T05:00:00Z
+2,Kristen Nygaard,1926-08-27T04:00:00Z
+3,Ole-Johan Dahl,1931-10-12T04:00:00Z
+{no format}
+When I try:
+{code}
+load data infile 'C:/Data/tld.csv' INTO TABLE tld FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
+{code}
+I get the error: 1292: Incorrect datetime value: '1906-12-09T05:00:00Z' for column `test`.`tld`.`birth` at row 1&lt;/p&gt;
+&lt;p&gt;Now when I edit the first record of the file to have:
+{no format}
+1,Grace Hopper,1906-12-09 05:00:00
+2,Kristen Nygaard,1926-08-27T04:00:00Z
+3,Ole-Johan Dahl,1931-10-12T04:00:00Z
+{no format}
+I can load it with 2 warnings:
+1265 Data truncated for column `birth` at row 2
+1265 Data truncated for column `birth` at row 3&lt;/p&gt;
+&lt;p&gt;However, when I execute:
+{code}
+select * from tld;
+{code}
+It works fine and I get;
+{no format}
++----+-----------------+-----------------------+&lt;/p&gt;
+&lt;table&gt;&lt;tr&gt;&lt;td&gt;id&lt;/td&gt;&lt;td&gt;name&lt;/td&gt;&lt;td&gt;birth&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+&lt;p&gt;+----+-----------------+-----------------------+&lt;/p&gt;
+&lt;table&gt;&lt;tr&gt;&lt;td&gt;1&lt;/td&gt;&lt;td&gt;Grace Hopper&lt;/td&gt;&lt;td&gt;12/9/1906 5:00:00 AM&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;2&lt;/td&gt;&lt;td&gt;Kristen Nygaard&lt;/td&gt;&lt;td&gt;8/27/1926 4:00:00 AM&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;3&lt;/td&gt;&lt;td&gt;Ole-Johan Dahl&lt;/td&gt;&lt;td&gt;10/12/1931 4:00:00 AM&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+&lt;p&gt;+----+-----------------+-----------------------+
+{no format}
+So, even with a warning, row 2 and 3 have been accepted. Why not the first one?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Olivier Bertrand</dc:creator><guid>https://mariadb.com/kb/en/load-data-infile/+comments/4998</guid></item><item><title>Re: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/4997</link><description>&lt;pre class="fixed"&gt;#!/usr/bin/sed -E
+s/,([12][0-9][0-9][0-9]-[01][0-9]-[0-5][0-9])T([012][0-9]:[0-5][0-9]:[0-5][0-9])Z,/,/1 /2,/
+&lt;/pre&gt;
+&lt;p&gt;It assumes comma-delimited. If your fields are quoted, but a double-quote after the first comma and before the last one.&lt;/p&gt;
+&lt;p&gt;I'm assuming "Z" has something to do with time zone? Or does it refer to "Zulu time," commonly called GMT? If you need to account for time zone differences, that is a further complication. If out and in have the same time zone, just ignore the zed.&lt;/p&gt;
+&lt;p&gt;I haven't actually run this. It probably has a syntax error or two. :-)&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jan Steinman</dc:creator><guid>https://mariadb.com/kb/en/load-data-infile/+comments/4997</guid></item><item><title>Re: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/4996</link><description>&lt;p&gt;Sorry for the typo: the format made by MongoDB is actually YYYY-MM-DDThh:mm:ssZ. It is also what REST queries return when putting a date in their JSON answer.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Olivier Bertrand</dc:creator><guid>https://mariadb.com/kb/en/load-data-infile/+comments/4996</guid></item><item><title>Re: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/4995</link><description>&lt;p&gt;That may be the "standard" for all NOSQL databases, but I can assure you that the ISO (and before that, ANSI) standard for SQL databases is "YYYY-MM-DD hh:mm:ss".&lt;/p&gt;
+&lt;p&gt;So, you've got duelling standards here.&lt;/p&gt;
+&lt;p&gt;I could be snide and point out that ANSI standard SQL has been around long before Y2K, long before MongoDB made the questionable choice to not include the first two digits of the year (what if you have to represent a date in the last century?), long before anyone even thought of creating NOSQL, but instead, I'll just say the difference looks like just two lines of Perl. :-) Or one line of Ruby. Just do it.&lt;/p&gt;
+&lt;p&gt;You could easily put it in a pipeline between your export stream and your import stream.&lt;/p&gt;
+&lt;p&gt;PS: I think you should submit an enhancement request to MongoDB, asking to be able to export to ISO standard SQL. :-)&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jan Steinman</dc:creator><guid>https://mariadb.com/kb/en/load-data-infile/+comments/4995</guid></item><item><title>Re: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/4994</link><description>&lt;p&gt;In that case, the date is  contained in a CSV file exported from MongoDB and it has the standard format for all NOSQL data meaning: YY-MM-DDThh:mm:ssZ.
+I understand the LOAD INFILE command cannot take care of all existing date formats, this is why I think it should an additional parameter.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Olivier Bertrand</dc:creator><guid>https://mariadb.com/kb/en/load-data-infile/+comments/4994</guid></item><item><title>Re: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/4993</link><description>&lt;p&gt;I would count that as pre-import massaging.&lt;/p&gt;
+&lt;p&gt;Unless you're importing a logical SQL dump from MariaDB itself (in which case, it's clearly a bug if the DATE format is wrong), you almost always have to massage your input data in some way — removing "$" and "," from currency columns, for example.&lt;/p&gt;
+&lt;p&gt;In most cases, it's no more than a few lines of Perl, Python, or Ruby to turn dates into the requisite "YYYY-MM-DD" format. (In fact, it's ONE LINE in Ruby!, Well, two, if you count "require 'date'.")&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jan Steinman</dc:creator><guid>https://mariadb.com/kb/en/load-data-infile/+comments/4993</guid></item><item><title>Re: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/4992</link><description>&lt;p&gt;Missing feature: specifying date format. Currently, loading in a date column fails.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Olivier Bertrand</dc:creator><guid>https://mariadb.com/kb/en/load-data-infile/+comments/4992</guid></item><item><title>Re: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/4370</link><description>&lt;p&gt;Missing feature: PARTITION (partition_list)&lt;/p&gt;
+&lt;p&gt;Is needed to speed up imports, with a separate thread per partition.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Dr. Ruud</dc:creator><guid>https://mariadb.com/kb/en/load-data-infile/+comments/4370</guid></item><item><title>Re: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/4061</link><description>&lt;p&gt;If you are getting 1064 SQL Syntax error here, it may be because the docs above don't accurately capture what (at least on my dev environment) is a requirement on the order of the FIELDS statements.&lt;/p&gt;
+&lt;p&gt;Specifically, it seems you must have the ENCLOSED BY before the TERMINATED BY&lt;/p&gt;
+&lt;p&gt;BEFORE (throws SQL syntax error)&lt;/p&gt;
+&lt;p&gt;LOAD DATA LOCAL INFILE "C:/my_file.csv" INTO TABLE my_table CHARACTER SET UTF8 FIELDS TERMINATED BY ','  OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '\r\n';&lt;/p&gt;
+&lt;p&gt;AFTER (works as expected)&lt;/p&gt;
+&lt;p&gt;LOAD DATA LOCAL INFILE "C:/my_file.csv" INTO TABLE my_table CHARACTER SET UTF8 FIELDS OPTIONALLY ENCLOSED BY '"' TERMINATED BY ',' LINES TERMINATED BY '\r\n';&lt;/p&gt;
+&lt;p&gt;Hope this helps someone.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/"> </dc:creator><guid>https://mariadb.com/kb/en/load-data-infile/+comments/4061</guid></item><item><title>Re: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/2913</link><description>&lt;p&gt;On further consideration, the privilege is required because you might read something you would not otherwise be able to read this way.  An unfortunate limitation.  Perhaps the privilege could not be required if the LOCAL argument is given, since the user must have access to a local file for the client to read it?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Verizon Team DB</dc:creator><guid>https://mariadb.com/kb/en/load-data-infile/+comments/2913</guid></item><item><title>Re: LOAD DATA INFILE</title><link>https://mariadb.com/kb/en/load-data-infile/+comments/2908</link><description>&lt;p&gt;The SELECT...INTO OUTFILE page mentions that the FILE privilege is required to make that command works.  It turns out that FILE is also required to make LOAD DATA INFILE work.  Please mention it on this page, although...&lt;/p&gt;
+&lt;p&gt;...should FILE be required for LOAD?  Unlike ...INTO OUTFILE, nothing on the host side is being changed; it's just being used as a data source.  The ability to do the load is (presumably) constrained by having INSERT on the target table, since INSERT triggers are activated.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Verizon Team DB</dc:creator><guid>https://mariadb.com/kb/en/load-data-infile/+comments/2908</guid></item></channel></rss>

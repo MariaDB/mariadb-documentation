@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>La cache delle Subquery - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="La cache delle Subquery" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/it/subquery-cache/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="L&#39;obiettivo della cache delle subquery è ottimizzare l&#39;esecuzione delle subquery, immagazzinando i risultati insieme ai parametri in una cache, ed evitare che vengano riesegui..." />
+
+    <meta name="description" content="L&#39;obiettivo della cache delle subquery è ottimizzare l&#39;esecuzione delle subquery, immagazzinando i risultati insieme ai parametri in una cache, ed evitare che vengano riesegui..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/it/subquery-cache/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/it/subquery-cache/" rel="nofollow">Accesso</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/it/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/it/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/it/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/it/mariadb-italiano/">MariaDB - Italiano</a>
+    
+
+    
+    » <a class="crumb" href="/kb/it/documentazione-di-mariadb/">Documentazione di MariaDB</a>
+    
+
+    
+    » <a class="crumb" href="/kb/it/ottimizzazione/">Ottimizzazione</a>
+    
+
+    
+    » <a class="crumb" href="/kb/it/lottimizzatore-delle-query/">L&#39;ottimizzatore delle query</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/it/subquery-cache/">La cache delle Subquery</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/it/">Pagina iniziale</a></li>
+                            
+                                
+                                    <li><a href="/kb/it/+questions/">Domande Aperte</a></li>
+                                
+                                <li><a href="/kb/it/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/it/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/it/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/it/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/it/subquery-cache/+history" rel="nofollow">Cronologia</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/it/subquery-cache/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/it/subquery-cache/+flag"
+                data-flag-url="/kb/it/subquery-cache/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/it/subquery-cache/+translate/">
+                Traduci</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Creato</dt>
+        <dd>
+
+<span class="datetime" title="2011-12-30 14:17">11 anni, 2 mesi ago</span></dd>
+
+        <dt>Modificato</dt>
+        <dd>
+
+<span class="datetime" title="2013-10-03 15:22">9 anni, 5 mesi ago</span></dd>
+
+        <dt>Tipo</dt>
+        <dd>article</dd>
+
+        <dt>Stato</dt>
+        <dd>active</dd>
+
+        <dt>Licenza</dt>
+        <dd>
+            
+                <a href="/kb/it/subquery-cache/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/it/subquery-cache/+history/feed/">
+            Cronologia</a>
+        </li>
+        <li><a href="/kb/it/subquery-cache/+comments/feed/">
+            Commenti</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/it/subquery-cache/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+        
+
+<div class="well well-small box"><div><h5>Versioni Localizzate</h5></div><div>
+
+        <ul>
+            
+            <li><a href="/kb/en/subquery-cache/">Subquery Cache</a> [en]</li>
+            
+        </ul>
+        
+</div>
+</div>
+
+    
+
+
+
+
+
+    
+
+<div class="well well-small box"><div><h5>Parents</h5></div><div>
+
+        <ul>
+            
+                <li><a href="/kb/it/lottimizzatore-delle-query/">L&#39;ottimizzatore delle query</a></li>
+            
+                <li><a href="/kb/it/ottimizzazioni-delle-subquery/">Ottimizzazioni delle subquery</a></li>
+            
+        </ul>
+    
+</div>
+</div>
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>La cache delle Subquery</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <p>L'obiettivo della cache delle subquery è ottimizzare l'esecuzione delle subquery, immagazzinando i risultati insieme ai parametri in una cache, ed evitare che vengano rieseguite nel caso in cui il risultato sia presente nella cache.</p>
+<h2 class="anchored_heading" id="amministrazione">Amministrazione</h2>
+<p>A partire da <a href="/kb/en/mariadb-532-release-notes/">MariaDB 5.3.2-beta</a> la cache è attiva per default. Nelle versioni precedenti di MariaDB è disattivata per default. E' possibile attivarla e disattivarla tramite la variabile <code>optimizer_switch subquery_cache</code> in questo modo:</p>
+<pre class="fixed"><span class="kt">SET</span> <span class="n">optimizer_switch</span><span class="o">=</span><span class="s1">&#39;subquery_cache=on&#39;</span><span class="p">;</span>
+</pre><p>L'efficienza della cache delle subquery è visibile in due variabili statistiche:</p>
+<ul start="1"><li><code>subquery_cache_hit</code> - Contatore globale degli utilizzi della cache.
+</li><li><code>subquery_cache_miss</code> - Contatore globale dei casi in cui la cache non viene usata.
+</li></ul>
+<p>Le variabili di sessione <code>tmp_table_size</code> e <code>max_heap_table_size</code> influenzano le dimensioni delle tabelle temporanee in memoria utilizzate per la cache. Queste dimensioni non possono crescere oltre il massimo di queste variabili (si veda la sezione Implementazione per ulteriori dettagli).</p>
+<h2 class="anchored_heading" id="visibilità">Visibilità</h2>
+<p>L'uso della cache delle subquery può essere analizzato negli warning di <code>EXTENDED EXPLAIN</code> in questo modo:
+<code class="fixed" style="white-space:pre-wrap">&#34;&lt;expr_cache&gt;&lt;//list of parameters//&gt;(//cached expression//)&#34;</code>.
+Per esempio:</p>
+<pre class="fixed"><span class="n">MariaDB</span> <span class="p">[</span><span class="n">test</span><span class="p">]</span><span class="o">&gt;</span> <span class="k">EXPLAIN</span> <span class="n">EXTENDED</span> <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t1</span> <span class="k">WHERE</span> <span class="n">a</span> <span class="k">IN</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">b</span> <span class="k">FROM</span> <span class="n">t2</span><span class="p">);</span>
+<span class="o">+----+--------------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span>
+<span class="o">|</span> <span class="n">id</span> <span class="o">|</span> <span class="n">select_type</span>        <span class="o">|</span> <span class="k">table</span> <span class="o">|</span> <span class="n">type</span> <span class="o">|</span> <span class="n">possible_keys</span> <span class="o">|</span> <span class="k">key</span>  <span class="o">|</span> <span class="n">key_len</span> <span class="o">|</span> <span class="n">ref</span>  <span class="o">|</span> <span class="n">rows</span> <span class="o">|</span> <span class="n">filtered</span> <span class="o">|</span> <span class="n">Extra</span>       <span class="o">|</span>
+<span class="o">+----+--------------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">PRIMARY</span>            <span class="o">|</span> <span class="n">t1</span>    <span class="o">|</span> <span class="k">ALL</span>  <span class="o">|</span> <span class="no">NULL</span>          <span class="o">|</span> <span class="no">NULL</span> <span class="o">|</span> <span class="no">NULL</span>    <span class="o">|</span> <span class="no">NULL</span> <span class="o">|</span>    <span class="mi">2</span> <span class="o">|</span>   <span class="mi">100</span><span class="p">.</span><span class="mi">00</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">where</span> <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">2</span> <span class="o">|</span> <span class="n">DEPENDENT</span> <span class="n">SUBQUERY</span> <span class="o">|</span> <span class="n">t2</span>    <span class="o">|</span> <span class="k">ALL</span>  <span class="o">|</span> <span class="no">NULL</span>          <span class="o">|</span> <span class="no">NULL</span> <span class="o">|</span> <span class="no">NULL</span>    <span class="o">|</span> <span class="no">NULL</span> <span class="o">|</span>    <span class="mi">2</span> <span class="o">|</span>   <span class="mi">100</span><span class="p">.</span><span class="mi">00</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">where</span> <span class="o">|</span>
+<span class="o">+----+--------------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span>
+<span class="mi">2</span> <span class="n">rows</span> <span class="k">in</span> <span class="kt">set</span><span class="p">,</span> <span class="mi">1</span> <span class="nf">warning</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">00</span> <span class="n">sec</span><span class="p">)</span>
+
+<span class="n">MariaDB</span> <span class="p">[</span><span class="n">test</span><span class="p">]</span><span class="o">&gt;</span> <span class="k">SHOW</span> <span class="n">WARNINGS</span><span class="p">;</span>
+<span class="o">+-------+------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="n">Level</span> <span class="o">|</span> <span class="n">Code</span> <span class="o">|</span> <span class="n">Message</span>                                                                                                                                                                                                    <span class="o">|</span>
+<span class="o">+-------+------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="n">Note</span>  <span class="o">|</span> <span class="mi">1003</span> <span class="o">|</span> <span class="k">select</span> <span class="ss">`test`</span><span class="p">.</span><span class="ss">`t1`</span><span class="p">.</span><span class="ss">`a`</span> <span class="k">AS</span> <span class="ss">`a`</span> <span class="k">from</span> <span class="ss">`test`</span><span class="p">.</span><span class="ss">`t1`</span> <span class="k">where</span> <span class="o">&lt;</span><span class="n">expr_cache</span><span class="o">&gt;&lt;</span><span class="ss">`test`</span><span class="p">.</span><span class="ss">`t1`</span><span class="p">.</span><span class="ss">`a`</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&lt;</span><span class="n">in_optimizer</span><span class="o">&gt;</span><span class="p">(</span><span class="ss">`test`</span><span class="p">.</span><span class="ss">`t1`</span><span class="p">.</span><span class="ss">`a`</span><span class="p">,</span><span class="o">&lt;</span><span class="k">exists</span><span class="o">&gt;</span><span class="p">(</span><span class="k">select</span> <span class="mi">1</span> <span class="k">from</span> <span class="ss">`test`</span><span class="p">.</span><span class="ss">`t2`</span> <span class="k">where</span> <span class="p">(</span><span class="o">&lt;</span><span class="n">cache</span><span class="o">&gt;</span><span class="p">(</span><span class="ss">`test`</span><span class="p">.</span><span class="ss">`t1`</span><span class="p">.</span><span class="ss">`a`</span><span class="p">)</span> <span class="o">=</span> <span class="ss">`test`</span><span class="p">.</span><span class="ss">`t2`</span><span class="p">.</span><span class="ss">`b`</span><span class="p">))))</span> <span class="o">|</span>
+<span class="o">+-------+------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+</span>
+<span class="mi">1</span> <span class="n">row</span> <span class="k">in</span> <span class="kt">set</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">00</span> <span class="n">sec</span><span class="p">)</span>
+</pre><p>Nell'esempio sopra, la presenza di <code class="fixed" style="white-space:pre-wrap">&#34;&lt;expr_cache&gt;&lt;`test`.`t1`.`a`&gt;(...)&#34;</code> indica in quale modo si sta usando la cache delle subquery.</p>
+<h2 class="anchored_heading" id="implementazione">Implementazione</h2>
+<p>La cache crea una tabella temporanea dove vengono registrati i risultati e tutti i parametri. Ha un indice unico sui parametri. Per prima cosa, la cache viene creata in una tabella MEMORY (se non è possibile farlo, la cache viene disabilitata per l'espressione corrente). Quando la tabella cresce oltre il valore minimo di <code>tmp_table_size</code> e <code>max_heap_table_size</code>, viene controllata la frequenza degli accessi:</p>
+<ul start="1"><li>se la frequenza è molto piccola (&lt;0.2) la cache viene disabilitata;
+</li><li>se la frequenza è moderata (&lt;0.7) la tabella viene svuotata e mantenuta in memoria;
+</li><li>se la frequenza è alta, la tabella viene scritta su disco.
+</li></ul>
+<pre class="fixed">frequenza = accessi / (accessi + mancati_utilizzi)
+</pre><h2 class="anchored_heading" id="impatto-sulle-performance">Impatto sulle performance</h2>
+<p>Vi sono alcuni esempi che mostrano come le performance influenzano la cache delle subquery (questi test sono stati eseguiti su un 2.53 GHz Intel Core 2 Duo MacBook Pro with dbt-3 con un dataset).</p>
+<div class="cstm-style borders"><table><tr><th>Esempio</th><th>Cache On</th><th>Cache Fff</th><th>Guadagno</th><th>Accessi</th><th>Mancati</th><th>Frequenza</th></tr>
+<tr><th>1</th><td>1.01sec</td><td>1 hour 31 min 43.33sec</td><td>5445x</td><td>149975</td><td>25</td><td>99.98%</td></tr>
+<tr><th>2</th><td>0.21sec</td><td>1.41sec</td><td>6.71x</td><td>6285</td><td>220</td><td>96.6%</td></tr>
+<tr><th>3</th><td>2.54sec</td><td>2.55sec</td><td>1.00044x</td><td>151</td><td>461</td><td>24.67%</td></tr>
+<tr><th>4</th><td>1.87sec</td><td>1.95sec</td><td>0.96x</td><td>0</td><td>23026</td><td>0%</td></tr>
+</table>
+</div><h3 class="anchored_heading" id="esempio-1">Esempio 1</h3>
+<p>Il dataset del benchmark DBT-3, una query per trovare i clienti con un bilancio vicino al massimo per la loro nazione:</p>
+<pre class="fixed"><span class="k">select</span> <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">from</span> <span class="n">customer</span> 
+<span class="k">where</span> 
+   <span class="n">c_acctbal</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">.</span><span class="mi">8</span> <span class="o">*</span> <span class="p">(</span><span class="k">select</span> <span class="k">max</span><span class="p">(</span><span class="n">c_acctbal</span><span class="p">)</span> 
+                      <span class="k">from</span> <span class="n">customer</span> <span class="k">C</span> 
+                      <span class="k">where</span> <span class="k">C</span><span class="p">.</span><span class="n">c_nationkey</span><span class="o">=</span><span class="n">customer</span><span class="p">.</span><span class="n">c_nationkey</span>
+                      <span class="k">group</span> <span class="k">by</span> <span class="n">c_nationkey</span><span class="p">);</span>
+</pre><h3 class="anchored_heading" id="esempio-2">Esempio 2</h3>
+<p>Benchmark DBT-3, query #17</p>
+<pre class="fixed"><span class="k">select</span> <span class="k">sum</span><span class="p">(</span><span class="n">l_extendedprice</span><span class="p">)</span> <span class="o">/</span> <span class="mi">7</span><span class="p">.</span><span class="mi">0</span> <span class="k">as</span> <span class="n">avg_yearly</span> 
+<span class="k">from</span> <span class="n">lineitem</span><span class="p">,</span> <span class="n">part</span> 
+<span class="k">where</span> 
+  <span class="n">p_partkey</span> <span class="o">=</span> <span class="n">l_partkey</span> <span class="k">and</span> 
+  <span class="n">p_brand</span> <span class="o">=</span> <span class="s1">&#39;Brand#42&#39;</span> <span class="k">and</span> <span class="n">p_container</span> <span class="o">=</span> <span class="s1">&#39;JUMBO BAG&#39;</span> <span class="k">and</span> 
+  <span class="n">l_quantity</span> <span class="o">&lt;</span> <span class="p">(</span><span class="k">select</span> <span class="mi">0</span><span class="p">.</span><span class="mi">2</span> <span class="o">*</span> <span class="k">avg</span><span class="p">(</span><span class="n">l_quantity</span><span class="p">)</span> <span class="k">from</span> <span class="n">lineitem</span> 
+                <span class="k">where</span> <span class="n">l_partkey</span> <span class="o">=</span> <span class="n">p_partkey</span><span class="p">);</span>
+</pre><h3 class="anchored_heading" id="esempio-3">Esempio 3</h3>
+<p>Benchmark DBT-3, query #2</p>
+<pre class="fixed"><span class="k">select</span>
+        <span class="n">s_acctbal</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">n_name</span><span class="p">,</span> <span class="n">p_partkey</span><span class="p">,</span> <span class="n">p_mfgr</span><span class="p">,</span> <span class="n">s_address</span><span class="p">,</span> <span class="n">s_phone</span><span class="p">,</span> <span class="n">s_comment</span>
+<span class="k">from</span>
+        <span class="n">part</span><span class="p">,</span> <span class="n">supplier</span><span class="p">,</span> <span class="n">partsupp</span><span class="p">,</span> <span class="n">nation</span><span class="p">,</span> <span class="n">region</span>
+<span class="k">where</span>
+        <span class="n">p_partkey</span> <span class="o">=</span> <span class="n">ps_partkey</span> <span class="k">and</span> <span class="n">s_suppkey</span> <span class="o">=</span> <span class="n">ps_suppkey</span> <span class="k">and</span> <span class="n">p_size</span> <span class="o">=</span> <span class="mi">33</span>
+        <span class="k">and</span> <span class="n">p_type</span> <span class="k">like</span> <span class="s1">&#39;%STEEL&#39;</span> <span class="k">and</span> <span class="n">s_nationkey</span> <span class="o">=</span> <span class="n">n_nationkey</span>
+        <span class="k">and</span> <span class="n">n_regionkey</span> <span class="o">=</span> <span class="n">r_regionkey</span> <span class="k">and</span> <span class="n">r_name</span> <span class="o">=</span> <span class="s1">&#39;MIDDLE EAST&#39;</span>
+        <span class="k">and</span> <span class="n">ps_supplycost</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="k">select</span>
+                        <span class="k">min</span><span class="p">(</span><span class="n">ps_supplycost</span><span class="p">)</span>
+                <span class="k">from</span>
+                        <span class="n">partsupp</span><span class="p">,</span> <span class="n">supplier</span><span class="p">,</span> <span class="n">nation</span><span class="p">,</span> <span class="n">region</span>
+                <span class="k">where</span>
+                        <span class="n">p_partkey</span> <span class="o">=</span> <span class="n">ps_partkey</span> <span class="k">and</span> <span class="n">s_suppkey</span> <span class="o">=</span> <span class="n">ps_suppkey</span>
+                        <span class="k">and</span> <span class="n">s_nationkey</span> <span class="o">=</span> <span class="n">n_nationkey</span> <span class="k">and</span> <span class="n">n_regionkey</span> <span class="o">=</span> <span class="n">r_regionkey</span>
+                        <span class="k">and</span> <span class="n">r_name</span> <span class="o">=</span> <span class="s1">&#39;MIDDLE EAST&#39;</span>
+        <span class="p">)</span>
+<span class="k">order</span> <span class="k">by</span>
+        <span class="n">s_acctbal</span> <span class="k">desc</span><span class="p">,</span> <span class="n">n_name</span><span class="p">,</span> <span class="n">s_name</span><span class="p">,</span> <span class="n">p_partkey</span><span class="p">;</span>
+</pre><h3 class="anchored_heading" id="esempio-4">Esempio 4</h3>
+<p>Benchmark DBT-3, query #20</p>
+<pre class="fixed"><span class="k">select</span>
+        <span class="n">s_name</span><span class="p">,</span> <span class="n">s_address</span>
+<span class="k">from</span>
+        <span class="n">supplier</span><span class="p">,</span> <span class="n">nation</span>
+<span class="k">where</span>
+        <span class="n">s_suppkey</span> <span class="k">in</span> <span class="p">(</span>
+                <span class="k">select</span>
+                        <span class="k">distinct</span> <span class="p">(</span><span class="n">ps_suppkey</span><span class="p">)</span>
+                <span class="k">from</span>
+                        <span class="n">partsupp</span><span class="p">,</span> <span class="n">part</span>
+                <span class="k">where</span>
+                        <span class="n">ps_partkey</span><span class="o">=</span><span class="n">p_partkey</span>
+                        <span class="k">and</span> <span class="n">p_name</span> <span class="k">like</span> <span class="s1">&#39;indian%&#39;</span>
+                        <span class="k">and</span> <span class="n">ps_availqty</span> <span class="o">&gt;</span> <span class="p">(</span>
+                                <span class="k">select</span>
+                                        <span class="mi">0</span><span class="p">.</span><span class="mi">5</span> <span class="o">*</span> <span class="k">sum</span><span class="p">(</span><span class="n">l_quantity</span><span class="p">)</span>
+                                <span class="k">from</span>
+                                        <span class="n">lineitem</span>
+                                <span class="k">where</span>
+                                        <span class="n">l_partkey</span> <span class="o">=</span> <span class="n">ps_partkey</span>
+                                        <span class="k">and</span> <span class="n">l_suppkey</span> <span class="o">=</span> <span class="n">ps_suppkey</span>
+                                        <span class="k">and</span> <span class="n">l_shipdate</span> <span class="o">&gt;=</span> <span class="s1">&#39;1995-01-01&#39;</span>
+                                        <span class="k">and</span> <span class="n">l_shipdate</span> <span class="o">&lt;</span> <span class="n">date_ADD</span><span class="p">(</span><span class="s1">&#39;1995-01-01&#39;</span><span class="p">,</span><span class="nb">interval</span> <span class="mi">1</span> <span class="k">year</span><span class="p">)</span>
+                                <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">and</span> <span class="n">s_nationkey</span> <span class="o">=</span> <span class="n">n_nationkey</span> <span class="k">and</span> <span class="n">n_name</span> <span class="o">=</span> <span class="s1">&#39;JAPAN&#39;</span>
+<span class="k">order</span> <span class="k">by</span>
+        <span class="n">s_name</span><span class="p">;</span>
+</pre><h2 class="anchored_heading" id="vedi-anche">Vedi anche</h2>
+<ul start="1"><li><a href="http://mysqlmaniac.com/2012/what-about-the-subqueries/">http://mysqlmaniac.com/2012/what-about-the-subqueries/</a> Un post che descrive l'impatto dell'ottimizzazione della cache delle subquery sulle query utilizzate dall'estensione di MediaWiki DynamicPageList
+</li><li><a href="http://varokism.blogspot.ru/2013/06/mariadb-subquery-cache-in-real-use-case.html">http://varokism.blogspot.ru/2013/06/mariadb-subquery-cache-in-real-use-case.html</a> Un altro caso d'uso dal mondo reale
+</li><li><a href="/kb/en/what-is-mariadb-53/">What is MariaDB 5.3</a></li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/it/subquery-cache/+subscriptions/add"
+                 data-unsubscribe-url="/kb/it/subquery-cache/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/it/index_merge-sort_intersection/">
+                        ← index_merge sort_intersection
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/it/lottimizzatore-delle-query/">
+                        ↑ L&#39;ottimizzatore delle query ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/it/fair-choice-between-range-and-index_merge-optimizations/">
+                        La scelta migliore tra le ottimizzazioni range e index_merge →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Commenti</h2>
+        
+    
+    <div id="comments" data-node-id="2084" data-comments-url="/kb/it/subquery-cache/+comments"
+         data-reply-url="/kb/it/subquery-cache/comments/post/">
+        Sto caricando i commenti......
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/it/lottimizzatore-delle-query/">
+                    ↑ L&#39;ottimizzatore delle query ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/it/eliminazione-delle-tabelle/">
+                            
+                            Eliminazione delle Tabelle
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/ottimizzazioni-delle-subquery/">
+                            
+                            Ottimizzazioni delle subquery
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/ottimizzazioni-per-le-derived-table/">
+                            
+                            Ottimizzazioni per le Derived Table
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/strategie-di-ottimizzazione/">
+                            
+                            Strategie di ottimizzazione
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/block-based-join-algorithms/">
+                            
+                            Algoritmi per le Join basati sui blocchi
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/extended-keys/">
+                            
+                            Chiavi Estese
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/mariadb-53-optimizer-debugging/">
+                            
+                            Debug dell&#39;ottimizzatore di MariaDB 5.3
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/index-condition-pushdown/">
+                            <span class="pull-right not_primary"></span>
+                            Index Condition Pushdown
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/index_merge-sort_intersection/">
+                            
+                            index_merge sort_intersection
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>La cache delle Subquery</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/fair-choice-between-range-and-index_merge-optimizations/">
+                            
+                            La scelta migliore tra le ottimizzazioni range e index_merge
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/optimizer_switch/">
+                            
+                            optimizer_switch
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/filesort-with-small-limit-optimization/">
+                            
+                            Ottimizzazione: filesort con piccoli LIMIT
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

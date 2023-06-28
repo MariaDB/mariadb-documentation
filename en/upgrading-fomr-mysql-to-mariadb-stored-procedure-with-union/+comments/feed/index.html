@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Upgrading fomr MySQL to MariaDB, stored procedure with union</title><link>https://mariadb.com/kb/en/upgrading-fomr-mysql-to-mariadb-stored-procedure-with-union/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/upgrading-fomr-mysql-to-mariadb-stored-procedure-with-union/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 01:58:10 +0000</lastBuildDate><item><title>Re: Upgrading fomr MySQL to MariaDB, stored procedure with union</title><link>https://mariadb.com/kb/en/upgrading-fomr-mysql-to-mariadb-stored-procedure-with-union/+comments/3629</link><description>&lt;p&gt;I tried it in MySQLWorkbench and Heidi, but got:&lt;/p&gt;
+&lt;pre class="fixed"&gt;Error Code: 1064. You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'end' at line 38
+&lt;/pre&gt;&lt;p&gt;After this I saw the delimiter change....
+This prevents the error.
+I use the delimiter change only in scripts with multiple statements.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jan de Bokx</dc:creator><guid>https://mariadb.com/kb/en/upgrading-fomr-mysql-to-mariadb-stored-procedure-with-union/+comments/3629</guid></item><item><title>Re: Upgrading fomr MySQL to MariaDB, stored procedure with union</title><link>https://mariadb.com/kb/en/upgrading-fomr-mysql-to-mariadb-stored-procedure-with-union/+comments/3628</link><description>&lt;p&gt;This appears to work fine, with no need to remove the BEGIN or END:&lt;/p&gt;
+&lt;pre class="fixed"&gt;DELIMITER //
+
+CREATE OR REPLACE DEFINER=`root`@`%` PROCEDURE `sp_s_persoon_bedrijf_werknemer`(
+  IN  In_param1  varchar(30),
+  IN  in_param2  varchar(30),
+  IN  in_param3  varchar(30),
+  IN  in_param4  varchar(30),
+  IN  in_param5  varchar(30),
+  IN  in_param6  varchar(30)
+)
+BEGIN
+(select * from `v_bedrijf`          
+where (zoekveld like concat('%',in_param1,'%') or in_param1 = '')
+and   (zoekveld like concat('%',in_param2,'%') or in_param2 = '')
+and   (zoekveld like concat('%',in_param3,'%') or in_param3 = '')
+or    (zoekveld like concat('%',in_param4,'%') and in_param4 &amp;lt;&amp;gt; '')
+or    (zoekveld like concat('%',in_param5,'%') and in_param5 &amp;lt;&amp;gt; '')
+or    (zoekveld like concat('%',in_param6,'%') and in_param6 &amp;lt;&amp;gt; '') limit 1000)
+union
+(select * from `v_personen`          
+where (zoekveld like concat('%',in_param1,'%') or in_param1 = '')
+and   (zoekveld like concat('%',in_param2,'%') or in_param2 = '')
+and   (zoekveld like concat('%',in_param3,'%') or in_param3 = '')
+or    (zoekveld like concat('%',in_param4,'%') and in_param4 &amp;lt;&amp;gt; '')
+or    (zoekveld like concat('%',in_param5,'%') and in_param5 &amp;lt;&amp;gt; '')
+or    (zoekveld like concat('%',in_param6,'%') and in_param6 &amp;lt;&amp;gt; '')  limit 1000)
+union
+(select * from `v_werknemer`          
+where (zoekveld like concat('%',in_param1,'%') or in_param1 = '')
+and   (zoekveld like concat('%',in_param2,'%') or in_param2 = '')
+and   (zoekveld like concat('%',in_param3,'%') or in_param3 = '')
+or    (zoekveld like concat('%',in_param4,'%') and in_param4 &amp;lt;&amp;gt; '')
+or    (zoekveld like concat('%',in_param5,'%') and in_param5 &amp;lt;&amp;gt; '')
+or    (zoekveld like concat('%',in_param6,'%') and in_param6 &amp;lt;&amp;gt; '')  limit 1000);
+
+END;
+
+//
+
+DELIMITER ;
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/upgrading-fomr-mysql-to-mariadb-stored-procedure-with-union/+comments/3628</guid></item></channel></rss>

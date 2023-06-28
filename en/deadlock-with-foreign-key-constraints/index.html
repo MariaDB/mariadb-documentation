@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Deadlock with foreign key constraints - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Deadlock with foreign key constraints" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/deadlock-with-foreign-key-constraints/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="We are using MariaDB 10.1 and facing some weird deadlock issues. While investigating we ran a sample program to test the foreign keys and found a deadlock error. Can someone p..." />
+
+    <meta name="description" content="We are using MariaDB 10.1 and facing some weird deadlock issues. While investigating we ran a sample program to test the foreign keys and found a deadlock error. Can someone p..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/deadlock-with-foreign-key-constraints/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/deadlock-with-foreign-key-constraints/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/replication-cluster-multi-master/">High Availability &amp; Performance Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/optimization-and-tuning/">Optimization and Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/optimization-and-indexes/">Optimization and Indexes</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/deadlock-with-foreign-key-constraints/">Deadlock with foreign key constraints</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/deadlock-with-foreign-key-constraints/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/deadlock-with-foreign-key-constraints/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/deadlock-with-foreign-key-constraints/+flag"
+                data-flag-url="/kb/en/deadlock-with-foreign-key-constraints/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2016-05-05 18:26">6 years, 10 months ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2016-05-12 13:31">6 years, 10 months ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>question</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/deadlock-with-foreign-key-constraints/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/deadlock-with-foreign-key-constraints/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/deadlock-with-foreign-key-constraints/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/deadlock-with-foreign-key-constraints/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Deadlock with foreign key constraints</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+    <div class="question formatted">
+        <p>We are using <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> and facing some weird deadlock issues. While investigating we ran a sample program to test the foreign keys and found a deadlock error. Can someone please explain this in bit detail so we understand how locking works in galera.</p>
+<p>We used a 2 node cluster for this testing.</p>
+<pre class="fixed">Session 1 (Node1):
+------------------------
+create table dl1(pk int primary key, data varchar(100));
+create table dl2(pk int primary key, pk1 int not null, constraint dl2_fk foreign key(pk1) 
+  references dl1(pk), data varchar(100));
+set autocommit=off;
+insert into dl1 values(1, 'a');
+
+Session 2 (Node2):
+------------------------
+set autocommit=off;
+
+insert into dl2(pk, pk1, data) values(10, 1, 'a0');
+
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails 
+  (`demoApp`.`dl2`, CONSTRAINT `dl2_fk` FOREIGN KEY (`pk1`) REFERENCES `dl1` (`pk`)) -- as expected
+
+select * from dl1;
+
+Empty set (0.00 sec) -- as expected
+Session 1 (Node1):
+------------------------
+commit;
+Session 2 (Node2):
+------------------------
+select * from dl1;
+
+ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction --- strange
+Once I got this error I ran the 'SHOW ENGINE INNODB STATUS\G' on node2 and here is the truncated output.
+------------------------
+LATEST FOREIGN KEY ERROR
+------------------------
+2016-05-04 17:46:34 7ff98ead8b00 Transaction:
+
+TRANSACTION 3852, ACTIVE 0 sec inserting, thread declared inside InnoDB 5000
+
+mysql tables in use 1, locked 1
+
+3 lock struct(s), heap size 1184, 1 row lock(s), undo log entries 1 --------------------&gt; (LOOK HERE)
+
+MySQL thread id 2507, OS thread handle 0x7ff98ead8b00, query id 73514 localhost root update
+
+insert into dl2(pk, pk1, data) values(10, 1, 'a0')
+
+Foreign key constraint fails for table `test`.`dl2`:
+
+,
+
+CONSTRAINT `dl2_fk` FOREIGN KEY (`pk1`) REFERENCES `dl1` (`pk`)
+
+Trying to add in child table, in index `dl2_fk` tuple:
+
+DATA TUPLE: 2 fields;
+
+0: len 4; hex 80000001; asc ;;
+
+1: len 4; hex 8000000a; asc ;;
+
+But in parent table `test`.`dl1`, in index `PRIMARY`,
+
+the closest match we can find is record:
+
+PHYSICAL RECORD: n_fields 1; compact format; info bits 0
+
+0: len 8; hex 696e66696d756d00; asc infimum ;;
+
+--------------
+
+ROW OPERATIONS
+
+--------------
+
+0 queries inside InnoDB, 0 queries in queue
+
+0 read views open inside InnoDB
+
+1 RW transactions active inside InnoDB ------------------&gt; (LOOK HERE)
+
+0 RO transactions active inside InnoDB
+
+1 out of 1000 descriptors used
+
+Main thread process no. 1242, id 140706194630400, state: sleeping
+
+Number of rows inserted 0, updated 0, deleted 0, read 0
+
+0.00 inserts/s, 0.00 updates/s, 0.00 deletes/s, 0.00 reads/s
+
+Number of system rows inserted 0, updated 0, deleted 0, read 0
+
+0.00 inserts/s, 0.00 updates/s, 0.00 deletes/s, 0.00 reads/s
+</pre>
+    </div>
+
+
+
+    
+        <h2>Answer
+            <span class="answer_comment">Answered by 
+<span class="user" id="user-2460">
+<a href="/kb/user/id/2460" title="Jan Lindström">Jan Lindström</a>
+</span> in <a href="#comment_2239">this comment</a>.</span></h2>
+    
+    <div class="answer formatted">
+        <p>Hi,</p>
+<p>Firstly, lets run above transactions on single node InnoDB without any Galera. First insert-statement will take row locks to avoid phantom inserts to dl1. This means that second insert-statement to dl2 has to wait for that lock. This is because that insert is dependent on parent row in dl1. Thus, on single node InnoDB above transactions fail on second insert with lock wait timeout. Remember ACID rules, transactions are run on isolation, so they do not know each other.</p>
+<p>Now lets consider Galera case. When node1 issues commit, the insert will be executed also on node2. This is problematic as transaction on node2 is still open (yes we did roll back the statement containing the insert but not whole transaction yet). This also means that all row locks are maintained. New select statement requires also shared locks to maintain repeatable read isolation level so it will compete with insert statement from node1. But, insert from node1 should commit and may not wait for locks so select in node2 is aborted. Now naturally the error is kind of misleading, but better than nothing.</p>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/deadlock-with-foreign-key-constraints/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/deadlock-with-foreign-key-constraints/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                
+                    <li><a href="/kb/en/optimization-and-indexes/">
+                        ↑ Optimization and Indexes ↑
+                    </a>
+                    </li>
+                
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="5558" data-comments-url="/kb/en/deadlock-with-foreign-key-constraints/+comments"
+         data-reply-url="/kb/en/deadlock-with-foreign-key-constraints/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/optimization-and-indexes/">
+                    ↑ Optimization and Indexes ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/the-essentials-of-an-index/">
+                            <span class="pull-right not_primary"></span>
+                            The Essentials of an Index
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/getting-started-with-indexes/">
+                            
+                            Getting Started with Indexes
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/full-text-indexes/">
+                            
+                            Full-Text Indexes
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/analyze-table/">
+                            <span class="pull-right not_primary"></span>
+                            ANALYZE TABLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/building-the-best-index-for-a-given-select/">
+                            
+                            Building the best INDEX for a given SELECT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/compound-composite-indexes/">
+                            
+                            Compound (Composite) Indexes
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/explain/">
+                            <span class="pull-right not_primary"></span>
+                            EXPLAIN
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/foreign-keys/">
+                            
+                            Foreign Keys
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/ignored-indexes/">
+                            
+                            Ignored Indexes
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/index-statistics/">
+                            
+                            Index Statistics
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/latitudelongitude-indexing/">
+                            
+                            Latitude/Longitude Indexing
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/primary-keys-with-nullable-columns/">
+                            
+                            Primary Keys with Nullable Columns
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/show-explain/">
+                            <span class="pull-right not_primary"></span>
+                            SHOW EXPLAIN
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/spatial-index/">
+                            <span class="pull-right not_primary"></span>
+                            SPATIAL INDEX
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/storage-engine-index-types/">
+                            
+                            Storage Engine Index Types
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

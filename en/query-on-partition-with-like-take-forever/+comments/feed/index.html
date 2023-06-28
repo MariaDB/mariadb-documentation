@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Query on partition with like take forever</title><link>https://mariadb.com/kb/en/query-on-partition-with-like-take-forever/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/query-on-partition-with-like-take-forever/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 00:20:58 +0000</lastBuildDate><item><title>Re: Query on partition with like take forever</title><link>https://mariadb.com/kb/en/query-on-partition-with-like-take-forever/+comments/5996</link><description>&lt;p&gt;I agree that this looks implausibly slow. I'd raise a bug report if there isn't already.&lt;/p&gt;
+&lt;p&gt;Could it be you are thrashing a table cache of insufficient size for 600-2300 partitions?&lt;/p&gt;
+&lt;p&gt;Your structure does break a few of the &lt;a href="/kb/en/partition-maintenance/"&gt;guidelines&lt;/a&gt; on partitioning.&lt;/p&gt;
+&lt;p&gt;Also FYI &lt;a href="/kb/en/inet6/"&gt;INET6 datatype&lt;/a&gt; does exist in 10.5+ version.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/query-on-partition-with-like-take-forever/+comments/5996</guid></item><item><title>Re: Query on partition with like take forever</title><link>https://mariadb.com/kb/en/query-on-partition-with-like-take-forever/+comments/5985</link><description>&lt;p&gt;Here the results:&lt;/p&gt;
+&lt;pre class="fixed"&gt;MariaDB [DRS_DB]&amp;gt; explain select * from cdr_03 where TimeStamp &amp;gt;= &amp;#34;2018-01-01 00:00:00&amp;#34; 
+    -&amp;gt;   and TimeStamp &amp;lt;= &amp;#34;2018-01-01 23:59:59&amp;#34; and IP = &amp;#34;343.456.989.659&amp;#34;;
+
++------+-------------+--------+------+---------------+------+---------+-------+------+-------------+
+| id   | select_type | table  | type | possible_keys | key  | key_len | ref   | rows | Extra       |
++------+-------------+--------+------+---------------+------+---------+-------+------+-------------+
+|    1 | SIMPLE      | cdr_03 | ref  | IP            | IP   | 23      | const | 2300 | Using where |
++------+-------------+--------+------+---------------+------+---------+-------+------+-------------+
+
+1 row in set (3.931 sec)
+
+MariaDB [DRS_DB]&amp;gt; explain select * from cdr_03 where TimeStamp &amp;gt;= &amp;#34;2018-01-01 00:00:00&amp;#34; 
+    -&amp;gt;   and TimeStamp &amp;lt;= &amp;#34;2018-01-01 23:59:59&amp;#34; and IP like &amp;#34;343.456.989.65%&amp;#34;;
+
++------+-------------+--------+-------+---------------+------+---------+------+------+-------------+
+| id   | select_type | table  | type  | possible_keys | key  | key_len | ref  | rows | Extra       |
++------+-------------+--------+-------+---------------+------+---------+------+------+-------------+
+|    1 | SIMPLE      | cdr_03 | range | IP            | IP   | 23      | NULL | 2300 | Using where |
++------+-------------+--------+-------+---------------+------+---------+------+------+-------------+
+
+1 row in set (3.733 sec)
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Mr.Luigi Caramico</dc:creator><guid>https://mariadb.com/kb/en/query-on-partition-with-like-take-forever/+comments/5985</guid></item><item><title>Re: Query on partition with like take forever</title><link>https://mariadb.com/kb/en/query-on-partition-with-like-take-forever/+comments/5983</link><description>&lt;p&gt;What is the output if you run &lt;a href="/kb/en/explain/"&gt;EXPLAIN&lt;/a&gt; on the two queries?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/query-on-partition-with-like-take-forever/+comments/5983</guid></item></channel></rss>

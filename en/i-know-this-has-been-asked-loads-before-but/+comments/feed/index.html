@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: I know this has been asked loads before, but...</title><link>https://mariadb.com/kb/en/i-know-this-has-been-asked-loads-before-but/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/i-know-this-has-been-asked-loads-before-but/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 00:11:59 +0000</lastBuildDate><item><title>Re: I know this has been asked loads before, but...</title><link>https://mariadb.com/kb/en/i-know-this-has-been-asked-loads-before-but/+comments/3144</link><description>&lt;p&gt;OK rebuilt and same result..&lt;/p&gt;
+&lt;p&gt;here are the steps&lt;/p&gt;
+&lt;p&gt;All from root&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#&lt;/code&gt;&lt;code&gt;#&lt;/code&gt;&lt;code&gt;#&lt;/code&gt;&lt;code&gt;#&lt;/code&gt;&lt;code&gt;
+Installing MariaDB&lt;/code&gt;&lt;/p&gt;
+&lt;pre class="fixed"&gt;apt-get install mariadb-server -y
+sudo mysql_secure_installation&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;#&lt;/code&gt;&lt;code&gt;#&lt;/code&gt;&lt;code&gt;#&lt;/code&gt;&lt;code&gt;#&lt;/code&gt;&lt;code&gt;
+Installing phpMyAdmin&lt;/code&gt;&lt;/p&gt;
+&lt;pre class="fixed"&gt;apt-get install phpmyadmin
+/etc/init.d/php7.0-fpm reload &amp;amp;&amp;amp; /etc/init.d/nginx reload&lt;/pre&gt;
+&lt;pre class="fixed"&gt;mysql -u root -p
+use mysql;
+update user set plugin = '' where User = 'root';
+flush privileges;
+exit;&lt;/pre&gt;&lt;p&gt;
+Test phpmyadmin in the browser:
+&lt;code class="fixed" style="white-space:pre-wrap"&gt;http://raspberrypi/phpmyadmin/&lt;/code&gt;
+Super double stop database!&lt;/p&gt;
+&lt;p&gt;&lt;code class="fixed" style="white-space:pre-wrap"&gt;service mysql stop &amp;amp;&amp;amp; /etc/init.d/mysql stop &amp;amp;&amp;amp; systemctl stop mariadb.service &amp;amp;&amp;amp; systemctl stop mysql.service &amp;amp;&amp;amp; systemctl stop mariadb &amp;amp;&amp;amp; systemctl stop mysql&lt;/code&gt;
+then check for to see if its dead
+&lt;code class="fixed" style="white-space:pre-wrap"&gt;systemctl is-active mariadb.service &lt;/code&gt;
+move data
+&lt;code class="fixed" style="white-space:pre-wrap"&gt;rsync -a /var/lib/mysql /mnt/database/&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;No change, can anyone share there working my.cnf?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/"> </dc:creator><guid>https://mariadb.com/kb/en/i-know-this-has-been-asked-loads-before-but/+comments/3144</guid></item><item><title>Re: I know this has been asked loads before, but...</title><link>https://mariadb.com/kb/en/i-know-this-has-been-asked-loads-before-but/+comments/3143</link><description>&lt;p&gt;Will do!
+I'm just rebuilding from the latest image (29/11/2017)..
+Yours Simon M.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/"> </dc:creator><guid>https://mariadb.com/kb/en/i-know-this-has-been-asked-loads-before-but/+comments/3143</guid></item><item><title>Re: I know this has been asked loads before, but...</title><link>https://mariadb.com/kb/en/i-know-this-has-been-asked-loads-before-but/+comments/3141</link><description>&lt;p&gt;Try setting &lt;code&gt;datadir = /mnt/database&lt;/code&gt;, that way it points to the same place to where the &lt;code&gt;rsync&lt;/code&gt; was done.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Markus Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/i-know-this-has-been-asked-loads-before-but/+comments/3141</guid></item><item><title>Re: I know this has been asked loads before, but...</title><link>https://mariadb.com/kb/en/i-know-this-has-been-asked-loads-before-but/+comments/3138</link><description>&lt;p&gt;Hi Markus,
+Simple answer is yes.
+I have had no trouble getting it to work using the default installation.&lt;/p&gt;
+&lt;p&gt;Steps taken post successful default installation,&lt;/p&gt;
+&lt;pre class="fixed"&gt;/etc/init.d/mysql stop
+systemctl stop mariadb.service&lt;/pre&gt;
+&lt;p&gt;	remove error log
+&lt;code class="fixed" style="white-space:pre-wrap"&gt;rm /var/log/mysql/*&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;    remove original error log
+&lt;code class="fixed" style="white-space:pre-wrap"&gt;rm /var/log/mysql/*&lt;/code&gt;&lt;/p&gt;
+&lt;pre class="fixed"&gt;umount /dev/sda1
+umount /mnt/usb_hd
+mkfs.ext4 /dev/sda1 -L database
+mkdir /mnt/database&lt;/pre&gt;&lt;p&gt;
+  Add Disk
+&lt;code class="fixed" style="white-space:pre-wrap"&gt;nano /etc/fstab&lt;/code&gt;
+    add
+&lt;/p&gt;&lt;pre class="fixed"&gt;/dev/sda1       /mnt/usb_hd      ext4    defaults        0       0
+mount /dev/sda1 /mnt/database&lt;/pre&gt;&lt;p&gt;
+    save and exit
+&lt;/p&gt;&lt;pre class="fixed"&gt;mount -a
+rsync -a /var/lib/mysql /mnt/database/&lt;/pre&gt;
+&lt;p&gt;   edit my.cnf
+&lt;code class="fixed" style="white-space:pre-wrap"&gt;nano /etc/mysql/my.cnf&lt;/code&gt;
+   add 
+&lt;/p&gt;&lt;pre class="fixed"&gt;[client-server]
+socket  = /var/run/mysqld/mysqld.sock
+port    = 3306
+[mysqld]
+datadir = /mnt/database/mysql/mysql
+[mariadb]
+datadir = /mnt/database/mysql/mysql&lt;/pre&gt;&lt;p&gt;
+  save and exit.&lt;/p&gt;
+&lt;p&gt;&lt;code class="fixed" style="white-space:pre-wrap"&gt;Reboot&lt;/code&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/"> </dc:creator><guid>https://mariadb.com/kb/en/i-know-this-has-been-asked-loads-before-but/+comments/3138</guid></item><item><title>Re: I know this has been asked loads before, but...</title><link>https://mariadb.com/kb/en/i-know-this-has-been-asked-loads-before-but/+comments/3134</link><description>&lt;p&gt;Does the &lt;code&gt;/mnt/database/mysql/&lt;/code&gt; directory exist? Try running &lt;code&gt;mkdir -p /mnt/database/mysql/&lt;/code&gt; first if you're using a Linux OS.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Markus Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/i-know-this-has-been-asked-loads-before-but/+comments/3134</guid></item></channel></rss>

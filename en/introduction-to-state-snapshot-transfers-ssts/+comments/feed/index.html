@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Introduction to State Snapshot Transfers (SSTs)</title><link>https://mariadb.com/kb/en/introduction-to-state-snapshot-transfers-ssts/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/introduction-to-state-snapshot-transfers-ssts/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Tue, 14 Mar 2023 19:42:41 +0000</lastBuildDate><item><title>Re: Error in Joining Cluster</title><link>https://mariadb.com/kb/en/introduction-to-state-snapshot-transfers-ssts/+comments/4545</link><description>&lt;p&gt;Thank you for your advice.  I didn't update and change any clustering configuration or timeoutsec.conf.  I found there are selinux issues and got them fixed.  Then node 2 could successfully join the cluster.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Testing User A Test</dc:creator><guid>https://mariadb.com/kb/en/introduction-to-state-snapshot-transfers-ssts/+comments/4545</guid></item><item><title>Re: Error in Joining Cluster</title><link>https://mariadb.com/kb/en/introduction-to-state-snapshot-transfers-ssts/+comments/4542</link><description>&lt;p&gt;Hi,&lt;/p&gt;
+&lt;p&gt;This is an important clue:&lt;/p&gt;
+&lt;pre&gt;
+2020-05-20 15:54:20 0 [Note] WSREP: /usr/sbin/mysqld: Terminated.
+May 20 15:54:20 uodbdb2 systemd: mariadb.service: main process exited, code=killed, status=6/ABRT 
+&lt;/pre&gt;
+&lt;p&gt;It appears that the &lt;code&gt;mysqld&lt;/code&gt; process was killed by &lt;code&gt;systemd&lt;/code&gt;. To check for sure, execute this:&lt;/p&gt;
+&lt;pre class="fixed"&gt;sudo journalctl -u mariadb
+&lt;/pre&gt;&lt;p&gt;This usually happens because your SST timed out. You most likely have to increase the systemd timeout. e.g.:&lt;/p&gt;
+&lt;pre class="fixed"&gt;sudo tee /etc/systemd/system/mariadb.service.d/timeoutsec.conf &amp;lt;&amp;lt;EOF
+[Service]
+
+TimeoutStartSec=0
+TimeoutStopSec=0
+EOF
+sudo systemctl daemon-reload
+&lt;/pre&gt;&lt;p&gt;See here: &lt;a href="https://mariadb.com/kb/en/systemd/#configuring-the-systemd-service-timeout"&gt;https://mariadb.com/kb/en/systemd/#configuring-the-systemd-service-timeout&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Geoff Montee</dc:creator><guid>https://mariadb.com/kb/en/introduction-to-state-snapshot-transfers-ssts/+comments/4542</guid></item><item><title>Error in Joining Cluster</title><link>https://mariadb.com/kb/en/introduction-to-state-snapshot-transfers-ssts/+comments/4540</link><description>&lt;p&gt;I have 2-node cluster running on &lt;a href="/kb/en/mariadb-10412-release-notes/"&gt;MariaDB 10.4.12&lt;/a&gt; and Galera 4 v26.4.3.
+Actually they are running smoothly as a cluster.  After reboot both servers, I started node 1 using /usr/bin/galera_new_cluster command, starting node 2 with command 'systemctl start mariadb'.  But node 2 could not join the cluster, with the following error messages on /var/log/messages:&lt;/p&gt;
+&lt;p&gt;May 20 15:54:18 uodbdb2 mysqld: 2020-05-20 15:54:18 1 [Note] WSREP: GCache history reset: old(8a371dc2-6762-11ea-b859-274830d9bb21:1261 -&amp;gt; 8a371dc2-6762-11ea-b859-274830d9bb21:1324
+May 20 15:54:18 uodbdb2 mysqld: 2020-05-20 15:54:18 1 [Note] WSREP: GCache DEBUG: RingBuffer::seqno_reset(): full reset
+May 20 15:54:19 uodbdb2 mysqld: 2020-05-20 15:54:19 0 [Warning] WSREP: 1.0 (JOAL_node1): State transfer to 0.0 (JOAL_node2) failed: -255 (Unknown error 255)
+May 20 15:54:19 uodbdb2 mysqld: 2020-05-20 15:54:19 0 [ERROR] WSREP: gcs/src/gcs_group.cpp:gcs_group_handle_join_msg():1178: Will never receive state. Need to abort.
+May 20 15:54:19 uodbdb2 mysqld: 2020-05-20 15:54:19 0 [Note] WSREP: gcomm: terminating thread
+May 20 15:54:19 uodbdb2 mysqld: 2020-05-20 15:54:19 0 [Note] WSREP: gcomm: joining thread
+May 20 15:54:19 uodbdb2 mysqld: 2020-05-20 15:54:19 0 [Note] WSREP: gcomm: closing backend
+May 20 15:54:20 uodbdb2 mysqld: 2020-05-20 15:54:20 0 [Note] WSREP: view(view_id(NON_PRIM,1b90d2ca,62) memb {
+May 20 15:54:20 uodbdb2 mysqld: 1b90d2ca,0
+May 20 15:54:20 uodbdb2 mysqld: } joined {
+May 20 15:54:20 uodbdb2 mysqld: } left {
+May 20 15:54:20 uodbdb2 mysqld: } partitioned {
+May 20 15:54:20 uodbdb2 mysqld: 834dc803,0
+May 20 15:54:20 uodbdb2 mysqld: })
+May 20 15:54:20 uodbdb2 mysqld: 2020-05-20 15:54:20 0 [Note] WSREP: PC protocol downgrade 1 -&amp;gt; 0
+May 20 15:54:20 uodbdb2 mysqld: 2020-05-20 15:54:20 0 [Note] WSREP: view((empty))
+May 20 15:54:20 uodbdb2 mysqld: 2020-05-20 15:54:20 0 [Note] WSREP: gcomm: closed
+May 20 15:54:20 uodbdb2 mysqld: 2020-05-20 15:54:20 0 [Note] WSREP: /usr/sbin/mysqld: Terminated.
+May 20 15:54:20 uodbdb2 systemd: mariadb.service: main process exited, code=killed, status=6/ABRT
+May 20 15:54:20 uodbdb2 mysqld: Terminated
+May 20 15:54:20 uodbdb2 mysqld: WSREP_SST: [INFO] Joiner cleanup. rsync PID: 10392 (20200520 15:54:20.647)
+May 20 15:54:21 uodbdb2 rsyncd[10392]: sent 0 bytes  received 0 bytes  total size 0
+May 20 15:54:21 uodbdb2 mysqld: WSREP_SST: [INFO] Joiner cleanup done. (20200520 15:54:21.155)&lt;/p&gt;
+&lt;p&gt;What's wrong?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Testing User A Test</dc:creator><guid>https://mariadb.com/kb/en/introduction-to-state-snapshot-transfers-ssts/+comments/4540</guid></item><item><title>Re: Introduction to State Snapshot Transfers (SSTs)</title><link>https://mariadb.com/kb/en/introduction-to-state-snapshot-transfers-ssts/+comments/3897</link><description>&lt;p&gt;If you wanted to try to print the unmasked value of wsrep_sst_auth with gdb, then it looks like you might need to print this sst_auth_real variable:&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/MariaDB/server/blob/54ffc4996a6b9ffd400177864c0b33b49b0c4bcf/sql/wsrep_sst.cc#L46"&gt;https://github.com/MariaDB/server/blob/54ffc4996a6b9ffd400177864c0b33b49b0c4bcf/sql/wsrep_sst.cc#L46&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Geoff Montee</dc:creator><guid>https://mariadb.com/kb/en/introduction-to-state-snapshot-transfers-ssts/+comments/3897</guid></item><item><title>Re: Introduction to State Snapshot Transfers (SSTs)</title><link>https://mariadb.com/kb/en/introduction-to-state-snapshot-transfers-ssts/+comments/3896</link><description>&lt;p&gt;I'm quite curious, is there any other way to verify or check the wsrep_sst_auth value? Querying it with SELECT/SHOW GLOBAL VARIABLE or thru mysqldump still results to a masked data.&lt;/p&gt;
+&lt;p&gt;For example, is it possible if I can use gdb or something that I can check the values of it. I have tried gdb but with no luck:
+e.g.&lt;/p&gt;
+&lt;pre class="fixed"&gt;(gdb) p do_command::thd-&amp;gt;status_var
+$4 = {column_compressions = 0, column_decompressions = 0, com_stat = {0 &amp;lt;repeats 15 times&amp;gt;, 184, 184, 0 &amp;lt;repeats 14 times&amp;gt;, 5, 0 &amp;lt;repeats 127 times&amp;gt;}, com_create_tmp_table = 0,
+  com_drop_tmp_table = 0, com_other = 828, com_multi = 0, com_stmt_prepare = 0, com_stmt_reprepare = 0, com_stmt_execute = 0, com_stmt_send_long_data = 0, com_stmt_fetch = 0, com_stmt_reset = 0,
+  com_stmt_close = 0, com_register_slave = 0, created_tmp_disk_tables_ = 0, created_tmp_tables_ = 184, ha_commit_count = 0, ha_delete_count = 0, ha_read_first_count = 0, ha_read_last_count = 0,
+  ha_read_key_count = 0, ha_read_next_count = 0, ha_read_prev_count = 0, ha_read_retry_count = 0, ha_read_rnd_count = 0, ha_read_rnd_next_count = 368, ha_read_rnd_deleted_count = 0,
+  ha_mrr_init_count = 0, ha_mrr_key_refills_count = 0, ha_mrr_rowid_refills_count = 0, ha_rollback_count = 0, ha_update_count = 0, ha_write_count = 0, ha_tmp_update_count = 0,
+  ha_tmp_write_count = 184, ha_tmp_delete_count = 0, ha_prepare_count = 0, ha_icp_attempts = 0, ha_icp_match = 0, ha_discover_count = 0, ha_savepoint_count = 0, ha_savepoint_rollback_count = 0,
+  ha_external_lock_count = 0, opened_tables = 0, opened_shares = 0, opened_views = 0, select_full_join_count_ = 0, select_full_range_join_count_ = 0, select_range_count_ = 0,
+  select_range_check_count_ = 0, select_scan_count_ = 184, update_scan_count = 0, delete_scan_count = 0, executed_triggers = 0, long_query_count = 0, filesort_merge_passes_ = 0,
+  filesort_range_count_ = 0, filesort_rows_ = 0, filesort_scan_count_ = 0, filesort_pq_sorts_ = 0, feature_custom_aggregate_functions = 0, feature_dynamic_columns = 0, feature_fulltext = 0, 
+  feature_gis = 0, feature_invisible_columns = 0, feature_json = 0, feature_locale = 0, feature_subquery = 0, feature_system_versioning = 0, feature_timezone = 0, feature_trigger = 0, 
+  feature_xml = 0, feature_window_functions = 0, master_gtid_wait_timeouts = 0, master_gtid_wait_time = 0, master_gtid_wait_count = 0, empty_queries = 0, access_denied_errors = 0, 
+  lost_connections = 0, max_statement_time_exceeded = 0, questions = 373, bytes_received = 34898, bytes_sent = 162665, rows_read = 0, rows_sent = 184, rows_tmp_read = 5888, 
+  binlog_bytes_written = 0, table_open_cache_hits = 0, table_open_cache_misses = 0, table_open_cache_overflows = 0, last_query_cost = 10.499000000000001, cpu_time = 0, busy_time = 0, 
+  threads_running = 1, max_local_memory_used = 372784, local_memory_used = 77808, global_memory_used = -280}
+
+&lt;/pre&gt;&lt;pre class="fixed"&gt;(gdb) p do_command::thd-&amp;gt;variables
+$2 = {dynamic_variables_version = 16, dynamic_variables_ptr = 0x7f1a3c10fcd8 &amp;#34;\001&amp;#34;, dynamic_variables_head = 104, dynamic_variables_size = 112, max_heap_table_size = 67108864,
+  tmp_memory_table_size = 67108864, tmp_disk_table_size = 18446744073709551615, long_query_time = 2000000, max_statement_time = 0, optimizer_switch = 4260495311, sql_mode = 33554432,
+  old_behavior = 0, option_bits = 2147486464, join_buff_space_limit = 2097152, log_slow_filter = 1983, log_slow_verbosity = 0, log_slow_disabled_statements = 8, log_disabled_statements = 2,
+  bulk_insert_buff_size = 8388608, join_buff_size = 262144, sortbuff_size = 2097152, group_concat_max_len = 1048576, default_regex_flags = 0, max_mem_used = 9223372036854775807,
+  slave_skip_counter = 0, max_relay_log_size = 1073741824, select_limit = 18446744073709551615, max_join_size = 18446744073709551615, expensive_subquery_limit = 100, auto_increment_increment = 3,
+  auto_increment_offset = 1, eq_range_index_dive_limit = 0, column_compression_zlib_strategy = 0, lock_wait_timeout = 86400, join_cache_level = 2, max_allowed_packet = 536870912,
+  max_error_count = 64, max_length_for_sort_data = 1024, max_recursive_iterations = 4294967295, max_sort_length = 1024, max_tmp_tables = 32, max_insert_delayed_threads = 20,
+  min_examined_row_limit = 0, multi_range_count = 256, net_buffer_length = 16384, net_interactive_timeout = 28800, net_read_timeout = 30, net_retry_count = 10, net_wait_timeout = 28800,
+  net_write_timeout = 60, optimizer_prune_level = 1, optimizer_search_depth = 62, optimizer_selectivity_sampling_limit = 100, optimizer_use_condition_selectivity = 1, use_stat_tables = 0,
+  histogram_size = 0, histogram_type = 0, preload_buff_size = 32768, profiling_history_size = 15, read_buff_size = 131072, read_rnd_buff_size = 262144, mrr_buff_size = 262144,
+  div_precincrement = 4, rowid_merge_buff_size = 8388608, max_sp_recursion_depth = 0, default_week_format = 0, max_seeks_for_key = 4294967295, range_alloc_block_size = 4096,
+  query_alloc_block_size = 16384, query_prealloc_size = 24576, trans_alloc_block_size = 8192, trans_prealloc_size = 4096, log_warnings = 2, log_slow_rate_limit = 1, binlog_format = 2,
+  binlog_row_image = 2, progress_report_time = 5, completion_type = 0, query_cache_type = 0, tx_isolation = 2, updatable_views_with_limit = 1, alter_algorithm = 0, max_user_connections = 0,
+  server_id = 1, pseudo_thread_id = 257, gtid_domain_id = 0, gtid_seq_no = 0, tx_read_only = 0 '\000', low_priority_updates = 0 '\000', query_cache_wlock_invalidate = 0 '\000',
+  keep_files_on_create = 0 '\000', old_mode = 0 '\000', old_passwords = 0 '\000', big_tables = 0 '\000', only_standard_compliant_cte = 1 '\001', query_cache_strip_comments = 0 '\000',
+  sql_log_slow = 0 '\000', sql_log_bin = 0 '\000', sql_log_bin_off = 0 '\000', binlog_annotate_row_events = 1 '\001', binlog_direct_non_trans_update = 0 '\000',
+  column_compression_zlib_wrap = 0 '\000', table_plugin = 0x555cbc1136a0, tmp_table_plugin = 0x0, enforced_table_plugin = 0x0, character_set_filesystem = 0x555cbb5531e0 &amp;lt;my_charset_bin&amp;gt;,
+  character_set_client = 0x555cbb5baf80 &amp;lt;my_charset_utf8mb4_general_ci&amp;gt;, character_set_results = 0x555cbb5baf80 &amp;lt;my_charset_utf8mb4_general_ci&amp;gt;,
+  collation_server = 0x555cbb575c00 &amp;lt;my_charset_latin1&amp;gt;, collation_database = 0x555cbb5bb400 &amp;lt;my_charset_utf8_general_ci&amp;gt;, collation_connection = 0x555cbb5baf80 &amp;lt;my_charset_utf8mb4_general_ci&amp;gt;,
+  default_master_connection = {str = 0x7f1a3c0ccf18 &amp;#34;&amp;#34;, length = 0}, lc_messages = 0x555cbb5d6000 &amp;lt;my_locale_en_US&amp;gt;, errmsgs = 0x555cbc083938, lc_time_names = 0x555cbb5d6000 &amp;lt;my_locale_en_US&amp;gt;,
+  time_zone = 0x555cbb5d3a28 &amp;lt;tz_SYSTEM&amp;gt;, sysdate_is_now = 1 '\001', wt_timeout_short = 10000, wt_deadlock_search_depth_short = 4, wt_timeout_long = 50000000, wt_deadlock_search_depth_long = 15,
+  wsrep_on = 0 '\000', wsrep_causal_reads = 0 '\000', wsrep_dirty_reads = 0 '\000', wsrep_sync_wait = 0, wsrep_retry_autocommit = 1, wsrep_OSU_method = 0, long_query_time_double = 2,
+  max_statement_time_double = 0, pseudo_slave_mode = 0 '\000',
+  session_track_system_variables = 0x555cbacedfe8 &amp;#34;autocommit,character_set_client,character_set_connection,character_set_results,time_zone&amp;#34;, session_track_transaction_info = 0,
+  session_track_schema = 1 '\001', session_track_state_change = 0 '\000', threadpool_priority = 2, idle_transaction_timeout = 0, idle_readonly_transaction_timeout = 0,
+  idle_write_transaction_timeout = 0, column_compression_threshold = 100, column_compression_zlib_level = 6, in_subquery_conversion_threshold = 1000, vers_asof_timestamp = {type = 0, ltime = {
+      year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0, second_part = 0, neg = 0 '\000', time_type = MYSQL_TIMESTAMP_DATE}}, vers_alter_history = 0}
+&lt;/pre&gt;&lt;p&gt;This could actually help debug further even we can actually set the value dynamically but determining it would be helpful if possible.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Paul Namuag</dc:creator><guid>https://mariadb.com/kb/en/introduction-to-state-snapshot-transfers-ssts/+comments/3896</guid></item></channel></rss>

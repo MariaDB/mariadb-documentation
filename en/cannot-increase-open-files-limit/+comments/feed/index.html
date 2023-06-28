@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Cannot increase open-files-limit</title><link>https://mariadb.com/kb/en/cannot-increase-open-files-limit/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/cannot-increase-open-files-limit/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 10 Mar 2023 11:46:11 +0000</lastBuildDate><item><title>Re: Cannot increase open-files-limit</title><link>https://mariadb.com/kb/en/cannot-increase-open-files-limit/+comments/3692</link><description>&lt;p&gt;It's for sure really annoying, but, after attempting some additional steps as per the MariaDB docs, one can get it like below. The message is the one like below:&lt;/p&gt;
+&lt;p&gt;[Warning] InnoDB: innodb_open_files 65500 should not be greater than the open_files_limit 16364&lt;/p&gt;
+&lt;p&gt;I started the MariaDB Server 10.3.11 with the below configs:&lt;/p&gt;
+&lt;p&gt;mariadb@db-d01:$ my_print_defaults mysqld | grep files
+--innodb_open_files=65533
+--open_files_limit=65533&lt;/p&gt;
+&lt;p&gt;I suspected something was blocking the limits of open_files_limit while innodb_open_files were going over and giving me that message. Looking for additional documents pointed by Ian Gilfillan, I found the below that the open_files_limit is limited by default at 16k (16364); a number which appears everywhere. &lt;/p&gt;
+&lt;p&gt;So, to increase that number, as we need to take it to `65533` to give it a full room, we need to change the `LimitNOFILE=16364` to `LimitNOFILE=65533` in the mariadb.service unit and enter the below command:&lt;/p&gt;
+&lt;p&gt;mariadb-dba@mortality-db-d01:$ sudo systemctl daemon-reload&lt;/p&gt;
+&lt;p&gt;It’s going to reload units located under the systemD subsystem which is going to make it possible to start the `mariadb.service` with that new definition. The ulimit is not an option anymore to tune open files, so, we check the new limit out of prlimit, as below:&lt;/p&gt;
+&lt;p&gt;mariadb@db-d01:$ sudo prlimit --pid=$(pidof mysqld) | grep NOFILE
+NOFILE     max number of open files               65533     65533&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt; Why prlimit? &lt;a href="https://lzone.de/cheat-sheet/ulimit"&gt;https://lzone.de/cheat-sheet/ulimit&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;And then, we can add to the current configuration file the below:
+--innodb_open_files=65533
+--open_files_limit=65533&lt;/p&gt;
+&lt;p&gt;No warnings on the error log enymore:
+`2018-12-13 10:40:59 0 [Note] InnoDB: Using Linux native AIO
+2018-12-13 10:40:59 0 [Note] InnoDB: Mutexes and rw_locks use GCC atomic builtins
+2018-12-13 10:40:59 0 [Note] InnoDB: Uses event mutexes
+2018-12-13 10:40:59 0 [Note] InnoDB: Compressed tables use zlib 1.2.8
+2018-12-13 10:40:59 0 [Note] InnoDB: Number of pools: 1
+2018-12-13 10:40:59 0 [Note] InnoDB: Using SSE2 crc32 instructions
+2018-12-13 10:40:59 0 [Note] InnoDB: Initializing buffer pool, total size = 7G, instances = 8, chunk size = 128M
+2018-12-13 10:40:59 0 [Note] InnoDB: Completed initialization of buffer pool
+2018-12-13 10:40:59 0 [Note] InnoDB: If the mysqld execution user is authorized, page cleaner thread priority can be changed. See the man page of setpriority().
+2018-12-13 10:41:00 0 [Note] InnoDB: 128 out of 128 rollback segments are active.
+2018-12-13 10:41:00 0 [Note] InnoDB: Creating shared tablespace for temporary tables
+2018-12-13 10:41:00 0 [Note] InnoDB: Setting file './ibtmp1' size to 12 MB. Physically writing the file full; Please wait ...
+2018-12-13 10:41:00 0 [Note] InnoDB: File './ibtmp1' size is now 12 MB.
+2018-12-13 10:41:00 0 [Note] InnoDB: 10.3.11 started; log sequence number 105534396886311; transaction id 929353557
+2018-12-13 10:41:00 0 [Note] InnoDB: Loading buffer pool(s) from /Database/prod/ib_buffer_pool
+2018-12-13 10:41:00 0 [Note] Plugin 'FEEDBACK' is disabled.
+2018-12-13 10:41:00 0 [Note] Server socket created on IP: '0.0.0.0'.
+2018-12-13 10:41:00 0 [Note] Server socket created on IP: '0.0.0.0'.
+2018-12-13 10:41:00 0 [Warning] 'proxies_priv' entry '@% root@db07' ignored in --skip-name-resolve mode.
+2018-12-13 10:41:00 0 [Note] Reading of all Master_info entries succeded
+2018-12-13 10:41:00 0 [Note] Added new Master_info '' to hash table
+2018-12-13 10:41:00 0 [Note] /usr/sbin/mysqld: ready for connections.
+Version: '10.3.11-MariaDB-1:10.3.11+mariaxenial-log'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  mariadb.org binary distribution
+2018-12-13 10:41:52 0 [Note] InnoDB: Buffer pool(s) load completed at 181213 10:41:52&lt;/p&gt;
+&lt;p&gt;So, that way, you can raise the files limite.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Wagner Bianchi</dc:creator><guid>https://mariadb.com/kb/en/cannot-increase-open-files-limit/+comments/3692</guid></item><item><title>Re: Cannot increase open-files-limit</title><link>https://mariadb.com/kb/en/cannot-increase-open-files-limit/+comments/1580</link><description>&lt;p&gt;If the OS isn't using systemd make sure that the open-file-limit is in the [mysqld_safe] section of the my.cnf file to raise the hard limit.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black </dc:creator><guid>https://mariadb.com/kb/en/cannot-increase-open-files-limit/+comments/1580</guid></item><item><title>Re: Cannot increase open-files-limit</title><link>https://mariadb.com/kb/en/cannot-increase-open-files-limit/+comments/1540</link><description>&lt;p&gt;I created /lib/systemd/system/mysqld.service with the referenced settings - no change.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Raquel James</dc:creator><guid>https://mariadb.com/kb/en/cannot-increase-open-files-limit/+comments/1540</guid></item><item><title>Re: Cannot increase open-files-limit</title><link>https://mariadb.com/kb/en/cannot-increase-open-files-limit/+comments/1537</link><description>&lt;p&gt;I saw both of these posts when researching this problem but since neither file referenced (/usr/lib/systemd/system/mysqld.service and /usr/lib/systemd/system/mariadb.service) exist on my server, I dismissed them as possible solutions.  In fact, the subdirectory /system does not even exist in my installation.  However, if the creation of one or the other of these files would be read and applied, I will certainly do so.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Raquel James</dc:creator><guid>https://mariadb.com/kb/en/cannot-increase-open-files-limit/+comments/1537</guid></item><item><title>Re: Cannot increase open-files-limit</title><link>https://mariadb.com/kb/en/cannot-increase-open-files-limit/+comments/1536</link><description>&lt;p&gt;Do the suggestions at &lt;a href="https://mariadb.com/kb/en/mariadb/could-not-increase-number-of-max_open_files-to-more-than-1024-request-1835/"&gt;https://mariadb.com/kb/en/mariadb/could-not-increase-number-of-max_open_files-to-more-than-1024-request-1835/&lt;/a&gt; and &lt;a href="http://unix.stackexchange.com/questions/152186/mysql-max-open-files-more-than-1024"&gt;http://unix.stackexchange.com/questions/152186/mysql-max-open-files-more-than-1024&lt;/a&gt; help?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/cannot-increase-open-files-limit/+comments/1536</guid></item></channel></rss>

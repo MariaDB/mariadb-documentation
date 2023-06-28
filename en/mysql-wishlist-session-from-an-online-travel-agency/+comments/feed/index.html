@@ -1,0 +1,604 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: MySQL "Wishlist" Session from an online travel agency</title><link>https://mariadb.com/kb/en/mysql-wishlist-session-from-an-online-travel-agency/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/mysql-wishlist-session-from-an-online-travel-agency/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 01:43:55 +0000</lastBuildDate><item><title>Re: MySQL "Wishlist" Session from an online travel agency</title><link>https://mariadb.com/kb/en/mysql-wishlist-session-from-an-online-travel-agency/+comments/216</link><description>&lt;p&gt;I learned from this....thanks&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">John S Wolter</dc:creator><guid>https://mariadb.com/kb/en/mysql-wishlist-session-from-an-online-travel-agency/+comments/216</guid></item><item><title>Re: MySQL "Wishlist" Session from an online travel agency</title><link>https://mariadb.com/kb/en/mysql-wishlist-session-from-an-online-travel-agency/+comments/98</link><description>&lt;pre&gt;
+&amp;gt; DROP TABLE is slow
+&lt;/pre&gt;
+&lt;ul start="1"&gt;&lt;li&gt;Was a bug in MySQL with compressed tables that is fixed by Oracle and is already in MySQL 5.1.
+&lt;/li&gt;&lt;/ul&gt;
+&lt;pre&gt;
+&amp;gt; Scaling replication
+&lt;/pre&gt;
+&lt;ul start="1"&gt;&lt;li&gt;MySQL 5.6 is working on this. As soon as this code is stable we can use
+  this as a base for &lt;a href="http://askmonty.org/worklog/?tid=181"&gt;MWL#181&lt;/a&gt;: Parallel replication of group-committed
+  transactions
+  (Project hours not easy to specify until 5.6 is stable).
+&lt;/li&gt;&lt;/ul&gt;
+&lt;pre&gt;
+&amp;gt; UTF-8 issues, MEMORY engine limitations
+&lt;/pre&gt;
+&lt;p&gt;I added &lt;a href="http://askmonty.org/worklog/?tid=203"&gt;MWL#203&lt;/a&gt; "Add efficient support for BLOB and VARCHAR to HEAP/MEMORY"&lt;/p&gt;
+&lt;p&gt;This should solve both this issue and also other issues with data
+going to disk that doesn't have to.&lt;/p&gt;
+&lt;p&gt;I estimate this to be around 60 hours development time + 16 hour testing.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; The "Adminlogging problem"
+&amp;gt; 
+&amp;gt; Many writes we have need to track the previous values so that they
+&amp;gt; are being shipped to an auditing database elsewhere on a different
+&amp;gt; machine. Many ways to solve that problem exist, most suck.
+&amp;gt;
+&amp;gt; Using RBR binlog, parse that output: We are currently parsing
+&amp;gt; "mysqlbinlog -vv" output. A binlog parsing library exposed to the
+&amp;gt; usual scripting languages would make that much easier. Also, the
+&amp;gt; binlog does not contain all data needed for an audit log
+&amp;gt; (application level user information needs to be embedded somehow).
+&lt;/pre&gt;
+&lt;p&gt;We have 'kind of' a 'C' library for this that is used by mysqlbinlog;
+It's far from easy to make the binary log available for scripting
+languages as the structure is quite complex and each event (and there
+are many of these) have their own format.  Any ideas of how to do this
+are appreciated (even a suggested interface would help).&lt;/p&gt;
+&lt;p&gt;It's however relatively easy to conditionally add more data to the
+binary log.  What information is it that you would like us to do?&lt;/p&gt;
+&lt;p&gt;Feel free to add what you like to &lt;a href="http://askmonty.org/worklog/?tid=204"&gt;MWL#204&lt;/a&gt;&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; We can log the statement including all comments in the statement
+&amp;gt; once, and have each row point back to the statement that caused this
+&amp;gt; row to be changed. You'd have the change from the RBR record, and
+&amp;gt; could get the higher level app user from a comment in the
+&amp;gt; statement.
+
+&amp;gt; I like. Binlog is written anyway, so no additional overhead. -- Kris
+&lt;/pre&gt;
+&lt;p&gt;MariaDB already have the statement stored in the binary log so this
+may already be partly solved. See
+&lt;a href="http://kb.askmonty.org/en/annotate_rows_log_event"&gt;http://kb.askmonty.org/en/annotate_rows_log_event&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;If not, please update &lt;a href="http://askmonty.org/worklog/?tid=204"&gt;MWL#204&lt;/a&gt; with what you need!&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Specialized statements? "SELECT FROM DELETE/SELECT FROM UPDATE":
+&amp;gt; Write statements returning a result set of old values. Actually
+&amp;gt; INSERT FROM DELETE/INSERT FROM UPDATE would be needed to make it
+&amp;gt; transactional.
+&lt;/pre&gt;
+&lt;p&gt;I tried to find an existing definition for this (I am sure some other
+database has this) but could not find it.&lt;/p&gt;
+&lt;p&gt;The best I have come up with so far is (for single table delete's):&lt;/p&gt;
+&lt;p&gt;is to use the DB2 syntax:&lt;/p&gt;
+&lt;p&gt;DELETE from (SELECT column_list from single_table WHERE ... ORDER BY)&lt;/p&gt;
+&lt;p&gt;another option would be&lt;/p&gt;
+&lt;p&gt;DELETE FROM table_name WHERE ... [LIMIT #]] SELECT expression_list&lt;/p&gt;
+&lt;p&gt;I have added the above to: &lt;a href="http://askmonty.org/worklog/?tid=205"&gt;MWL#205&lt;/a&gt; DELETE with result set&lt;/p&gt;
+&lt;p&gt;Doing UPDATE's is a bit harder from a syntax point of view. Lets
+think about that when the DELETE problem is solved.  The LAST_VALUE()
+function Eric is working on may solve this.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; MySQL 5.5. provides an Audit plugin API for this. Check it out,
+&amp;gt; write UDP sender into eventlogging as such a plugin. It is easy, and
+&amp;gt; does exactly what we want. Also, this is the least ugly way to solve
+&amp;gt; this.
+&lt;/pre&gt;
+&lt;p&gt;That is also an option.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Replication synchronisation (Global Unique Id)
+
+&amp;gt; At the moment we build our replication hierarchies at most 2 levels
+&amp;gt; deep, and use a host language wrapper around SHOW MASTER STATUS and
+&amp;gt; SELECT MASTER_POS_WAIT() to create waypoints where needed. This does
+&amp;gt; not work across more than 1 hop (2 levels), as master binlog
+&amp;gt; positions do not translate past one slave.  A mechanism that allows
+&amp;gt; to create such waypoints across any number of hops would be useful
+&amp;gt; from a correctness perspective. I would also allow us more
+&amp;gt; flexibility in how we build our replication hierarchies.
+&lt;/pre&gt;
+&lt;p&gt;We created a long time ago &lt;a href="http://askmonty.org/worklog/?tid=31"&gt;MWL#31&lt;/a&gt; "global transaction id" to solve
+this issue, but that is for the moment on hold waiting (we are waiting
+for a developer at another company to post his solution that he has
+worked a long time one before continuing).&lt;/p&gt;
+&lt;p&gt;Lately Kristian has been working on a sub part of this:
+&lt;a href="http://askmonty.org/worklog/?tid=175"&gt;MWL#175&lt;/a&gt; "Unique ID in binlog event metadata"&lt;/p&gt;
+&lt;p&gt;The above should likely solve your problems. Please comment!&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Large table upload causes replication lag
+&amp;gt;
+&amp;gt; Some events are known independent events, and can cause large
+&amp;gt; replication lag due to their sheer size. For example, sometimes we
+&amp;gt; upload large new tables to a master, and the data download then
+&amp;gt; delays normal processing in all slaves. It would be nice for a
+&amp;gt; mechanism to exist to leverage additional connections to download
+&amp;gt; this out-of-band.
+&lt;/pre&gt;
+&lt;p&gt;I have now created &lt;a href="http://askmonty.org/worklog/?tid=206"&gt;MWL#206&lt;/a&gt; for all replication task that gives more
+parallelism.&lt;/p&gt;
+&lt;p&gt;I have added the following tasks as sub tasks for the above:&lt;/p&gt;
+&lt;ul start="1"&gt;&lt;li&gt;&lt;a href="http://askmonty.org/worklog/?tid=207"&gt;MWL#207&lt;/a&gt; Replicate LOAD DATA INFILE 'out of band'
+&lt;/li&gt;&lt;li&gt;&lt;a href="http://askmonty.org/worklog/?tid=208"&gt;MWL#208&lt;/a&gt; Replicate ALTER TABLE in parallel
+&lt;/li&gt;&lt;/ul&gt;
+&lt;pre&gt;
+&amp;gt; We shard data. In some cases, for some users which do care less
+&amp;gt; about speed and more about reporting, it would be convenient to have
+&amp;gt; a way to unshard data. Is FederatedX a solution? Can be have
+&amp;gt; replication so that a slave can be slave to multiple masters
+&amp;gt; provided the data sets of the masters are nonoverlapping?
+&lt;/pre&gt;
+&lt;p&gt;Kristian has created &lt;a href="http://askmonty.org/worklog/?tid=201"&gt;MWL#201&lt;/a&gt; "Multi-source replication" to handle this.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Making slaves in a non-sucky way
+&amp;gt; Right now we mylvmbackup a slave, restore it to a new box, recover
+&amp;gt; the InnoDB and connect it to the master. We'd like to have a command
+&amp;gt; that can be issues to an empty database, will download the data from
+&amp;gt; a master (or a co-slave), and then attach the new slave to the
+&amp;gt; master (using the configuration provided on the command line or by
+&amp;gt; the co-slave). At the SQL level. With progress report.
+
+&amp;gt; And please have the data move at disk speed, no index creation, ship
+&amp;gt; binary index data from the co-slave or master. This can be fast! --
+&lt;/pre&gt;
+&lt;p&gt;For this I don't have a simple solution. I have however recorded this into
+&lt;a href="http://askmonty.org/worklog/?tid=209"&gt;MWL#209&lt;/a&gt; "Setting up a new slave easily" to allow Kristian to comment.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Stable snapshot
+&amp;gt; 
+&amp;gt; "FLUSH TABLES WITH READ LOCK" can still break, if a checkpoint
+&amp;gt; occurs under the lock.
+&amp;gt; Can we have FLUSH TABLES WITH READ LOCK AND NO CHECKPOINT and a
+&amp;gt; FORCE CHECKPOINT for InnoDB, or have FLUSH TABLES force this
+&amp;gt; checkpoint when applied to InnoDB?
+&lt;/pre&gt;
+&lt;p&gt;&lt;a href="/kb/en/what-is-mariadb-53/"&gt;MariaDB 5.3&lt;/a&gt; supports already the command:&lt;/p&gt;
+&lt;p&gt;FLUSH TABLE WITH READ LOCK AND DISABLE CHECKPOINT.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Server restart required (Replication)
+&amp;gt;
+&amp;gt; About every replication config change requires a server restart to
+&amp;gt; be picked up. Please fix!
+&lt;/pre&gt;
+&lt;p&gt;I have added &lt;a href="http://askmonty.org/worklog/?tid=210"&gt;MWL#210&lt;/a&gt; "Make all replication variables changeable
+without server restart"&lt;/p&gt;
+&lt;p&gt;The main problem is that some of the variables are very hard to
+change, so it's best to take these one by one.&lt;/p&gt;
+&lt;p&gt;I have added all replication variables to the &lt;a href="http://askmonty.org/worklog/?tid=210"&gt;MWL#210&lt;/a&gt;. Can you mark
+those that are most important to make changeable?&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; RBR conflict resultion SP
+&amp;gt; In RBR, when there is any kind of RBR problem, call a SP. The SP
+&amp;gt; gets all required data made available somehow, can define a
+&amp;gt; resolution policy. 4 Outcomes: Choose old, choose new, fail (error)
+&amp;gt; and synthesize (merge) new row.
+&lt;/pre&gt;
+&lt;p&gt;I have added this as &lt;a href="http://askmonty.org/worklog/?tid=211"&gt;MWL#211&lt;/a&gt;  conflict resolution for RBR replication&lt;/p&gt;
+&lt;p&gt;This one is however not an easy task. Kristian needs to write a high
+level description for this.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Compressed binlog
+&amp;gt; 
+&amp;gt; Write the binlog optionally in a compressed fashion at the event level.
+&lt;/pre&gt;
+&lt;p&gt;I have created &lt;a href="http://askmonty.org/worklog/?tid=21"&gt;MWL#21&lt;/a&gt; "Compressed binary log" for this.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Async binlog shipping
+&lt;/pre&gt;
+&lt;p&gt;Already in MySQL 5.5&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; On binlog rotation, run a SP asynchronously. Note than execution of
+&amp;gt; for example a shell command through a UDF must not lock anything! 
+&amp;gt; Provide sufficient environmental data to the SP (binlog names old
+&amp;gt; and new, binlog position for old and new log, etc).
+&lt;/pre&gt;
+&lt;p&gt;I have added MLW#213 Run SP on binary log rotation.
+(Not much to add except of the above)&lt;/p&gt;
+&lt;p&gt;The main problem is to run this asynchronously. We do have a thread
+designed for things like this, so it may not be that hard.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Use tables, not files
+&amp;gt; 
+&amp;gt; Get rid of master.info, relay.info. These should be InnoDB tables in mysql.*.
+&lt;/pre&gt;
+&lt;p&gt;This is already done in MySQL 5.6&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Less critical wishes
+&amp;gt; Async query API so that we can map/reduce at the client level
+&lt;/pre&gt;
+&lt;p&gt;Kristian has done an excellent specification for this at:
+&lt;a href="http://askmonty.org/worklog/?tid=192"&gt;MWL#192&lt;/a&gt; "optional nonblocking client API"&lt;/p&gt;
+&lt;p&gt;Would that satisfy your needs?&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Provide an API in mysqlclient.so so that we can write application
+&amp;gt; side map/reduce query-shards-in-parallel actions.
+&lt;/pre&gt;
+&lt;p&gt;To be able to do this, I would need a spec for you of the API.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Make Indexes first level objects
+&amp;gt;
+&amp;gt; An index should be able to exist as an object that is not tied to a
+&amp;gt; physical table. That would allow for indices that are global to a
+&amp;gt; partition, and for functional indexes or indices on virtual columns.
+&lt;/pre&gt;
+&lt;p&gt;This is close to impossible to do. Functional indexes are notable
+easier to do.&lt;/p&gt;
+&lt;p&gt;I have recorded this in &lt;a href="http://askmonty.org/worklog/?tid=214"&gt;MWL#214&lt;/a&gt;  "Make Indexes first level objects"
+I also added: &lt;a href="http://askmonty.org/worklog/?tid=215"&gt;MWL#215&lt;/a&gt; "Functional indexes"&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; ALTER TABLE progress report
+&amp;gt;
+&amp;gt; ALTER TABLE can take a long time. We know how to go into $datadir
+&amp;gt; and find the secret files and observe them, but we'd rather see
+&amp;gt; progress in SHOW PROCESSLIST.
+&amp;gt; done while you wait (*closes &amp;gt; emacs*). -- Monty
+&lt;/pre&gt;
+&lt;p&gt;I got a little to ambitious in trying to do it right, but this is now
+done in &lt;a href="/kb/en/what-is-mariadb-53/"&gt;MariaDB 5.3&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;It's documented here &lt;a href="http://kb.askmonty.org/en/progress-reporting"&gt;http://kb.askmonty.org/en/progress-reporting&lt;/a&gt; and
+I expect that a lot of MySQL clients will support this soon!&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Fast ALTER TABLE
+&amp;gt;
+&amp;gt; Can we have proper fast ALTER TABLE? That would include online index
+&amp;gt; drop/create, and versioned schema plus version numbers at the page
+&amp;gt; level or the row level. Rows would be upgraded to the most recent
+&amp;gt; schema version not at ALTER TABLE time, but whenever their row/page
+&amp;gt; is being dirtied for whatever reason. -- Kris, Herald.
+&lt;/pre&gt;
+&lt;p&gt;In &lt;a href="/kb/en/what-is-mariadb-55/"&gt;MariaDB 5.5&lt;/a&gt; there is as far as I know some work done to make ALTER
+TABLE fast with InnoDB and with ADD/DROP INDEX.  We have to come back
+to this question when we have &lt;a href="/kb/en/what-is-mariadb-55/"&gt;MariaDB 5.5&lt;/a&gt; ready and can look at the
+code.&lt;/p&gt;
+&lt;p&gt;In Aria it would be easy to add columns and drop not key columns
+instantly. For other storage engines this is probably harder.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; There is the facebook hack for online ALTER TABLE.
+&lt;/pre&gt;
+&lt;p&gt;I hope that for the near future the facebook solution should be good
+enough... (at least it's a workable solution).&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Nested transactions / In TXN flag
+&amp;gt;
+&amp;gt; "I would like to have nested transactions. They would make some
+&amp;gt; things I need to solve a lot easier (layering in code, lower layers
+&amp;gt; with their own TXNs being called by upper layers with or without a
+&amp;gt; TXN going on)."
+&lt;/pre&gt;
+&lt;p&gt;The &lt;a href="http://askmonty.org/worklog/?tid=137"&gt;MWL#137&lt;/a&gt; covers this.&lt;/p&gt;
+&lt;p&gt;Before doing this, we would need to do a deeper investigation to
+create a proper low level description of this. The current estimate
+for doing the low level design is 24 hours.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; "I would like to see a viable definition of nested transactions. I
+&amp;gt; would like to know what it means when an inner TXN does a COMMIT and
+&amp;gt; then the outer TXN does a ROLLBACK. Are there any other ways to
+&amp;gt; solve your layering problem?"
+&lt;/pre&gt;
+&lt;p&gt;Does the &lt;a href="http://askmonty.org/worklog/?tid=137"&gt;MWL#137&lt;/a&gt; cover this ?
+Why can't you do SAVEPOINTS instead ?&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Another group asked about solutions for the same layering problem,
+&amp;gt; but in a different way: "We would like to have a flag or status
+&amp;gt; variable that tells code if it currently is inside a transaction,
+&amp;gt; and optionally, if that is an implied (autocommit = 0) or explicit
+&amp;gt; (autocommit = 1 and BEGIN WORK was issued) transaction."
+&lt;/pre&gt;
+&lt;p&gt;Based on our discussion we have added to MariaDB a variable
+'@@in_transaction' which will be 1 if one has executed either a BEGIN
+statement or if one has accessed a table and autocommit is not
+enabled.&lt;/p&gt;
+&lt;p&gt;Hopefully this should solve your problem.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Compressed MyISAM/Aria
+&amp;gt;
+&amp;gt; We are using MyISAM in some places for mostly append-only tables and
+&amp;gt; very large sizes (20 TB and more target size). We are considering
+&amp;gt; Aria for this, if Aria is comparable in space efficiency to MyISAM,
+&amp;gt; and has nicer recovery after an unplanned shutdown.
+&lt;/pre&gt;
+&lt;p&gt;The new page format with auto recovery uses a little more space than
+MyISAM but not much.&lt;/p&gt;
+&lt;p&gt;When compressing it with aria_pack it uses exactly the same space as MyISAM.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; MyISAM tables we are using are being compressed with
+&amp;gt; myisampack/myisamchk when they are finished with being written
+&amp;gt; to. This process is at the moment cumbersome, as it involves a FLUSH
+&amp;gt; TABLES and external commands being run outside of the DB server.
+&amp;gt;
+&amp;gt; Having an SQL command that online packs MyISAM/Aria tables would be
+&amp;gt; useful, as this would handle open file handles and other stuff more
+&amp;gt; nicely, and also can be controlled from the client using only SQL.
+&lt;/pre&gt;
+&lt;p&gt;This is relatively easy to do. &lt;a href="http://askmonty.org/worklog/?tid=216"&gt;MWL#216&lt;/a&gt;&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; GET_LOCK() improvements
+&amp;gt;
+&amp;gt; "At the moment GET_LOCK() in limited to one lock per
+&amp;gt; connection. Acquiring a second lock while holding one releases the
+&amp;gt; initial lock. This has been done in order to avoid deadlocking
+&amp;gt; problems, we presume.
+&lt;/pre&gt;
+&lt;p&gt;Correct.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Having a deadlock detection system in place, and being able to pick
+&amp;gt; up multiple locks at once or gradually would be useful."
+&amp;gt; 
+&amp;gt; There are voices (mine, for one) which state that if you are using
+&amp;gt; GET_LOCK instead of InnoDB row locks then you are doing it
+&amp;gt; wrong. Using GET_LOCK more is a step into the wrong direction,
+&amp;gt; technology-wise.
+&lt;/pre&gt;
+&lt;p&gt;As I helped solve one of your GET_LOCK() usages (for priority queues)
+I would like to know if the above is still relevant.&lt;/p&gt;
+&lt;p&gt;I did add one task regarding this:
+&lt;a href="http://askmonty.org/worklog/?tid=217"&gt;MWL#217&lt;/a&gt; Get list of active GET_LOCK&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; "Some large join take ages to execute. Probably due to tmp tables to disk."
+&amp;gt; 
+&amp;gt; Probably better of with Hash Joins? Show query examples, please. -- Monty
+&lt;/pre&gt;
+&lt;p&gt;Another issue could be if you are using blobs, in which case the join
+will use disk based tables. In this case the Aria storage engine for
+internal temp tables may help. Making MEMORY tables capable of handling
+BLOB's and big VARCHAR (&lt;a href="http://askmonty.org/worklog/?tid=203"&gt;MWL#203&lt;/a&gt;) may also help.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; PERFORMANCE_SCHEMA, MySQL 5.5 stuff plus addons. WL Item for better
+&amp;gt; EXPLAIN exists. -- Monty
+&amp;gt; 
+&amp;gt; Please link this item here. -- Kris
+&lt;/pre&gt;
+&lt;p&gt;The worklog items we have for explain are:&lt;/p&gt;
+&lt;ul start="1"&gt;&lt;li&gt;&lt;a href="http://askmonty.org/worklog/?tid=51"&gt;MWL#51&lt;/a&gt; Add EXPLAIN for UPDATE/DELETE
+&lt;/li&gt;&lt;li&gt;&lt;a href="http://askmonty.org/worklog/?tid=182"&gt;MWL#182&lt;/a&gt; Explain running statements
+&lt;/li&gt;&lt;li&gt;&lt;a href="http://askmonty.org/worklog/?tid=110"&gt;MWL#110&lt;/a&gt; Make EXPLAIN always show materialization separately (done)
+&lt;/li&gt;&lt;li&gt;&lt;a href="http://askmonty.org/worklog/?tid=111"&gt;MWL#111&lt;/a&gt; Make EXPLAIN show where subquery predicates are in the WHERE clause
+&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;I added an overview task &lt;a href="http://askmonty.org/worklog/?tid=218"&gt;MWL#218&lt;/a&gt; "Better EXPLAIN" to link to all
+EXPLAIN tasks.&lt;/p&gt;
+&lt;p&gt;I was of the impression that Igor had yet another explain task. I will
+ask him about this.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; "Better statistics for queries."
+&lt;/pre&gt;
+&lt;p&gt;Added &lt;a href="http://askmonty.org/worklog/?tid=219"&gt;MWL#219&lt;/a&gt; "Query statistics" that should handle most of the
+requested things.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Optimizer woes
+&amp;gt; 
+&amp;gt; "Unquoted numbers cause weird query plans." -- Ruud
+&amp;gt; 
+&amp;gt; Yes, they have to, thanks to numeric casting in SQL. This is not
+&amp;gt; really solveable. -- Monty
+&lt;/pre&gt;
+&lt;p&gt;An example:&lt;/p&gt;
+&lt;p&gt;SELECT * from t1 where character_key=10;&lt;/p&gt;
+&lt;p&gt;The above key would match the following strings:&lt;/p&gt;
+&lt;p&gt;'9.999990000000099999', '10', ' 10', '10a', '10.01' etc&lt;/p&gt;
+&lt;p&gt;In theory MariaDB could internally replace the above comparison of
+character key with:&lt;/p&gt;
+&lt;p&gt;where character_key&amp;gt;"" and character_key &amp;lt;CHAR(ASCII(32)+1) and
+character key &amp;gt;="9.99999" and character_key&amp;lt;= "10.5" and
+character_key=10;&lt;/p&gt;
+&lt;p&gt;The above would however only work reasonable for constants, not when
+comparing a integer key with a character key.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; In MongoDB (gasp!) it can be made such that a query that uses a full
+&amp;gt; scan instead of an index is an error.
+&lt;/pre&gt;
+&lt;p&gt;In MariaDB/MySQL you can use the following variables to catch bad queries:&lt;/p&gt;
+&lt;pre&gt;
+SQL_SAFE_UPDATES=1   ; Don't allow UPDATE/DELETE that doesn't use keys.
+SQL_SELECT_LIMIT=#   ; Automatic upper level limit for SELECT
+SQL_MAX_JOIN_SIZE=#  ; Give an error for queries that may touch many rows.
+&lt;/pre&gt;
+&lt;p&gt;Saying that table scan is not allowed is not practical as if there is tables
+with only a few rows a table scan is the best access method.&lt;/p&gt;
+&lt;p&gt;MySQL also can log queries not using an index in the slow log, which
+is good. But, can we make such implied casts somehow cause an error
+optionally, that would make that SQL easier to find in Development.&lt;/p&gt;
+&lt;pre&gt;
+If the above variables is not good enough, we could add a variable
+SQL_FORCE_INDEX_USAGE= 0 | 1 | 2
+
+0 is normal.
+1 would give an error if you are not specifying a usable index for all tables.
+  It would still allow MariaDB to do a table scan if that's the best method.
+2 Give an error for any SELECT's that would use a table scan on a normal
+  (not internal temporary table)
+&lt;/pre&gt;
+&lt;p&gt;I have recorded this in &lt;a href="http://askmonty.org/worklog/?tid=220"&gt;MWL#220&lt;/a&gt; Disallow table scan in SELECT&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Using memcached as a backend
+&lt;/pre&gt;
+&lt;p&gt;Can you please remind me of what this was ?&lt;/p&gt;
+&lt;pre&gt;
+a) Creating a storage engine that can access memcache
+b) Storing results of selects in memcache
+c) Access a storage engine with the memcache protocol (this is implemented
+   in InnoDB in MySQL 5.5)
+&lt;/pre&gt;
+&lt;p&gt;Something else?&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Moving ibd files physically
+&lt;/pre&gt;
+&lt;p&gt;Added&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; InnoDB should be able to do this natively, via ALTER TABLE ... DETACH/ATTACH.
+&lt;/pre&gt;
+&lt;p&gt;I added task:
+&lt;a href="http://askmonty.org/worklog/?tid=221"&gt;MWL#221&lt;/a&gt; "move InnoDB data files between servers"&lt;/p&gt;
+&lt;p&gt;But I don't have anyone available that could do this task just now.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; More data load issues
+&amp;gt; 
+&amp;gt; SELECT INTO OUTFILE LOCAL? We do have LOAD DATA INFILE LOCAL.
+&amp;gt; 
+&amp;gt; Yes, but as implemented it is a security risk, also messes with
+&amp;gt; firewall config due to the way it connects. -- Kris
+&amp;gt; Does not. -- Monty
+&amp;gt; 
+&amp;gt; Ok, I will write this up in a better way. -- Kris
+&lt;/pre&gt;
+&lt;p&gt;Please explain what the issue is.  LOAD DATA LOCAL INFILE works as follows:&lt;/p&gt;
+&lt;ul start="1"&gt;&lt;li&gt;The client sends the LOAD DATA LOCAL INFILE command to the server on the
+  connection.
+&lt;/li&gt;&lt;li&gt;The server sends instead of an 'ok' packet back a packet that contains
+  the requested file name.
+&lt;/li&gt;&lt;li&gt;The client recognizes this special packet and opens the file and sends the
+  data to the server trough the normal connection it uses to pass queries.
+&lt;/li&gt;&lt;/ul&gt;
+&lt;pre&gt;
+&amp;gt; About every second innodb config change requires a server restart to
+&amp;gt; be picked up. Please fix!
+&lt;/pre&gt;
+&lt;p&gt;&lt;a href="http://askmonty.org/worklog/?tid=222"&gt;MWL#222&lt;/a&gt; "Make all innodb variables changeable without server restart"&lt;/p&gt;
+&lt;p&gt;It would be nice to get a list of the variables that you find most
+important.  (As XtraDB is not our most core competence, fixing these
+takes a little more efforts than other tasks).&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; INFORMATION_SCHEMA
+&amp;gt; 
+&amp;gt; Faster I_S. Consider a server with one million tables. Make I_S not
+&amp;gt; suck on this.
+&lt;/pre&gt;
+&lt;p&gt;&lt;a href="http://askmonty.org/worklog/?tid=223"&gt;MWL#223&lt;/a&gt;  "Handle millions of tables (add data dictionary)"&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; GRANTS, ROLES, LDAP
+&amp;gt;
+&amp;gt; We would be able to specify users as roles (e.g. developer, webuser,
+&amp;gt; admin) and then assign a set of roles to users. One role is the
+&amp;gt; default role picked up on login, the others can be picked up and
+&amp;gt; dropped with a command.
+&lt;/pre&gt;
+&lt;p&gt;We have already tried to do this twice in MySQL Ab. Maybe its time to get it
+right this time.&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://askmonty.org/worklog/?tid=198"&gt;MWL#198&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I will ask Sergei to add some more meat for this worklog.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; The database should be able to work fine with one million users, one
+&amp;gt; million roles. Do not keep all data in memory, load the required
+&amp;gt; info on login into a cache (size changeable without restart). On
+&amp;gt; login, load the requested data, if it is not in cache already.
+&lt;/pre&gt;
+&lt;p&gt;I created:
+&lt;a href="http://askmonty.org/worklog/?tid=224"&gt;MWL#224&lt;/a&gt; "Handle millions of users &amp;amp; roles"&lt;/p&gt;
+&lt;p&gt;I will ask Sergei to do some estimates of this.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Views
+&amp;gt; 
+&amp;gt; Views are parsed for every access, never cached.
+&lt;/pre&gt;
+&lt;p&gt;MLW#225 Cache VIEW's&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; TABLESPACE
+&amp;gt; 
+&amp;gt; Proper tablespace management a la Oracle. -- SimonM
+&amp;gt; 
+&amp;gt; Why? Please state benefits, spec it. -- Monty
+&amp;gt; 
+&amp;gt; Simon replied:
+&amp;gt; 
+&amp;gt; My thoughts: We have database instances which have data ranging
+&amp;gt; from: 20G to 2TB and some archive db servers containing up to 40TB
+&amp;gt; of data target size.
+&lt;/pre&gt;
+&lt;p&gt;Thanks for a clear explanation. However adding true table spaces to
+InnoDB is probably one-two man years of works and not practical for us
+to do.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Tablespaces, if done right, can expose an API internally, that all
+&amp;gt; storage engines can use instead of talking to the filesystem
+&amp;gt; directly. That would unify the actual storage management of all
+&amp;gt; storage engines.
+&lt;/pre&gt;
+&lt;p&gt;The problem is that file systems will always evolve faster than any
+internal implementation of table spaces, so the benefit will not be
+that great.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Get rid of MyISAM in mysql.*
+&amp;gt; 
+&amp;gt; You should be able to use any general storage engine in mysql.*, e.g. InnoDB.
+&lt;/pre&gt;
+&lt;p&gt;&lt;a href="http://askmonty.org/worklog/?tid=226"&gt;MWL#226&lt;/a&gt;  "Replace the MYISAM mysql.* tables with Aria / XtraDB"&lt;/p&gt;
+&lt;p&gt;For this task the time estimate is very approximative. We would need to
+do some testing to be able to give a correct estimate.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Get rid of log tables in mysql.*
+&amp;gt;
+&amp;gt; The mysql.* schema is a config repository. It was a mistake to place
+&amp;gt; potential log tables in here, e.g. the general log and slow query
+&amp;gt; log tables.
+&lt;/pre&gt;
+&lt;p&gt;Yes, they are not good, but you don't need and should not use them
+(performance is terrible) so don't think this should be a big problem&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Timezone issues
+&amp;gt; 
+&amp;gt; Currently, timezones are part of the session, not part of the
+&amp;gt; column. Data types exist that take timezone data from the session
+&amp;gt; into account (broken!), other data types never do that.
+&lt;/pre&gt;
+&lt;p&gt;&lt;a href="http://askmonty.org/worklog/?tid=227"&gt;MWL#227&lt;/a&gt;  Add time types that contains timezone&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Dynamic ENUM
+&lt;/pre&gt;
+&lt;p&gt;&lt;a href="http://askmonty.org/worklog/?tid=228"&gt;MWL#228&lt;/a&gt; Dynamic ENUM&lt;/p&gt;
+&lt;p&gt;This is a very specific task for you. We can do it but I would
+prioritize this a lower than other more general tasks.&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; Multiple Buffer pool
+&amp;gt; 
+&amp;gt; Innodb multiple buffer pools, but size of each, and to which pool
+&amp;gt; will a page go configured by the dba (instead of random/hash as in
+&amp;gt; 5.5, at table level).
+&lt;/pre&gt;
+&lt;p&gt;I added &lt;a href="http://askmonty.org/worklog/?tid=229"&gt;MWL#229&lt;/a&gt;, but this is not a trivial task...&lt;/p&gt;
+&lt;pre&gt;
+&amp;gt; InnoDB temp tables
+&amp;gt;
+&amp;gt; Discussed internally: is it not possible to use &amp;gt; Innodb temporary
+&amp;gt; tables or similar for this perhaps in an explicit &amp;gt; tempdb (like
+&amp;gt; Sybase)?
+&lt;/pre&gt;
+&lt;p&gt;I assume the questions is one could use InnoDB temporary tables as internal
+temporary tables inside MariaDB?&lt;/p&gt;
+&lt;p&gt;This is not trivial to do because:&lt;/p&gt;
+&lt;p&gt;The interface for the internal temporary tables is a bit different than
+for normal tables (not much, but still).&lt;/p&gt;
+&lt;p&gt;The internal temporary tables can do things that not normal engines can:&lt;/p&gt;
+&lt;ul start="1"&gt;&lt;li&gt;Do unique over all fields (no key length limitations)
+&lt;/li&gt;&lt;li&gt;Handle NULL differently from normal context (in GROUP BY NULL are equal).
+&lt;/li&gt;&lt;li&gt;The memory for MEMORY tables is more dynamic;  It's allocated when needed
+  and freed for other things when not needed.
+&lt;/li&gt;&lt;li&gt;MEMORY has a low footprint (except for VARCHAR) and is optimized for
+  non-transactional usage.  I don't know how InnoDB temporary tables are
+  optimized for not transactional and not crash-safe usage.
+&lt;/li&gt;&lt;/ul&gt;
+&lt;pre&gt;
+&amp;gt; That is: tables are always temporary, cleaned up on server restart,
+&amp;gt; writes to tables do not need to be (should not be) flushed.  That
+&amp;gt; would make the MEMORY engine thing from above irrelevant.
+&lt;/pre&gt;
+&lt;p&gt;I think that it would be notable more work to use InnoDB for internal
+temporary tables than fixing the MEMORY engine. With InnoDB there is
+also a chance that at the end we would notice that it doesn't work...&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Michael Widenius</dc:creator><guid>https://mariadb.com/kb/en/mysql-wishlist-session-from-an-online-travel-agency/+comments/98</guid></item><item><title>Re: MySQL "Wishlist" Session from an online travel agency</title><link>https://mariadb.com/kb/en/mysql-wishlist-session-from-an-online-travel-agency/+comments/97</link><description>&lt;div style="margin-left:2em"&gt;&lt;p&gt; HIERARCHICAL CHECKSUMS (AUTOMATIC)&lt;/p&gt;
+&lt;p&gt; Mark a table (any engine) as USING_CHECKSUM.&lt;/p&gt;
+&lt;p&gt; The table will have a column which is automatically maintained, and each row contains a row checksum. The column may be visible, or there is a function to manually get to the checksum for a row. The checksum is maintained automatically, so when a row changes, the checksum is also being updated.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;This is what you get with Aria and MyISAM when you create the table with
+CHECKSUM=1.&lt;/p&gt;
+&lt;p&gt;The checksum is transactionally updated and CHECKSUM table is instant.&lt;/p&gt;
+&lt;p&gt;Doing this in InnoDB would be a *lot* of work.&lt;/p&gt;
+&lt;div style="margin-left:2em"&gt;&lt;p&gt; The checksums can be used for table content comparison for tools
+ such as mk-table-sync, speeding up the process considerably.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div style="margin-left:2em"&gt;&lt;p&gt; This could be sped up even more if the checksums are hierarchical,
+ that is, checksums for row-ranges, and ranges of row-ranges existed
+ as well in a treelike structure. Two tables are identical in content
+ if their toplevel checksums are identical. If their toplevel
+ checksums differ, digging downward in the tree can reveal all
+ differing rows very quickly.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;Nice idea, but for that to work it would have to be integrated deeply
+in a storage engine and I don't know of any storage engines that has
+anything similar.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Michael Widenius</dc:creator><guid>https://mariadb.com/kb/en/mysql-wishlist-session-from-an-online-travel-agency/+comments/97</guid></item><item><title>Re: MySQL "Wishlist" Session from an online travel agency</title><link>https://mariadb.com/kb/en/mysql-wishlist-session-from-an-online-travel-agency/+comments/90</link><description>&lt;p&gt;HIERARCHICAL CHECKSUMS (AUTOMATIC)&lt;/p&gt;
+&lt;p&gt;Mark a table (any engine) as USING_CHECKSUM.&lt;/p&gt;
+&lt;p&gt;The table will have a column which is automatically maintained, and each row contains a row checksum. The column may be visible, or there is a function to manually get to the checksum for a row. The checksum is maintained automatically, so when a row changes, the checksum is also being updated.&lt;/p&gt;
+&lt;p&gt;The checksums can be used for table content comparison for tools such as mk-table-sync, speeding up the process considerably.&lt;/p&gt;
+&lt;p&gt;This could be sped up even more if the checksums are hierarchical, that is, checksums for row-ranges, and ranges of row-ranges existed as well in a treelike structure. Two tables are identical in content if their toplevel checksums are identical. If their toplevel checksums differ, digging downward in the tree can reveal all differing rows very quickly.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Kristian Köhntopp</dc:creator><guid>https://mariadb.com/kb/en/mysql-wishlist-session-from-an-online-travel-agency/+comments/90</guid></item></channel></rss>

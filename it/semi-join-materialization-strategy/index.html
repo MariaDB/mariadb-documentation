@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>La strategia Semi-join Materialization - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="La strategia Semi-join Materialization" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/it/semi-join-materialization-strategy/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+La Semi-join Materialization è un tipo particolare di materializzazione delle subquery utilizzata per le subquery di tipo semi-join. In realtà comprende due strategie:
+Materi..." />
+
+    <meta name="description" content="
+La Semi-join Materialization è un tipo particolare di materializzazione delle subquery utilizzata per le subquery di tipo semi-join. In realtà comprende due strategie:
+Materi..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/it/semi-join-materialization-strategy/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/it/semi-join-materialization-strategy/" rel="nofollow">Accesso</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/it/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/it/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/it/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/it/mariadb-italiano/">MariaDB - Italiano</a>
+    
+
+    
+    » <a class="crumb" href="/kb/it/documentazione-di-mariadb/">Documentazione di MariaDB</a>
+    
+
+    
+    » <a class="crumb" href="/kb/it/ottimizzazione/">Ottimizzazione</a>
+    
+
+    
+    » <a class="crumb" href="/kb/it/lottimizzatore-delle-query/">L&#39;ottimizzatore delle query</a>
+    
+
+    
+    » <a class="crumb" href="/kb/it/strategie-di-ottimizzazione/">Strategie di ottimizzazione</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/it/semi-join-materialization-strategy/">La strategia Semi-join Materialization</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/it/">Pagina iniziale</a></li>
+                            
+                                
+                                    <li><a href="/kb/it/+questions/">Domande Aperte</a></li>
+                                
+                                <li><a href="/kb/it/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/it/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/it/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/it/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/it/semi-join-materialization-strategy/+history" rel="nofollow">Cronologia</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/it/semi-join-materialization-strategy/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/it/semi-join-materialization-strategy/+flag"
+                data-flag-url="/kb/it/semi-join-materialization-strategy/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/it/semi-join-materialization-strategy/+translate/">
+                Traduci</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Creato</dt>
+        <dd>
+
+<span class="datetime" title="2012-07-21 05:24">10 anni, 7 mesi ago</span></dd>
+
+        <dt>Modificato</dt>
+        <dd>
+
+<span class="datetime" title="2012-10-09 07:54">10 anni, 5 mesi ago</span></dd>
+
+        <dt>Tipo</dt>
+        <dd>article</dd>
+
+        <dt>Stato</dt>
+        <dd>active</dd>
+
+        <dt>Licenza</dt>
+        <dd>
+            
+                <a href="/kb/it/semi-join-materialization-strategy/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/it/semi-join-materialization-strategy/+history/feed/">
+            Cronologia</a>
+        </li>
+        <li><a href="/kb/it/semi-join-materialization-strategy/+comments/feed/">
+            Commenti</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/it/semi-join-materialization-strategy/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <ul>
+                
+                    <li><a href="/kb/it/semi-join-materialization-strategy/+image/sj-materialization1">sj-materialization1</a>
+                    </li>
+                
+            </ul>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+        
+
+<div class="well well-small box"><div><h5>Versioni Localizzate</h5></div><div>
+
+        <ul>
+            
+            <li><a href="/kb/en/semi-join-materialization-strategy/">Semi-join Materialization Strategy</a> [en]</li>
+            
+        </ul>
+        
+</div>
+</div>
+
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>La strategia Semi-join Materialization</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#lidea" title="L&#39;idea">L&#39;idea</a></li>
+
+    <li class=""><a href="#semi-join-materialization-in-azione" title="Semi-join materialization in azione">Semi-join materialization in azione</a>    <ol class="toc">
+
+        <li class=""><a href="#materialization-scan" title="Materialization-Scan">Materialization-Scan</a></li>
+
+        <li class=""><a href="#materialization-lookup" title="Materialization-Lookup">Materialization-Lookup</a>    </ol>
+</li>
+
+    <li class=""><a href="#subquery-con-raggruppamento" title="Subquery con raggruppamento">Subquery con raggruppamento</a></li>
+
+    <li class=""><a href="#riassunto" title="Riassunto">Riassunto</a> </ol>
+</li>
+</div>
+<p>La Semi-join Materialization è un tipo particolare di materializzazione delle subquery utilizzata per le <a href="http://kb.askmonty.org/it/ottimizzazioni-delle-semi-join/">subquery di tipo semi-join</a>. In realtà comprende due strategie:</p>
+<ul start="1"><li>Materializzazione/ricerca
+</li><li>Materializzazione/scansione
+</li></ul>
+<h2 class="anchored_heading" id="lidea">L'idea</h2>
+<p>Si consideri una query che trova i Paesi in Europa che contengono grandi città:</p>
+<pre class="fixed"><span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">Country</span> 
+<span class="k">where</span> <span class="n">Country</span><span class="p">.</span><span class="n">code</span> <span class="k">IN</span> <span class="p">(</span><span class="k">select</span> <span class="n">City</span><span class="p">.</span><span class="n">Country</span> 
+                       <span class="k">from</span> <span class="n">City</span> 
+                       <span class="k">where</span> <span class="n">City</span><span class="p">.</span><span class="n">Population</span> <span class="o">&gt;</span> <span class="mi">7</span><span class="o">*</span><span class="mi">1000</span><span class="o">*</span><span class="mi">1000</span><span class="p">)</span>
+      <span class="k">and</span> <span class="n">Country</span><span class="p">.</span><span class="n">continent</span><span class="o">=</span><span class="s1">&#39;Europe&#39;</span>
+</pre><p>La subquery non è correlata, quindi può essere eseguita indipendentemente dalla query esterna. L'idea della materializzazione delle semi-join consiste appunto nel materializzarle, popolare una tabella temporanea con i possibili valori del campo City.country e infine eseguire una join con gli Stati europei:</p>
+<p><img src="/kb/it/la-strategia-semi-join-materialization/+image/sj-materialization1" alt="sj-materialization1" title="sj-materialization1"></p>
+<p>La join può essere eseguita in due direzioni:</p>
+<ol start="1"><li>Dalla tabella materializzata agli Stati in Europa
+</li><li>Dagli Stati in Europa alla tabella materializzata
+</li></ol>
+<p>Il primo modo implica l'esecuzione di una scansione completa della tabella materializzata, perciò viene chiamato "Materialization-scan".</p>
+<p>Se si esegue una join da Countries alla tabella materializzata, il modo meno costoso per trovare una corrispondenza nella tabella materializzata è eseguire una ricerca sulla chiave primaria (ne ha una: è stata usata per eliminare i duplicati). Per questo motivo. questa strategia si chiama "Materialization-lookup".</p>
+<h2 class="anchored_heading" id="semi-join-materialization-in-azione">Semi-join materialization in azione</h2>
+<h3 class="anchored_heading" id="materialization-scan">Materialization-Scan</h3>
+<p>Se si cercano le città con una popolazione maggiore di 7 milioni, l'ottimizzatore usa la strategia Materialization-Scan, ed ecco il risultato di <code>EXPLAIN</code>:</p>
+<pre class="fixed"><span class="n">MariaDB</span> <span class="p">[</span><span class="n">world</span><span class="p">]</span><span class="o">&gt;</span> <span class="k">explain</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">Country</span> <span class="k">where</span> <span class="n">Country</span><span class="p">.</span><span class="n">code</span> <span class="k">IN</span> <span class="p">(</span><span class="k">select</span> <span class="n">City</span><span class="p">.</span><span class="n">Country</span> <span class="k">from</span> <span class="n">City</span> <span class="k">where</span>  <span class="n">City</span><span class="p">.</span><span class="n">Population</span> <span class="o">&gt;</span> <span class="mi">7</span><span class="o">*</span><span class="mi">1000</span><span class="o">*</span><span class="mi">1000</span><span class="p">);</span>
+<span class="o">+</span><span class="c1">----+--------------+-------------+--------+--------------------+------------+---------+--------------------+------+-----------------------+</span>
+<span class="o">|</span> <span class="n">id</span> <span class="o">|</span> <span class="n">select_type</span>  <span class="o">|</span> <span class="k">table</span>       <span class="o">|</span> <span class="k">type</span>   <span class="o">|</span> <span class="n">possible_keys</span>      <span class="o">|</span> <span class="k">key</span>        <span class="o">|</span> <span class="n">key_len</span> <span class="o">|</span> <span class="k">ref</span>                <span class="o">|</span> <span class="k">rows</span> <span class="o">|</span> <span class="n">Extra</span>                 <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+--------------+-------------+--------+--------------------+------------+---------+--------------------+------+-----------------------+</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">PRIMARY</span>      <span class="o">|</span> <span class="o">&lt;</span><span class="n">subquery2</span><span class="o">&gt;</span> <span class="o">|</span> <span class="k">ALL</span>    <span class="o">|</span> <span class="n">distinct_key</span>       <span class="o">|</span> <span class="k">NULL</span>       <span class="o">|</span> <span class="k">NULL</span>    <span class="o">|</span> <span class="k">NULL</span>               <span class="o">|</span>   <span class="mi">15</span> <span class="o">|</span>                       <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">PRIMARY</span>      <span class="o">|</span> <span class="n">Country</span>     <span class="o">|</span> <span class="n">eq_ref</span> <span class="o">|</span> <span class="k">PRIMARY</span>            <span class="o">|</span> <span class="k">PRIMARY</span>    <span class="o">|</span> <span class="mi">3</span>       <span class="o">|</span> <span class="n">world</span><span class="p">.</span><span class="n">City</span><span class="p">.</span><span class="n">Country</span> <span class="o">|</span>    <span class="mi">1</span> <span class="o">|</span>                       <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">2</span> <span class="o">|</span> <span class="n">MATERIALIZED</span> <span class="o">|</span> <span class="n">City</span>        <span class="o">|</span> <span class="n">range</span>  <span class="o">|</span> <span class="n">Population</span><span class="p">,</span><span class="n">Country</span> <span class="o">|</span> <span class="n">Population</span> <span class="o">|</span> <span class="mi">4</span>       <span class="o">|</span> <span class="k">NULL</span>               <span class="o">|</span>   <span class="mi">15</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">index</span> <span class="n">condition</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+--------------+-------------+--------+--------------------+------------+---------+--------------------+------+-----------------------+</span>
+<span class="mi">3</span> <span class="k">rows</span> <span class="k">in</span> <span class="k">set</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">01</span> <span class="n">sec</span><span class="p">)</span>
+</pre><p>Da qui si vede che:</p>
+<ul start="1"><li>Ci sono ancora due <code>SELECT</code>s (sono le colonne con <code class="fixed" style="white-space:pre-wrap">id=1</code> e <code class="fixed" style="white-space:pre-wrap">id=2</code>)
+</li><li>La seconda select (con <code>id=2</code>) ha <code class="fixed" style="white-space:pre-wrap">select_type=MATERIALIZED</code>. Ciò significa che viene eseguita e il suo risultato viene inserito in una tabella temporanea con un indice unico su tutte le colonne. Lo scopo di questo indice è impedire la presenza di record doppi.
+</li><li>La prima select ha ricevuto il nome di tabella <code class="fixed" style="white-space:pre-wrap">&amp;lt;subquery2&amp;gt;</code>. Essa è la tabella che si ottiene dalla materializzazione della select con <code>id=2</code>.
+</li></ul>
+<p>L'ottimizzatore sceglie di effettuare una scansione completa della tabella materializzata, perciò in questo esempio si usa la strategia Materialization-Scan.</p>
+<p>Per quanto riguarda il costo dell'esecuzione, verranno lette 15 righe dalla tabella City, scritte 15 righe nella tabella materializzata, che poi verranno lette (l'ottimizzatore presume che non ci siano duplicati) e infine 15 accessi eq_ref alla tabella Country. In totale, sono 45 letture e 15 inserimenti.</p>
+<p>Per comparare i due metodi, se si lancia <code>EXPLAIN</code> in MySQL, si ottiene quanto segue:</p>
+<pre class="fixed"><span class="n">MySQL</span> <span class="p">[</span><span class="n">world</span><span class="p">]</span><span class="o">&gt;</span> <span class="k">explain</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">Country</span> <span class="k">where</span> <span class="n">Country</span><span class="p">.</span><span class="n">code</span> <span class="k">IN</span> <span class="p">(</span><span class="k">select</span> <span class="n">City</span><span class="p">.</span><span class="n">Country</span> <span class="k">from</span> <span class="n">City</span> <span class="k">where</span>  <span class="n">City</span><span class="p">.</span><span class="n">Population</span> <span class="o">&gt;</span> <span class="mi">7</span><span class="o">*</span><span class="mi">1000</span><span class="o">*</span><span class="mi">1000</span><span class="p">);</span>
+<span class="o">+</span><span class="c1">----+--------------------+---------+-------+--------------------+------------+---------+------+------+------------------------------------+</span>
+<span class="o">|</span> <span class="n">id</span> <span class="o">|</span> <span class="n">select_type</span>        <span class="o">|</span> <span class="k">table</span>   <span class="o">|</span> <span class="k">type</span>  <span class="o">|</span> <span class="n">possible_keys</span>      <span class="o">|</span> <span class="k">key</span>        <span class="o">|</span> <span class="n">key_len</span> <span class="o">|</span> <span class="k">ref</span>  <span class="o">|</span> <span class="k">rows</span> <span class="o">|</span> <span class="n">Extra</span>                              <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+--------------------+---------+-------+--------------------+------------+---------+------+------+------------------------------------+</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">PRIMARY</span>            <span class="o">|</span> <span class="n">Country</span> <span class="o">|</span> <span class="k">ALL</span>   <span class="o">|</span> <span class="k">NULL</span>               <span class="o">|</span> <span class="k">NULL</span>       <span class="o">|</span> <span class="k">NULL</span>    <span class="o">|</span> <span class="k">NULL</span> <span class="o">|</span>  <span class="mi">239</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">where</span>                        <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">2</span> <span class="o">|</span> <span class="n">DEPENDENT</span> <span class="n">SUBQUERY</span> <span class="o">|</span> <span class="n">City</span>    <span class="o">|</span> <span class="n">range</span> <span class="o">|</span> <span class="n">Population</span><span class="p">,</span><span class="n">Country</span> <span class="o">|</span> <span class="n">Population</span> <span class="o">|</span> <span class="mi">4</span>       <span class="o">|</span> <span class="k">NULL</span> <span class="o">|</span>   <span class="mi">15</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">index</span> <span class="n">condition</span><span class="p">;</span> <span class="k">Using</span> <span class="k">where</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+--------------------+---------+-------+--------------------+------------+---------+------+------+------------------------------------+</span>
+</pre><p>Con questo piano, si effettuano <code>(239 + 239*15) = 3824</code> letture nelle tabelle.</p>
+<h3 class="anchored_heading" id="materialization-lookup">Materialization-Lookup</h3>
+<p>Si supponga di modificare leggermente la query e cercare gli Stati che hanno città con una popolazione superiore a un milione (invece di sette):</p>
+<pre class="fixed"><span class="n">MariaDB</span> <span class="p">[</span><span class="n">world</span><span class="p">]</span><span class="o">&gt;</span> <span class="k">explain</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">Country</span> <span class="k">where</span> <span class="n">Country</span><span class="p">.</span><span class="n">code</span> <span class="k">IN</span> <span class="p">(</span><span class="k">select</span> <span class="n">City</span><span class="p">.</span><span class="n">Country</span> <span class="k">from</span> <span class="n">City</span> <span class="k">where</span>  <span class="n">City</span><span class="p">.</span><span class="n">Population</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="o">*</span><span class="mi">1000</span><span class="o">*</span><span class="mi">1000</span><span class="p">)</span> <span class="p">;</span>
+<span class="o">+</span><span class="c1">----+--------------+-------------+--------+--------------------+--------------+---------+------+------+-----------------------+</span>
+<span class="o">|</span> <span class="n">id</span> <span class="o">|</span> <span class="n">select_type</span>  <span class="o">|</span> <span class="k">table</span>       <span class="o">|</span> <span class="k">type</span>   <span class="o">|</span> <span class="n">possible_keys</span>      <span class="o">|</span> <span class="k">key</span>          <span class="o">|</span> <span class="n">key_len</span> <span class="o">|</span> <span class="k">ref</span>  <span class="o">|</span> <span class="k">rows</span> <span class="o">|</span> <span class="n">Extra</span>                 <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+--------------+-------------+--------+--------------------+--------------+---------+------+------+-----------------------+</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">PRIMARY</span>      <span class="o">|</span> <span class="n">Country</span>     <span class="o">|</span> <span class="k">ALL</span>    <span class="o">|</span> <span class="k">PRIMARY</span>            <span class="o">|</span> <span class="k">NULL</span>         <span class="o">|</span> <span class="k">NULL</span>    <span class="o">|</span> <span class="k">NULL</span> <span class="o">|</span>  <span class="mi">239</span> <span class="o">|</span>                       <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">PRIMARY</span>      <span class="o">|</span> <span class="o">&lt;</span><span class="n">subquery2</span><span class="o">&gt;</span> <span class="o">|</span> <span class="n">eq_ref</span> <span class="o">|</span> <span class="n">distinct_key</span>       <span class="o">|</span> <span class="n">distinct_key</span> <span class="o">|</span> <span class="mi">3</span>       <span class="o">|</span> <span class="n">func</span> <span class="o">|</span>    <span class="mi">1</span> <span class="o">|</span>                       <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">2</span> <span class="o">|</span> <span class="n">MATERIALIZED</span> <span class="o">|</span> <span class="n">City</span>        <span class="o">|</span> <span class="n">range</span>  <span class="o">|</span> <span class="n">Population</span><span class="p">,</span><span class="n">Country</span> <span class="o">|</span> <span class="n">Population</span>   <span class="o">|</span> <span class="mi">4</span>       <span class="o">|</span> <span class="k">NULL</span> <span class="o">|</span>  <span class="mi">238</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">index</span> <span class="n">condition</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+--------------+-------------+--------+--------------------+--------------+---------+------+------+-----------------------+</span>
+<span class="mi">3</span> <span class="k">rows</span> <span class="k">in</span> <span class="k">set</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">00</span> <span class="n">sec</span><span class="p">)</span>
+</pre><p>L'output di <code>EXPLAIN</code> è simile a quello ottenuto per la Materialization-scan, con qualche eccezione:</p>
+<ul start="1"><li>L'accesso alla tabella <code class="fixed" style="white-space:pre-wrap">&amp;lt;subquery2&amp;gt;</code> avviene con il metodo <code>eq_ref</code>
+</li><li>L'accesso utilizza un indice chiamato <code class="fixed" style="white-space:pre-wrap">distinct_key</code>
+</li></ul>
+<p>Ciò significa che l'ottimizzatore pianifica di effettuare ricerche sull'indice nella tabella materializzata. In altre parole, sceglie di usare la strategia Materialization-lookup.</p>
+<p>In MySQL (o con <code class="fixed" style="white-space:pre-wrap">optimizer_switch='semijoin=off,materialization=off'</code>), <code>EXPLAIN</code> produce il seguente output:</p>
+<pre class="fixed"><span class="n">MySQL</span> <span class="p">[</span><span class="n">world</span><span class="p">]</span><span class="o">&gt;</span> <span class="k">explain</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">Country</span> <span class="k">where</span> <span class="n">Country</span><span class="p">.</span><span class="n">code</span> <span class="k">IN</span> <span class="p">(</span><span class="k">select</span> <span class="n">City</span><span class="p">.</span><span class="n">Country</span> <span class="k">from</span> <span class="n">City</span> <span class="k">where</span>  <span class="n">City</span><span class="p">.</span><span class="n">Population</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="o">*</span><span class="mi">1000</span><span class="o">*</span><span class="mi">1000</span><span class="p">)</span> <span class="p">;</span>
+<span class="o">+</span><span class="c1">----+--------------------+---------+----------------+--------------------+---------+---------+------+------+-------------+</span>
+<span class="o">|</span> <span class="n">id</span> <span class="o">|</span> <span class="n">select_type</span>        <span class="o">|</span> <span class="k">table</span>   <span class="o">|</span> <span class="k">type</span>           <span class="o">|</span> <span class="n">possible_keys</span>      <span class="o">|</span> <span class="k">key</span>     <span class="o">|</span> <span class="n">key_len</span> <span class="o">|</span> <span class="k">ref</span>  <span class="o">|</span> <span class="k">rows</span> <span class="o">|</span> <span class="n">Extra</span>       <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+--------------------+---------+----------------+--------------------+---------+---------+------+------+-------------+</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span> <span class="k">PRIMARY</span>            <span class="o">|</span> <span class="n">Country</span> <span class="o">|</span> <span class="k">ALL</span>            <span class="o">|</span> <span class="k">NULL</span>               <span class="o">|</span> <span class="k">NULL</span>    <span class="o">|</span> <span class="k">NULL</span>    <span class="o">|</span> <span class="k">NULL</span> <span class="o">|</span>  <span class="mi">239</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">where</span> <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">2</span> <span class="o">|</span> <span class="n">DEPENDENT</span> <span class="n">SUBQUERY</span> <span class="o">|</span> <span class="n">City</span>    <span class="o">|</span> <span class="n">index_subquery</span> <span class="o">|</span> <span class="n">Population</span><span class="p">,</span><span class="n">Country</span> <span class="o">|</span> <span class="n">Country</span> <span class="o">|</span> <span class="mi">3</span>       <span class="o">|</span> <span class="n">func</span> <span class="o">|</span>   <span class="mi">18</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">where</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+--------------------+---------+----------------+--------------------+---------+---------+------+------+-------------+</span>
+</pre><p>Come si vede, entrambi i piani eseguono una scansione completa della tabella <code>Country</code>. Come secondo passaggio, MariaDB riempe la tabella materializzata (238 righe lette dalla tabella City e scritte nella tabella temporanea) ed esegue una ricerca su indice univoco per ogni record nella tabella <code>Country</code>, quindi esegue 238 ricerche su indice univoco. In totale, il costo del secondo passaggio è di <code>(239+238) = 477</code> letture e <code>238</code> inserimenti (questi ultimi su tabella temporanea).</p>
+<p>Il piano di MySQL per il secondo passaggio consiste nel leggere 18 righe utilizzando un indice su <code>City.Country</code> per ogni record trovato nella tabella <code>Country</code>. Questa operazione ha un costo di <code>(18*239) = 4302</code> letture. Se la subquery venisse invocata meno volte, questo piano risulterebbe molto migliore rispetto alla materializzazione. Anche MariaDB ha la possibilità di scegliere questo piano (si veda <a href="http://kb.askmonty.org/it/la-strategia-firstmatch">la strategia FirstMatch</a>), ma in questo caso non l'ha fatto.</p>
+<h2 class="anchored_heading" id="subquery-con-raggruppamento">Subquery con raggruppamento</h2>
+<p>MariaDB è in grado di utilizzare la strategia di materializzazione delle Semi-join anche quando la subquery ha un raggruppamento (mentre le altre strategie per le semi-join non sono applicabili in questi casi).</p>
+<p>Ciò permette un'esecuzione efficiente delle query che cercano l'elemento migliore, o l'ultimo elemento, in un dato gruppo.</p>
+<p>Per esempio, ecco come cercare le città che hanno la popolazione più alta nel continente in cui si trovano:</p>
+<pre class="fixed"><span class="k">explain</span> 
+<span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">City</span> 
+<span class="k">where</span> <span class="n">City</span><span class="p">.</span><span class="n">Population</span> <span class="k">in</span> <span class="p">(</span><span class="k">select</span> <span class="k">max</span><span class="p">(</span><span class="n">City</span><span class="p">.</span><span class="n">Population</span><span class="p">)</span> <span class="k">from</span> <span class="n">City</span><span class="p">,</span> <span class="n">Country</span> 
+                          <span class="k">where</span> <span class="n">City</span><span class="p">.</span><span class="n">Country</span><span class="o">=</span><span class="n">Country</span><span class="p">.</span><span class="n">Code</span> 
+                          <span class="k">group</span> <span class="k">by</span> <span class="n">Continent</span><span class="p">)</span>
+<span class="o">+</span><span class="c1">------+--------------+-------------+------+---------------+------------+---------+----------------------------------+------+-----------------+</span>
+<span class="o">|</span> <span class="n">id</span>   <span class="o">|</span> <span class="n">select_type</span>  <span class="o">|</span> <span class="k">table</span>       <span class="o">|</span> <span class="k">type</span> <span class="o">|</span> <span class="n">possible_keys</span> <span class="o">|</span> <span class="k">key</span>        <span class="o">|</span> <span class="n">key_len</span> <span class="o">|</span> <span class="k">ref</span>                              <span class="o">|</span> <span class="k">rows</span> <span class="o">|</span> <span class="n">Extra</span>           <span class="o">|</span>
+<span class="o">+</span><span class="c1">------+--------------+-------------+------+---------------+------------+---------+----------------------------------+------+-----------------+</span>
+<span class="o">|</span>    <span class="mi">1</span> <span class="o">|</span> <span class="k">PRIMARY</span>      <span class="o">|</span> <span class="o">&lt;</span><span class="n">subquery2</span><span class="o">&gt;</span> <span class="o">|</span> <span class="k">ALL</span>  <span class="o">|</span> <span class="n">distinct_key</span>  <span class="o">|</span> <span class="k">NULL</span>       <span class="o">|</span> <span class="k">NULL</span>    <span class="o">|</span> <span class="k">NULL</span>                             <span class="o">|</span>  <span class="mi">239</span> <span class="o">|</span>                 <span class="o">|</span>
+<span class="o">|</span>    <span class="mi">1</span> <span class="o">|</span> <span class="k">PRIMARY</span>      <span class="o">|</span> <span class="n">City</span>        <span class="o">|</span> <span class="k">ref</span>  <span class="o">|</span> <span class="n">Population</span>    <span class="o">|</span> <span class="n">Population</span> <span class="o">|</span> <span class="mi">4</span>       <span class="o">|</span> <span class="o">&lt;</span><span class="n">subquery2</span><span class="o">&gt;</span><span class="p">.</span><span class="k">max</span><span class="p">(</span><span class="n">City</span><span class="p">.</span><span class="n">Population</span><span class="p">)</span> <span class="o">|</span>    <span class="mi">1</span> <span class="o">|</span>                 <span class="o">|</span>
+<span class="o">|</span>    <span class="mi">2</span> <span class="o">|</span> <span class="n">MATERIALIZED</span> <span class="o">|</span> <span class="n">Country</span>     <span class="o">|</span> <span class="k">ALL</span>  <span class="o">|</span> <span class="k">PRIMARY</span>       <span class="o">|</span> <span class="k">NULL</span>       <span class="o">|</span> <span class="k">NULL</span>    <span class="o">|</span> <span class="k">NULL</span>                             <span class="o">|</span>  <span class="mi">239</span> <span class="o">|</span> <span class="k">Using</span> <span class="k">temporary</span> <span class="o">|</span>
+<span class="o">|</span>    <span class="mi">2</span> <span class="o">|</span> <span class="n">MATERIALIZED</span> <span class="o">|</span> <span class="n">City</span>        <span class="o">|</span> <span class="k">ref</span>  <span class="o">|</span> <span class="n">Country</span>       <span class="o">|</span> <span class="n">Country</span>    <span class="o">|</span> <span class="mi">3</span>       <span class="o">|</span> <span class="n">world</span><span class="p">.</span><span class="n">Country</span><span class="p">.</span><span class="n">Code</span>               <span class="o">|</span>   <span class="mi">18</span> <span class="o">|</span>                 <span class="o">|</span>
+<span class="o">+</span><span class="c1">------+--------------+-------------+------+---------------+------------+---------+----------------------------------+------+-----------------+</span>
+<span class="mi">4</span> <span class="k">rows</span> <span class="k">in</span> <span class="k">set</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">00</span> <span class="n">sec</span><span class="p">)</span>
+</pre><p>Le città sono queste:</p>
+<pre class="fixed">+------+-------------------+---------+------------+
+| ID   | Name              | Country | Population |
++------+-------------------+---------+------------+
+| 1024 | Mumbai (Bombay)   | IND     |   10500000 |
+| 3580 | Moscow            | RUS     |    8389200 |
+| 2454 | Macao             | MAC     |     437500 |
+|  608 | Cairo             | EGY     |    6789479 |
+| 2515 | Ciudad de México | MEX     |    8591309 |
+|  206 | São Paulo        | BRA     |    9968485 |
+|  130 | Sydney            | AUS     |    3276207 |
++------+-------------------+---------+------------+
+</pre><h2 class="anchored_heading" id="riassunto">Riassunto</h2>
+<p>Materializzazione delle semi-join</p>
+<ul start="1"><li>Può essere usata per le subquery IN non correlate. La subquery può utilizzare il raggruppamento e/o le funzioni aggreganti.
+</li><li>Appare in <code>EXPLAIN</code> come <code class="fixed" style="white-space:pre-wrap">type=MATERIALIZED</code> per la subquery, e una riga contenente <code class="fixed" style="white-space:pre-wrap">table=&lt;subqueryN&gt;</code> nella query madre.
+</li><li>E' abilitata quando si hanno <code class="fixed" style="white-space:pre-wrap">materialization=on</code> e <code class="fixed" style="white-space:pre-wrap">semijoin=on</code> in <a href="http://kb.askmonty.org/it/optimizer_switch-in-mariadb-53/">@@optimizer_switch</a>.
+</li><li>Condivide il flag <code class="fixed" style="white-space:pre-wrap">materialization=on|off</code> con <a href="http://kb.askmonty.org/it/ottimizzazioni-delle-subquery-non-semi-join/#la-materializzazione-per-le-subquery-in-non-correlate">la materializzazione delle semi-join</a>.
+</li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/it/semi-join-materialization-strategy/+subscriptions/add"
+                 data-unsubscribe-url="/kb/it/semi-join-materialization-strategy/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/it/loosescan-strategy/">
+                        ← La strategia LooseScan
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/it/strategie-di-ottimizzazione/">
+                        ↑ Strategie di ottimizzazione ↑
+                    </a>
+                    </li>
+                
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Commenti</h2>
+        
+    
+    <div id="comments" data-node-id="2865" data-comments-url="/kb/it/semi-join-materialization-strategy/+comments"
+         data-reply-url="/kb/it/semi-join-materialization-strategy/comments/post/">
+        Sto caricando i commenti......
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/it/strategie-di-ottimizzazione/">
+                    ↑ Strategie di ottimizzazione ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/it/duplicateweedout-strategy/">
+                            
+                            La strategia DuplicateWeedout
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/la-strategia-firstmatch/">
+                            
+                            La strategia FirstMatch
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/it/loosescan-strategy/">
+                            
+                            La strategia LooseScan
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>La strategia Semi-join Materialization</span>
+                        
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

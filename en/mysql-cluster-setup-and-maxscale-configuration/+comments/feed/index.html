@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for:  MySQL Cluster setup and MaxScale configuration</title><link>https://mariadb.com/kb/en/mysql-cluster-setup-and-maxscale-configuration/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/mysql-cluster-setup-and-maxscale-configuration/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 10 Mar 2023 13:42:06 +0000</lastBuildDate><item><title>Re:  MySQL Cluster setup and MaxScale configuration</title><link>https://mariadb.com/kb/en/mysql-cluster-setup-and-maxscale-configuration/+comments/2748</link><description>&lt;p&gt;Thanks, I added this bug at: &lt;a href="https://jira.mariadb.org/browse/MXS-1131"&gt;https://jira.mariadb.org/browse/MXS-1131&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/"> </dc:creator><guid>https://mariadb.com/kb/en/mysql-cluster-setup-and-maxscale-configuration/+comments/2748</guid></item><item><title>Re:  MySQL Cluster setup and MaxScale configuration</title><link>https://mariadb.com/kb/en/mysql-cluster-setup-and-maxscale-configuration/+comments/2747</link><description>&lt;p&gt;Check the error logs for any errors that could explain why the socket file was not created. If a simple restart of MaxScale doesn't fix it, I'd recommend filing a bug at &lt;a href="https://jira.mariadb.org/projects/MXS"&gt;jira.mariadb.org&lt;/a&gt;.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Markus Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/mysql-cluster-setup-and-maxscale-configuration/+comments/2747</guid></item><item><title>Re:  MySQL Cluster setup and MaxScale configuration</title><link>https://mariadb.com/kb/en/mysql-cluster-setup-and-maxscale-configuration/+comments/2746</link><description>&lt;p&gt;This is my maxscale config:&lt;/p&gt;
+&lt;pre class="fixed"&gt;# cat /etc/maxscale.cnf
+[Cluster Service]
+type=service
+router=readconnroute
+router_options=ndb
+servers=server1,server2
+user=test
+passwd=test
+version_string=5.6.28-CLUSTER
+
+[Cluster Listener]
+type=listener
+service=Cluster Service
+protocol=MySQLClient
+port=4906
+
+[NDB Cluster Monitor]
+type=monitor
+module=ndbclustermon
+servers=server1,server2
+user=monitor
+passwd=monitor
+monitor_interval=8000
+
+[server1]
+
+#SQL node1
+type=server
+address=127.0.0.1
+port=3306
+protocol=MySQLBackend
+
+[server2]
+#SQL node2
+type=server
+address=192.168.84.86
+port=3306
+protocol=MySQLBackend
+
+[MaxAdmin]
+type=service
+router=cli
+
+[MaxAdmin Unix Listener]
+type=listener
+service=MaxAdmin
+protocol=maxscaled
+socket=default
+ &lt;/pre&gt;&lt;p&gt;But it is still error: &lt;/p&gt;
+&lt;pre class="fixed"&gt;# maxadmin
+Unable to connect to MaxScale at /tmp/maxadmin.sock: No such file or directory
+ &lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/"> </dc:creator><guid>https://mariadb.com/kb/en/mysql-cluster-setup-and-maxscale-configuration/+comments/2746</guid></item><item><title>Re:  MySQL Cluster setup and MaxScale configuration</title><link>https://mariadb.com/kb/en/mysql-cluster-setup-and-maxscale-configuration/+comments/2745</link><description>&lt;p&gt;MaxScale 2.0 introduced UNIX domain sockets for MaxAdmin as the default method of connecting. Instead of using &lt;code&gt;port=6603&lt;/code&gt; you can use &lt;code&gt;socket=default&lt;/code&gt; to configure the cli service to create a socket instead of a network port. For more details, refer to the &lt;a href="https://mariadb.com/kb/en/mariadb-enterprise/reference-maxadmin/"&gt;MaxAdmin&lt;/a&gt; documentation.&lt;/p&gt;
+&lt;p&gt;You can use the network interface by defining at least one network option for maxadmin: &lt;code&gt;maxadmin -P 6603 -p&lt;/code&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Markus Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/mysql-cluster-setup-and-maxscale-configuration/+comments/2745</guid></item><item><title>Re:  MySQL Cluster setup and MaxScale configuration</title><link>https://mariadb.com/kb/en/mysql-cluster-setup-and-maxscale-configuration/+comments/2744</link><description>&lt;p&gt;Pls help me for the error "Unable to connect to MaxScale at /tmp/maxadmin.sock"
+&lt;code class="unknown_macro"&gt;&amp;lt;&amp;lt;&lt;span class="macro_name"&gt;code&lt;/span&gt;&lt;span class="macro_arg_string"&gt;&lt;/span&gt;&amp;gt;&amp;gt;&lt;/code&gt;]#  ./maxscale -c ../
+Info : MaxScale will be run in the terminal process.
+Configuration file : /etc/maxscale.cnf
+Log directory      : /var/log/maxscale
+Data directory     : /var/lib/maxscale
+Module directory   : /usr/lib64/maxscale
+Service cache      : /var/cache/maxscale&lt;/p&gt;
+&lt;p&gt;2017-02-07 14:45:21   notice : MariaDB MaxScale 2.0.4 started
+2017-02-07 14:45:21   notice : MaxScale is running in process 3351
+2017-02-07 14:45:21   notice : Configuration file: /etc/maxscale.cnf
+2017-02-07 14:45:21   notice : Log directory: /var/log/maxscale
+2017-02-07 14:45:21   notice : Data directory: /var/lib/maxscale
+2017-02-07 14:45:21   notice : Module directory: /usr/lib64/maxscale
+2017-02-07 14:45:21   notice : Service cache: /var/cache/maxscale
+2017-02-07 14:45:21   notice : Initialise readconnroute router module V1.1.0.
+2017-02-07 14:45:21   notice : Loaded module readconnroute: V1.1.0 from /usr/lib64/maxscale/libreadconnroute.so
+2017-02-07 14:45:21   notice : Initialise the MySQL Cluster Monitor module V2.1.0.
+2017-02-07 14:45:21   notice : Loaded module ndbclustermon: V2.1.0 from /usr/lib64/maxscale/libndbclustermon.so
+2017-02-07 14:45:21   notice : No query classifier specified, using default 'qc_sqlite'.
+2017-02-07 14:45:21   notice : Loaded module qc_sqlite: V1.0.0 from /usr/lib64/maxscale/libqc_sqlite.so
+2017-02-07 14:45:21   notice : Configuration was successfully verified.&lt;/p&gt;
+&lt;ol start="1"&gt;&lt;li&gt;maxadmin
+Unable to connect to MaxScale at /tmp/maxadmin.sock: No such file or directory&amp;lt;&amp;lt;/code&amp;gt;&amp;gt;&lt;/li&gt;&lt;/ol&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/"> </dc:creator><guid>https://mariadb.com/kb/en/mysql-cluster-setup-and-maxscale-configuration/+comments/2744</guid></item></channel></rss>

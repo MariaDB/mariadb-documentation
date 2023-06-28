@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Pagination Optimization - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Pagination Optimization" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/pagination-optimization/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="Pagination, not with OFFSET, LIMIT" />
+
+    <meta name="description" content="Pagination, not with OFFSET, LIMIT" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/pagination-optimization/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/pagination-optimization/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/replication-cluster-multi-master/">High Availability &amp; Performance Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/optimization-and-tuning/">Optimization and Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/query-optimizations/">Query Optimizations</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/pagination-optimization/">Pagination Optimization</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/pagination-optimization/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/pagination-optimization/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/pagination-optimization/+flag"
+                data-flag-url="/kb/en/pagination-optimization/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/pagination-optimization/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2016-06-13 19:03">6 years, 9 months ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2017-10-12 09:15">5 years, 5 months ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/pagination-optimization/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/pagination-optimization/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/pagination-optimization/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/pagination-optimization/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Pagination Optimization</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#the-desire" title="The Desire">The Desire</a></li>
+
+    <li class=""><a href="#the-problem" title="The Problem">The Problem</a></li>
+
+    <li class=""><a href="#other-bugs" title="Other Bugs">Other Bugs</a></li>
+
+    <li class=""><a href="#what-to-do" title="What to Do?">What to Do?</a></li>
+
+    <li class=""><a href="#implementation-getting-rid-of-offset" title="Implementation -- Getting Rid of OFFSET">Implementation -- Getting Rid of OFFSET</a></li>
+
+    <li class=""><a href="#implementation-left-off" title="Implementation -- &quot;Left Off&quot;">Implementation -- &quot;Left Off&quot;</a></li>
+
+    <li class=""><a href="#implementation-links-beyond-next" title="Implementation -- Links Beyond [Next]">Implementation -- Links Beyond [Next]</a></li>
+
+    <li class=""><a href="#a-reasonable-set-of-links" title="A Reasonable Set of Links">A Reasonable Set of Links</a></li>
+
+    <li class=""><a href="#why-it-works" title="Why it Works">Why it Works</a></li>
+
+    <li class=""><a href="#items-11-20-out-of-12345" title="&quot;Items 11-20 Out of 12345&quot;">&quot;Items 11-20 Out of 12345&quot;</a></li>
+
+    <li class=""><a href="#complex-where-or-join" title="Complex WHERE, or JOIN">Complex WHERE, or JOIN</a></li>
+
+    <li class=""><a href="#how-much-faster" title="How Much Faster?">How Much Faster?</a></li>
+
+    <li class=""><a href="#what-is-lost" title="What is Lost">What is Lost</a></li>
+
+    <li class=""><a href="#postlog" title="Postlog">Postlog</a></li>
+
+    <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
+</li>
+</div>
+<h2 class="anchored_heading" id="the-desire">The Desire</h2>
+<p>You have a website with news articles, or a blog, or some other thing with a list of things that might be too long for a single page. So, you decide to break it into chunks of, say, 10 items and provide a [Next] button to go the next "page".</p>
+<p>You spot <a href="/kb/en/limit/">OFFSET and LIMIT</a> in MariaDB and decide that is the obvious way to do it.</p>
+<pre class="fixed">    SELECT  *
+        FROM  items
+        WHERE  messy_filtering
+        ORDER BY  date DESC
+        OFFSET  $M  LIMIT $N
+</pre><p>Note that the problem requirement needs a [Next] link on each page so that the user can 'page' through the data. He does not really need "GoTo Page #". Jump to the [First] or [Last] page may be useful.</p>
+<h2 class="anchored_heading" id="the-problem">The Problem</h2>
+<p>All is well -- until you have 50,000 items in a list. And someone tries to walk through all 5000 pages. That 'someone' could be a search engine crawler.</p>
+<p>Where's the problem? Performance. Your web page is doing "SELECT ... OFFSET 49990 LIMIT 10" (or the equivalent "LIMIT 49990,10"). MariaDB has to find all 50,000 rows, step over the first 49,990, then deliver the 10 for that distant page.</p>
+<p>If it is a crawler ('spider') that read all the pages, then it actually touched about 125,000,000 items to read all 5,000 pages.</p>
+<p>Reading the entire table, just to get a distant page, can be so much I/O that it can cause timeouts on the web page. Or it can interfere with other activity, causing other things to be slow.</p>
+<h2 class="anchored_heading" id="other-bugs">Other Bugs</h2>
+<p>In addition to a performance problem, ...</p>
+<ul><li>If an item is inserted or deleted between the time you look at one page and the next, you could miss an item, or see an item duplicated.
+</li><li>The pages are not easily bookmarked or sent to someone else because the contents shift over time.
+</li><li>The WHERE clause and the <a href="/kb/en/order-by/">ORDER BY</a> may even make it so that all 50,000 items have to be read, just to find the 10 items for page 1!
+</li></ul>
+<h2 class="anchored_heading" id="what-to-do">What to Do?</h2>
+<p>Hardware? No, that's just a bandaid. The data will continue to grow and even the new hardware won't handle it.</p>
+<p>Better INDEX? No. You must get away from reading the entire table to get the 5000th page.</p>
+<p>Build another table saying where the pages start? Get real! That would be a maintenance nightmare, and expensive.</p>
+<p>Bottom line: Don't use OFFSET; instead remember where you "left off".</p>
+<pre class="fixed">First page (latest 10 items):
+    SELECT ... WHERE ... ORDER BY id DESC LIMIT 10
+Next page (second 10):
+    SELECT ... WHERE ... AND id &lt; $left_off ORDER BY id DESC LIMIT 10
+</pre><div style="margin-left:2em"></div>
+<p>With INDEX(id), this suddenly becomes very efficient.</p>
+<h2 class="anchored_heading" id="implementation-getting-rid-of-offset">Implementation -- Getting Rid of OFFSET</h2>
+<p>You are probably doing this now: <a href="/kb/en/order-by/">ORDER BY</a> datetime DESC LIMIT 49990,10 You probably have some unique id on the table. This can probably be used for "left off".</p>
+<p>Currently, the [Next] button probably has a url something like ?topic=xyz&amp;page=4999&amp;limit=10 The 'topic' (or 'tag' or 'provider' or 'user' or etc) says which set of items are being displayed. The product of page*limit gives the OFFSET. (The "limit=10" might be in the url, or might be hard-coded; this choice is not relevant to this discussion.)</p>
+<p>The new variant would be ?topic=xyz&amp;id=12345&amp;limit=10. (Note: the 12345 is not computable from 4999.) By using INDEX(topic, id) you can efficiently say</p>
+<pre class="fixed">    WHERE topic = 'xyz'
+      AND id &gt;= 1234
+    ORDER BY id
+    LIMIT 10
+</pre><p>That will hit only 10 rows. This is a huge improvement for later pages. Now for more details.</p>
+<h2 class="anchored_heading" id="implementation-left-off">Implementation -- "Left Off"</h2>
+<p>What if there are exactly 10 rows left when you display the current page? It would make the UI nice if you grayed out the [Next] button, wouldn't it. (Or you could suppress the button all together.)</p>
+<p>How to do that? Instead of LIMIT 10, use LIMIT 11. That will give you the 10 items needed for the current page, plus an indication of whether there is another page. And the id for that page.</p>
+<p>So, take the 11th id for the [Next] button: &lt;a href=?topic=xyz&amp;id=$id11&amp;limit=10&gt;Next&lt;/a&gt;</p>
+<h2 class="anchored_heading" id="implementation-links-beyond-next">Implementation -- Links Beyond [Next]</h2>
+<p>Let's extend the 11 trick to also find the next 5 pages and build links for them.</p>
+<p>Plan A is to say LIMIT 51. If you are on page 12, that would give you links for pages 13 (using 11th id) through pages 17 (51st).</p>
+<p>Plan B is to do two queries, one to get the 10 items for the current page, the other to get the next 41 ids (LIMIT 10, 41) for the next 5 pages.</p>
+<p>Which plan to pick? It depends on many things, so benchmark.</p>
+<h2 class="anchored_heading" id="a-reasonable-set-of-links">A Reasonable Set of Links</h2>
+<p>Reaching forward and backward by 5 pages is not too much work. It would take two separate queries to find the ids in both directions. Also, having links that take you to the First and Last pages would be easy to do. No id is needed; they can be something like</p>
+<pre class="fixed">    &lt;a href=?topic=xyz&amp;id=FIRST&amp;limit=10&gt;First&lt;/a&gt;
+    &lt;a href=?topic=xyz&amp;id=LAST&amp;limit=10&gt;Last&lt;/a&gt;
+</pre><p>The UI would recognize those, then generate a SELECT with something like</p>
+<pre class="fixed">    WHERE topic = 'xyz'
+    ORDER BY id ASC -- ASC for First; DESC for Last
+    LIMIT 10
+</pre><p>The last items would be delivered in reverse order. Either deal with that in the UI, or make the SELECT more complex:</p>
+<pre class="fixed">    ( SELECT ...
+        WHERE topic = 'xyz'
+        ORDER BY id DESC
+        LIMIT 10
+    ) ORDER BY id ASC
+</pre><p>Let's say you are on page 12 of lots of pages. It could show these links:</p>
+<pre class="fixed">    [First] ... [7] [8] [9] [10] [11] 12 [13] [14] [15] [16] [17] ... [Last]
+</pre><p>where the ellipsis is really used. Some end cases:</p>
+<pre class="fixed">Page one of three:
+    First [2] [3]
+Page one of many:
+    First [2] [3] [4] [5] ... [Last]
+Page two of many:
+    [First] 2 [3] [4] [5] ... [Last]
+If you jump to the Last page, you don't know what page number it is.
+So, the best you can do is perhaps:
+    [First] ... [Prev] Last
+</pre><h2 class="anchored_heading" id="why-it-works">Why it Works</h2>
+<p>The goal is to touch only the relevant rows, not all the rows leading up to the desired rows. This is nicely achieved, except for building links to the "next 5 pages". That may (or may not) be efficiently resolved by the simple SELECT id, discussed above. The reason that may not be efficient deals with the WHERE clause.</p>
+<p>Let's discuss the optimal and suboptimal indexes.</p>
+<p>For this discussion, I am assuming</p>
+<ul><li>The datetime field might have duplicates -- this can cause troubles
+</li><li>The id field is unique
+</li><li>The id field is close enough to datetime-ordered to be used instead of datetime.
+</li></ul>
+<p>Very efficient -- it does all the work in the index:</p>
+<pre class="fixed">    INDEX(topic, id)
+    WHERE topic = 'xyz'
+      AND id &gt;= 876
+    ORDER BY id ASC
+    LIMIT 10,41
+&lt;&lt;/code??
+That will hit 51 consecutive index entries, 0 data rows.
+
+Inefficient -- it must reach into the data:
+&lt;&lt;code&gt;&gt;
+    INDEX(topic, id)
+    WHERE topic = 'xyz'
+      AND id &gt;= 876
+      AND is_deleted = 0
+    ORDER BY id ASC
+    LIMIT 10,41
+</pre><p>That will hit at least 51 consecutive index entries, plus at least 51 _randomly_ located data rows.</p>
+<p>Efficient -- back to the previous degree of efficiency:</p>
+<pre class="fixed">    INDEX(topic, is_deleted, id)
+    WHERE topic = 'xyz'
+      AND id &gt;= 876
+      AND is_deleted = 0
+    ORDER BY id ASC
+    LIMIT 10,41
+</pre><p>Note how all the '=' parts of the WHERE come first; then comes both the '&gt;=' and 'ORDER BY', both on id. This means that the INDEX can be used for all the WHERE, plus the ORDER BY.</p>
+<h2 class="anchored_heading" id="items-11-20-out-of-12345">"Items 11-20 Out of 12345"</h2>
+<p>You lose the "out of" except when the count is small. Instead, say something like</p>
+<pre class="fixed">    Items 11-20 out of Many
+</pre><p>Alternatively... Only a few searches will have too many items to count. Keep another table with the search criteria and a count. This count can be computed daily (or hourly) by some background script. When discovering that the topic is a busy one, look it up in the table to get</p>
+<pre class="fixed">    Items 11-20 out of about 49,000
+</pre><p>The background script would round the count off.</p>
+<p>The quick way to get an _estimated_ number of rows for an InnoDB table is</p>
+<pre class="fixed">    SELECT  table_rows
+        FROM  information_schema.TABLES
+        WHERE  TABLE_SCHEMA = 'database_name'
+          AND  TABLE_NAME = 'table_name'
+</pre><p>However, it does not allow for the WHERE clause that you probably have.</p>
+<h2 class="anchored_heading" id="complex-where-or-join">Complex WHERE, or JOIN</h2>
+<p>If the search criteria cannot be confined to an INDEX in a single table, this technique is doomed. I have another paper that discusses "Lists", which solves that (which extra development work), and even improves on what is discussed here.</p>
+<h2 class="anchored_heading" id="how-much-faster">How Much Faster?</h2>
+<p>This depends on</p>
+<ul><li>How many rows (total)
+</li><li>Whether the WHERE clause prevented the efficient use of the ORDER BY
+</li><li>Whether the data is bigger than the cache.
+This last one kicks in when building one page requires reading more data from disk can be cached. At that point, the problem goes from being CPU-bound to being I/O-bound. This is likely to suddenly slow down the loading of a pages by a factor of 10.
+</li></ul>
+<h2 class="anchored_heading" id="what-is-lost">What is Lost</h2>
+<ul><li>Cannot "jump to Page N", for an arbitrary N. Why do you want to do that?
+</li><li>Walking backward from the end does not know the page numbers.
+</li><li>The code is more complex.
+</li></ul>
+<h2 class="anchored_heading" id="postlog">Postlog</h2>
+<p>Designed about 2007; posted 2012.</p>
+<h2 class="anchored_heading" id="see-also">See Also</h2>
+<ul><li><a href="http://stackoverflow.com/questions/31533414/filtering-large-db-record-grouped-by-a-column">A forum discussion</a>
+</li><li><a href="http://use-the-index-luke.com/no-offset">Luke calls it "seek method" or "keyset pagination"</a>
+</li><li><a href="http://use-the-index-luke.com/sql/partial-results/fetch-next-page">More by Luke</a>
+</li></ul>
+<p>Rick James graciously allowed us to use this article in the Knowledge Base.</p>
+<p><a href="http://mysql.rjweb.org/">Rick James' site</a> has other useful tips, how-tos,
+optimizations, and debugging tips.</p>
+
+<p>Original source: <a href="http://mysql.rjweb.org/doc.php/pagination">http://mysql.rjweb.org/doc.php/pagination</a></p>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/pagination-optimization/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/pagination-optimization/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/optimizing-for-latest-news-style-queries/">
+                        ← Optimizing for &#34;Latest News&#34;-style Queries
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/query-optimizations/">
+                        ↑ Query Optimizations ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/pivoting-in-mariadb/">
+                        Pivoting in MariaDB →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="5724" data-comments-url="/kb/en/pagination-optimization/+comments"
+         data-reply-url="/kb/en/pagination-optimization/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/query-optimizations/">
+                    ↑ Query Optimizations ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/index-hints-how-to-force-query-plans/">
+                            
+                            Index Hints: How to Force Query Plans
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/subquery-optimizations/">
+                            
+                            Subquery Optimizations
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/optimization-strategies/">
+                            
+                            Optimization Strategies
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/optimizations-for-derived-tables/">
+                            
+                            Optimizations for Derived Tables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/table-elimination/">
+                            
+                            Table Elimination
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/statistics-for-optimizing-queries/">
+                            
+                            Statistics for Optimizing Queries
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/filesort-with-small-limit-optimization/">
+                            
+                            Filesort with Small LIMIT Optimization
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/limit-rows-examined/">
+                            
+                            LIMIT ROWS EXAMINED
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/index_merge-sort_intersection/">
+                            
+                            index_merge sort_intersection
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-53-optimizer-debugging/">
+                            
+                            MariaDB 5.3 Optimizer Debugging
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/optimizer-switch/">
+                            
+                            optimizer_switch
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/how-to-quickly-insert-data-into-mariadb/">
+                            
+                            How to Quickly Insert Data Into MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/index-condition-pushdown/">
+                            
+                            Index Condition Pushdown
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/query-limits-and-timeouts/">
+                            
+                            Query Limits and Timeouts
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/aborting-statements/">
+                            
+                            Aborting Statements that Exceed a Certain Time to Execute
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/partition-pruning-and-selection/">
+                            <span class="pull-right not_primary"></span>
+                            Partition Pruning and Selection
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/big-deletes/">
+                            
+                            Big DELETEs 
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/data-sampling-techniques-for-efficiently-finding-a-random-row/">
+                            
+                            Data Sampling: Techniques for Efficiently Finding a Random Row
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/data-warehousing-high-speed-ingestion/">
+                            
+                            Data Warehousing High Speed Ingestion
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/data-warehousing-summary-tables/">
+                            
+                            Data Warehousing Summary Tables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/data-warehousing-techniques/">
+                            
+                            Data Warehousing Techniques
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/equality-propagation-optimization/">
+                            
+                            Equality propagation optimization
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/force-index/">
+                            
+                            FORCE INDEX
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/groupwise-max-in-mariadb/">
+                            
+                            Groupwise Max in MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/guiduuid-performance/">
+                            
+                            GUID/UUID Performance
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/ignore-index/">
+                            
+                            IGNORE INDEX
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/not_null_range_scan-optimization/">
+                            
+                            not_null_range_scan Optimization
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/optimizing-for-latest-news-style-queries/">
+                            
+                            Optimizing for &#34;Latest News&#34;-style Queries
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Pagination Optimization</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/pivoting-in-mariadb/">
+                            
+                            Pivoting in MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/rollup-unique-user-counts/">
+                            
+                            Rollup Unique User Counts
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/rowid-filtering-optimization/">
+                            
+                            Rowid Filtering Optimization
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/use-index/">
+                            
+                            USE INDEX
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

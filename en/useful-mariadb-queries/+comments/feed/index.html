@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Useful MariaDB Queries</title><link>https://mariadb.com/kb/en/useful-mariadb-queries/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/useful-mariadb-queries/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Tue, 14 Mar 2023 20:27:59 +0000</lastBuildDate><item><title>Re: Useful MariaDB Queries</title><link>https://mariadb.com/kb/en/useful-mariadb-queries/+comments/5740</link><description>&lt;p&gt;Query for remove duplicates with "group by" is great, it's easy to understand. Thank you so much.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Cesar L. C.</dc:creator><guid>https://mariadb.com/kb/en/useful-mariadb-queries/+comments/5740</guid></item><item><title>Re: Useful MariaDB Queries</title><link>https://mariadb.com/kb/en/useful-mariadb-queries/+comments/5577</link><description>&lt;p&gt;Please replace 'FROM student' with 'FROM student_tests' in the subqueries of the following examples:&lt;/p&gt;
+&lt;p&gt;- Finding the Row with the Minimum of a Particular Column
+- Finding Rows with the Maximum Value of a Column by Group&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Eduardo Reyes</dc:creator><guid>https://mariadb.com/kb/en/useful-mariadb-queries/+comments/5577</guid></item><item><title>Re: Useful MariaDB Queries</title><link>https://mariadb.com/kb/en/useful-mariadb-queries/+comments/5216</link><description>&lt;p&gt;Specifically to "Removing Duplicates":&lt;/p&gt;
+&lt;p&gt;If there are many columns in a table, spelling out the necessary conditions as required in the above example can prove to be tedious. Therfore, what is proposed is to
+1) find all unique rows by using grouping on all colums except the indexed column,
+2) use it as an exclusion list from the original table as rows to be kept.
+I am not sure about the computational cost of this proposed method, so further comments are most welcome.&lt;/p&gt;
+&lt;p&gt;As an example:&lt;/p&gt;
+&lt;pre class="fixed"&gt;-- Create a sample table:
+CREATE TABLE t (id INT, c1 VARCHAR(2), c2 VARCHAR(2), c3 VARCHAR(2));
+INSERT INTO t VALUES (1,'a', 'b', 'c'), (2,'a','b','c'), (3,'a','d','c'), (4,'a','d','e'), (5,'a','d','e'), (6,'b','a','c'), (7,'e', 'b', 'c'), (8,'e','b','c'), (9,'e','d','c');
+
+-- Display the table, if you will:
+SELECT * FROM t;
++------+------+------+------+
+| id   | c1   | c2   | c3   |
++------+------+------+------+
+|    1 | a    | b    | c    |
+|    2 | a    | b    | c    |
+|    3 | a    | d    | c    |
+|    4 | a    | d    | e    |
+|    5 | a    | d    | e    |
+|    6 | b    | a    | c    |
+|    7 | e    | b    | c    |
+|    8 | e    | b    | c    |
+|    9 | e    | d    | c    |
++------+------+------+------+
+
+-- To see what can be considered as unique and be kept use MIN() or MAX() by grouping on all data columns. In terms of essential content, it makes no difference max or min:
+SELECT MIN(id) FROM t GROUP BY c1, c2, c3;
++---------+
+| MIN(id) |
++---------+
+|       1 |
+|       3 |
+|       4 |
+|       6 |
+|       7 |
+|       9 |
++---------+
+
+-- What will be removed is:
+SELECT id FROM t EXCEPT SELECT MIN(id) FROM t GROUP BY c1, c2, c3;
++------+
+| id   |
++------+
+|    2 |
+|    5 |
+|    8 |
++------+
+
+-- And finally, the overall compiled statement is:
+DELETE FROM t WHERE id IN (SELECT id FROM t EXCEPT SELECT MIN(id) FROM t GROUP BY c1, c2, c3);
+
+-- To see the outcome:
+SELECT * FROM t;
++------+------+------+------+
+| id   | c1   | c2   | c3   |
++------+------+------+------+
+|    1 | a    | b    | c    |
+|    3 | a    | d    | c    |
+|    4 | a    | d    | e    |
+|    6 | b    | a    | c    |
+|    7 | e    | b    | c    |
+|    9 | e    | d    | c    |
++------+------+------+------+
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Tibor Lapohos</dc:creator><guid>https://mariadb.com/kb/en/useful-mariadb-queries/+comments/5216</guid></item></channel></rss>

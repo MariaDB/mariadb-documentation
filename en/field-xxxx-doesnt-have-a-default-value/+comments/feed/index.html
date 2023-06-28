@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Field 'xxxx' doesn't have a default value</title><link>https://mariadb.com/kb/en/field-xxxx-doesnt-have-a-default-value/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/field-xxxx-doesnt-have-a-default-value/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 00:36:29 +0000</lastBuildDate><item><title>Re: Field 'xxxx' doesn't have a default value</title><link>https://mariadb.com/kb/en/field-xxxx-doesnt-have-a-default-value/+comments/5229</link><description>&lt;p&gt;Primary key &lt;a href="/kb/en/auto_increment/"&gt;auto-increments&lt;/a&gt; can be made null:&lt;/p&gt;
+&lt;pre class="fixed"&gt;ALTER TABLE customer MODIFY customer_id INT(11) NULL AUTO_INCREMENT;
+&lt;/pre&gt;&lt;p&gt;but not given a DEFAULT value, as the AUTO_INCREMENT takes care of that:&lt;/p&gt;
+&lt;pre class="fixed"&gt;ALTER TABLE customer MODIFY customer_id INT(11) NOT NULL DEFAULT '0' AUTO_INCREMENT;
+ERROR 1067 (42000): Invalid default value for 'customer_id'
+&lt;/pre&gt;&lt;p&gt;You shouldn't get the "Field 'xxxx' doesn't have a default value" error on an auto-increment, so if you are, it would help to find the queries resulting in the problem as well as the table state at the time of these errors.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/field-xxxx-doesnt-have-a-default-value/+comments/5229</guid></item><item><title>Re: Field 'xxxx' doesn't have a default value</title><link>https://mariadb.com/kb/en/field-xxxx-doesnt-have-a-default-value/+comments/5228</link><description>&lt;p&gt;Thanks Ian...
+But how can I specify a default value for a field that is primary and auto-increment, such as the customer_id field?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Bruce Therrien</dc:creator><guid>https://mariadb.com/kb/en/field-xxxx-doesnt-have-a-default-value/+comments/5228</guid></item><item><title>Re: Field 'xxxx' doesn't have a default value</title><link>https://mariadb.com/kb/en/field-xxxx-doesnt-have-a-default-value/+comments/5227</link><description>&lt;p&gt;You haven't provided the queries that are giving the error, but since this looks like an OpenCart installation, it's probably an issue with the OpenCart application sometimes not populating a field. With the definition you've provided, you will get the error you mentioned if you try an insert without specifying a particular value for a NOT NULL field. A query like &lt;/p&gt;
+&lt;pre class="fixed"&gt;ALTER TABLE customer MODIFY org_sponsor VARCHAR(16) NOT NULL DEFAULT '';
+&lt;/pre&gt;&lt;p&gt;or &lt;/p&gt;
+&lt;pre class="fixed"&gt;ALTER TABLE customer MODIFY org_sponsor VARCHAR(16) NULL;
+&lt;/pre&gt;&lt;p&gt;will work around the error you mention, but you should test if this doesn't have other unforeseen consequences. The application may not handle NULL values correctly, for example.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/field-xxxx-doesnt-have-a-default-value/+comments/5227</guid></item><item><title>Re: Field 'xxxx' doesn't have a default value</title><link>https://mariadb.com/kb/en/field-xxxx-doesnt-have-a-default-value/+comments/5226</link><description>&lt;p&gt;fax, company, and org_sponsor are also giving the error.&lt;/p&gt;
+&lt;pre class="fixed"&gt;MyISAM storage
+
+-- phpMyAdmin SQL Dump
+-- version 4.6.6deb4+deb9u1
+-- https://www.phpmyadmin.net/
+--
+-- Host: localhost
+-- Generation Time: May 10, 2021 at 09:37 AM
+-- Server version: 10.3.27-MariaDB-0+deb10u1-log
+-- PHP Version: 7.3.27-1~deb10u1
+
+SET SQL_MODE = &amp;#34;NO_AUTO_VALUE_ON_ZERO&amp;#34;;
+SET time_zone = &amp;#34;+00:00&amp;#34;;
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `opencart`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `customer`
+--
+
+CREATE TABLE `customer` (
+  `customer_id` int(11) NOT NULL,
+  `customer_group_id` int(11) NOT NULL,
+  `store_id` int(11) NOT NULL DEFAULT 0,
+  `firstname` varchar(64) NOT NULL,
+  `lastname` varchar(64) NOT NULL,
+  `email` varchar(96) NOT NULL,
+  `telephone` varchar(32) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `fax` varchar(32) NOT NULL,
+  `password` varchar(40) NOT NULL,
+  `salt` varchar(9) NOT NULL,
+  `cart` text DEFAULT NULL,
+  `wishlist` text DEFAULT NULL,
+  `newsletter` tinyint(1) NOT NULL DEFAULT 0,
+  `address_id` int(11) NOT NULL DEFAULT 0,
+  `custom_field` text NOT NULL,
+  `ip` varchar(40) NOT NULL,
+  `status` tinyint(1) NOT NULL,
+  `approved` tinyint(1) NOT NULL,
+  `safe` tinyint(1) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `date_added` timestamp NOT NULL DEFAULT current_timestamp(),
+  `wmmw_id` varchar(64) NOT NULL,
+  `photo` varchar(50) NOT NULL,
+  `voice` varchar(20) NOT NULL,
+  `voice2` varchar(20) NOT NULL,
+  `manager` int(2) NOT NULL,
+  `rank` varchar(20) NOT NULL,
+  `rank_icon` varchar(20) NOT NULL,
+  `pagetext_en` varchar(300) NOT NULL,
+  `pagetext_fr` varchar(300) NOT NULL,
+  `pp_email` varchar(96) NOT NULL,
+  `validated` varchar(12) NOT NULL,
+  `visitor` int(2) NOT NULL,
+  `candidate` int(2) NOT NULL,
+  `reseller` varchar(10) NOT NULL DEFAULT 'No',
+  `coop_page` int(2) NOT NULL,
+  `wmmw_domain` varchar(128) DEFAULT NULL,
+  `volunteer` int(2) NOT NULL DEFAULT 0,
+  `level` varchar(30) DEFAULT NULL,
+  `authorized` varchar(20) NOT NULL,
+  `target` decimal(12,2) NOT NULL,
+  `members` int(12) NOT NULL,
+  `charter` varchar(50) NOT NULL,
+  `raffle` varchar(25) NOT NULL,
+  `raffle2` varchar(25) NOT NULL,
+  `raffle3` varchar(25) NOT NULL,
+  `sponsor_id` varchar(16) NOT NULL,
+  `coordinator_level` varchar(25) NOT NULL,
+  `beta` varchar(20) DEFAULT NULL,
+  `org_sponsor` varchar(16) NOT NULL,
+  `coordinator` varchar(12) NOT NULL DEFAULT 'No',
+  `angel` varchar(12) NOT NULL,
+  `apprentice` varchar(12) NOT NULL,
+  `angel_id` varchar(40) NOT NULL,
+  `comptroller` varchar(12) NOT NULL,
+  `deposit` varchar(20) NOT NULL,
+  `gencomp` varchar(12) NOT NULL,
+  `comptroller_id` varchar(20) NOT NULL,
+  `gencomp_id` varchar(20) NOT NULL,
+  `gencomp_id2` varchar(20) NOT NULL,
+  `coordinator_id` int(4) NOT NULL DEFAULT 0,
+  `p2` varchar(30) NOT NULL,
+  `timezone` varchar(30) NOT NULL,
+  `raffle4` varchar(12) NOT NULL,
+  `raffle5` varchar(12) NOT NULL,
+  `primary_raffle` varchar(12) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `customer`
+--
+ALTER TABLE `customer`
+  ADD PRIMARY KEY (`customer_id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `customer`
+--
+ALTER TABLE `customer`
+  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Bruce Therrien</dc:creator><guid>https://mariadb.com/kb/en/field-xxxx-doesnt-have-a-default-value/+comments/5226</guid></item><item><title>Re: Field 'xxxx' doesn't have a default value</title><link>https://mariadb.com/kb/en/field-xxxx-doesnt-have-a-default-value/+comments/5225</link><description>&lt;p&gt;You say there is more than one field giving this error, including the auto_increment field? You need to give more information to make it easier to help. What is the storage engine, what is the table structure, what are the inserts that are failing? What didn't work about the query?&lt;/p&gt;
+&lt;p&gt;NO_ENGINE_SUBSTITUTION is already a default setting for &lt;a href="/kb/en/sql_mode/"&gt;sql_mode&lt;/a&gt;, so your admin is probably not setting NO_ENGINE_SUBSTITUTION, they are removing strict mode (STRICT_TRANS_TABLES or STRICT_ALL_TABLES) which allows inserts in this case, giving a warning instead of an error and inserting zeroes or empty strings.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/field-xxxx-doesnt-have-a-default-value/+comments/5225</guid></item></channel></rss>

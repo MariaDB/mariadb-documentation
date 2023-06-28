@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Saltare selettivamente la replica degli eventi del binlog - Source - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+        <meta name="robots" content="noindex, nofollow">
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Saltare selettivamente la replica degli eventi del binlog - Source" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/it/selectively-skipping-replication-of-binlog-events/+source/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="" />
+
+    <meta name="description" content="" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes autoresize nodes_source jqui" id="nodes_source">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/it/selectively-skipping-replication-of-binlog-events/+source/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/it/selectively-skipping-replication-of-binlog-events/+source/" rel="nofollow">Accesso</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/it/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/it/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/it/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/it/mariadb-italiano/">MariaDB - Italiano</a>
+    
+
+    
+    » <a class="crumb" href="/kb/it/replica/">Replica</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/it/selectively-skipping-replication-of-binlog-events/">Saltare selettivamente la replica degli eventi del binlog</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/it/">Pagina iniziale</a></li>
+                            
+                                
+                                    <li><a href="/kb/it/+questions/">Domande Aperte</a></li>
+                                
+                                <li><a href="/kb/it/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/it/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/it/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/it/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+                        <div>
+    
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-small" href="/kb/it/selectively-skipping-replication-of-binlog-events/">Return to article</a>
+    
+</div>
+</div>
+
+</div>
+                    
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+            <section id="content" class="limited_width col-md-10 clearfix">
+                
+                    <h1>Saltare selettivamente la replica degli eventi del binlog - Source</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+
+    
+
+    
+    <div class="revision_info">
+        <dl class="table">
+            <dt>Revisione</dt>
+            <dd><a href="/kb/it/selectively-skipping-replication-of-binlog-events/+r/9920/">9920</a></dd>
+            <dt>Utente</dt>
+            <dd>
+<span class="user" id="user-982">
+<a href="/kb/user/id/982" title="Federico Razzoli">Federico Razzoli</a>
+</span></dd>
+            <dt>Data</dt>
+            <dd>
+
+<span class="datetime" title="2012-04-13 23:04">2012-04-13 23:04</span></dd>
+        </dl>
+    </div>
+    
+
+
+    
+
+    
+        
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+
+Normalmente, tutte le modifiche sono registrate come eventi nel binlog e sono anche replicate in tutti gli slave (anche se possono ancora essere filtrate con le opzioni &lt;&lt;code&gt;&gt;--replicate-do-xxx&lt;&lt;/code&gt;&gt;, &lt;&lt;code&gt;&gt;--replicate-ignore-xxx&lt;&lt;/code&gt;&gt;
+e simili). Tuttavia, a volte può essere desiderabile che alcuni eventi siano registrati nel binlog, ma non replicati dagli slave, dove la distinzione tra gli eventi non dovrebbe essere replicata o non è sotto il controllo dell&#39;applicazione che esegue le modifiche. 
+
+Questo può essere utile se un&#39;applicazione effettua una replica esterna al server, non attraverso la replica built-in, o se ha dei dati che non devono essere replicati per una qualsiasi ragione.
+
+Questo è possibile grazie a due nuove variabili di sistema introdotte in MariaDB 5.5:
+
+== Variabile di sessione del master: @@skip_replication
+
+Quando questa variabile è impostata a true, le seguenti modifiche vengono registrate nel binlog con il flag ##@@skip_replication## impostato. Tali eventi non saranno replicati dagli eventi che sono stati avviati con l&#39;opzione &lt;&lt;code&gt;&gt;--replicate-events-marked-for-skip&lt;&lt;/code&gt;&gt; impostata a un valore diverso da ##REPLICATE## (che è il default).
+
+&lt;&lt;style class=&#34;darkheader-nospace-borders-side&#34;&gt;&gt;
+|= Nome variabile | ##skip_replication##
+|= Contesto         | Sessione
+|= Tipo di accesso   | Dinamico
+|= Tipo di dato     | ##bool##
+|= Valore predefinito | ##OFF##
+&lt;&lt;/style&gt;&gt;
+
+L&#39;opzione ##@@skip_replication## ha effetto solo se il log binario è abilitato e ##@@sql_log_bin## è impostato a true.
+
+Non è possibile modificare ##@@skip_replication## nel mezzo di una transazione; questo per evitare che solo una parte della transazione sia registrata nel log, mentre un&#39;altra non sia registrata. Prima di modificare la variabile, è necessario terminare la transazione corrente con ##COMMIT##/##ROLLBACK##.
+
+== Opzione dello slave: --replicate-events-marked-for-skip
+
+Questa opzione dice allo slave se replicare o meno gli eventi marcati con il flag  ##@@skip_replication##. Il default è ##REPLICATE##, e questo assicura che tutti gli eventi vengano replicati. Se impostato a ##FILTER_ON_SLAVE##, gli eventi così marcati verranno ignorati dallo slave e non replicati. Se impostato a ##FILTER_ON_MASTER##, il filtraggio verrà effettuato dal master, risparmiando così traffico di rete perché gli eventi non vengono inviati allo slave.
+
+&lt;&lt;style class=&#34;darkheader-nospace-borders-side&#34;&gt;&gt;
+|= Nome variabile | ##replicate_events_marked_for_skip##
+|= Contesto         | Globale
+|= Tipo di accesso   | Dinamico
+|= Tipo di dato      | enum: ##REPLICATE## {{{|}}} ##FILTER_ON_SLAVE## {{{|}}} ##FILTER_ON_MASTER##
+|= Valore predefinito | ##REPLICATE##
+&lt;&lt;/style&gt;&gt;
+
+
+&lt;&lt;style class=&#34;greenbox&#34;&gt;&gt;
+**Nota:** ##replicate_events_marked_for_skip## è una variabile dinamica (può essere modificata senza riavviare il server), tuttavia i thread slave devono essere terminati prima della modifica, altrimenti si otterrà un errore.
+&lt;&lt;/style&gt;&gt;
+
+Quando gli eventi vengono filtrati a causa di ##@@skip_replication##, il filtraggio avviene sul master; in altre parole, l&#39;evento non viene affatto inviato allo slave. Se molti eventi vengono filtrati in questo modo, lo slave potrebbe restare inattivo a lungo in attesa di comunicazioni dal master. Questo di per sé non è un problema, ma occorre tenerlo a mente quando si interroga lo slave sugli eventi che vengono filtrati. Per esempio ##START SLAVE UNTIL &lt;posizione&gt;## si ferma quando incontra il primo evento **non** filtrato alla data posizione o più avanti. Se l&#39;evento che si trova in quella posizione è stato filtrato, il thread slave si ferma solo quando incontra il successivo evento non filtrato. In effetti, se un evento è filtrato, per lo slave è come se non fosse stato scritto nel binlog del maste.
+
+Si noti che quando gli eventi vengono filtrati da uno slave, i dati nel suo database saranno differenti da quelli che si trovano nel master. E&#39; responsabilità dell&#39;applicazione replicarli senza utilizzare la replica built-in oppure assicurarsi della coerenza dell&#39;operazione. In caso contrario è possibile che la replica produca errori come, per esempio, violazioni di vincoli ##[[constraint_type-unique-constraint|UNIQUE]]## o altri problemi che la costringeranno ad arrestarsi; per riavviarla sarà necessario un intervento manuale.
+
+La variabile di sessione ##@@skip_replication## può essere modificata anche se non si dispone di privilegi particolari. In questo modo le applicazioni potranno cambiarne il valore senza avere il permesso ##SUPER##. Occorre però ricordarsi che quando si utilizzano slave che hanno &lt;&lt;code&gt;&gt;--replicate-events-marked-for-skip&lt;&lt;/code&gt;&gt; con un valore diverso da ##REPLICATE##, sarà possibile effettuare modifiche che non verranno replicate.
+
+== skip_replication e sql_log_bin
+
+##[[set-sql_log_bin|@@sql_log_bin]]## e ##@@skip_replication## sono in qualche modo simili, perché entrambi possono essere usati per impedire che una modifica nel master venga replicata nello slave. La differenza è che con ##@@skip_replication##
+tali modifiche vengono comunque scritte nel binlog e la replica degli eventi viene saltata solo dagli slave che sono configurati per farlo, cioè quelli con &lt;&lt;code&gt;&gt;--replicate-events-marked-for-skip&lt;&lt;/code&gt;&gt; diverso da ##REPLICATE##. Invece con ##@@sql_log_bin##, gli eventi non vengono registrati nel binlog, perciò non saranno nemmeno replicati nello slave.
+
+== skip_replication e il binlog
+
+Quando gli eventi nel binlog sono marcati con ##@@skip_replication## flag, questo valore verrà conservato se il dump viene effettuato con il programma ##[[mysqlbinlog]]## e riapplicati su un server con il programma ##[[mysql-command-line-client|mysql client]]##. Similarmente, l&#39;istruzione ##[[binlog|BINLOG]]## impedisce che il flag venga modificato. Anche uno slave avviato con &lt;&lt;code&gt;&gt;--log-slave-updates&lt;&lt;/code&gt;&gt; che non filtri gli eventi (&lt;&lt;code&gt;&gt;--replicate-events-marked-for-skip=REPLICATE&lt;&lt;/code&gt;&gt;) preserverà il flag se gli eventi registrati nel binlog dello slave.
+
+</textarea>
+    
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

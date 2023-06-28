@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: IF</title><link>https://mariadb.com/kb/en/if/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/if/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 20:28:04 +0000</lastBuildDate><item><title>Re: statement_list</title><link>https://mariadb.com/kb/en/if/+comments/4528</link><description>&lt;p&gt;I have the same problem too. Since statement list is one or more SQL statements, I think it should work for multiple statements without BEGIN END.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Tz-Ching Yu</dc:creator><guid>https://mariadb.com/kb/en/if/+comments/4528</guid></item><item><title>statement_list</title><link>https://mariadb.com/kb/en/if/+comments/4347</link><description>&lt;p&gt;Wouldn't statement_list be one or more?&lt;/p&gt;
+&lt;p&gt;The reason I ask is - at least in a stored procedure I worked on today - it appears that only the FIRST statement in the "statement_list" executes. I remedied this by putting a BEGIN ... END; that started after the IF (or THEN, to be more specific) and ended just before the ELSE/END IF. This doesn't seem to be the behavior of the CASE structures I have in other stored procedures - and I don't recall if I had this issue before...which might be a commentary on how oblivious I am, but, is this the expected behavior?&lt;/p&gt;
+&lt;p&gt;My environment is MariaDB installed on a VICIdial / VICIbox system, MariaDB's version variable is showing a value of "10.1.6-MariaDB-log"&lt;/p&gt;
+&lt;p&gt;Thanks for any feedback / confirmation of what I am seeing...David&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">David Blum</dc:creator><guid>https://mariadb.com/kb/en/if/+comments/4347</guid></item><item><title>Re: IF</title><link>https://mariadb.com/kb/en/if/+comments/3844</link><description>&lt;p&gt;Roberto,&lt;/p&gt;
+&lt;p&gt;I was having this same issue, then was able to figure it out.&lt;/p&gt;
+&lt;p&gt;I was using a script to create a SPROC that contained the IF statement, and every time I got the same error you did.&lt;/p&gt;
+&lt;p&gt;I then used the "DELIMITER $$" statement at the top of my script. Then I changed the ';' on every statement outside of the SPROC that was defining. As an example:&lt;/p&gt;
+&lt;pre class="fixed"&gt;DELIMITER $$
+USE my_db $$
+DROP PROCEDURE IF EXISTS my_sproc $$
+CREATE PROCEDURE
+my_sproc ()
+BEGIN
+   IF 1=1
+   THEN
+     SELECT 1;
+   END IF;
+END $$
+&lt;/pre&gt;&lt;p&gt;If you do the same as above, but take out the delimiter statement and change all the '$$'s to ';'s, you'll get the same error again. It seems like it was getting confused somehow on the statements inside and outside the "IF" if they both expected the same delimiter.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Russ Kubes</dc:creator><guid>https://mariadb.com/kb/en/if/+comments/3844</guid></item><item><title>Re: IF</title><link>https://mariadb.com/kb/en/if/+comments/3618</link><description>&lt;p&gt;I am using "Server version: 10.1.35-MariaDB-1stretch mariadb.org binary distribution".&lt;/p&gt;
+&lt;p&gt;The documentation does not provide any functional example, I am trying to run a simple test because i need a complex approach but before implement the conditional i did a simple test following the documentation and i got this&lt;/p&gt;
+&lt;p&gt;MariaDB [(none)]&amp;gt; IF 1=1 THEN SELECT 1 END IF;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'IF' at line 1&lt;/p&gt;
+&lt;p&gt;But when I test adding ";" on the syntax:&lt;/p&gt;
+&lt;p&gt;MariaDB [(none)]&amp;gt; IF 1=1 THEN; SELECT 1; END IF;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '' at line 1
++---+&lt;/p&gt;
+&lt;table&gt;&lt;tr&gt;&lt;td&gt;1&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+&lt;p&gt;+---+&lt;/p&gt;
+&lt;table&gt;&lt;tr&gt;&lt;td&gt;1&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+&lt;p&gt;+---+
+1 row in set (0.00 sec)&lt;/p&gt;
+&lt;p&gt;ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END IF' at line 1&lt;/p&gt;
+&lt;p&gt;Same when trying with a functional example:&lt;/p&gt;
+&lt;p&gt;MariaDB [dbgpon]&amp;gt; set @myId = (SELECT IF ((SELECT count(1) FROM `vlan` WHERE `gpon` = 1 AND `value`='1') = 1, TRUE, FALSE));
+Query OK, 0 rows affected (0.00 sec)&lt;/p&gt;
+&lt;p&gt;MariaDB [dbgpon]&amp;gt; IF @myId=1 THEN; SELECT @myId;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '' at line 1
++-------+&lt;/p&gt;
+&lt;table&gt;&lt;tr&gt;&lt;td&gt;@myId&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+&lt;p&gt;+-------+&lt;/p&gt;
+&lt;table&gt;&lt;tr&gt;&lt;td&gt;1&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+&lt;p&gt;+-------+
+1 row in set (0.00 sec)&lt;/p&gt;
+&lt;p&gt;MariaDB [dbgpon]&amp;gt; &lt;/p&gt;
+&lt;p&gt;I hope a better documentation and explain what does the message means:&lt;/p&gt;
+&lt;div style="margin-left:2em"&gt;&lt;div style="margin-left:2em"&gt;&lt;p&gt; right syntax to use near '' at line 1&amp;lt;&amp;lt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Where is '' ?&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Roberto Blandino</dc:creator><guid>https://mariadb.com/kb/en/if/+comments/3618</guid></item></channel></rss>

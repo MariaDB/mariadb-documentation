@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: InnoDB recovery under Maria</title><link>https://mariadb.com/kb/en/innodb-recovery-under-maria/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/innodb-recovery-under-maria/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 15 Mar 2023 01:30:55 +0000</lastBuildDate><item><title>Re: InnoDB recovery under Maria</title><link>https://mariadb.com/kb/en/innodb-recovery-under-maria/+comments/356</link><description>&lt;p&gt;I think you are right here.&lt;/p&gt;
+&lt;p&gt;Virtual box does not do a real flush by default. I will do some testing on this next week. &lt;/p&gt;
+&lt;p&gt;Thanks.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Roger Irwin</dc:creator><guid>https://mariadb.com/kb/en/innodb-recovery-under-maria/+comments/356</guid></item><item><title>Re: InnoDB recovery under Maria</title><link>https://mariadb.com/kb/en/innodb-recovery-under-maria/+comments/355</link><description>&lt;p&gt;I would still say the correct fix here is to avoid the InnoDB corruption in
+the first place, not try to work around it.&lt;/p&gt;
+&lt;p&gt;This kind of thing should not have to happen no matter how systems crash. But
+you need to configure your setup (virtualisation software + host disk system)
+so that when InnoDB does fsync(), it really gets to the disk and does not lie
+to InnoDB about it. If you've done that and still get this, it would indicate
+a bug in InnoDB I think that should be fixed...&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Kristian Nielsen</dc:creator><guid>https://mariadb.com/kb/en/innodb-recovery-under-maria/+comments/355</guid></item><item><title>Re: InnoDB recovery under Maria</title><link>https://mariadb.com/kb/en/innodb-recovery-under-maria/+comments/354</link><description>&lt;p&gt;This is typical of the log I get:&lt;/p&gt;
+&lt;p&gt;(Note this is from the orig MySql server)&lt;/p&gt;
+&lt;p&gt;120810  9:09:05 [Note] Plugin 'FEDERATED' is disabled.
+120810  9:09:05 InnoDB: The InnoDB memory heap is disabled
+120810  9:09:05 InnoDB: Mutexes and rw_locks use Windows interlocked functions
+120810  9:09:05 InnoDB: Compressed tables use zlib 1.2.3
+120810  9:09:12 InnoDB: Initializing buffer pool, size = 28.0M
+120810  9:09:12 InnoDB: Completed initialization of buffer pool
+120810  9:09:13 InnoDB: highest supported file format is Barracuda.
+InnoDB: Log scan progressed past the checkpoint lsn 35380397
+120810  9:09:13  InnoDB: Database was not shut down normally!
+InnoDB: Starting crash recovery.
+InnoDB: Reading tablespace information from the .ibd files...
+InnoDB: Restoring possible half-written data pages from the doublewrite
+InnoDB: buffer...
+InnoDB: Warning: database page corruption or a failed
+InnoDB: file read of space 0 page 60.
+InnoDB: Trying to recover it from the doublewrite buffer.
+InnoDB: Recovered the page from the doublewrite buffer.
+InnoDB: Doing recovery: scanned up to log sequence number 39774208
+InnoDB: Database page corruption on disk or a failed
+InnoDB: file read of page 198.
+InnoDB: You may have to recover from a backup.
+120810  9:09:22  InnoDB: Page dump in ascii and hex (16384 bytes):
+ len 16384; hex &lt;/p&gt;
+&lt;p&gt;&amp;lt;-----snip hex codes-----&amp;gt;&lt;/p&gt;
+&lt;p&gt;InnoDB: End of page dump
+120810  9:09:22  InnoDB: Page checksum 3727053759, prior-to-4.0.14-form checksum 3652553842
+InnoDB: stored checksum 3727053759, prior-to-4.0.14-form stored checksum 1227594201
+InnoDB: Page lsn 0 35404338, low 4 bytes of lsn at page end 38009135
+InnoDB: Page number (if stored to page already) 198,
+InnoDB: space id (if created with &amp;gt;= MySQL-4.1.1 and stored already) 0
+InnoDB: Page may be a system page
+InnoDB: Database page corruption on disk or a failed
+InnoDB: file read of page 198.
+InnoDB: You may have to recover from a backup.
+InnoDB: It is also possible that your operating
+InnoDB: system has corrupted its own file cache
+InnoDB: and rebooting your computer removes the
+InnoDB: error.
+InnoDB: If the corrupt page is an index page
+InnoDB: you can also try to fix the corruption
+InnoDB: by dumping, dropping, and reimporting
+InnoDB: the corrupt table. You can use CHECK
+InnoDB: TABLE to scan your table for corruption.
+InnoDB: See also &lt;a href="http://dev.mysql.com/doc/refman/5.5/en/forcing-innodb-recovery.html"&gt;http://dev.mysql.com/doc/refman/5.5/en/forcing-innodb-recovery.html&lt;/a&gt;
+InnoDB: about forcing recovery.&lt;/p&gt;
+&lt;p&gt;Note that this is all running on a VirtualBox virtual machine with virtual disk. This is the production configuration, not just for testing.&lt;/p&gt;
+&lt;p&gt;Now to recover I restart with recover level =4, dump the tables, delete the innodb files, restart with recover = 0 and restore the dump.&lt;/p&gt;
+&lt;p&gt;One of my options would be to write a program which detects the situation and does the above procedure automatically!&lt;/p&gt;
+&lt;p&gt;However I am trying to achieve a better long term solution with Maria.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Roger Irwin</dc:creator><guid>https://mariadb.com/kb/en/innodb-recovery-under-maria/+comments/354</guid></item><item><title>Re: InnoDB recovery under Maria</title><link>https://mariadb.com/kb/en/innodb-recovery-under-maria/+comments/352</link><description>&lt;p&gt;It sounds like your real issue here is that InnoDB recovery fails?&lt;/p&gt;
+&lt;p&gt;InnoDB recovery should always work, even if mysqld or server crashes.&lt;/p&gt;
+&lt;p&gt;Make sure you have hard drive caches configured correctly so that when the
+drive tells the kernel that a write is done, the data is really on the disk
+and not just in internal disk cache. InnoDB recovery is dependent on this.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Kristian Nielsen</dc:creator><guid>https://mariadb.com/kb/en/innodb-recovery-under-maria/+comments/352</guid></item><item><title>Re: InnoDB recovery under Maria</title><link>https://mariadb.com/kb/en/innodb-recovery-under-maria/+comments/350</link><description>&lt;p&gt;How do you know it now? When the server starts and hangs?&lt;/p&gt;
+&lt;p&gt;Either way, this "can be interupted abruptly, leaving the InnoDB tables blocked" surely looks like a bug. I'd suggest you to report it on bugs.mysql.com and see if it gets fixed.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Sergei Golubchik</dc:creator><guid>https://mariadb.com/kb/en/innodb-recovery-under-maria/+comments/350</guid></item></channel></rss>
