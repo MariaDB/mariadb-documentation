@@ -23,9 +23,9 @@
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
     <meta property="og:site_name" content="MariaDB KnowledgeBase" />
     <meta property="fb:admins" content="514852603" />
-    <meta property="og:description" content="Using mysqlbinlog to Extract Entries from the Binary Log for Debugging." />
+    <meta property="og:description" content="Using mariadb-binlog to extract entries from the binary log for debugging." />
 
-    <meta name="description" content="Using mysqlbinlog to Extract Entries from the Binary Log for Debugging." />
+    <meta name="description" content="Using mariadb-binlog to extract entries from the binary log for debugging." />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
@@ -235,12 +235,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2016-04-02 23:34">6 years, 11 months ago</span></dd>
+<span class="datetime" title="2016-04-02 23:34">7 years, 2 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2017-08-24 12:01">5 years, 6 months ago</span></dd>
+<span class="datetime" title="2023-05-30 21:58">4 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -380,9 +380,9 @@
 <pre class="fixed">sudo cp /var/lib/mysql/mysql-bin.000687 ~/
 sudo chown $USER: ~/mysql-bin.000687
 </pre><p><strong>Step 2: Create an extract header</strong></p>
-<p>Binary logs have a header portion. Without the header <a href="/kb/en/mysqlbinlog/">mysqlbinlog</a> won't be able to read it. The header also contains valuable session information</p>
+<p>Binary logs have a header portion. Without the header <a href="/kb/en/mariadb-binlog/">mariadb-binlog</a> won't be able to read it. The header also contains valuable session information</p>
 <p>We look at the binary log to see how big the header and session information is:</p>
-<pre class="fixed">mysqlbinlog --base64-output<span class="o">=</span>decode-rows --verbose mysql-bin.000687 <span class="p">|</span> more
+<pre class="fixed">mariadb-binlog --base64-output<span class="o">=</span>decode-rows --verbose mysql-bin.000687 <span class="p">|</span> more
 /*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE<span class="o">=</span>1*/<span class="p">;</span>
 /*!40019 SET @@session.max_insert_delayed_threads<span class="o">=</span>0*/<span class="p">;</span>
 /*!50003 SET @OLD_COMPLETION_TYPE<span class="o">=</span>@@COMPLETION_TYPE,COMPLETION_TYPE<span class="o">=</span>0*/<span class="p">;</span>
@@ -407,7 +407,7 @@ BEGIN
 </pre><p>We see that the session information ends at 328  because of the last line, so we extract to that point.</p>
 <pre class="fixed">dd <span class="k">if</span><span class="o">=</span>mysql-bin.000687 <span class="nv">of</span><span class="o">=</span>mysql-bin.000687-extract-offset-129619 <span class="nv">bs</span><span class="o">=</span><span class="m">1</span> <span class="nv">count</span><span class="o">=</span>328
 </pre><p>We need to find out at what offset the entry at 129619 ends and it might be useful to extract some previous entries as well.</p>
-<pre class="fixed">mysqlbinlog --base64-output<span class="o">=</span>decode-rows --verbose mysql-bin.000687 <span class="p">|</span> grep  <span class="s1">&#39;^# at &#39;</span> <span class="p">|</span>  grep -C <span class="m">10</span> <span class="s1">&#39;^# at 129619$&#39;</span>
+<pre class="fixed">mariadb-binlog --base64-output<span class="o">=</span>decode-rows --verbose mysql-bin.000687 <span class="p">|</span> grep  <span class="s1">&#39;^# at &#39;</span> <span class="p">|</span>  grep -C <span class="m">10</span> <span class="s1">&#39;^# at 129619$&#39;</span>
 <span class="c1"># at 127602</span>
 <span class="c1"># at 127690</span>
 <span class="c1"># at 128201</span>
@@ -430,11 +430,11 @@ BEGIN
 <span class="c1"># at 131040</span>
 <span class="c1"># at 131244</span>
 </pre><p>Take a look at those entries with:</p>
-<pre class="fixed">mysqlbinlog --base64-output<span class="o">=</span>decode-rows --verbose --start-position <span class="m">129006</span>  --stop-position <span class="m">130168</span>  mysql-bin.000687 <span class="p">|</span> more
+<pre class="fixed">mariadb-binlog --base64-output<span class="o">=</span>decode-rows --verbose --start-position <span class="m">129006</span>  --stop-position <span class="m">130168</span>  mysql-bin.000687 <span class="p">|</span> more
 </pre><p>Now let's assume we want to start at our original 129619 and finish before 130168</p>
 <pre class="fixed">dd <span class="k">if</span><span class="o">=</span>mysql-bin.000687 <span class="nv">bs</span><span class="o">=</span><span class="m">1</span> <span class="nv">skip</span><span class="o">=</span><span class="m">129619</span> <span class="nv">count</span><span class="o">=</span><span class="k">$((</span> <span class="m">130168</span> <span class="o">-</span> <span class="m">129619</span> <span class="k">))</span>  &gt;&gt; mysql-bin.000687-extract-offset-129619
 </pre><p>Check the extract:</p>
-<pre class="fixed">mysqlbinlog mysql-bin.000687-extract-offset-129619
+<pre class="fixed">mariadb-binlog mysql-bin.000687-extract-offset-129619
 </pre><p>Upload this to the <a href="/kb/en/ftp/">private uploads</a> or attach to the public bug report if nothing sensitive there.</p>
 
     </div>
@@ -508,7 +508,7 @@ BEGIN
             
                 
                     <li>
-                        <a href="/kb/en/connection-string-in-mariadb-10-10/">
+                        <a href="/kb/en/reporting-bugs/">
                             
                             MariaDB Community Bug Reporting
                         </a>

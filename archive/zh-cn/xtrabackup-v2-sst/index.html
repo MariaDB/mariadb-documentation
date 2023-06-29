@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>xtrabackup-v2 SST方法 - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="xtrabackup-v2 SST方法" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/zh-cn/xtrabackup-v2-sst/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+In MariaDB 10.1 and later, Mariabackup is the recommended backup method to use instead of Percona XtraBackup.
+In MariaDB 10.3, Percona XtraBackup is not supported. See Percon..." />
+
+    <meta name="description" content="
+In MariaDB 10.1 and later, Mariabackup is the recommended backup method to use instead of Percona XtraBackup.
+In MariaDB 10.3, Percona XtraBackup is not supported. See Percon..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/zh-cn/xtrabackup-v2-sst/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/zh-cn/xtrabackup-v2-sst/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/zh-cn/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/zh-cn/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/zh-cn/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb/">MariaDB - 简体中文</a>
+    
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb-server/">MariaDB Server文档</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/zh-cn/xtrabackup-v2-sst/">xtrabackup-v2 SST方法</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/zh-cn/">首页</a></li>
+                            
+                                
+                                    <li><a href="/kb/zh-cn/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/zh-cn/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/zh-cn/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/zh-cn/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/zh-cn/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/xtrabackup-v2-sst/+history" rel="nofollow">历史</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/xtrabackup-v2-sst/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/zh-cn/xtrabackup-v2-sst/+flag"
+                data-flag-url="/kb/zh-cn/xtrabackup-v2-sst/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/xtrabackup-v2-sst/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>已创建</dt>
+        <dd>
+
+<span class="datetime" title="2023-06-19 03:29">1 week, 2 days ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2023-06-19 03:29">1 week, 2 days ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/zh-cn/xtrabackup-v2-sst/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/zh-cn/xtrabackup-v2-sst/+history/feed/">
+            历史</a>
+        </li>
+        <li><a href="/kb/zh-cn/xtrabackup-v2-sst/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/zh-cn/xtrabackup-v2-sst/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+        
+
+<div class="well well-small box"><div><h5>Localized Versions</h5></div><div>
+
+        <ul>
+            
+            <li><a href="/kb/en/xtrabackup-v2-sst-method/">xtrabackup-v2 SST Method</a> [en]</li>
+            
+        </ul>
+        
+</div>
+</div>
+
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>xtrabackup-v2 SST方法</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#选择-percona-xtrabackup-进行-sst" title="选择 Percona XtraBackup 进行 SST">选择 Percona XtraBackup 进行 SST</a></li>
+
+    <li class=""><a href="#认证和权限" title="认证和权限">认证和权限</a>    <ol class="toc">
+
+        <li class=""><a href="#无密码身份验证-unix-socket" title="无密码身份验证 - Unix Socket">无密码身份验证 - Unix Socket</a></li>
+
+        <li class=""><a href="#无密码身份验证-gssapi" title="无密码身份验证 - GSSAPI">无密码身份验证 - GSSAPI</a>    </ol>
+</li>
+
+    <li class=""><a href="#选择捐赠节点" title="选择捐赠节点">选择捐赠节点</a></li>
+
+    <li class=""><a href="#socat依赖项" title="Socat依赖项">Socat依赖项</a>    <ol class="toc">
+
+        <li class=""><a href="#在rhelcentos上安装socat" title="在RHEL/CentOS上安装Socat">在RHEL/CentOS上安装Socat</a>    </ol>
+</li>
+
+    <li class=""><a href="#tls" title="TLS">TLS</a>    <ol class="toc">
+
+        <li class=""><a href="#使用内置于socat的openssl加密进行tls" title="使用内置于Socat的OpenSSL加密进行TLS">使用内置于Socat的OpenSSL加密进行TLS</a></li>
+
+        <li class=""><a href="#使用-openssl-加密和-galera-兼容证书和密钥的-tls" title="使用 OpenSSL 加密和 Galera 兼容证书和密钥的 TLS">使用 OpenSSL 加密和 Galera 兼容证书和密钥的 TLS</a></li>
+
+        <li class=""><a href="#使用-openssl-加密和-mariadb-兼容证书和密钥的-tls" title="使用 OpenSSL 加密和 MariaDB 兼容证书和密钥的 TLS">使用 OpenSSL 加密和 MariaDB 兼容证书和密钥的 TLS</a>    </ol>
+</li>
+
+    <li class=""><a href="#日志" title="日志">日志</a>    <ol class="toc">
+
+        <li class=""><a href="#记录到-sst-日志" title="记录到 SST 日志">记录到 SST 日志</a></li>
+
+        <li class=""><a href="#将日志记录到-syslog" title="将日志记录到 Syslog">将日志记录到 Syslog</a>    </ol>
+</li>
+
+    <li class=""><a href="#使用-ipv6-地址执行-sst" title="使用 IPv6 地址执行 SST">使用 IPv6 地址执行 SST</a></li>
+
+    <li class=""><a href="#使用-percona-xtrabackup-手动执行-sst" title="使用 Percona XtraBackup 手动执行 SST">使用 Percona XtraBackup 手动执行 SST</a></li>
+
+    <li class=""><a href="#参见" title="参见">参见</a> </ol>
+</li>
+</div>
+<div class="cstm-style greenbox"><p>In <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> and later, <a href="/kb/en/mariabackup/">Mariabackup</a> is the recommended backup method to use instead of Percona XtraBackup.</p>
+</div><div class="cstm-style redbox"><p>In <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a>, Percona XtraBackup is <strong>not supported</strong>. See <a href="/kb/en/percona-xtrabackup-overview/#compatibility-with-mariadb">Percona XtraBackup Overview: Compatibility with MariaDB</a> for more information.</p>
+</div><div class="cstm-style redbox"><p>In <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> and <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a>, Percona XtraBackup is only <strong>partially supported</strong>. See <a href="/kb/en/percona-xtrabackup-overview/#compatibility-with-mariadb">Percona XtraBackup Overview: Compatibility with MariaDB</a> for more information.</p>
+</div>
+<p><code>xtrabackup-v2</code> SST 方法使用 <a href="/kb/en/backup-restore-and-import-clients-percona-xtrabackup/">Percona XtraBackup</a> 工具执行 SST。这是一种不会阻塞捐赠节点的方法。</p>
+<p>请注意，如果您使用 <code>xtrabackup-v2</code> SST 方法，则还需要在服务器上安装 <a href="#socat-dependency">socat</a>。这是将备份从捐赠节点流式传输到加入者节点所需的。</p>
+<p>由于 <a href="/kb/en/backup-restore-and-import-clients-percona-xtrabackup/">Percona XtraBackup</a> 是第三方产品，因此可能需要额外的安装和配置。有关供应商的信息，请参阅 <a href="http://www.percona.com/doc/percona-xtradb-cluster/5.5/manual/xtrabackup_sst.html">Percona 的 xtrabackup SST 文档</a>。</p>
+<h2 class="anchored_heading" id="选择-percona-xtrabackup-进行-sst">选择 Percona XtraBackup 进行 SST</h2>
+<p>要使用 <code>xtrabackup-v2</code> SST 方法，必须在捐赠节点和加入者节点上设置 <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_method">wsrep_sst_method=xtrabackup-v2</a></code>。可以使用 <code><a href="/kb/en/set/#global-session">SET GLOBAL</a></code> 在您打算成为 SST 捐赠者的节点上动态更改它。例如：</p>
+<pre class="fixed"><span class="k">SET</span> <span class="k">GLOBAL</span> <span class="n">wsrep_sst_method</span><span class="o">=</span><span class="s1">&#39;xtrabackup-v2&#39;</span><span class="p">;</span>
+</pre><p>可以在启动节点之前的服务器 <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> 中的 <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> 中设置它：</p>
+<pre class="fixed"><span class="p">[</span><span class="n">mariadb</span><span class="p">]</span>
+<span class="p">...</span>
+<span class="n">wsrep_sst_method</span> <span class="o">=</span> <span class="n">xtrabackup</span><span class="o">-</span><span class="n">v2</span>
+</pre><p>为了使 SST 正常工作，捐赠节点和加入者节点必须使用相同的 SST 方法。因此，建议在所有节点上将 <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_method">wsrep_sst_method</a></code> 设置为相同的值，因为任何节点通常都会成为捐赠者或加入者节点。</p>
+<h2 class="anchored_heading" id="认证和权限">认证和权限</h2>
+<p>要使用 <code>xtrabackup-v2</code> SST 方法，<a href="/kb/en/backup-restore-and-import-clients-percona-xtrabackup/">Percona XtraBackup</a> 需要能够在捐赠节点上进行本地身份验证，以便它可以创建备份并流式传输到加入者。您可以通过设置 <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_auth">wsrep_sst_auth</a></code> 系统变量来告诉捐赠节点使用哪个用户名和密码。它可以在您打算成为 SST 捐赠者的节点上使用 <code><a href="/kb/en/set/#global-session">SET GLOBAL</a></code> 命令进行动态更改。例如：</p>
+<pre class="fixed"><span class="k">SET</span> <span class="k">GLOBAL</span> <span class="n">wsrep_sst_auth</span> <span class="o">=</span> <span class="s1">&#39;xtrabackup:mypassword&#39;</span><span class="p">;</span>
+</pre><p>它也可以在服务器 <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">选项组</a> 中的 <a href="/kb/en/configuring-mariadb-with-option-files/">选项文件</a> 中设置，以在启动节点之前进行设置：</p>
+<pre class="fixed">[mariadb]
+...
+wsrep_sst_auth = xtrabackup:mypassword
+</pre><p>某些 <a href="/kb/en/authentication-plugins/">认证插件</a> 不需要密码。例如，<code><a href="/kb/en/authentication-plugin-unix-socket/">unix_socket</a></code> 和 <code><a href="/kb/en/authentication-plugin-gssapi/">gssapi</a></code> 认证插件不需要密码。如果您使用的是不需要密码即可登录的用户帐户，则可以将 <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_auth">wsrep_sst_auth</a></code> 的密码组件留空。例如：</p>
+<pre class="fixed">[mariadb]
+...
+wsrep_sst_auth = xtrabackup:
+</pre><p>执行 SST 的备份用户帐户需要具有 <a href="/kb/en/percona-xtrabackup-overview/#authentication-and-privileges">与 Percona XtraBackup 相同的权限</a>，即 <code>RELOAD</code>、<code>PROCESS</code>、<code>LOCK TABLES</code> 和 <code>REPLICATION CLIENT</code> <a href="/kb/en/grant/#global-privileges">全局权限</a>。为了安全起见，您应该确保在集群中的每个节点上都设置了这些权限。<a href="/kb/en/backup-restore-and-import-clients-percona-xtrabackup/">Percona XtraBackup</a> 在捐赠节点上本地连接以执行备份，因此以下用户应该足够：</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">USER</span> <span class="s1">&#39;xtrabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span> <span class="n">IDENTIFIED</span> <span class="k">BY</span> <span class="s1">&#39;mypassword&#39;</span><span class="p">;</span>
+<span class="k">GRANT</span> <span class="n">RELOAD</span><span class="p">,</span> <span class="n">PROCESS</span><span class="p">,</span> <span class="k">LOCK</span> <span class="n">TABLES</span><span class="p">,</span> <span class="n">REPLICATION</span> <span class="n">CLIENT</span> <span class="k">ON</span> <span class="o">*</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;xtrabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
+</pre><h3 class="anchored_heading" id="无密码身份验证-unix-socket">无密码身份验证 - Unix Socket</h3>
+<p>可以使用 <code><a href="/kb/en/authentication-plugin-unix-socket/">unix_socket</a></code> 身份验证插件为执行 SST 的用户帐户提供身份验证。这将提供不需要在 <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_auth">wsrep_sst_auth</a></code> 中配置明文密码的好处。</p>
+<p>用户帐户必须具有与运行 <code>mysqld</code> 进程的操作系统用户帐户相同的名称。在许多系统上，这是配置为 <code><a href="/kb/en/mysqld-options/#-user">user</a></code> 选项的用户帐户，并且通常默认为 <code>mysql</code>。</p>
+<p>例如，如果已经安装了 <code><a href="/kb/en/authentication-plugin-unix-socket/">unix_socket</a></code> 身份验证插件，则可以执行以下操作以创建用户帐户：</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">USER</span> <span class="s1">&#39;mysql&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span> <span class="n">IDENTIFIED</span> <span class="n">VIA</span> <span class="n">unix_socket</span><span class="p">;</span>
+<span class="k">GRANT</span> <span class="n">RELOAD</span><span class="p">,</span> <span class="n">PROCESS</span><span class="p">,</span> <span class="k">LOCK</span> <span class="n">TABLES</span><span class="p">,</span> <span class="n">REPLICATION</span> <span class="n">CLIENT</span> <span class="k">ON</span> <span class="o">*</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;mysql&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
+</pre><p>然后，要配置 <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_auth">wsrep_sst_auth</a></code>，可以在启动节点之前的服务器 <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">选项组</a> 中的 <a href="/kb/en/configuring-mariadb-with-option-files/">选项文件</a> 中设置以下内容：</p>
+<pre class="fixed">[mariadb]
+...
+wsrep_sst_auth = mysql:
+</pre><h3 class="anchored_heading" id="无密码身份验证-gssapi">无密码身份验证 - GSSAPI</h3>
+<p>可以使用 <code><a href="/kb/en/authentication-plugin-gssapi/">gssapi</a></code> 身份验证插件为执行 SST 的用户帐户提供身份验证。这将提供不需要在 <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_auth">wsrep_sst_auth</a></code> 中配置明文密码的好处。</p>
+<p>必须先执行以下步骤：</p>
+<ul start="1"><li>您需要运行 <a href="http://web.mit.edu/Kerberos/krb5-1.12/doc/index.html">MIT Kerberos</a> 或 <a href="https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview">Microsoft Active Directory</a> 的 KDC。
+</li><li>您需要为 MariaDB 服务器 <a href="/kb/en/authentication-plugin-gssapi/#creating-a-keytab-file-on-a-unix-server">创建一个 keytab 文件</a>。
+</li><li>您需要 <a href="/kb/en/authentication-plugin-gssapi/#installing-the-plugins-package">安装包含<code>[[authentication-plugin-gssapi|gssapi</code></a><code> 身份验证插件的软件包]]。</code>
+</li><li>您需要在 MariaDB 中 <a href="/kb/en/authentication-plugin-gssapi/#installing-the-plugin">安装插件</a>，以便可以使用 <code><a href="/kb/en/authentication-plugin-gssapi/">gssapi</a></code> 身份验证插件。
+</li><li>您需要 <a href="/kb/en/authentication-plugin-gssapi/#configuring-the-plugin">配置插件</a>。
+</li><li>您需要 <a href="/kb/en/authentication-plugin-gssapi/#creating-users">创建一个使用 <code>[[authentication-plugin-gssapi|gssapi</code></a><code> 身份验证插件进行身份验证的用户帐户]]，以便可以将该用户帐户用于 SST。此用户帐户将需要对应于后端 KDC 上存在的用户帐户。</code>
+</li></ul>
+<p>例如，您可以执行以下操作以在 MariaDB 中创建用户帐户：</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">USER</span> <span class="s1">&#39;xtrabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span> <span class="n">IDENTIFIED</span> <span class="n">VIA</span> <span class="n">gssapi</span><span class="p">;</span>
+<span class="k">GRANT</span> <span class="n">RELOAD</span><span class="p">,</span> <span class="n">PROCESS</span><span class="p">,</span> <span class="k">LOCK</span> <span class="n">TABLES</span><span class="p">,</span> <span class="n">REPLICATION</span> <span class="n">CLIENT</span> <span class="k">ON</span> <span class="o">*</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;xtrabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
+</pre><p>然后，要配置 <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_auth">wsrep_sst_auth</a></code>，可以在启动节点之前的服务器 <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">选项组</a> 中的 <a href="/kb/en/configuring-mariadb-with-option-files/">选项文件</a> 中设置以下内容：</p>
+<pre class="fixed">[mariadb]
+...
+wsrep_sst_auth = xtrabackup:
+</pre><h2 class="anchored_heading" id="选择捐赠节点">选择捐赠节点</h2>
+<p>使用Percona XtraBackup创建SST的备份时，XtraBackup在备份结束时需要系统范围锁定。这是通过<code><a href="/kb/en/flush/">FLUSH TABLES WITH READ LOCK</a></code>完成的。</p>
+<p>如果集群中的特定节点通过接收所有应用程序的写入流量而充当<em>primary</em>节点，则通常不应将此节点用作捐赠节点，因为系统范围锁定可能会干扰应用程序。在这种情况下，您可以通过设置<code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_donor">wsrep_sst_donor</a></code>系统变量来定义一个或多个首选捐赠节点。</p>
+<p>例如，假设我们有一个5节点集群，其中节点为<code>node1</code>，<code>node2</code>，<code>node3</code>，<code>node4</code>和<code>node5</code>，并且假设<code>node1</code>充当<em>primary</em>节点。可以通过在启动节点之前在服务器<a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a>中的<a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>中设置以下内容来配置<code>node2</code>的首选捐赠节点：</p>
+<pre class="fixed">[mariadb]
+...
+wsrep_sst_donor=node3,node4,node5,
+</pre><p>尾随逗号告诉服务器允许在首选捐赠者不可用时使用任何其他节点作为捐赠者。因此，如果集群中只剩下<code>node1</code>，尾随逗号允许将其用作捐赠节点。</p>
+<h2 class="anchored_heading" id="socat依赖项">Socat依赖项</h2>
+<p>在SST过程中，捐赠节点使用<a href="http://www.dest-unreach.org/socat/doc/socat.html">socat</a>将备份流式传输到加入者节点。然后加入者节点在恢复之前准备备份。为使其正常工作，必须在捐赠节点和加入者节点上都安装socat实用程序。否则，MariaDB错误日志将包含类似于以下内容的错误：</p>
+<pre class="fixed wrap">WSREP_SST: [ERROR] socat not found in path: /usr/sbin:/sbin:/usr//bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin (20180122 14:55:32.993)
+</pre><h3 class="anchored_heading" id="在rhelcentos上安装socat">在RHEL/CentOS上安装Socat</h3>
+<p>在RHEL/CentOS上，可以从<a href="https://fedoraproject.org/wiki/EPEL">Extra Packages for Enterprise Linux (EPEL)</a>存储库安装<code>socat</code>。</p>
+<h2 class="anchored_heading" id="tls">TLS</h2>
+<p>此SST方法支持三种不同的TLS方法。可以通过在MariaDB配置文件的<code>[sst]</code>部分中设置<code>encrypt</code>选项来选择特定方法。选项如下：</p>
+<ul start="1"><li>使用内置于<code>socat</code>中的OpenSSL加密的TLS（<code>encrypt=2</code>）
+</li><li>使用具有与Galera兼容的证书和密钥的OpenSSL加密的TLS（<code>encrypt=3</code>）
+</li><li>使用具有与MariaDB兼容的证书和密钥的OpenSSL加密的TLS（<code>encrypt=4</code>）
+</li></ul>
+<p>请注意，<code>encrypt=1</code>是指已弃用并删除的TLS加密方法。</p>
+<h3 class="anchored_heading" id="使用内置于socat的openssl加密进行tls">使用内置于Socat的OpenSSL加密进行TLS</h3>
+<p>要生成与此加密方法兼容的密钥，可以遵循<a href="http://www.dest-unreach.org/socat/doc/socat-openssltunnel.html">这些说明</a>。</p>
+<p>例如：</p>
+<ul start="1"><li>首先，生成密钥和证书：
+</li></ul>
+<pre class="fixed">FILENAME=sst
+openssl genrsa -out $FILENAME.key 1024
+openssl req -new -key $FILENAME.key -x509 -days 3653 -out $FILENAME.crt
+cat $FILENAME.key $FILENAME.crt &gt;$FILENAME.pem
+chmod 600 $FILENAME.key $FILENAME.pem
+</pre><ul start="1"><li>在某些系统上，您还必须将dhparams添加到证书中：
+</li></ul>
+<pre class="fixed">openssl dhparam -out dhparams.pem 2048
+cat dhparams.pem &gt;&gt; sst.pem
+</pre><ul start="1"><li>然后将证书和密钥复制到集群中的所有节点。
+</li></ul>
+<ul start="1"><li>然后，在集群中的所有节点上配置以下内容：
+</li></ul>
+<pre class="fixed">[sst]
+encrypt=2
+tca=/etc/my.cnf.d/certificates/sst.crt
+tcert=/etc/my.cnf.d/certificates/sst.pem
+</pre><p>但是用适用于您系统的路径替换路径。</p>
+<p>这应该允许加密您的SST。</p>
+<h3 class="anchored_heading" id="使用-openssl-加密和-galera-兼容证书和密钥的-tls">使用 OpenSSL 加密和 Galera 兼容证书和密钥的 TLS</h3>
+<p>要生成与此加密方法兼容的密钥，您可以按照<a href="https://galeracluster.com/library/documentation/ssl-sst.html#ssl-xtrabackup">这些说明</a>进行操作。</p>
+<p>例如：</p>
+<ul start="1"><li>首先，生成密钥和证书：
+</li></ul>
+<pre class="fixed"># CA
+openssl genrsa 2048 &gt; ca-key.pem
+openssl req -new -x509 -nodes -days 365000 \
+-key ca-key.pem -out ca-cert.pem
+ 
+# server1
+openssl req -newkey rsa:2048 -days 365000 \
+-nodes -keyout server1-key.pem -out server1-req.pem
+openssl rsa -in server1-key.pem -out server1-key.pem
+openssl x509 -req -in server1-req.pem -days 365000 \
+-CA ca-cert.pem -CAkey ca-key.pem -set_serial 01 \
+-out server1-cert.pem
+</pre><ul start="1"><li>然后，在群集中的所有节点上复制证书和密钥。
+</li></ul>
+<ul start="1"><li>然后，在群集中的所有节点上配置以下内容：
+</li></ul>
+<pre class="fixed">[sst]
+encrypt=3
+tkey=/etc/my.cnf.d/certificates/server1-key.pem
+tcert=/etc/my.cnf.d/certificates/server1-cert.pem
+</pre><p>但用适用于您系统的路径替换这些路径。</p>
+<p>这样应该可以加密您的 SST。</p>
+<h3 class="anchored_heading" id="使用-openssl-加密和-mariadb-兼容证书和密钥的-tls">使用 OpenSSL 加密和 MariaDB 兼容证书和密钥的 TLS</h3>
+<p>要生成与此加密方法兼容的密钥，您可以按照<a href="/kb/en/certificate-creation-with-openssl/">这些说明</a>进行操作。</p>
+<p>例如：</p>
+<ul start="1"><li>首先，生成密钥和证书：
+</li></ul>
+<pre class="fixed"># CA
+openssl genrsa 2048 &gt; ca-key.pem
+openssl req -new -x509 -nodes -days 365000 \
+-key ca-key.pem -out ca-cert.pem
+ 
+# server1
+openssl req -newkey rsa:2048 -days 365000 \
+-nodes -keyout server1-key.pem -out server1-req.pem
+openssl rsa -in server1-key.pem -out server1-key.pem
+openssl x509 -req -in server1-req.pem -days 365000 \
+-CA ca-cert.pem -CAkey ca-key.pem -set_serial 01 \
+-out server1-cert.pem
+</pre><ul start="1"><li>然后，在群集中的所有节点上复制证书和密钥。
+</li></ul>
+<ul start="1"><li>然后，在群集中的所有节点上配置以下内容：
+</li></ul>
+<pre class="fixed">[sst]
+encrypt=4
+ssl-ca=/etc/my.cnf.d/certificates/ca-cert.pem
+ssl-cert=/etc/my.cnf.d/certificates/server1-cert.pem
+ssl-key=/etc/my.cnf.d/certificates/server1-key.pem
+</pre><p>但用适用于您系统的路径替换这些路径。</p>
+<p>这样应该可以加密您的 SST。</p>
+<h2 class="anchored_heading" id="日志">日志</h2>
+<p><code>xtrabackup-v2</code> SST 方法有自己的日志记录，不在 MariaDB Server 日志记录之外。</p>
+<h3 class="anchored_heading" id="记录到-sst-日志">记录到 SST 日志</h3>
+<p>默认情况下，在捐赠节点上，它记录到<code>innobackup.backup.log</code>。此日志文件位于<code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code>中。</p>
+<p>默认情况下，在加入节点上，它记录到<code>innobackup.prepare.log</code>和<code>innobackup.move.log</code>。这些日志文件位于<code>.sst</code>目录中，该目录是位于<code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code>内部的隐藏目录。</p>
+<p>每个后续 SST 都会覆盖这些日志文件，因此如果 SST 失败，最好在启动另一个 SST 之前将它们复制到安全位置，以便可以分析日志文件。请参见 <a href="https://jira.mariadb.org/browse/MDEV-17973">MDEV-17973</a>。</p>
+<h3 class="anchored_heading" id="将日志记录到-syslog">将日志记录到 Syslog</h3>
+<p>您可以通过在 <a href="%E9%85%8D%E7%BD%AE_MariaDB_%E9%80%89%E9%A1%B9%E6%96%87%E4%BB%B6">选项文件</a> 的 <code>[sst]</code> <a href="%E4%BD%BF%E7%94%A8%E9%80%89%E9%A1%B9%E7%BB%84%E9%85%8D%E7%BD%AE_MariaDB">#option-groups</a> 中设置以下内容，将 SST 日志重定向到 syslog：</p>
+<pre class="fixed">[sst]
+sst-syslog=1
+</pre><p>您还可以通过在 <a href="%E9%85%8D%E7%BD%AE_MariaDB_%E9%80%89%E9%A1%B9%E6%96%87%E4%BB%B6">选项文件</a> 的 <code>[mysqld_safe]</code> <a href="%E4%BD%BF%E7%94%A8%E9%80%89%E9%A1%B9%E7%BB%84%E9%85%8D%E7%BD%AE_MariaDB">#option-groups</a> 中设置以下内容，将 SST 日志重定向到 syslog：</p>
+<pre class="fixed">[mysqld_safe]
+syslog
+</pre><h2 class="anchored_heading" id="使用-ipv6-地址执行-sst">使用 IPv6 地址执行 SST</h2>
+<p>如果您正在使用 IPv6 地址执行 Percona XtraBackup SST，则需要将 <code>socat</code> 实用程序传递给 <code>pf=ip6</code> 选项。这可以通过在 <a href="%E9%85%8D%E7%BD%AE_MariaDB_%E9%80%89%E9%A1%B9%E6%96%87%E4%BB%B6">选项文件</a> 的 <code>[sst]</code> <a href="%E4%BD%BF%E7%94%A8%E9%80%89%E9%A1%B9%E7%BB%84%E9%85%8D%E7%BD%AE_MariaDB">#option-groups</a> 中设置 <code>sockopt</code> 选项来完成。例如：</p>
+<pre class="fixed">[sst]
+sockopt=&#34;,pf=ip6&#34;
+</pre><p>有关更多信息，请参见 <a href="https://jira.mariadb.org/browse/MDEV-18797">MDEV-18797</a>。</p>
+<h2 class="anchored_heading" id="使用-percona-xtrabackup-手动执行-sst">使用 Percona XtraBackup 手动执行 SST</h2>
+<p>在某些情况下，如果 Galera Cluster 的自动 SST 反复失败，则执行“手动 SST”可能会有所帮助。请参见以下页面以了解如何执行此操作：</p>
+<ul start="1"><li><a href="%E4%BD%BF%E7%94%A8_Percona_XtraBackup_%E6%89%8B%E5%8A%A8%E8%BF%9B%E8%A1%8C_Galera_Cluster_%E8%8A%82%E7%82%B9%E7%9A%84_SST">Manual SST of Galera Cluster node with Percona XtraBackup</a>
+</li></ul>
+<h2 class="anchored_heading" id="参见">参见</h2>
+<ul start="1"><li><a href="https://www.percona.com/doc/percona-xtradb-cluster/5.7/manual/xtrabackup_sst.html">Percona XtraBackup SST Configuration</a>
+</li><li><a href="https://www.percona.com/doc/percona-xtradb-cluster/5.7/security/encrypt-traffic.html#encrypt-sst">Encrypting PXC Traffic: 
+ENCRYPTING SST TRAFFIC</a>
+</li><li><a href="https://galeracluster.com/library/documentation/xtrabackup-options.html">XTRABACKUP PARAMETERS</a>
+</li><li><a href="https://galeracluster.com/library/documentation/ssl-sst.html#ssl-xtrabackup">SSL FOR STATE SNAPSHOT TRANSFERS: ENABLING SSL FOR XTRABACKUP</a></li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/zh-cn/xtrabackup-v2-sst/+subscriptions/add"
+                 data-unsubscribe-url="/kb/zh-cn/xtrabackup-v2-sst/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/zh-cn/window-functions-overview/">
+                        ← Window Functions速览
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/zh-cn/mariadb-server/">
+                        ↑ MariaDB Server文档 ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/zh-cn/auto_increment-handling-in-xtradbinnodb/">
+                        XtraDB/InnoDB中的AUTO_INCREMENT处理方式 →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="12422" data-comments-url="/kb/zh-cn/xtrabackup-v2-sst/+comments"
+         data-reply-url="/kb/zh-cn/xtrabackup-v2-sst/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/zh-cn/mariadb-server/">
+                    ↑ MariaDB Server文档 ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/alter/">
+                            
+                            ALTER语句
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create/">
+                            
+                            CREATE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/mariabackup/">
+                            
+                            Mariabackup
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/mariadb-columnstore/">
+                            
+                            MariaDB ColumnStore
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/mariadb-administration/">
+                            
+                            MariaDB 管理
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/standard-replication/">
+                            
+                            MariaDB复制
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/mariadb-server-mariadb-server/">
+                            
+                            使用MariaDB Server
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/columns-storage-engines-and-plugins/">
+                            
+                            列、存储引擎和插件
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/backing-up-and-restoring-databases/">
+                            
+                            备份和恢复数据库
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/data-types/">
+                            
+                            数据类型
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/account-management-sql-commands/">
+                            
+                            账户管理中的SQL命令
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/alter-user/">
+                            
+                            ALTER USER
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/analyze-format-json/">
+                            
+                            ANALYZE FORMAT=JSON
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/mariadb-analyze-formatjson/">
+                            
+                            ANALYZE FORMAT=JSON 示例
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/begin-end/">
+                            
+                            BEGIN END
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/case-statement/">
+                            
+                            CASE STATEMENT（条件语句）
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/close/">
+                            
+                            CLOSE(关闭)
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/coalesce/">
+                            
+                            COALESCE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/concurrent-inserts/">
+                            
+                            Concurrent Inserts
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create-database/">
+                            
+                            CREATE DATABASE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create-function/">
+                            
+                            CREATE FUNCTION
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create-procedure/">
+                            
+                            CREATE PROCEDURE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create-trigger/">
+                            
+                            CREATE TRIGGER
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/database/">
+                            
+                            DATABASE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/declare-handler/">
+                            
+                            DECLARE HANDLER
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/declare-variable/">
+                            
+                            DECLARE Variable
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/delete/">
+                            
+                            DELETE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/drop-role/">
+                            
+                            DROP ROLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/drop-user/">
+                            
+                            DROP USER
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/execute-statement/">
+                            
+                            EXECUTE 语句
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/fetch/">
+                            
+                            FETCH
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/galera-cluster-system-variables/">
+                            
+                            Galera Cluster System Variables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/getting-started-with-mariadb-galera-cluster/">
+                            
+                            Getting Started with MariaDB Galera Cluster
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/grant/">
+                            
+                            GRANT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/greatest/">
+                            
+                            GREATEST
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/group_concat/">
+                            
+                            GROUP_CONCAT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/help-command/">
+                            
+                            HELP 命令
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/high_prioritylow_priority/">
+                            
+                            HIGH_PRIORITY和LOW_PRIORITY
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/how-to-quickly-insert-data-into-mariadb/">
+                            
+                            How to Quickly Insert Data Into MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/if-statement/">
+                            
+                            IF 语句
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/in/">
+                            
+                            IN
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/insert/">
+                            
+                            INSERT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/insert-on-duplicate-key-update/">
+                            
+                            INSERT ON DUPLICATE KEY UPDATE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/insert-select/">
+                            
+                            INSERT SELECT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/iterate/">
+                            
+                            ITERATE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/labels/">
+                            
+                            Labels
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/last_value/">
+                            
+                            LAST_VALUE()
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/leave/">
+                            
+                            LEAVE（退出）
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/load-data-infile/">
+                            
+                            LOAD DATA INFILE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/loop/">
+                            
+                            LOOP（循环）
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/sql_modeoracle-from-mariadb-103/">
+                            
+                            MariaDB 10.3支持SQL_MODE=ORACLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/mysqldump/">
+                            
+                            mysqldump
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/non-recursive-common-table-expressions-overview/">
+                            
+                            Non-Recursive Common Table Expressions Overview
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/rename-table/">
+                            
+                            RENAME TABLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/rename-user/">
+                            
+                            RENAME USER
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/replace/">
+                            
+                            REPLACE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/revoke/">
+                            
+                            REVOKE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/selectinto/">
+                            
+                            SELECT INTO
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/select-into-outfile/">
+                            
+                            SELECT INTO OUTFILE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/selinux/">
+                            
+                            SELinux
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/set/">
+                            
+                            SET
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/set-default-role/">
+                            
+                            SET DEFAULT ROLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/set-names/">
+                            
+                            SET NAMES
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/set-password/">
+                            
+                            SET PASSWORD
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/set-role/">
+                            
+                            SET ROLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/set-variable/">
+                            
+                            SET Variable
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/show-create-user/">
+                            
+                            SHOW CREATE USER
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/show-databases/">
+                            
+                            SHOW DATABASES
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/show-grants/">
+                            
+                            SHOW GRANTS
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/ssl-overview/">
+                            
+                            SSL 综述
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/string-literals/">
+                            
+                            String Literals
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/tinyint/">
+                            
+                            TINYINT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/truncate-table/">
+                            
+                            TRUNCATE TABLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/update/">
+                            
+                            UPDATE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/wait-and-nowait/">
+                            
+                            WAIT 和 NOWAIT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/window-functions-overview/">
+                            
+                            Window Functions速览
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>xtrabackup-v2 SST方法</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/auto_increment-handling-in-xtradbinnodb/">
+                            
+                            XtraDB/InnoDB中的AUTO_INCREMENT处理方式
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/xtradbinnodb-file-format/">
+                            
+                            XtraDB/InnoDB的文件格式
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/general-query-log/">
+                            
+                            一般查询日志
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/using-innodb-instead-of-xtradb/">
+                            
+                            使用InnoDB替代XtraDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/about-xtradb/">
+                            
+                            关于 XtraDB 存储引擎
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/create-user/">
+                            
+                            创建用户
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/start-slave/">
+                            
+                            启动从服务
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/declare-cursor/">
+                            
+                            声明游标
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/performance-schema-table_lock_waits_summary_by_table-table/">
+                            
+                            性能配置方案 table_lock_waits_summary_by_table 表
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/numeric-data-type-overview/">
+                            
+                            数值型的数据类型概述
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/identifier-names/">
+                            
+                            标识符命名规则
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/identifier-case-sensitivity/">
+                            
+                            标识符对大小写敏感的情况
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/identifier-qualifiers/">
+                            
+                            标识限定符
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/user-defined-variables/">
+                            
+                            用户变量(User-Defined Variables)
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/cache-index/">
+                            
+                            索引-缓存
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/setting-character-sets-and-collations/">
+                            
+                            设置字符集和排序规则
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/assignment-operator/">
+                            
+                            赋值操作符(:=)
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/reset/">
+                            
+                            重置（清零）
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/error-log/">
+                            
+                            错误日志
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

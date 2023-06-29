@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariabackup-overview/+r/124526/">124526</a></dd>
+            <dd><a href="/kb/en/mariabackup-overview/+r/126069/">126069</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2814">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-03-21 19:58">2023-03-21 19:58</span></dd>
+<span class="datetime" title="2023-05-23 14:15">2023-05-23 14:15</span></dd>
         </dl>
     </div>
     
@@ -524,8 +524,19 @@ If your database server is also using the [[myrocks|MyRocks]] storage engine, th
 To use the ##[[mariabackup-options/#-history|--history]]## option, the backup user also needs to have the following privileges granted:
 
 &lt;&lt;sql&gt;&gt;
-GRANT CREATE ON PERCONA_SCHEMA.* TO &#39;mariabackup&#39;@&#39;localhost&#39;;
-GRANT INSERT ON PERCONA_SCHEMA.* TO &#39;mariabackup&#39;@&#39;localhost&#39;;
+GRANT CREATE, INSERT ON mysql.* TO &#39;mariabackup&#39;@&#39;localhost&#39;;
+&lt;&lt;/sql&gt;&gt;
+
+Prior to MariaDB 10.11, the necessary permissions to use ##[[mariabackup-options/#-history|--history]]## were:
+
+&lt;&lt;sql&gt;&gt;
+GRANT CREATE, INSERT ON PERCONA_SCHEMA.* TO &#39;mariabackup&#39;@&#39;localhost&#39;;
+&lt;&lt;/sql&gt;&gt;
+
+If you&#39;re upgrading from an older version and you want to use the new default table without losing your backup history, you can move and rename the current table in this way:
+
+&lt;&lt;sql&gt;&gt;
+RENAME TABLE PERCONA_SCHEMA.xtrabackup_history TO mysql.mariadb_backup_history;
 &lt;&lt;/sql&gt;&gt;
 
 The user account information can be specified with the ##[[mariabackup-options/#-user|--user]]## and ##[[mariabackup-options/#-p-password|--password]]## command-line options. For example:
@@ -656,15 +667,17 @@ Problems solved by setting ##[[mariabackup-options/#-lock-ddl-per-table|--lock-d
 * If a table is dropped during the backup, then it might still exists after the backup is prepared.
 * If a table exists when the backup starts, but it is dropped before the backup copies it, then the tablespace file can&#39;t be copied, so the backup would fail.
 
-Problems solved by setting ##[[innodb-system-variables/#innodb_log_optimize_ddl|innodb_log_optimize_ddl=OFF]]## (MariaDB Server system variable added in MariaDB 10.2.17:
+Problems solved by setting ##[[innodb-system-variables/#innodb_log_optimize_ddl|innodb_log_optimize_ddl=OFF]]## (MariaDB Server system variable added in MariaDB 10.2.17 and removed in 10.6.0):
 
 * If the backup noticed concurrent DDL, then it might fail with &#34;ALTER TABLE or OPTIMIZE TABLE was executed during backup&#34;.
 
-Problems solved by ##[[innodb-system-variables/#innodb_safe_truncate|innodb_safe_truncate=ON]]## (MariaDB Server system variable in MariaDB 10.2.19):
+Problems solved by ##[[innodb-system-variables/#innodb_safe_truncate|innodb_safe_truncate=ON]]## (MariaDB Server system variable in MariaDB 10.2.19 and removed in 10.3.0):
 
 * If a table is created during the backup, then it might not exist in the backup after prepare.
 * If a table is renamed during the backup after the tablespace file was copied, then the table may not exist after the backup is prepared.
 * If a table is dropped and created under the same name during the backup after the tablespace file was copied, then the table will have the wrong tablespace ID when the backup is prepared.
+
+Note that, with the removal of ##innodb_log_optimize_ddl## and ##innodb_safe_truncate##, the above problems were definitely solved.
 
 Problems solved by other bug fixes:
 

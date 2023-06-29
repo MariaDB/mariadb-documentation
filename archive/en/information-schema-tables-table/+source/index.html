@@ -304,7 +304,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/information-schema-tables-table/+r/117979/">117979</a></dd>
+            <dd><a href="/kb/en/information-schema-tables-table/+r/127522/">127522</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -313,7 +313,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-07-28 09:38">2022-07-28 09:38</span></dd>
+<span class="datetime" title="2023-06-25 21:08">2023-06-25 21:08</span></dd>
         </dl>
     </div>
     
@@ -324,7 +324,7 @@
     
         
         <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
-The [[information_schema|Information Schema]] table shows information about the various non-##TEMPORARY## tables (except tables from the ##Information Schema## database) and [[views|views]] on the server.
+The [[information_schema|Information Schema]] table shows information about the various tables (until MariaDB 11.2.0, only non-##TEMPORARY## tables, except for tables from the ##Information Schema## database) and [[views|views]] on the server.
 
 It contains the following columns:
 &lt;&lt;style class=&#34;darkheader-nospace-borders&#34;&gt;&gt;
@@ -332,7 +332,7 @@ It contains the following columns:
 | ##TABLE_CATALOG## | Always ##def##. |
 | ##TABLE_SCHEMA## | Database name. |
 | ##TABLE_NAME## | Table name. |
-| ##TABLE_TYPE## | One of ##BASE TABLE## for a regular table, ##VIEW## for a [[views|view]], ##SYSTEM VIEW## for [[information_schema|Information Schema]] tables,  ##SYSTEM VERSIONED## for [[system-versioned-tables|system-versioned tables]] or ##SEQUENCE## for [[sequences|sequences]]. |	 
+| ##TABLE_TYPE## | One of ##BASE TABLE## for a regular table, ##VIEW## for a [[views|view]], ##SYSTEM VIEW## for [[information_schema|Information Schema]] tables,  ##SYSTEM VERSIONED## for [[system-versioned-tables|system-versioned tables]], ##SEQUENCE## for [[sequences|sequences]] or, from MariaDB 11.2.0, ##TEMPORARY## for local temporary tables. |	 
 | ##ENGINE## | [[storage-engines|Storage Engine]]. |
 | ##VERSION## | Version number from the table&#39;s .frm file |
 | ##ROW_FORMAT## | Row format (see [[xtradbinnodb-storage-formats/|InnoDB]], [[aria-storage-formats|Aria]] and [[myisam-storage-formats|MyISAM]] row formats). |
@@ -351,7 +351,7 @@ It contains the following columns:
 | ##CREATE_OPTIONS## | Extra ##[[create-table|CREATE TABLE]]## options. |
 | ##TABLE_COMMENT## | Table comment provided when MariaDB created the table. |
 | ##MAX_INDEX_LENGTH## | Maximum index length (supported by MyISAM and Aria tables). Added in MariaDB 10.3.5. |
-| ##TEMPORARY## | Placeholder to signal that a table is a temporary table. Currently always &#34;N&#34;, except &#34;Y&#34; for generated information_schema tables and NULL for [[views]]. Added in MariaDB 10.3.5. |
+| ##TEMPORARY## | Until MariaDB 11.2.0, placeholder to signal that a table is a temporary table and always &#34;N&#34;, except &#34;Y&#34; for generated information_schema tables and NULL for [[views]]. From MariaDB 11.2.0, will also be set to &#34;Y&#34; for local temporary tables. Added in MariaDB 10.3.5. |
 &lt;&lt;/style&gt;&gt;
 
 Although the table is standard in the Information Schema, all but ##TABLE_CATALOG##, ##TABLE_SCHEMA##, ##TABLE_NAME##, ##TABLE_TYPE##, ##ENGINE## and ##VERSION## are MySQL and MariaDB extensions.
@@ -463,6 +463,20 @@ SELECT table_schema as `DB`, table_name AS `Table`,
 | wordpress          | wp_commentmeta                        |      2.47 |
 | wordpress          | wp_simple_login_log                   |      2.03 |
 ...
+&lt;&lt;/code&gt;&gt;
+
+From MariaDB 11.2.0
+&lt;&lt;code&gt;&gt;
+CREATE TEMPORARY TABLE foo.t1 (a int);
+
+SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA=&#39;foo&#39; AND TEMPORARY=&#39;y&#39;\G
+*************************** 1. row ***************************
+   TABLE_CATALOG: def
+    TABLE_SCHEMA: foo
+      TABLE_NAME: t1
+      TABLE_TYPE: TEMPORARY
+...
+       TEMPORARY: Y
 &lt;&lt;/code&gt;&gt;
 
 == See Also

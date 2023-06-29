@@ -276,7 +276,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/zh-cn/aria-storage-engine/+r/13040/">13040</a></dd>
+            <dd><a href="/kb/zh-cn/aria-storage-engine/+r/127177/">127177</a></dd>
             <dt>用户</dt>
             <dd>
 <span class="user" id="user-1257">
@@ -285,7 +285,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2012-12-18 06:31">2012-12-18 06:31</span></dd>
+<span class="datetime" title="2023-06-12 03:19">2023-06-12 03:19</span></dd>
         </dl>
     </div>
     
@@ -295,91 +295,83 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">Aria 存储引擎是默认被编译进MariaDB 5.1里的,并且在mysqld启动的时候就要求同时启动.
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+[[Aria]] 存储引擎从 MariaDB 5.1 开始默认编译，并且在启动 MariaDB 时需要“使用”。
 
-另外,内部的磁盘表是Aria表格式而不是MyISAM表格式.这将使某些&lt;&lt;fixed&gt;&gt;GROUP BY&lt;&lt;/fixed&gt;&gt;和&lt;&lt;fixed&gt;&gt;DISTINCT&lt;&lt;/fixed&gt;&gt;请求速度更快,因为Aria有比MyISAM更好的缓冲机制.包含Aria是MariaDB 5.1和MySQL 5.1之间的一个不同.
+从 MariaDB 10.4 开始，所有 [[system-tables|系统表]] 都是 Aria。
 
-&lt;&lt;style class=&#34;redbox&#34;&gt;&gt;
-注意: **//Aria//** 存储引擎以前是叫做 //**Maria**// (参考
-[[http://askmonty.org/wiki/Rename_Maria|Maria改名]] 获得更改名称的详细信息) 并且在以前版本的 [[MariaDB]] 里他也仍然是被叫做 Maria.
-&lt;&lt;/style&gt;&gt;
-There are also some new options to ##[[create-table|CREATE TABLE]]##:
+此外，内部磁盘上的表格使用 Aria 表格格式而不是 [[MyISAM]] 表格格式。这应该会加速一些 [[group-by|GROUP BY]] 和 [[count-distinct|DISTINCT]] 查询，因为 Aria 具有比 MyISAM 更好的缓存。
 
-* **##TRANSACTIONAL= 0 {{{|}}} 1## :** Transactional means crash-safe for Aria
-* **##PAGE_CHECKSUM= 0 {{{|}}} 1## :** If index and data should use
-  page checksums for extra safety.
-* **##TABLE_CHECKSUM= 0 {{{|}}} 1## :**
-  Same as ##CHECKSUM## in MySQL 5.1
-* **##ROW_FORMAT=PAGE## :** The new cacheable row format for
-  Aria tables. Default row format for Aria tables and only row format that can
-  be used if ##TRANSACTIONAL=1##.
-  To emulate MyISAM, use ##ROW_FORMAT=FIXED## or ##ROW_FORMAT=DYNAMIC##
-* ##[[checksum-table|CHECKSUM TABLE]]## now ignores values in NULL fields. This
-  makes ##CHECKSUM TABLE## faster and fixes some cases where
-  same table definition could give different checksum values depending on row
-  format. The disadvantage is that the value is now different compared to other
-  MySQL installations. The new checksum calculation is fixed for all table
-  engines that uses the default way to calculate and MyISAM which does the
-  calculation internally. Note: Old MyISAM tables with internal checksum will
-  return the same checksum as before. To fix them to calculate according to new
-  rules you have to do an ##[[alter-table|ALTER TABLE]]##. You can use the old
-  ways to calculate checksums by using the option &lt;&lt;code&gt;&gt;--old&lt;&lt;/code&gt;&gt; to mysqld or set the
-  system variable &#39;##@@old##&#39; to ##1## when you
-  do ##CHECKSUM TABLE ...  EXTENDED;##
-* At startup Aria will check the Aria logs and automatically recover the tables
-  from last checkpoint if mysqld was not taken down correctly.
-
-== [[mysqld-options-full-list|mysqld startup options]] for Aria
-
-&lt;&lt;style class=&#34;darkheader-nospace-borders&#34; style=&#34;font-size:0.8em;&#34;&gt;&gt;
-|= Option |= Description |= Default value |
-| &lt;&lt;code&gt;&gt;--aria[=#]&lt;&lt;/code&gt;&gt; | Enable or disable Aria plugin. Possible values are ##ON##, ##OFF##, ##FORCE## (don&#39;t start if the plugin fails to load). | ##ON## |
-| &lt;&lt;code&gt;&gt;--aria-block-size=# &lt;&lt;/code&gt;&gt; | Block size to be used for Aria index pages. | 8192 |
-| &lt;&lt;code&gt;&gt;--aria-checkpoint-interval=# &lt;&lt;/code&gt;&gt; | Interval between automatic checkpoints, in seconds; ##0## means &#39;no automatic checkpoints&#39; which makes sense only for testing. | ##30## |
-| ##{{{--}}}aria-force-start-after-recovery-failures=# ## | Number of consecutive log recovery failures after which logs will be automatically deleted to cure the problem; ##0## (the default) disables the feature. | ##0## |
-| &lt;&lt;code&gt;&gt;--aria-group-commit=# &lt;&lt;/code&gt;&gt; | Specifies Aria group commit mode. Possible values are &#34;##none##&#34; (no group commit), &#34;##hard##&#34; (with waiting to actual commit), &#34;##soft##&#34; (no wait for commit (DANGEROUS!!!)) | ##none## |
-| &lt;&lt;code&gt;&gt;--aria-group-commit-interval=# &lt;&lt;/code&gt;&gt; | Interval between commits in microseconds (##1/1000000## second). ##0## stands for no waiting for other threads to come and do a commit in &#34;##hard##&#34; mode and no sync()/commit at all in &#34;##soft##&#34; mode.  Option has only an effect if ##aria_group_commit## is used | ##0## |
-| &lt;&lt;code&gt;&gt;--aria-log-dir-path=name&lt;&lt;/code&gt;&gt; | Path to the directory where to store transactional log | Same as &#39;##datadir##&#39; |
-| &lt;&lt;code&gt;&gt;--aria-log-file-size=# &lt;&lt;/code&gt;&gt; | Limit for transaction log size | ##1073741824## |
-| &lt;&lt;code&gt;&gt;--aria-log-purge-type=# &lt;&lt;/code&gt;&gt; | Specifies how Aria transactional log will be purged. Possible values of name are &#34;##immediate##&#34;, &#34;##external##&#34; and &#34;##at_flush##&#34; | ##immediate## |
-| &lt;&lt;code&gt;&gt;--aria-max-sort-file-size=# &lt;&lt;/code&gt;&gt; | Don&#39;t use the fast sort index method to created index if the temporary file would get bigger than this. | ##9223372036853727232## |
-| &lt;&lt;code&gt;&gt;--aria-page-checksum&lt;&lt;/code&gt;&gt; | Maintain page checksums (can be overridden per table with ##PAGE_CHECKSUM## clause in ##CREATE TABLE##) | ##TRUE## |
-| &lt;&lt;code&gt;&gt;--aria-pagecache-age-threshold=# &lt;&lt;/code&gt;&gt; | This characterizes the number of hits a hot block has to be untouched until it is considered aged enough to be downgraded to a warm block. This specifies the percentage ratio of that number of hits to the total number of blocks in the page cache. | ##300## |
-| &lt;&lt;code&gt;&gt;--aria-pagecache-buffer-size=# &lt;&lt;/code&gt;&gt; | The size of the buffer used for index blocks for Aria tables. Increase this to get better index handling (for all reads and multiple writes) to as much as you can afford. | ##134217720## (= 128M) |
-| ##{{{--}}}aria-pagecache-division-limit=# ## | The minimum percentage of warm blocks in key cache | ##100## |
-| &lt;&lt;code&gt;&gt;--aria-recover[=#]&lt;&lt;/code&gt;&gt; | Specifies how corrupted tables should be automatically repaired. Possible values are &#34;##NORMAL##&#34; (the default), &#34;##BACKUP##&#34;, &#34;##FORCE##&#34;, &#34;##QUICK##&#34;, or &#34;##OFF##&#34; which is like not using the option. | ##NORMAL## |
-| &lt;&lt;code&gt;&gt;--aria-repair-threads=# &lt;&lt;/code&gt;&gt; | Number of threads to use when repairing Aria tables. The value of 1 disables parallel repair. | ##1## |
-| &lt;&lt;code&gt;&gt;--aria-sort-buffer-size=# &lt;&lt;/code&gt;&gt; | The buffer that is allocated when sorting the index when doing a ##REPAIR## or when creating indexes with ##CREATE INDEX## or ##ALTER TABLE##. | ##134217728## |
-| &lt;&lt;code&gt;&gt;--aria-stats-method=# &lt;&lt;/code&gt;&gt; | Specifies how Aria index statistics collection code should treat ##NULL##s. Possible values are &#34;##nulls_unequal##&#34;, &#34;##nulls_equal##&#34;, and &#34;##nulls_ignored##&#34;. | ##nulls_unequal## |
-| &lt;&lt;code&gt;&gt;--aria-sync-log-dir=# &lt;&lt;/code&gt;&gt; | Controls syncing directory after log file growth and new file creation. Possible values are &#34;##never##&#34;, &#34;##newfile##&#34; and &#34;##always##&#34;). | ##NEWFILE## |
+&lt;&lt;style class=&#34;greenbox&#34;&gt;&gt;
+注意：**//Aria//** 存储引擎以前称为 //**Maria**//（有关重命名的详细信息，请参见[[the-aria-name|Aria 名称]]），并且在以前版本的 [[MariaDB]] 中，该引擎仍然被称为 Maria。
 &lt;&lt;/style&gt;&gt;
 
+在 [[create-table|CREATE TABLE]] 和 [[alter-table|ALTER TABLE]] 中，Aria 表格的以下选项：
 
-In normal operations, the only variables you have to consider are:
+* **##TRANSACTIONAL= 0 {{{|}}} 1##：** 如果为 Aria 表格设置了 ##TRANSACTIONAL## 表格选项，则该表格将是崩溃安全的。这是通过将表格的任何更改记录到 Aria 的事务日志中并在语句结束时同步这些写入来实现的。这将略微减慢写入和更新速度。但是，好处是如果服务器在语句结束之前崩溃，则所有非持久性更改将回滚到语句开始时的状态。这还需要每行和键存储事务 ID（以允许并发插入和选择）多达 6 个字节。
+** 对于分区表不支持 ##TRANSACTIONAL=1##。
+** Aria 表格的 ##TRANSACTIONAL## 表格选项默认值取决于表格的 ##ROW_FORMAT## 表格选项的值。有关更多详细信息，请参见下文。
+** 如果为 Aria 表格设置了 ##TRANSACTIONAL## 表格选项，则该表格实际上不支持事务。有关更多信息，请参见 MDEV-21364。在此上下文中，“事务”只是指“崩溃安全”。
+* **##PAGE_CHECKSUM= 0 {{{|}}} 1##：** 如果索引和数据应使用页面校验和以获得额外的安全性。
+* **##TABLE_CHECKSUM= 0 {{{|}}} 1##：** 与 MySQL 5.1 中的 ##CHECKSUM## 相同
+* **##ROW_FORMAT=PAGE {{{|}}} FIXED {{{|}}} DYNAMIC##：** 表格的 [[aria-storage-formats|行格式]]。
+** 默认值为 ##PAGE##。
+** 要模拟 MyISAM，请设置 ##ROW_FORMAT=FIXED## 或 ##ROW_FORMAT=DYNAMIC##
 
-* ##aria-pagecache-buffer-size##
-** This is where all data and index are cached. The bigger this is, the faster
-   Aria will work.
-* ##aria-block-size##
-** The default value 8192, should be ok for most cases. The only with a higher
-   value is that it takes long to find a packed key in the block as one has to
-   search roughly 8192/2 to find each key.  We plan to fix this by adding a
-   dictionary at the end of the page to be able to do a binary search within
-   the block before starting a scan.  Until this is done and key lookups takes
-   too long time even if you are not hitting disk, then you should consider
-   making this smaller.
-** Possible values to try are ##2048##, ##4096## or ##8192##
-** Note that you can&#39;t change this without dumping, deleting old tables and
-   deleting all log files and then restoring your Aria tables. (This is the
-   only option that requires a dump and load)
-* ##aria-log-purge-type##
-** Set this to &#34;##at_flush##&#34; if you want to keep a copy of the transaction logs
-   (good as an extra backup). The logs will stay around until you
-   execute ##FLUSH LOGS##;
+##TRANSACTIONAL## 和 ##ROW_FORMAT## 表格选项的交互如下：
 
+* 如果设置了 ##TRANSACTIONAL=1##，则仅支持 ##PAGE## 行格式。如果将 ##ROW_FORMAT## 设置为其他某个值，则 Aria 将发出警告，但仍将强制行格式为 ##PAGE##。
+* 如果设置了 ##TRANSACTIONAL=0##，则该表格将不具备崩溃安全性，并且支持任何行格式。
+* 如果未设置 ##TRANSACTIONAL## 的任何值，则支持任何行格式。如果设置了 ##ROW_FORMAT##，则表格将使用该行格式。否则，表格将使用默认的 ##PAGE## 行格式。在这种情况下，如果表格使用了 ##PAGE## 行格式，则它将是崩溃安全的。如果它使用其他某些行格式，则它将不具备崩溃安全性。
 
-See also: [[aria-faq|Aria FAQ]]
-</textarea>
+其他一些改进包括：
+
+* [[checksum-table|CHECKSUM TABLE]] 现在忽略空字段中的值。这使得 ##CHECKSUM TABLE## 更快，并修复了某些情况下，相同的表定义可能会根据 [[aria-storage-formats|行格式]] 给出不同的校验和值的情况。缺点是该值现在与其他 MySQL 安装不同。新的校验和计算对所有使用默认计算方式和内部计算校验和的 MyISAM 表格引擎都是固定的。注意：具有内部校验和的旧 MyISAM 表格将返回与之前相同的校验和。要根据新规则进行计算以修复它们，您必须执行 ##[[alter-table|ALTER TABLE]]##。您可以使用选项 &lt;&lt;code&gt;&gt;--old&lt;&lt;/code&gt;&gt; 以 mariadbd//mysqld 或在执行 ##CHECKSUM TABLE ...  EXTENDED;## 时将系统变量 &#39;##@@old##&#39; 设置为 ##1## 来使用旧的计算校验和的方法。
+* 在启动时，Aria 将检查 Aria 日志，并在服务器未正确关闭时自动从最后一个检查点恢复表格。请参见[[#aria-log-files|Aria 日志文件]]
+
+== Aria 的启动选项
+
+有关完整列表，请参见[[aria-server-system-variables|Aria 系统变量]]。
+
+在正常操作中，您需要考虑的唯一变量是：
+
+* [[aria-server-system-variables#aria_pagecache_buffer_size|aria-pagecache-buffer-size]]
+** 这是所有索引和数据页面缓存的位置。这个值越大，Aria 就越快。
+*[[[aria-server-system-variables#aria_block_size|aria-block-size]]
+** 默认值 8192 对于大多数情况来说应该是可以的。更高的值唯一的问题在于，在块中查找打包键需要更长时间，因为必须搜索大约 8192/2 才能找到每个键。我们计划通过在页面末尾添加一个字典来解决这个问题，以便在开始扫描之前能够在块内进行二进制搜索。在完成此操作并且即使您没有击中磁盘，关键查找也需要太长时间时，您应该考虑将其缩小。
+** 可以尝试的可能值为 ##2048##、##4096## 或 ##8192##
+** 请注意，您不能更改此值而不进行转储、删除旧表格并删除所有日志文件，然后恢复您的 Aria 表格。（这是唯一需要转储和加载的选项）
+* [[aria-server-system-variables#aria_log_purge_type|aria-log-purge-type]]
+** 如果要保留事务日志的副本（作为额外备份），请将其设置为 &#34;##at_flush##&#34;。日志将保留直到您执行 [[flush|FLUSH ENGINE LOGS]]。
+
+== Aria 日志文件
+
+##aria_log_control## 文件是一个非常短的日志文件（52 字节），其中包含与日志记录和检查点相关的所有 Aria 表格的当前状态。特别地，它包含以下信息：
+&lt;&lt;code&gt;&gt;
+Aria 文件版本：1
+块大小：8192
+maria_uuid：ee948482-6cb7-11ed-accb-3c7c3ff16468
+last_checkpoint_lsn：(1,0x235a)
+last_log_number：1
+trid：28
+recovery_failures：0
+&lt;&lt;/code&gt;&gt;
+
+* ##uuid## 是每个系统的唯一标识符。所有创建的 Aria 文件都将在其 .MAI 标头中拥有此标识符的副本。这主要用于检查是否有人在 MariaDB 服务器之间复制了 Aria 文件。
+* ##last_checkpoint_lsn## 和 ##last_log_number## 是有关当前 aria_log 文件的信息。
+* ##trid## 是迄今为止看到的最高事务编号。用于恢复。
+
+##aria_log.*## 文件包含更改 Aria 文件（包括创建表、删除表、插入等）的所有操作的日志。这是一个“正常”的 WAL（预写式日志），类似于 InnoDB 日志文件，只是 aria_logs 包含了重做和撤销。当旧的 aria_log 文件不再需要时，它们会自动删除（最后一个检查点或任何正在运行的事务不再需要引用旧数据）。
+
+=== 缺少有效 ID
+错误 ##Missing valid id at start of file. File is not a valid aria control file## 意味着某些东西覆盖了文件中至少前 4 个字节。这可能是由于文件系统（硬件或软件）的问题，或者是一个 bug，其中 MariaDB 内部的线程写入了错误的文件描述符（在这种情况下，您应该 [[reporting-bugs|报告此 bug]]，并附上控制文件的副本以进行协助）。
+
+在关机的情况下，如果出现损坏的日志文件，则应该能够通过删除所有 aria_log 文件来修复该问题。
+如果控制文件损坏，则必须删除 aria_control_file 和所有 aria_log.* 文件。
+这样做的效果是，在打开 Aria 表格时，服务器将认为它已从另一个系统移动，并自动检查和修复它。如果没有问题，表格将被打开，并可以像往常一样使用。也请参见 [[aria-faq/#when-is-it-safe-to-remove-old-log-files|什么时候可以安全地删除旧日志文件]]。
+
+== 另请参阅
+* [[aria-faq|Aria 常见问题解答]]</textarea>
     
 
 

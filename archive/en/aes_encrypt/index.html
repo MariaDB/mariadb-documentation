@@ -259,12 +259,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2010-03-27 18:01">12 years, 11 months ago</span></dd>
+<span class="datetime" title="2010-03-27 18:01">13 years, 3 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2019-01-17 09:04">4 years, 1 month ago</span></dd>
+<span class="datetime" title="2023-06-20 19:29">1 week ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -333,6 +333,25 @@
 </div>
 
     
+
+
+
+    
+    
+
+<div class="well well-small box"><div><h5>Product Versions</h5></div><div>
+
+        <ul id="product_chooser">
+            
+                <li class="mariadb_from_11_2">
+                    <label><input type="checkbox" data-product-class="mariadb_from_11_2"
+                            >MariaDB starting with 11.2</label>
+                </li>
+            
+        </ul>
+    
+</div>
+</div>
 
 
 
@@ -412,26 +431,29 @@
     <div class="answer formatted">
         <h2 class="anchored_heading" id="syntax">Syntax</h2>
 <pre class="fixed">AES_ENCRYPT(str,key_str)
+</pre><p>From <a href="/kb/en/mariadb-11-2-0-release-notes/">MariaDB 11.2.0</a></p>
+<pre class="fixed">AES_ENCRYPT(str, key, [, iv [, mode]])
 </pre><h2 class="anchored_heading" id="description">Description</h2>
-<p><code>AES_ENCRYPT()</code> and <code><a href="/kb/en/aes_decrypt/">AES_DECRYPT()</a></code> allow encryption and decryption of
-data using the official AES (Advanced Encryption Standard) algorithm,
-previously known as "Rijndael." Encoding with a 128-bit key length is
-used, but you can extend it up to 256 bits by modifying the source. We
-chose 128 bits because it is much faster and it is secure enough for
-most purposes.</p>
+<p><code>AES_ENCRYPT()</code> and <a href="/kb/en/aes_decrypt/">AES_DECRYPT()</a> allow encryption and decryption of
+data using the official AES (Advanced Encryption Standard) algorithm, previously known as "Rijndael." Encoding with a 128-bit key length is used (from <a href="/kb/en/mariadb-11-2-0-release-notes/">MariaDB 11.2.0</a>, this is the default, and can be changed). 128 bits is much faster and is secure enough for most purposes.</p>
 <p><code>AES_ENCRYPT()</code> encrypts a string <em><code>str</code></em> using the key <em><code>key_str</code></em>, and returns a binary string.</p>
 <p><code>AES_DECRYPT()</code> decrypts the encrypted string and returns the original
 string.</p>
 <p>The input arguments may be any length. If either argument is NULL, the result of this function is also <code>NULL</code>.</p>
-<p>Because AES is a block-level algorithm, padding is used to encode
-uneven length strings and so the result string length may be
-calculated using this formula:</p>
+<p>Because AES is a block-level algorithm, padding is used to encode uneven length strings and so the result string length may be calculated using this formula:</p>
 <pre class="fixed">16 x (trunc(string_length / 16) + 1)
-</pre><p>If <code>AES_DECRYPT()</code> detects invalid data or incorrect padding, it returns
-<code>NULL</code>. However, it is possible for <code>AES_DECRYPT()</code> to return a non-<code>NULL</code>
-value (possibly garbage) if the input data or the key is invalid.</p>
-<h2 class="anchored_heading" id="examples">Examples</h2>
+</pre><p>If <code>AES_DECRYPT()</code> detects invalid data or incorrect padding, it returns <code>NULL</code>. However, it is possible for <code>AES_DECRYPT()</code> to return a non-<code>NULL</code> value (possibly garbage) if the input data or the key is invalid.</p>
+<div class="mariadb_from_11_2 mariadb from_11_2 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-112/">11.2</a></h5><p>From <a href="/kb/en/what-is-mariadb-112/">MariaDB 11.2</a>, the function supports an initialization vector, and control of the block encryption mode. The default mode is specified by the <a href="/kb/en/server-system-variables/#block_encryption_mode">block_encryption_mode</a> system variable, which can be changed when calling the function with a mode. <em>mode</em> is aes-{128,192,256}-{ecb,cbc,ctr} for example:  "AES-128-cbc".</p>
+<p>AES_ENCRYPT(str, key) can no longer be used in persistent virtual columns (and the like).</p>
+</div><h2 class="anchored_heading" id="examples">Examples</h2>
 <pre class="fixed"><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t</span> <span class="k">VALUES</span> <span class="p">(</span><span class="n">AES_ENCRYPT</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">,</span><span class="n">SHA2</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">,</span><span class="mi">512</span><span class="p">)));</span>
+</pre><p>From <a href="/kb/en/mariadb-11-2-0-release-notes/">MariaDB 11.2.0</a>:</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="n">HEX</span><span class="p">(</span><span class="n">AES_ENCRYPT</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="s1">&#39;bar&#39;</span><span class="p">,</span> <span class="s1">&#39;0123456789abcdef&#39;</span><span class="p">,</span> <span class="s1">&#39;aes-256-cbc&#39;</span><span class="p">))</span> <span class="k">AS</span> <span class="n">x</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">----------------------------------+</span>
+<span class="o">|</span> <span class="n">x</span>                                <span class="o">|</span>
+<span class="o">+</span><span class="c1">----------------------------------+</span>
+<span class="o">|</span> <span class="mi">42</span><span class="n">A3EB91E6DFC40A900D278F99E0726E</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----------------------------------+</span>
 </pre>
     </div>
 

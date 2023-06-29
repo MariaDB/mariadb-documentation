@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/aria-faq/+r/121938/">121938</a></dd>
+            <dd><a href="/kb/en/aria-faq/+r/127306/">127306</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-11-29 15:49">2022-11-29 15:49</span></dd>
+<span class="datetime" title="2023-06-19 08:54">2023-06-19 08:54</span></dd>
         </dl>
     </div>
     
@@ -384,7 +384,7 @@ Long term, we have the following goals for Aria:
 Documentation is available at [[aria/|Aria]] and related topics.  The project is maintained on [[https://github.com/MariaDB/server|GitHub]].
 
 If you want to know what happens or be part of developing Aria, you can subscribe to the 
-[[http://launchpad.net/~maria-developers|maria-developers]], [[http://launchpad.net/~maria-docs|maria-docs]], or [[http://launchpad.net/~maria-discuss|maria-discuss]] groups on Launchpad.
+[[https://lists.mariadb.org/postorius/lists/developers.lists.mariadb.org/|developers]], [[https://lists.mariadb.org/postorius/lists/docs.lists.mariadb.org/|docs]], or [[https://lists.mariadb.org/postorius/lists/discuss.lists.mariadb.org/|discuss]] mailing lists.
 
 To report and check bugs in Aria, see [[reporting-bugs|Reporting Bugs]].
 
@@ -480,15 +480,15 @@ In the current development phase Aria tables created with ##TRANSACTIONAL=1## ar
 
 If Aria doesn&#39;t start or you have an unrecoverable table (shouldn&#39;t happen):
 * Remove the ##aria_log.%## files from the data directory.
-* Restart ##mysqld## and run ##[[check-table|CHECK TABLE]]##, ##[[repair-table|REPAIR TABLE]]## or ##[[mysqlcheck]]## on your Aria tables.
+* Restart ##mysqld## and run [[check-table|CHECK TABLE]], [[repair-table|REPAIR TABLE]] or [[mariadb-check]] on your Aria tables.
 
 Alternatively,
 
-* Remove logs and run ##[[aria_chk]]## on your ##*.MAI## files.
+* Remove logs and run [[aria_chk]] on your ##*.MAI## files.
 
 == What is going to change in later Aria main releases?
 
-The ##LOCK TABLES## statement will not start a crash-safe segment. You should use ##[[begin|BEGIN]]## and ##[[commit|COMMIT]]## instead. 
+The ##LOCK TABLES## statement will not start a crash-safe segment. You should use [[begin|BEGIN]] and [[commit|COMMIT]] instead. 
 
 To make things future safe, you could do this:
 
@@ -523,7 +523,7 @@ You can use ##PAGE_CHECKSUM=1## also for non-transactional tables; This puts a p
 
 You may still have a speed difference (may be slightly positive or negative) between MyISAM and Aria because of different page sizes.  You can change the page size for MariaDB with ##--aria-block-size=\###, where ##\### is 1024, 2048, 4096, 8192, 16384 or 32768.
 
-Note that if you change the page size you have to dump all your old tables into text (with ##[[mysqldump]]##) and remove the old Aria log and files: 
+Note that if you change the page size you have to dump all your old tables into text (with [[mariadb-dump]]) and remove the old Aria log and files: 
 
 &lt;&lt;code&gt;&gt;
 # rm datadir/aria_log*
@@ -557,15 +557,15 @@ XXX.MAD : The data.
 
 It&#39;s safe to copy all the Aria files to another directory or MariaDB instance if any of the following holds:
 
-* If you shutdown the MariaDB Server properly with ##[[mysqladmin|mysqladmin shutdown]]##, so that there is nothing for Aria to recover when it starts.
+* If you shutdown the MariaDB Server properly with [[mariadb-admin|mariadb-admin shutdown]], so that there is nothing for Aria to recover when it starts.
 
 or
 
-* If you have run a ##[[flush|FLUSH TABLES]]## statement and not accessed the table using SQL from that time until the tables have been copied. 
+* If you have run a [[flush|FLUSH TABLES]] statement and not accessed the table using SQL from that time until the tables have been copied. 
 
 In addition, you must adhere the following rule for transactional tables:
 
-You can&#39;t copy the table to a location within the same MariaDB server if the new table has existed before and the new table is still active in the Aria recovery log (that is, Aria may need to access the old data during recovery). If you are unsure whether the old name existed, run ##[[aria_chk|aria_chk --zerofill]]## on the table before you use it.
+You can&#39;t copy the table to a location within the same MariaDB server if the new table has existed before and the new table is still active in the Aria recovery log (that is, Aria may need to access the old data during recovery). If you are unsure whether the old name existed, run [[aria_chk|aria_chk --zerofill]] on the table before you use it.
 
 After copying a transactional table and before you use the table, we recommend that you run the command:
 
@@ -575,13 +575,13 @@ $ aria_chk --zerofill table_name
 
 This will overwrite all references to the logs (LSN), all transactional references (TRN) and all unused space with 0. It also marks the table as &#39;movable&#39;. An additional benefit of zerofill is that the Aria files will compress better.  No real data is ever removed as part of zerofill.
 
-Aria will automatically notice if you have copied a table from another system and do &#39;zerofill&#39; for the first access of the table if it was not marked as &#39;movable&#39;. The reason for using ##[[aria_chk|aria_chk --zerofill]]## is that you avoid a delay in the MariaDB server for the first access of the table.
+Aria will automatically notice if you have copied a table from another system and do &#39;zerofill&#39; for the first access of the table if it was not marked as &#39;movable&#39;. The reason for using [[aria_chk|aria_chk --zerofill]] is that you avoid a delay in the MariaDB server for the first access of the table.
 
 Note that this automatic detection doesn&#39;t work if you copy tables within the same MariaDB server!
 
 == When is it safe to remove old log files?
 
-If you want to remove the [[aria-storage-engine/#aria-log-files|Aria log files]] (##aria_log.%##) with ##rm## or delete, then you must first shut down MariaDB cleanly (for example, with ##[[mysqladmin|mysqladmin shutdown]]##) before deleting the old files.
+If you want to remove the [[aria-storage-engine/#aria-log-files|Aria log files]] (##aria_log.%##) with ##rm## or delete, then you must first shut down MariaDB cleanly (for example, with [[mariadb-admin|mariadb-admin shutdown]]) before deleting the old files.
 
 The same rules apply when upgrading MariaDB; When upgrading, first take down MariaDB in a clean way and then upgrade. This will allow you to remove the old log files if there are incompatible problems between
 releases.

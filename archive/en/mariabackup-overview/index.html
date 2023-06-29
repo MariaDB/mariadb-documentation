@@ -247,12 +247,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2017-04-28 17:30">5 years, 11 months ago</span></dd>
+<span class="datetime" title="2017-04-28 17:30">6 years, 2 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-03-21 19:58">3 weeks, 5 days ago</span></dd>
+<span class="datetime" title="2023-05-23 14:15">1 month ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -595,8 +595,11 @@ repository using <code><a href="https://wiki.debian.org/apt-get">apt-get</a></co
 <span class="k">GRANT</span> <span class="n">RELOAD</span><span class="p">,</span> <span class="n">PROCESS</span><span class="p">,</span> <span class="k">LOCK</span> <span class="n">TABLES</span><span class="p">,</span> <span class="n">REPLICATION</span> <span class="n">CLIENT</span> <span class="k">ON</span> <span class="o">*</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;mariabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
 </pre><p>If your database server is also using the <a href="/kb/en/myrocks/">MyRocks</a> storage engine, then the user account that performs the backup will also need the <code>SUPER</code> <a href="/kb/en/grant/#global-privileges">global privilege</a>. This is because Mariabackup creates a checkpoint of this data by setting the <code><a href="/kb/en/myrocks-system-variables/#rocksdb_create_checkpoint">rocksdb_create_checkpoint</a></code> system variable, which requires this privilege. See <a href="https://jira.mariadb.org/browse/MDEV-20577">MDEV-20577</a> for more information.</p>
 <p>To use the <code><a href="/kb/en/mariabackup-options/#-history">--history</a></code> option, the backup user also needs to have the following privileges granted:</p>
-<pre class="fixed"><span class="k">GRANT</span> <span class="k">CREATE</span> <span class="k">ON</span> <span class="n">PERCONA_SCHEMA</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;mariabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
-<span class="k">GRANT</span> <span class="k">INSERT</span> <span class="k">ON</span> <span class="n">PERCONA_SCHEMA</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;mariabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
+<pre class="fixed"><span class="k">GRANT</span> <span class="k">CREATE</span><span class="p">,</span> <span class="k">INSERT</span> <span class="k">ON</span> <span class="n">mysql</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;mariabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
+</pre><p>Prior to <a href="/kb/en/what-is-mariadb-1011/">MariaDB 10.11</a>, the necessary permissions to use <code><a href="/kb/en/mariabackup-options/#-history">--history</a></code> were:</p>
+<pre class="fixed"><span class="k">GRANT</span> <span class="k">CREATE</span><span class="p">,</span> <span class="k">INSERT</span> <span class="k">ON</span> <span class="n">PERCONA_SCHEMA</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;mariabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
+</pre><p>If you're upgrading from an older version and you want to use the new default table without losing your backup history, you can move and rename the current table in this way:</p>
+<pre class="fixed"><span class="k">RENAME</span> <span class="k">TABLE</span> <span class="n">PERCONA_SCHEMA</span><span class="p">.</span><span class="n">xtrabackup_history</span> <span class="k">TO</span> <span class="n">mysql</span><span class="p">.</span><span class="n">mariadb_backup_history</span><span class="p">;</span>
 </pre><p>The user account information can be specified with the <code><a href="/kb/en/mariabackup-options/#-user">--user</a></code> and <code><a href="/kb/en/mariabackup-options/#-p-password">--password</a></code> command-line options. For example:</p>
 <pre class="fixed">$ mariabackup --backup \
    --target-dir=/var/mariadb/backup/ \
@@ -667,14 +670,15 @@ InnoDB: for how to resolve the issue.
 <ul start="1"><li>If a table is dropped during the backup, then it might still exists after the backup is prepared.
 </li><li>If a table exists when the backup starts, but it is dropped before the backup copies it, then the tablespace file can't be copied, so the backup would fail.
 </li></ul>
-<p>Problems solved by setting <code><a href="/kb/en/innodb-system-variables/#innodb_log_optimize_ddl">innodb_log_optimize_ddl=OFF</a></code> (MariaDB Server system variable added in <a href="/kb/en/mariadb-10217-release-notes/">MariaDB 10.2.17</a>:</p>
+<p>Problems solved by setting <code><a href="/kb/en/innodb-system-variables/#innodb_log_optimize_ddl">innodb_log_optimize_ddl=OFF</a></code> (MariaDB Server system variable added in <a href="/kb/en/mariadb-10217-release-notes/">MariaDB 10.2.17</a> and removed in 10.6.0):</p>
 <ul start="1"><li>If the backup noticed concurrent DDL, then it might fail with "ALTER TABLE or OPTIMIZE TABLE was executed during backup".
 </li></ul>
-<p>Problems solved by <code><a href="/kb/en/innodb-system-variables/#innodb_safe_truncate">innodb_safe_truncate=ON</a></code> (MariaDB Server system variable in <a href="/kb/en/mariadb-10219-release-notes/">MariaDB 10.2.19</a>):</p>
+<p>Problems solved by <code><a href="/kb/en/innodb-system-variables/#innodb_safe_truncate">innodb_safe_truncate=ON</a></code> (MariaDB Server system variable in <a href="/kb/en/mariadb-10219-release-notes/">MariaDB 10.2.19</a> and removed in 10.3.0):</p>
 <ul start="1"><li>If a table is created during the backup, then it might not exist in the backup after prepare.
 </li><li>If a table is renamed during the backup after the tablespace file was copied, then the table may not exist after the backup is prepared.
 </li><li>If a table is dropped and created under the same name during the backup after the tablespace file was copied, then the table will have the wrong tablespace ID when the backup is prepared.
 </li></ul>
+<p>Note that, with the removal of <code>innodb_log_optimize_ddl</code> and <code>innodb_safe_truncate</code>, the above problems were definitely solved.</p>
 <p>Problems solved by other bug fixes:</p>
 <ul start="1"><li>If <code><a href="/kb/en/mariabackup-options/#-lock-ddl-per-table">--lock-ddl-per-table</a></code> is used and if a table is concurrently being dropped or renamed, then Mariabackup can fail to acquire the MDL lock.
 </li></ul>
@@ -918,6 +922,15 @@ $ <span class="nb">ulimit</span> -Hn
                         <a href="/kb/en/manual-sst-of-galera-cluster-node-with-mariabackup/">
                             <span class="pull-right not_primary"></span>
                             Manual SST of Galera Cluster Node With Mariabackup
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/individual-database-restores-with-mariabackup-from-full-backup/">
+                            
+                            Individual Database Restores with MariaBackup from Full Backup
                         </a>
                     </li>
                 

@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/getting-started-with-indexes/+r/101600/">101600</a></dd>
+            <dd><a href="/kb/en/getting-started-with-indexes/+r/125866/">125866</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2020-11-11 13:23">2020-11-11 13:23</span></dd>
+<span class="datetime" title="2023-05-16 12:14">2023-05-16 12:14</span></dd>
         </dl>
     </div>
     
@@ -359,7 +359,11 @@ WHERE t.TABLE_SCHEMA != &#39;information_schema&#39;
 &lt;&lt;/code&gt;&gt;
 
 == Unique Index
-A Unique Index must be unique, but it can be null. So each key value identifies only one record, but not each record needs to be represented. 
+A Unique Index must be unique, but it can have columns that may be NULL. So each key value identifies only one record, but not each record needs to be represented.
+
+&lt;&lt;product mariadb from=10.5&gt;&gt;
+Unique, if index type is not specified, is normally a BTREE index that can also be used by the optimizer to find rows. If the key is longer than the max key length for the used storage engine and the storage engine supports long unique index, a HASH key will be created. This enables MariaDB to enforce uniqueness for any type or number of columns.
+&lt;&lt;/product&gt;&gt;
 
 For example, to create a unique key on the Employee_Code field, as well as a primary key, use:
 
@@ -386,7 +390,7 @@ and
 CREATE UNIQUE INDEX HomePhone ON Employees(Home_Phone);
 &lt;&lt;/code&gt;&gt;
 
-Indexes can contain more than one column. MariaDB is able to use one or more columns on the leftmost part of the index, if it cannot use the whole index.
+Indexes can contain more than one column. MariaDB is able to use one or more columns on the leftmost part of the index, if it cannot use the whole index. (except for the HASH index type).
 
 Take another example:
 &lt;&lt;sql&gt;&gt;
@@ -463,6 +467,50 @@ uniqueness constraint, and another user may get the same name.
 
 If a unique index consists of a column where trailing pad characters are stripped or ignored, inserts into that column where values differ only by the number of trailing pad characters will result in a duplicate-key error.
 
+&lt;&lt;product mariadb from=10.5&gt;&gt;
+For some engines, like InnoDB, ##UNIQUE## can be used with any type of columns or any number of columns.
+
+&lt;&lt;sql&gt;&gt;
+create table t1 (a int primary key,
+b blob,
+c1 varchar(1000),
+c2 varchar(1000),
+c3 varchar(1000),
+c4 varchar(1000),
+c5 varchar(1000),
+c6 varchar(1000),
+c7 varchar(1000),
+c8 varchar(1000),
+c9 varchar(1000),
+unique key `b` (b),
+unique key `all_c` (c1,c2,c3,c4,c6,c7,c8,c9)) engine=myisam;
+&lt;&lt;/sql&gt;&gt;
+
+If the key length is longer than the max key length supported by the engine, a HASH key will be created.
+This can be seen with ##SHOW CREATE TABLE table_name## or ##SHOW INDEX FROM table_name##:
+&lt;&lt;sql&gt;&gt;
+show create table t1\G
+*************************** 1. row ***************************
+       Table: t1
+Create Table: CREATE TABLE `t1` (
+  `a` int(11) NOT NULL,
+  `b` blob DEFAULT NULL,
+  `c1` varchar(1000) DEFAULT NULL,
+  `c2` varchar(1000) DEFAULT NULL,
+  `c3` varchar(1000) DEFAULT NULL,
+  `c4` varchar(1000) DEFAULT NULL,
+  `c5` varchar(1000) DEFAULT NULL,
+  `c6` varchar(1000) DEFAULT NULL,
+  `c7` varchar(1000) DEFAULT NULL,
+  `c8` varchar(1000) DEFAULT NULL,
+  `c9` varchar(1000) DEFAULT NULL,
+  PRIMARY KEY (`a`),
+  UNIQUE KEY `b` (`b`) USING HASH,
+  UNIQUE KEY `all_c` (`c1`,`c2`,`c3`,`c4`,`c6`,`c7`,`c8`,`c9`) USING HASH
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
+
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/product&gt;&gt;
 == Plain Indexes
 Indexes do not necessarily need to be unique. For example:
 &lt;&lt;sql&gt;&gt;

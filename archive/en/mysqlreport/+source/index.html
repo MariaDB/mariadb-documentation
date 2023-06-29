@@ -179,6 +179,10 @@
     » <a class="crumb" href="/kb/en/clients-utilities/">Clients &amp; Utilities</a>
     
 
+    
+    » <a class="crumb" href="/kb/en/legacy-clients-and-utilities/">Legacy Clients and Utilities</a>
+    
+
 
     » <a class="node_link crumb" href="/kb/en/mysqlreport/">mysqlreport</a>
 
@@ -284,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mysqlreport/+r/96669/">96669</a></dd>
+            <dd><a href="/kb/en/mysqlreport/+r/127355/">127355</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -293,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2020-06-10 22:47">2020-06-10 22:47</span></dd>
+<span class="datetime" title="2023-06-19 18:30">2023-06-19 18:30</span></dd>
         </dl>
     </div>
     
@@ -303,58 +307,17 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;product mariadb from=10.4.6&gt;&gt;
-From MariaDB 10.4.6, ##mariadb-report## is a symlink to ##mysqlreport##.
+        <textarea id="answer_source" class="creole_source autogrow">##mysqlreport## makes a friendly report of important MariaDB status values.
+
+&lt;&lt;product mariadb from=10.4.6&gt;&gt;
+From MariaDB 10.4.6, [[mariadb-report]] is a symlink to ##mysqlreport##.
 &lt;&lt;/product&gt;&gt;
 
 &lt;&lt;product mariadb from=10.5.2&gt;&gt;
-From MariaDB 10.5.2, ##mysqlreport## is the symlink, and ##mariadb-report## the binary name.
+From MariaDB 10.5.2, ##mysqlreport## is the symlink, and [[mariadb-report]] the binary name.
 &lt;&lt;/product&gt;&gt;
 
-&lt;&lt;toc&gt;&gt;
-##mysqlreport## makes a friendly report of important MariaDB status values. Actually, it makes a friendly report of nearly every status
- value from SHOW STATUS. Unlike SHOW STATUS which simply dumps over 100 values to the screen in one long list, mysqlreport interprets and
- formats the values and presents the basic values and many more inferred values in a human-readable format. Numerous example reports
- are available at the mysqlreport web page at http://hackmysql.com/mysqlreport.
-
-The benefit of mysqlreport is that it allows you to very quickly see a wide array of performance indicators for your MariaDB server
- which would otherwise need to be calculated by hand from all the various SHOW STATUS values. For example, the Index Read Ratio is an
- important value but it&#39;s not present in SHOW STATUS; it&#39;s an inferred value (the ratio of Key_reads to Key_read_requests).
-
-This documentation outlines all the command line options in mysqlreport, most of which control which reports are printed. This document does not address how to interpret these reports; that topic is covered in the document Guide To Understanding mysqlreport at
- http://hackmysql.com/mysqlreportguide.
-
-== Usage
-
-&lt;&lt;code&gt;&gt;
-mysqlreport [options]
-&lt;&lt;/code&gt;&gt;
-
-== mysqlreport options
-Technically, command line options are in the form ##--option##, but ##-option## works too. All options can be abbreviated if the abbreviation is unique. For example, option ##--host## can be abbreviated to ##--ho## but not ##--h## because ##--h## is ambiguous: it could mean ##--host## or ##--help##.
-&lt;&lt;style class=&#34;darkheader-nospace-borders&#34;&gt;&gt;
-|= Option |= Description
-| ##--all## | Equivalent to ##--dtq --dms --com 3 --sas --qcache##. (Notice ##--tab## is not invoked by ##--all##.)
-| ##--com N## | Print top N number of non-DMS Com_ [[server-status-variables|status values]] in descending order (after DMS in Questions report). If N is not given, default is 3. Such non-DMS Com_ values include [[server-status-variables#com_change_db|Com_change_db]], [[server-status-variables#com_show_tables|Com_show_tables]], [[server-status-variables#com_rollback|Com_rollback]], etc.
-| ##--dms## | Print Data Manipulation Statements (DMS) report (under DMS in Questions report). DMS are those from the [[data-manipulation|Data Manipulation]] section. Currently, mysqlreport considers only [[select|SELECT]], [[insert|INSERT]], [[replace|REPLACE]], [[update|UPDATE]], and [[delete|DELETE]]. Each DMS is listed in descending order by count.
-| ##--dtq## | Print Distribution of Total Queries (DTQ) report (under Total in Questions report). Queries (or Questions) can be divided into four main areas: DMS (see ##--dms##), Com_ (see ##--com## ), COM_QUIT (see COM_QUIT and Questions at http://hack‐mysql.com/com_quit), and Unknown. ##--dtq## lists the number of queries in each of these areas in descending order.
-| ##--email ADDRESS## | After printing the report to screen, email the report to ADDRESS. This option requires sendmail in /usr/sbin/, therefore it does not work on Windows. /usr/sbin/sendmail can be a sym link to qmail, for example, or any MTA that emulates  sendmail&#39;s  -t command line option and operation. The FROM: field is &#34;mysqlreport&#34;, SUBJECT: is &#34;MySQL status report&#34;.
-| ##--flush-status## | Execute a [[flush|FLUSH  STATUS]]  after  generating the reports. If you do not have permissions in MariaDB to do this an error from DBD::mysql::st will be printed after the reports.
-| ##--help## | Output help information and exit.
-| ##--host ADDRESS## | Host address.
-| ##--infile FILE## | Instead of getting [[show-status|SHOW STATUS]] values from MariaDB, read values from FILE. FILE is often a copy of the output of SHOW STATUS including formatting characters (+, -). //mysqlreport// expects FILE to have the format &#34; value number &#34; where value is only alpha and underscore characters (A-Z and _) and number is a positive integer. Anything before, between, or after value and number is ignored. //mysqlreport// also needs the following MariaDB server variables: [[server-system-variables#version|version]], [[server-system-variables#table_open_cache|table_cache]], [[server-system-variables#max_connections|max_connections]], [[myisam-system-variables#key_buffer_size|key_buffer_size]], [[server-system-variables#query_cache_size|query_cache_size]]. These values can be specified in INFILE in the format &#34;name = value&#34; where name is one of the aforementioned server variables and value is a positive integer with or without a trailing M and possible periods (for version). For example, to specify an 18M key_buffer_size: key_buffer_size = 18M. Or, a 256 table_cache: table_cache = 256. The M implies Megabytes not million, so 18M means 18,874,368 not 18,000,000. If these server variables are not specified the following defaults are used (respectively) which may cause strange values to be reported: 0.0.0, 64, 100, 8M, 0.
-| ##--no-mycnf## | Makes mysqlreport not read ~/.my.cnf which it does by default otherwise. ##--user## and ##--password## always override values from ~/.my.cnf.
-| ##--outfile FILE## | After printing the report to screen, print the report to FILE too. Internally, mysqlreport always writes the report to a temp file first: ##/tmp/mysqlreport.PID## on *nix, ##c:sqlreport.PID## on Windows (PID is the script&#39;s process ID). Then it prints the temp file to screen. Then if ##--outfile## is specified, the temp file is copied to OUTFILE. After ##--email## (above), the temp file is deleted.
-| ##--password## | As of version 2.3 ##--password## can take the password on the command line like ##--password FOO##. Using ##--password## alone without giving a password on the command line causes mysqlreport to prompt for a password.
-| ##--port PORT## | Port number.
-| ##--qcache## | Print [[query-cache|Query Cache]] report.
-| ##--sas## | Print report for Select_ and Sort_ [[server-status-variables|status values]] (after Questions report). See MySQL Select and Sort Status Variables at http://hackmysql.com/selectandsort.
-| ##--socket SOCKET## | For connections to localhost, the Unix socket file to use, or, on Windows, the name of the named pipe to use.
-| ##--tab## | Print Threads, Aborted, and Bytes status reports (after Created temp report). As of mysqlreport v2.3 the Threads report reports on all Threads_ status values.
-| ##--user USERNAME## | Username.
-&lt;&lt;/style&gt;&gt;
-
-== Examples</textarea>
+See [[mariadb-report]] for details.</textarea>
     
 
 

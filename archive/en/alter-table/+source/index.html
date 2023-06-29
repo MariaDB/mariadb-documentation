@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/alter-table/+r/124645/">124645</a></dd>
+            <dd><a href="/kb/en/alter-table/+r/126056/">126056</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-03-26 20:58">2023-03-26 20:58</span></dd>
+<span class="datetime" title="2023-05-23 10:14">2023-05-23 10:14</span></dd>
         </dl>
     </div>
     
@@ -367,8 +367,10 @@ alter_specification:
   {{{|}}} ALGORITHM [=] {DEFAULT|INPLACE|COPY|NOCOPY|INSTANT}
   {{{|}}} LOCK [=] {DEFAULT|NONE|SHARED|EXCLUSIVE}
   {{{|}}} FORCE
-  {{{|}}} partition_options
-  {{{|}}} ADD PARTITION [IF NOT EXISTS] (partition_definition)
+  {{{|}}} [[create-table/#partitions|partition_options]]
+  {{{|}}} CONVERT TABLE normal_table TO [[create-table/#partitions|partition_definition]]
+  {{{|}}} CONVERT PARTITION partition_name TO TABLE tbl_name
+  {{{|}}} ADD PARTITION [IF NOT EXISTS] ([[create-table/#partitions|partition_definition]])
   {{{|}}} DROP PARTITION [IF EXISTS] partition_names
   {{{|}}} COALESCE PARTITION number
   {{{|}}} REORGANIZE PARTITION [partition_names INTO (partition_definitions)]
@@ -536,7 +538,6 @@ Drops the column from the table.
 If you are using &lt;&lt;fixed&gt;&gt;IF EXISTS&lt;&lt;/fixed&gt;&gt; you will not get an error if the column didn&#39;t exist.
 If the column is part of any index, the column will be dropped from them, except if you add a new column with identical name at the same time. The index will be dropped if all columns from the index were dropped.
 If the column was used in a view or trigger, you will get an error next time the view or trigger is accessed.
-&lt;&lt;product mariadb from=10.2.8&gt;&gt;
 Dropping a column that is part of a multi-column &lt;&lt;fixed&gt;&gt;UNIQUE&lt;&lt;/fixed&gt;&gt; constraint is not permitted. For example:
 &lt;&lt;code&gt;&gt;
 CREATE TABLE a (
@@ -560,7 +561,6 @@ DESC x;
 | b     | int(11) | NO   | PRI | NULL    |       |
 +-------+---------+------+-----+---------+-------+
 &lt;&lt;/code&gt;&gt;
-&lt;&lt;/product&gt;&gt;
 
 &lt;&lt;product mariadb from=10.4.0&gt;&gt;
 MariaDB 10.4.0 supports instant DROP COLUMN. DROP COLUMN of an indexed column would imply [[drop-index|DROP INDEX]] (and in the case of a non-UNIQUE multi-column index, possibly ADD INDEX). These will not be allowed with [[#algorithm|ALGORITHM=INSTANT]], but unlike before, they can be allowed with [[#algorithm|ALGORITHM=NOCOPY]]
@@ -767,13 +767,9 @@ WHERE TABLE_NAME = &#39;account_ledger&#39;;
 
 === DROP CONSTRAINT
 
-&lt;&lt;product mariadb from=&#34;10.2.22&#34;&gt;&gt;
 ##DROP CONSTRAINT## for ##UNIQUE## and ##FOREIGN KEY## [[constraint|constraints]] was introduced in MariaDB 10.2.22 and MariaDB 10.3.13.
-&lt;&lt;/product&gt;&gt;
 
-&lt;&lt;product mariadb from=&#34;10.2.1&#34;&gt;&gt;
 ##DROP CONSTRAINT## for ##CHECK## constraints was introduced in MariaDB 10.2.1
-&lt;&lt;/product&gt;&gt;
 
 Modifies the table, removing the given constraint.
 
@@ -839,6 +835,22 @@ ALTER TABLE tab_name FORCE;
 &lt;&lt;/sql&gt;&gt;
 
 With InnoDB, the table rebuild will only reclaim unused space (i.e. the space previously used for deleted rows) if the [[innodb-system-variables#innodb_file_per_table|innodb_file_per_table]] system variable is set to ##ON## (the default). If the system variable is ##OFF##, then the space will not be reclaimed, but it will be-re-used for new data that&#39;s later added.
+
+=== CONVERT TABLE / CONVERT PARTITION
+
+##CONVERT TABLE## and ##CONVERT PARTITION## was introduced in MariaDB 10.7.1.
+
+##CONVERT PARTITION## can be used to remove a partition from a table and make this an ordinary table. For example:
+
+&lt;&lt;sql&gt;&gt;
+ALTER TABLE partitioned_table CONVERT PARTITION part1 TO TABLE normal_table;
+&lt;&lt;/sql&gt;&gt;
+
+##CONVERT PARTITION## will take an existing table and move this to another table as its own partition with a specified [[create-table/#partitions|partition definition]]. For example the following moves ##normal_table## to a partition of ##partitioned_table## with a definition that its values, based on the ##PARTITION BY## of the ##partitioned_table##, are less than 12345.
+
+&lt;&lt;sql&gt;&gt;
+ALTER TABLE partitioned_table CONVERT TABLE normal_table TO PARTITION part1 VALUES LESS THAN (12345);
+&lt;&lt;/sql&gt;&gt;
 
 === EXCHANGE PARTITION
 
@@ -965,7 +977,7 @@ See [[innodb-online-ddl-overview/#lock|InnoDB Online DDL Overview: LOCK]] for in
 == Progress Reporting
 
 MariaDB provides progress reporting for ##ALTER TABLE## statement for clients
-that support the new progress reporting protocol. For example, if you were using the [[mysql-command-line-client|mysql]] client, then the progress report might look like this::
+that support the new progress reporting protocol. For example, if you were using the [[mariadb-command-line-client|mariadb]] client, then the progress report might look like this::
 
 &lt;&lt;code&gt;&gt;
 ALTER TABLE test ENGINE=Aria;

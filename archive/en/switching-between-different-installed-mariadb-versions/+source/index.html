@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/switching-between-different-installed-mariadb-versions/+r/33998/">33998</a></dd>
+            <dd><a href="/kb/en/switching-between-different-installed-mariadb-versions/+r/126531/">126531</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-7">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2015-01-27 15:26">2015-01-27 15:26</span></dd>
+<span class="datetime" title="2023-05-30 11:28">2023-05-30 11:28</span></dd>
         </dl>
     </div>
     
@@ -313,7 +313,7 @@ and running them one at a time. This is useful when doing benchmarking,
 testing, or for when developing different MariaDB versions.
 
 This is most easily done using the tar files from
-[[http://downloads.askmonty.org/mariadb/|downloads.askmonty.org]].
+[[https://mariadb.org/download/|mariadb.org/download/]].
 
 == Stopping a pre-installed MySQL/MariaDB from interfering with your tests
 
@@ -323,7 +323,7 @@ If MySQL/MariaDB is already installed and running, you have two options:
 ** In this case you are probably best off creating a specific section for
    MariaDB in your &lt;&lt;fixed&gt;&gt;~~/.my.cnf&lt;&lt;/fixed&gt;&gt; file.
 # Stop mysqld with &lt;&lt;fixed&gt;&gt;/etc/rc.d/mysql stop&lt;&lt;/fixed&gt;&gt;
-  or &lt;&lt;fixed&gt;&gt;mysqladmin shutdown&lt;&lt;/fixed&gt;&gt;.
+  or &lt;&lt;fixed&gt;&gt;mariadb-admin shutdown&lt;&lt;/fixed&gt;&gt;.
 
 Note that you don&#39;t have to uninstall or otherwise remove MySQL!
 
@@ -341,21 +341,21 @@ The steps to create a binary tar file are:
 * [[creating-the-mariadb-binary-tarball|Create the binary tar ball]].
 
 You will then be left with a tar file named something like:
-&lt;&lt;fixed&gt;&gt;mariadb-5.3.2-MariaDB-beta-linux-x86_64.tar.gz&lt;&lt;/fixed&gt;&gt;
+&lt;&lt;fixed&gt;&gt;mariadb-11.0.1-MariaDB-linux-x86_64.tar.gz&lt;&lt;/fixed&gt;&gt;
 
 == Creating a directory structure for the different installations
 
 Install the binary tar files under &lt;&lt;fixed&gt;&gt;/usr/local/&lt;&lt;/fixed&gt;&gt; with
-the following directory names (one for each MariaDB version you want to use):
+the following directory names (one for each MariaDB version you want to use), for example:
 
-* &lt;&lt;fixed&gt;&gt;mariadb-5.1&lt;&lt;/fixed&gt;&gt;
-* &lt;&lt;fixed&gt;&gt;mariadb-5.2&lt;&lt;/fixed&gt;&gt;
-* &lt;&lt;fixed&gt;&gt;mariadb-5.3&lt;&lt;/fixed&gt;&gt;
-* &lt;&lt;fixed&gt;&gt;mariadb-5.5&lt;&lt;/fixed&gt;&gt;
-* &lt;&lt;fixed&gt;&gt;mariadb-10.0&lt;&lt;/fixed&gt;&gt;
+* &lt;&lt;fixed&gt;&gt;mariadb-10.5&lt;&lt;/fixed&gt;&gt;
+* &lt;&lt;fixed&gt;&gt;mariadb-10.6&lt;&lt;/fixed&gt;&gt;
+* &lt;&lt;fixed&gt;&gt;mariadb-10.11&lt;&lt;/fixed&gt;&gt;
+* &lt;&lt;fixed&gt;&gt;mariadb-11.0&lt;&lt;/fixed&gt;&gt;
+* &lt;&lt;fixed&gt;&gt;mariadb-11.1&lt;&lt;/fixed&gt;&gt;
 
 The above assumes you are just testing major versions of MariaDB. If you are
-testing specific versions, use directory names like ##mariadb-5.3.2##
+testing specific versions, use directory names like ##mariadb-11.0.1##
 
 With the directories in place, create a sym-link named ##mariadb## which points
 at the ##mariadb-XXX## directory you are currently testing. When you want to
@@ -364,9 +364,9 @@ switch to testing a different version, just update the sym-link.
 Example:
 &lt;&lt;code&gt;&gt;
 cd /usr/local
-tar xfz /tmp/mariadb-5.3.2-MariaDB-beta-linux-x86_64.tar.gz
-mv -vi mariadb-5.3.2-MariaDB-beta-linux-x86_64 mariadb-5.3
-ln -vs mariadb-5.3 mariadb
+tar xfz /tmp/mariadb-11.0.1-linux-systemd-x86_64.tar.gz
+mv -vi mariadb-11.0.1-MariaDB-systemd-linux-x86_64 mariadb-11.0
+ln -vs mariadb-11.0 mariadb
 &lt;&lt;/code&gt;&gt;
 
 == Setting up the data directory
@@ -385,13 +385,13 @@ The steps are:
   (On Linux you do it with the ##useradd## command).
 # Create the directory (we call it ##mariadb-data## in the example below) or
   add a symlink to a directory which is in some other place.
-# Create the ##mysql## permission tables with ##mysql_install_db##
+# Create the ##mysql## permission tables with [[mariadb-install-db]]
 
 &lt;&lt;code&gt;&gt;
 cd /usr/local/
 mkdir mariadb-data
 cd mariadb
-./bin/mysql_install_db --no-defaults --datadir=/usr/local/mariadb-data
+./bin/mariadb-install-db --no-defaults --datadir=/usr/local/mariadb-data
 chown -R mysql mariadb-data mariadb-data/*
 &lt;&lt;/code&gt;&gt;
 
@@ -404,7 +404,7 @@ To create a different &lt;&lt;fixed&gt;&gt;data&lt;&lt;/fixed&gt;&gt; directorie
 
 &lt;&lt;code&gt;&gt;
 cd mariadb
-./scripts/mysql_install_db --no-defaults
+./scripts/mariadb-install-db --no-defaults
 chown -R mysql mariadb-data mariadb-data/*
 &lt;&lt;/code&gt;&gt;
 
@@ -416,7 +416,7 @@ If you want to use another disk you should do:
 &lt;&lt;code&gt;&gt;
 cd mariadb
 ln -s path-to-empty-directory-for-data data
-./scripts/mysql_install_db --no-defaults --datadir=./data
+./scripts/mariadb-install-db --no-defaults --datadir=./data
 chown -R mysql mariadb-data mariadb-data/*
 &lt;&lt;/code&gt;&gt;
 
@@ -426,7 +426,7 @@ The normal steps are:
 
 &lt;&lt;code&gt;&gt;
 rm mariadb
-ln -s mariadb-5.# mariadb
+ln -s mariadb-# mariadb
 cd mariadb
 ./bin/mysqld_safe --no-defaults --datadir=/usr/local/mariadb-data &amp;
 &lt;&lt;/code&gt;&gt;
@@ -447,17 +447,15 @@ port=3306
 [mysqld]
 datadir=/usr/local/mariadb-data
 
-[mariadb-5.2]
-# Options for MariaDB 5.2
-[mariadb-5.3]
-# Options for MariaDB 5.3
+[mariadb-11.0]
+# Options for MariaDB 11.0
+[mariadb-11.1]
+# Options for MariaDB 11.1
 &lt;&lt;/code&gt;&gt;
 
 If you create an &lt;&lt;fixed&gt;&gt;~~/.my.cnf&lt;&lt;/fixed&gt;&gt; file, you should start
 &lt;&lt;fixed&gt;&gt;mysqld&lt;&lt;/fixed&gt;&gt; with &lt;&lt;fixed&gt;&gt;--defaults-file=~~/.my.cnf&lt;&lt;/fixed&gt;&gt;
-instead of &lt;&lt;fixed&gt;&gt;--no-defaults&lt;&lt;/fixed&gt;&gt; in the examples above.
-
-</textarea>
+instead of &lt;&lt;fixed&gt;&gt;--no-defaults&lt;&lt;/fixed&gt;&gt; in the examples above.</textarea>
     
 
 

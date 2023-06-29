@@ -292,7 +292,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/thread-pool-in-mariadb/+r/122114/">122114</a></dd>
+            <dd><a href="/kb/en/thread-pool-in-mariadb/+r/126114/">126114</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-363">
@@ -301,7 +301,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-11-30 13:45">2022-11-30 13:45</span></dd>
+<span class="datetime" title="2023-05-23 21:13">2023-05-23 21:13</span></dd>
         </dl>
     </div>
     
@@ -459,10 +459,10 @@ extra_port = 8385
 extra_max_connections = 10
 &lt;&lt;/code&gt;&gt;
 
-Once you have the extra port configured, you can use the ##[[mysql-command-line-client|mysql]]## client with the ##-P## option to connect to the port.
+Once you have the extra port configured, you can use the [[mariadb-command-line-client|mariadb]] client with the ##-P## option to connect to the port.
 
 &lt;&lt;code&gt;&gt;
-$ mysql -u root -P 8385 -p
+$ mariadb -u root -P 8385 -p
 &lt;&lt;/code&gt;&gt;
 
 == Monitoring Thread Pool Activity
@@ -481,29 +481,27 @@ On Unix, the thread pool implementation uses objects called thread groups to div
 
 == Fixing a Blocked Thread Pool
 
-When using global locks, even with a high value on the ##[[thread-pool-system-status-variables#thread_pool_max_threads|thread_pool_max_threads]]## system variable, it is still possible to block the entire pool.  
+When using global locks, even with a high value on the [[thread-pool-system-status-variables#thread_pool_max_threads|thread_pool_max_threads]] system variable, it is still possible to block the entire pool.  
 
-Imagine the case where a client performs ##[[flush|FLUSH TABLES WITH READ LOCK]]## then pauses.  If then the number of other clients connecting to the server to start write operations exceeds the maximum number of threads allowed in the pool, it can block the Server.  This makes it impossible to issue the ##[[lock-and-unlock-tables|UNLOCK TABLES]]## statement.  It can also block MaxScale from monitoring the Server.
+Imagine the case where a client performs [[flush|FLUSH TABLES WITH READ LOCK]] then pauses.  If then the number of other clients connecting to the server to start write operations exceeds the maximum number of threads allowed in the pool, it can block the Server.  This makes it impossible to issue the [[lock-and-unlock-tables|UNLOCK TABLES]] statement.  It can also block MaxScale from monitoring the Server.
 
 To mitigate the issue, MariaDB allows you to configure an extra port for administrative connections.  See [[#configuring-the-extra-port|Configuring the Extra Port]] for information on how to configure this.
 
-Once you have the extra port configured, you can use the ##[[mysql-command-line-client|mysql]]## client with the ##-P## option to connect to the port.
+Once you have the extra port configured, you can use the [[mariadb-command-line-client|mariadb]] client with the ##-P## option to connect to the port.
 
 &lt;&lt;code&gt;&gt;
-$ mysql -u root -P 8385 -p
+$ mariadb -u root -P 8385 -p
 &lt;&lt;/code&gt;&gt;
 
-This ensures that your administrators can access the server in cases where the number of threads is already equal to the configured value of the ##[[thread-pool-system-status-variables#thread_pool_max_threads|thread_pool_max_threads]]## system variable, and all threads are blocked.  It also ensures that MaxScale can still access the server in such situations for monitoring information.
+This ensures that your administrators can access the server in cases where the number of threads is already equal to the configured value of the [[thread-pool-system-status-variables#thread_pool_max_threads|thread_pool_max_threads]] system variable, and all threads are blocked.  It also ensures that MaxScale can still access the server in such situations for monitoring information.
 
-Once you are connected to the extra port, you can solve the issue by increasing the value on the ##[[thread-pool-system-status-variables#thread_pool_max_threads|thread_pool_max_threads]]## system variable, or by killing the offending connection, (that is, the connection that holds the global lock, which would be in the ##sleep## state).
+Once you are connected to the extra port, you can solve the issue by increasing the value on the [[thread-pool-system-status-variables#thread_pool_max_threads|thread_pool_max_threads]] system variable, or by killing the offending connection, (that is, the connection that holds the global lock, which would be in the ##sleep## state).
 
 == MariaDB Thread Pool vs Oracle MySQL Enterprise Thread Pool
 
 Commercial editions of MySQL since 5.5 include an Oracle MySQL Enterprise
 thread pool implemented as a plugin, which delivers similar functionality.
-Official documentation of the feature can be found in the
-[[http://dev.mysql.com/doc/refman/5.5/en/thread-pool-plugin.html|MySQL Reference Manual]]
-and a detailed discussion about the design of the feature is at
+A detailed discussion about the design of the feature is at
 [[http://mikaelronstrom.blogspot.com/2011/10/mysql-thread-pool-summary.html|Mikael Ronstrom&#39;s blog]].
 Here is the summary of similarities and differences, based on the above
 materials.

@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>备份和还原概述 - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="备份和还原概述" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/zh-cn/backup-and-restore-overview/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+本文简要讨论了备份MariaDB的主要方式。有关详细的描述和语法，请参阅各个页面。更多细节正在添加中。
+逻辑备份与物理备份
+逻辑备份由用于恢复数据的SQL语句组成，例如CREATE DATABASE，CREATE TABLE和INSERT。
+物理备份是通过复制单个数据文件或目录来执行的。
+主要区别如下：
+逻辑备份更加灵活，因为数据可以在其他硬件配..." />
+
+    <meta name="description" content="
+本文简要讨论了备份MariaDB的主要方式。有关详细的描述和语法，请参阅各个页面。更多细节正在添加中。
+逻辑备份与物理备份
+逻辑备份由用于恢复数据的SQL语句组成，例如CREATE DATABASE，CREATE TABLE和INSERT。
+物理备份是通过复制单个数据文件或目录来执行的。
+主要区别如下：
+逻辑备份更加灵活，因为数据可以在其他硬件配..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/zh-cn/backup-and-restore-overview/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/zh-cn/backup-and-restore-overview/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/zh-cn/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/zh-cn/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/zh-cn/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb/">MariaDB - 简体中文</a>
+    
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb-server/">MariaDB Server文档</a>
+    
+
+    
+    » <a class="crumb" href="/kb/zh-cn/backing-up-and-restoring-databases/">备份和恢复数据库</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/zh-cn/backup-and-restore-overview/">备份和还原概述</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/zh-cn/">首页</a></li>
+                            
+                                
+                                    <li><a href="/kb/zh-cn/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/zh-cn/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/zh-cn/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/zh-cn/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/zh-cn/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/backup-and-restore-overview/+history" rel="nofollow">历史</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/backup-and-restore-overview/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/zh-cn/backup-and-restore-overview/+flag"
+                data-flag-url="/kb/zh-cn/backup-and-restore-overview/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/backup-and-restore-overview/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>已创建</dt>
+        <dd>
+
+<span class="datetime" title="2023-06-15 12:25">1 week, 6 days ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2023-06-15 12:27">1 week, 6 days ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/zh-cn/backup-and-restore-overview/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/zh-cn/backup-and-restore-overview/+history/feed/">
+            历史</a>
+        </li>
+        <li><a href="/kb/zh-cn/backup-and-restore-overview/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/zh-cn/backup-and-restore-overview/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+        
+
+<div class="well well-small box"><div><h5>Localized Versions</h5></div><div>
+
+        <ul>
+            
+            <li><a href="/kb/en/backup-and-restore-overview/">Backup and Restore Overview</a> [en]</li>
+            
+            <li><a href="/kb/it/backup-and-restore-overview/">Panoramica sul backup e sul restore</a> [it]</li>
+            
+        </ul>
+        
+</div>
+</div>
+
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>备份和还原概述</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#逻辑备份与物理备份" title="逻辑备份与物理备份">逻辑备份与物理备份</a></li>
+
+    <li class=""><a href="#备份工具" title="备份工具">备份工具</a>    <ol class="toc">
+
+        <li class=""><a href="#mariadb-backup" title="Mariadb-backup">Mariadb-backup</a></li>
+
+        <li class=""><a href="#mariadb-dump" title="mariadb-dump">mariadb-dump</a>        <ol class="toc">
+
+            <li class=""><a href="#innodb逻辑备份" title="InnoDB逻辑备份">InnoDB逻辑备份</a></li>
+
+            <li class=""><a href="#示例" title="示例">示例</a>        </ol>
+</li>
+
+        <li class=""><a href="#mariadb-hotcopy-mysqlhotcopy" title="mariadb-hotcopy / mysqlhotcopy">mariadb-hotcopy / mysqlhotcopy</a>        <ol class="toc">
+
+            <li class=""><a href="#示例" title="示例">示例</a>        </ol>
+</li>
+
+        <li class=""><a href="#percona-xtrabackup" title="Percona XtraBackup">Percona XtraBackup</a></li>
+
+        <li class=""><a href="#文件系统快照" title="文件系统快照">文件系统快照</a></li>
+
+        <li class=""><a href="#lvm" title="LVM">LVM</a></li>
+
+        <li class=""><a href="#percona-tokubackup" title="Percona TokuBackup">Percona TokuBackup</a></li>
+
+        <li class=""><a href="#dbforge-studio-for-mysql" title="dbForge Studio for MySQL">dbForge Studio for MySQL</a>    </ol>
+</li>
+
+    <li class=""><a href="#另请参阅" title="另请参阅">另请参阅</a> </ol>
+</li>
+</div><p>
+本文简要讨论了备份MariaDB的主要方式。有关详细的描述和语法，请参阅各个页面。更多细节正在添加中。</p>
+<h2 class="anchored_heading" id="逻辑备份与物理备份">逻辑备份与物理备份</h2>
+<p>逻辑备份由用于恢复数据的SQL语句组成，例如<a href="/kb/en/create-database/">CREATE DATABASE</a>，<a href="/kb/en/create-table/">CREATE TABLE</a>和<a href="/kb/en/insert/">INSERT</a>。</p>
+<p>物理备份是通过复制单个数据文件或目录来执行的。</p>
+<p>主要区别如下：</p>
+<ul start="1"><li>逻辑备份更加灵活，因为数据可以在其他硬件配置，MariaDB版本甚至其他DBMS上恢复，而物理备份无法导入到显着不同的硬件，不同的DBMS或甚至不同版本的MariaDB上。
+</li><li>逻辑备份可以在数据库和表级别上执行，而物理备份是在目录和文件级别上执行的。在<a href="/kb/en/myisam/">MyISAM</a>和<a href="/kb/en/innodb/">InnoDB</a>存储引擎中，每个表都有一个等效的文件集。 （在<a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a>之前的版本中，默认情况下一些InnoDB表存储在同一个文件中，在这种情况下无法按表进行备份。请参阅<a href="/kb/en/xtradbinnodb-server-system-variables/#innodb_file_per_table">innodb_file_per_table</a>。）
+</li><li>逻辑备份比等效的物理备份更大。
+</li><li>逻辑备份需要比等效的物理备份更长时间来备份和恢复。
+</li><li>日志文件和配置文件不是逻辑备份的一部分
+</li></ul>
+<h2 class="anchored_heading" id="备份工具">备份工具</h2>
+<h3 class="anchored_heading" id="mariadb-backup">Mariadb-backup</h3>
+<p><a href="/kb/en/mariadb-backup/">Mariadb-backup</a>是<a href="/kb/en/backup-restore-and-import-xtrabackup/">Percona XtraBackup</a>的分支，增加了对<a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> <a href="InnoDB_compression">compression</a>和<a href="/kb/en/data-at-rest-encryption/">data-at-rest encryption</a>的支持。它包含在<a href="/kb/en/mariadb-10123-release-notes/">MariaDB 10.1.23</a>及更高版本中。</p>
+<h3 class="anchored_heading" id="mariadb-dump">mariadb-dump</h3>
+<p><a href="/kb/en/mariadb-dump/">mariadb-dump</a>（以前称为mysqldump）执行逻辑备份。当数据大小相对较小时，它是执行备份和恢复的最灵活方式。</p>
+<p>对于大型数据集，备份文件可能很大，恢复时间可能很长。</p>
+<p>mariadb-dump将数据转储为SQL格式（也可以将其转储为其他格式，例如CSV或XML），然后可以轻松地将数据导入到另一个数据库中。假设转储中没有版本或DBMS特定的语句，可以将数据导入到MariaDB的其他版本，MySQL甚至完全不同的DBMS中。</p>
+<p>mariadb-dump会将触发器与表一起转储，因为这些是表定义的一部分。但是，<a href="/kb/en/stored-procedures/">存储过程</a>，<a href="/kb/en/views/">views</a>和<a href="/kb/en/events/">events</a>不是，需要显式重新创建（例如，<code>--routines</code>和<code>--events</code>）。<a href="/kb/en/stored-procedures/">存储过程</a>和<a href="functions">functions</a>也是系统表的一部分（例如<a href="/kb/en/mysqlproc-table/">mysql.proc</a>）。</p>
+<h4 class="anchored_heading" id="innodb逻辑备份">InnoDB逻辑备份</h4>
+<p>InnoDB使用<a href="/kb/en/xtradbinnodb-buffer-pool/">缓冲池</a>，它将其表中的数据和索引存储在内存中。该缓冲池对性能非常重要。如果InnoDB数据不适合内存，则缓冲池包含最常访问的数据非常重要。但是，最后访问的数据是可以插入到缓冲池中的候选数据。如果未正确配置，则当发生表扫描时，InnoDB可能会将整个表的内容复制到缓冲池中。逻辑备份的问题在于它们总是意味着完整的表扫描。</p>
+<p>避免这种情况的简单方法是增加<a href="/kb/en/xtradbinnodb-server-system-variables/#innodb_old_blocks_time">innodb_old_blocks_time</a>系统变量的值。它表示必须经过多少毫秒才能将最近访问的页面放入缓冲池中的“新”子列表中。只访问一次的数据应该保留在“旧”子列表中。这意味着它们很快就会从缓冲池中清除。由于在备份过程中，“旧”子列表很可能存储无用的数据，因此可以通过更改<a href="/kb/en/xtradbinnodb-server-system-variables/#innodb_old_blocks_pct">innodb_old_blocks_pct</a>系统变量的值来考虑调整其大小。</p>
+<p>还可以在开始逻辑备份之前明确将缓冲池转储到磁盘上，并在备份过程之后将其恢复。这将撤消备份期间发生的任何对缓冲池的负面更改。要转储缓冲池，可以将<a href="/kb/en/innodb-system-variables/#innodb_buffer_pool_dump_now">innodb_buffer_pool_dump_now</a>系统变量设置为ON。要还原它，请将<a href="/kb/en/innodb-system-variables/#innodb_buffer_pool_load_now">innodb_buffer_pool_load_now</a>系统变量设置为ON。</p>
+<h4 class="anchored_heading" id="示例">示例</h4>
+<p>备份单个数据库</p>
+<pre class="fixed">shell&gt; mariadb-dump db_name &gt; backup-file.sql
+</pre><p>还原或加载数据库</p>
+<pre class="fixed">shell&gt; mariadb db_name &lt; backup-file.sql
+</pre><p>有关详细语法和示例，请参见<a href="/kb/en/mariadb-dump/">mariadb-dump</a>页面。</p>
+<h3 class="anchored_heading" id="mariadb-hotcopy-mysqlhotcopy">mariadb-hotcopy / mysqlhotcopy</h3>
+<div class="cstm-style redbox"><p>mariadb-hotcopy / mysqlhotcopy目前已弃用。</p>
+</div><p><a href="/kb/en/mariadb-hotcopy/">mariadb-hotcopy</a>执行物理备份，并仅用于备份<a href="/kb/en/myisam/">MyISAM</a>和<a href="/kb/en/archive/">ARCHIVE</a>表。它只能在与数据库目录位置相同的计算机上运行。</p>
+<h4 class="anchored_heading" id="示例">示例</h4>
+<pre class="fixed">shell&gt; mariadb-hotcopy db_name [/path/to/new_directory]
+shell&gt; mariadb-hotcopy db_name_1 ... db_name_n /path/to/new_directory
+</pre><h3 class="anchored_heading" id="percona-xtrabackup">Percona XtraBackup</h3>
+<div class="cstm-style greenbox"><p>In <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> and later, <a href="/kb/en/mariabackup/">Mariabackup</a> is the recommended backup method to use instead of Percona XtraBackup.</p>
+</div><div class="cstm-style redbox"><p>In <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a>, Percona XtraBackup is <strong>not supported</strong>. See <a href="/kb/en/percona-xtrabackup-overview/#compatibility-with-mariadb">Percona XtraBackup Overview: Compatibility with MariaDB</a> for more information.</p>
+</div><div class="cstm-style redbox"><p>In <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> and <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a>, Percona XtraBackup is only <strong>partially supported</strong>. See <a href="/kb/en/percona-xtrabackup-overview/#compatibility-with-mariadb">Percona XtraBackup Overview: Compatibility with MariaDB</a> for more information.</p>
+</div><p>
+<a href="/kb/en/backup-restore-and-import-xtrabackup/">Percona XtraBackup</a>是用于执行快速热备份的工具。它专门为<a href="/kb/en/innodb/">XtraDB/InnoDB</a>数据库设计，但可以与任何存储引擎一起使用（尽管不能与<a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> <a href="/kb/en/encryption/">encryption</a>和<a href="/kb/en/compression/">compression</a>一起使用）。它不包含在MariaDB中。</p>
+<h3 class="anchored_heading" id="文件系统快照">文件系统快照</h3>
+<p>某些文件系统（如Veritas）支持快照。在快照期间，必须锁定表。获得快照的正确步骤是：</p>
+<ul start="1"><li>从mariadb客户端执行<a href="/kb/en/flush/">FLUSH TABLES WITH READ LOCK</a>。客户端必须保持打开状态。
+</li><li>从shell中执行<code>mount vxfs snapshot</code>
+</li><li>客户端可以执行<a href="/kb/en/transactions-lock/">UNLOCK TABLES</a>。
+</li><li>复制快照文件。
+</li><li>从shell中使用<code>umount snapshot</code>卸载快照。
+</li></ul>
+<h3 class="anchored_heading" id="lvm">LVM</h3>
+<p>广泛使用的物理备份方法，使用Perl脚本作为包装器。请参见<a href="http://www.lenzg.net/mylvmbackup/">http://www.lenzg.net/mylvmbackup/</a>。</p>
+<h3 class="anchored_heading" id="percona-tokubackup">Percona TokuBackup</h3>
+<p>有关详细信息，请参见：</p>
+<ul start="1"><li><a href="https://www.percona.com/blog/2013/09/12/tokudb-hot-backup-part-1/">TokuDB热备份–第1部分</a>
+</li><li><a href="https://www.percona.com/blog/2013/09/19/tokudb-hot-backup-part-2/">TokuDB热备份–第2部分</a>
+</li><li><a href="https://www.percona.com/blog/2015/02/05/tokudb-hot-backup-now-mysql-plugin/">TokuDB热备现在是MySQL插件</a>
+</li></ul>
+<h3 class="anchored_heading" id="dbforge-studio-for-mysql">dbForge Studio for MySQL</h3>
+<p>除了系统实用程序外，还可以使用第三方GUI工具执行备份和还原操作。在这种情况下，值得一提的是dbForge Studio for MySQL，这是一个功能丰富的数据库IDE，完全兼容MariaDB，并提供广泛的备份功能。</p>
+<p>Studio的备份和还原模块允许精确配置和管理全面和部分备份，直到特定数据库对象。定期备份的功能提供了特定的设置来处理错误并记录它们的日志。此外，设置和配置可以保存以供以后重用。</p>
+<p>这些操作是向导辅助的，允许用户以可视化模式设置所有任务。</p>
+<h2 class="anchored_heading" id="另请参阅">另请参阅</h2>
+<ul start="1"><li><a href="https://mariadb.com/blog/streaming-mariadb-backups-cloud">在云中流式传输MariaDB备份</a>（mariadb.com博客）</li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/zh-cn/backup-and-restore-overview/+subscriptions/add"
+                 data-unsubscribe-url="/kb/zh-cn/backup-and-restore-overview/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/zh-cn/backing-up-and-restoring-databases-percona-xtrabackup/">
+                        ← Percona XtraBackup
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/zh-cn/backing-up-and-restoring-databases/">
+                        ↑ 备份和恢复数据库 ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/zh-cn/replication-as-a-backup-solution/">
+                        复制作为备份解决方案 →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="12413" data-comments-url="/kb/zh-cn/backup-and-restore-overview/+comments"
+         data-reply-url="/kb/zh-cn/backup-and-restore-overview/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/zh-cn/backing-up-and-restoring-databases/">
+                    ↑ 备份和恢复数据库 ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/backing-up-and-restoring-databases-percona-xtrabackup/">
+                            
+                            Percona XtraBackup
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>备份和还原概述</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/replication-as-a-backup-solution/">
+                            
+                            复制作为备份解决方案
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

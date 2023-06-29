@@ -292,7 +292,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/understanding-mariadb-architecture/+r/96108/">96108</a></dd>
+            <dd><a href="/kb/en/understanding-mariadb-architecture/+r/126568/">126568</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-125">
@@ -301,7 +301,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2020-05-25 23:53">2020-05-25 23:53</span></dd>
+<span class="datetime" title="2023-05-30 20:54">2023-05-30 20:54</span></dd>
         </dl>
     </div>
     
@@ -484,7 +484,7 @@ Stored procedures and triggers don&#39;t inherit a default database from the ses
 
 == The Binary Log
 
-Different tables can be built using different storage engines. It is important to note that not all engines are transactional, and that different engines implement the transaction logs in different ways. For this reason, MariaDB cannot replicate data from a master to a slave using an equivalent of SQL Server transactional replication.
+Different tables can be built using different storage engines. It is important to note that not all engines are transactional, and that different engines implement the transaction logs in different ways. For this reason, MariaDB cannot replicate data from a primary to a replica using an equivalent of SQL Server transactional replication.
 
 Instead, it needs a global mechanism to log the changes that are applied to data. This mechanism is the [[binary-log|binary log]], often abbreviated to binlog.
 
@@ -493,13 +493,13 @@ The binary log can be written in the following formats:
 * ROW logs a reference to the rows that have been modified, if any (usually it’s the primary key), and the new values that have been added or modified, in a binary format.
 * MIXED is a combination of the above formats. It means that ROW is used for statements that can safely be logged in this way (see below), and STATEMENT is used in other cases. This is the default format from MariaDB 10.2.
 
-In most cases, STATEMENT is slower because the SQL statement needs to be re-executed by the slave, and because certain statements may produce a different result in the slave (think about queries that use LIMIT without ORDER BY, or the CURRENT_TIMESTAMP() function). But there are exceptions, and besides, DDL statements are always logged as STATEMENT to avoid flooding the binary log. Therefore, the binary log may well contain both ROW and STATEMENT entries.
+In most cases, STATEMENT is slower because the SQL statement needs to be re-executed by the replica, and because certain statements may produce a different result in the replica (think about queries that use LIMIT without ORDER BY, or the CURRENT_TIMESTAMP() function). But there are exceptions, and besides, DDL statements are always logged as STATEMENT to avoid flooding the binary log. Therefore, the binary log may well contain both ROW and STATEMENT entries.
 
 See [[binary-log-formats|Binary Log Formats]].
 
 The binary log allows:
-* replication, if enabled on the master;
-* promoting a slave to a master, if enabled on that slave;
+* replication, if enabled on the primary;
+* promoting a replica to a primary, if enabled on that replica;
 * incremental backups;
 * seeing data as they were in a point of time in the past ([[flashback]]);
 * restoring a backup and re-appling the binary log, with the exception of a data change which caused problems (human mistake, application bug, SQL injection);
@@ -507,7 +507,7 @@ The binary log allows:
 
 If you don&#39;t plan to use any of these features on a server, it is possible to [[replication-and-binary-log-system-variables#log_bin|disable]] the binary log to slightly improve the performance.
 
-The binary log can be inspected using the [[mysqlbinlog]] utility, which comes with MariaDB. Enabling or disabling the binary log requires restarting MariaDB.
+The binary log can be inspected using the [[mariadb-binlog]] utility, which comes with MariaDB. Enabling or disabling the binary log requires restarting MariaDB.
 
 See also [[mariadb-replication-overview-for-sql-server-users|MariaDB Replication Overview for SQL Server Users]] and [[mariadb-backups-overview-for-sql-server-users|MariaDB Backups Overview for SQL Server Users]] for a better understanding of how the binary log is used.
 

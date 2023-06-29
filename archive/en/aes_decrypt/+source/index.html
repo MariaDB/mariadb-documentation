@@ -300,7 +300,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/aes_decrypt/+r/18911/">18911</a></dd>
+            <dd><a href="/kb/en/aes_decrypt/+r/127432/">127432</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -309,7 +309,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2013-08-26 12:16">2013-08-26 12:16</span></dd>
+<span class="datetime" title="2023-06-20 19:51">2023-06-20 19:51</span></dd>
         </dl>
     </div>
     
@@ -325,12 +325,39 @@
 AES_DECRYPT(crypt_str,key_str)
 &lt;&lt;/code&gt;&gt;
 
+From MariaDB 11.2.0
+&lt;&lt;code&gt;&gt;
+AES_ENCRYPT(crypt_str, key_str, [, iv [, mode]])
+&lt;&lt;/code&gt;&gt;
+
 == Description
 
-This function allows decryption of data using the official AES
-(Advanced Encryption Standard) algorithm. For more information, see
-the description of ##[[aes_encrypt|AES_ENCRYPT()]]##.
-</textarea>
+This function allows decryption of data using the official AES (Advanced Encryption Standard) algorithm. For more information, see the description of [[aes_encrypt|AES_ENCRYPT()]].
+\\\\
+&lt;&lt;product mariadb from=&#34;11.2&#34;&gt;&gt;
+From MariaDB 11.2, the function supports an initialization vector, and control of the block encryption mode. The default mode is specified by the [[server-system-variables/#block_encryption_mode|block_encryption_mode]] system variable, which can be changed when calling the function with a mode. //mode// is aes-{128,192,256}-{ecb,cbc,ctr} for example:  &#34;AES-128-cbc&#34;.
+
+For modes that require it, the initialization_vector //iv// should be 16 bytes (it can be longer, but the extra bytes are ignored). A shorter //iv//, where one is required, results in the function returning NULL. Calling [[random_bytes|RANDOM_BYTES(16)]] will generate a random series of bytes that can be used for the //iv//. 
+&lt;&lt;/product&gt;&gt;
+
+== Examples
+From MariaDB 11.2.0:
+&lt;&lt;sql&gt;&gt;
+SELECT HEX(AES_ENCRYPT(&#39;foo&#39;, &#39;bar&#39;, &#39;0123456789abcdef&#39;, &#39;aes-128-ctr&#39;)) AS x; 
++--------+
+| x      |
++--------+
+| C57C4B |
++--------+
+
+
+SELECT AES_DECRYPT(x&#39;C57C4B&#39;, &#39;bar&#39;, &#39;0123456789abcdef&#39;, &#39;aes-128-ctr&#39;); 
++------------------------------------------------------------------+
+| AES_DECRYPT(x&#39;C57C4B&#39;, &#39;bar&#39;, &#39;0123456789abcdef&#39;, &#39;aes-128-ctr&#39;) |
++------------------------------------------------------------------+
+| foo                                                              |
++------------------------------------------------------------------+
+&lt;&lt;/sql&gt;&gt;</textarea>
     
 
 

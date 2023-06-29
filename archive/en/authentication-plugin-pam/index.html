@@ -251,12 +251,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2011-12-05 18:40">11 years, 3 months ago</span></dd>
+<span class="datetime" title="2011-12-05 18:40">11 years, 6 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-04-27 20:50">10 months, 3 weeks ago</span></dd>
+<span class="datetime" title="2023-06-02 11:30">3 weeks, 5 days ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -553,7 +553,9 @@
 
         <li class=""><a href="#conflicts-with-password-validation" title="Conflicts with Password Validation">Conflicts with Password Validation</a></li>
 
-        <li class=""><a href="#selinux" title="SELinux">SELinux</a>    </ol>
+        <li class=""><a href="#selinux" title="SELinux">SELinux</a></li>
+
+        <li class=""><a href="#memory-overcommit" title="Memory Overcommit">Memory Overcommit</a>    </ol>
 </li>
 
     <li class=""><a href="#tutorials" title="Tutorials">Tutorials</a></li>
@@ -662,7 +664,7 @@ sudo chmod g+r /etc/shadow
 </li><li><code>mysql_clear_password</code>
 </li></ul>
 <p>When connecting with a <a href="/kb/en/clients-utilities/">client or utility</a> to a server as a user account that authenticates with the <code>pam</code> authentication plugin, you may need to tell the client where to find the relevant client authentication plugin by specifying the <code>--plugin-dir</code> option. For example:</p>
-<pre class="fixed">mysql --plugin-dir=/usr/local/mysql/lib64/mysql/plugin --user=alice
+<pre class="fixed">mariadb --plugin-dir=/usr/local/mysql/lib64/mysql/plugin --user=alice
 </pre><div class="cstm-style redbox"><p>Both the <code>dialog</code> and the <code>mysql_clear_password</code> client authentication plugins transmit the password to the server in clear text. Therefore, when you use the <code>pam</code> authentication plugin, it is incredibly important to <a href="/kb/en/data-in-transit-encryption/">encrypt client connections  using TLS</a> to prevent the clear-text passwords from being seen by unauthorized users.</p>
 </div><h3 class="anchored_heading" id="dialog"><code>dialog</code></h3>
 <p>Usually the <code>pam</code> authentication plugin uses the <code>dialog</code> client authentication plugin to communicate with the user. This client authentication plugin allows MariaDB to support arbitrarily complex PAM configurations with regular or one-time passwords, challenge-response, multiple questions, or just about anything else. When using a MariaDB client library, there is no need to install or enable anything — the <code>dialog</code> client authentication plugin is loaded by the client library completely automatically and transparently for the application.</p>
@@ -823,6 +825,16 @@ allow this access for now by executing:
 # semodule -i mypol.pp
 </pre><p>Sometimes issues like this can be fixed by updating the system's SELinux policies. You may be able to update the policies using <a href="https://linux.die.net/man/1/audit2allow">audit2allow</a>. See <a href="/kb/en/selinux/#generating-selinux-policies-with-audit2allow">SELinux: Generating SELinux Policies with audit2allow</a> for more information.</p>
 <p>If you can't get the <code>pam</code> authentication plugin to work with SELinux at all, then it can help to disable SELinux entirely. See <a href="/kb/en/selinux/#changing-selinuxs-mode">SELinux: Changing SELinux's Mode</a> for information on how to do this.</p>
+<h3 class="anchored_heading" id="memory-overcommit">Memory Overcommit</h3>
+<p>On <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a> and later you may run into authentication failures with the following log message in the MariaDB error log:</p>
+<pre class="fixed">pam: cannot exec /usr/lib64/mysql/plugin/auth_pam_tool_dir/auth_pam_tool (errno: 12 &#34;Cannot allocate memory&#34;) 
+</pre><p>This can happen on operating system setups that are configured to prevent memory overcommit. When the MariaDB server process spawns the <code>auth_pam_tool</code> helper process there's a brief period where the new process inherits the memory of the MariaDB process before releasing that memory and executing the new command. When having a MariaDB server configured to use more than 50% of the server machnines RAM -- which is common for dedicated database servers -- this duplication would lead to an over-commit situation.</p>
+<p>Starting with <a href="/kb/en/mariadb-10425-release-notes/">MariaDB 10.4.25</a>, <a href="/kb/en/mariadb-10516-release-notes/">MariaDB 10.5.16</a>, <a href="/kb/en/mariadb-1068-release-notes/">MariaDB 10.6.8</a>, and <a href="/kb/en/mariadb-1074-release-notes/">MariaDB 10.7.4</a>, we changed to use <code>posix_spawn()</code> instead of the classic <code>fork();exec()</code> to prevent this, but systems with older glibc versions prior to 2.26 still use <code>fork();exec()</code> to implement <code>posix_spawn()</code> internally and so are still affected; this is for example still the case on RedHat Enterprise Linux 7.</p>
+<p>To solve this you can either:</p>
+<ul start="1"><li>change the <code>vm.overcommit_memory</code> kernel setting to allow memory overcommit
+</li><li>install the older <code>auth_pam_v1</code> plugin version that does not spawn a helper process (but may run into problems with file permissions or multi threading with some PAM modules)
+</li></ul>
+<p>See also <a href="https://jira.mariadb.org/browse/MDEV-26212">MDEV-26212</a> and <a href="https://jira.mariadb.org/browse/MDEV-30734">MDEV-30734</a></p>
 <h2 class="anchored_heading" id="tutorials">Tutorials</h2>
 <p>You may find the following PAM-related tutorials helpful:</p>
 <ul start="1"><li><a href="/kb/en/configuring-pam-authentication-and-user-mapping-with-unix-authentication/">Configuring PAM Authentication and User Mapping with Unix Authentication</a>

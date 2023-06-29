@@ -276,7 +276,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/maxscale-troubleshooting/+r/125263/">125263</a></dd>
+            <dd><a href="/kb/en/maxscale-troubleshooting/+r/127376/">127376</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3062">
@@ -285,7 +285,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-04-14 05:43">2023-04-14 05:43</span></dd>
+<span class="datetime" title="2023-06-20 08:31">2023-06-20 08:31</span></dd>
         </dl>
     </div>
     
@@ -312,6 +312,107 @@ Set [[https://mariadb.com/kb/en/mariadb-maxscale-2208-mariadb-maxscale-configura
 The query classifier cache in MaxScale by default takes up to 15% of memory to cache query classification data. This value can be lowered using the [[https://mariadb.com/kb/en/mariadb-maxscale-2208-mariadb-maxscale-configuration-guide/#query_classifier_cache_size|query_classifier_cache_size]] parameter.
 
 The [[https://mariadb.com/kb/en/mariadb-maxscale-2208-mariadb-maxscale-configuration-guide/#retain_last_statements|retain_last_statements]] and [[https://mariadb.com/kb/en/mariadb-maxscale-2208-mariadb-maxscale-configuration-guide/#session_trace|session_trace]] debugging parameters can cause memory usage to increase. Disabling them under intensive loads is recommended if they are not needed. Note that the {{{maxctrl list queries}}} requires that {{{retain_last_statements=1}}} is set.
+
+== Profiling Memory Usage
+
+Profiling the memory usage can be useful for finding out why MaxScale appears to use more memory than it should. It is especially helpful for analyzing OOM situations or other cases where the memory grows linearly and causes problems.
+
+To profile the memory usage of MaxScale, there are multiple options. The following sections describe the methods that are available.
+
+If a problem in memory usage is identified and it appears to be due to a bug in MaxScale, please open a new bug report on the [[https://jira.mariadb.org/browse/MXS|MariaDB Jira under the MaxScale project]]. Remember to include all the profiling and leak check reports along with the MaxScale version number and the configuration file with all password and other sensitive information removed. 
+
+=== Debug Binaries
+
+The easiest option is to install the MaxScale debug binaries which are built with [[https://github.com/google/sanitizers/wiki/AddressSanitizer|AddressSanitizer]] and [[https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer|LeakSanitizer]] enabled. These are low-impact instrumentation tools that detect memory access errors as well as memory leaks.
+
+Once installed, make sure that the {{{maxlog}}} parameter is not disabled and then start MaxScale. Let it run until the memory usage grows beyond normal limits and then shut MaxScale down with {{{systemctl stop maxscale.service}}}. The MaxScale log should contain a verbose explanation of where memory leaks occurred, if any were found.
+
+=== Jemalloc Heap Profiling
+
+Jemalloc is an alternative to the default glibc memory allocator. It is capable of analyzing the heap memory usage of a process which allows it to be used to detect all sorts of memory usage problems with a lower overhead compared to tools like Valgrind. Unlike the ASAN and LSAN sanitizers, it is capable of detecting cases where memory doesn&#39;t actually leak but keeps growing with no upper limit (e.g. items get appended to a list but are never removed).
+
+==== Ubuntu and Debian
+
+To enable jemalloc, the packages for it must be first installed from the system repositories. Ubuntu 20.04 requires the following packages to be installed for jemalloc profiling:
+&lt;&lt;code&gt;&gt;
+apt-get -y install libjemalloc2 libjemalloc-dev binutils graphviz ghostscript gv
+&lt;&lt;/code&gt;&gt;
+
+==== Configuring MaxScale for Jemalloc Heap Profiling
+
+Once installed, edit {{{/lib/systemd/system/maxscale.service}}} and add the following two lines into the {{{[Service]}}} section.
+
+&lt;&lt;code&gt;&gt;
+Environment=MALLOC_CONF=prof:true,prof_leak:true,prof_gdump:true,lg_prof_sample:18,prof_prefix:/var/log/maxscale/jeprof
+Environment=LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
+&lt;&lt;/code&gt;&gt;
+
+Then run {{{systemctl daemon-reload}}} and restart MaxScale with {{{systemctl restart maxscale.service}}}.
+
+The MaxScale log directory in {{{/var/log/maxscale/}}} will start to be filled by versioned files with a {{{.heap}}} suffix. Every time the virtual memory used by MaxScale reaches a new high, a file will be created. Initially, the files will be created very often but eventually the pace will slow down. Once the problematic memory usage has been identified, the latest {{{.heap}}} file can be analyzed with the {{{jeprof}}} program.
+
+The easiest way to look at the generated heap profile is with the PDF output. To generate the PDF report of the latest heap dump, run the following command:
+
+&lt;&lt;code&gt;&gt;
+jeprof --pdf /usr/bin/maxscale $(ls -1 /var/log/maxscale/*.heap|sort -V|tail -n 1) &gt; heap-report.pdf
+&lt;&lt;/code&gt;&gt;
+
+The generated {{{heap-report.pdf}}} will contain a breakdown of the memory usage of MaxScale.
+
+Note that the report generation with the {{{jeprof}}} program must be done on the same system where the profiling was done. If done elsewhere, the binaries do not necessarily match and can cause the report generation to fail.
+
+=== Tcmalloc Heap Profiling
+
+Similarly to the jemalloc memory allocator, the [[https://github.com/google/tcmalloc|tcmalloc]] memory allocator comes with a leak checker and heap profiler.
+
+==== Installation
+
+===== Rocky Linux 8
+
+&lt;&lt;code&gt;&gt;
+sudo dnf -y install gperftools
+&lt;&lt;/code&gt;&gt;
+
+===== Ubuntu 20.04
+
+&lt;&lt;code&gt;&gt;
+sudo apt -y install google-perftools
+&lt;&lt;/code&gt;&gt;
+
+==== Service file configuration
+
+Once tcmalloc is installed, edit {{{/lib/systemd/system/maxscale.service}}} and add the following lines into the {{{[Service]}}} section.
+
+**Note:** Make sure to use the correct path to the tcmalloc library in {{{LD_PRELOAD}}}. The following example uses the Debian location of the library. The file is usually located in {{{/usr/lib64/libtcmalloc_and_profiler.so.4.5.3}}} on RHEL systems. The version number of the library can also change which might require other adjustments to the library path.
+
+&lt;&lt;code&gt;&gt;
+Environment=LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_and_profiler.so.4.5.3
+Environment=HEAPPROFILE=/var/log/maxscale/maxscale.prof
+Environment=HEAPCHECK=normal
+Environment=HEAP_CHECK_AFTER_DESTRUCTORS=true
+&lt;&lt;/code&gt;&gt;
+
+Then run {{{systemctl daemon-reload}}} and restart MaxScale with {{{systemctl restart maxscale.service}}}.
+
+==== Report generation
+
+Depending on which OS you are using, the report generation program is named either {{{pprof}}} (RHEL) or {{{google-pprof}}} (Debian/Ubuntu).
+
+It is important to pick the latest {{{.heap}}} file to analyze. The following command generates the {{{heap-report.pdf}}} from the latest heap dump. The file will show the breakdown of the memory usage.
+
+&lt;&lt;code&gt;&gt;
+pprof --pdf /usr/bin/maxscale $(ls /var/log/maxscale/*.heap|sort -V|tail -n 1) &gt; heap-report.pdf
+&lt;&lt;/code&gt;&gt;
+
+=== Valgrind
+
+Valgrind can be used to analyze memory usage problems but usually it is left as the last resort due to the heavy performance penalty that it incurs. However, the use of Valgrind is simple as it is widely available and can be used with existing MaxScale binaries.
+
+To use {{{valgrind}}} for memory leak detection, edit the {{{/lib/systemd/system/maxscale.service}}} file and replace the following values:
+*  {{{ExecStart=/usr/bin/maxscale}}} with {{{ExecStart=valgrind --leak-check=full /usr/bin/maxscale -d}}}
+*  {{{Type=forking}}} with {{{Type=simple}}}
+
+Then reload the daemon with {{{systemctl daemon-reload}}} and restart the MaxScale process with {{{systemctl restart maxscale.service}}}. Once the memory problem is confirmed, stop the MaxScale process with {{{systemctl stop maxscale.service}}}. Valgrind will print the leak report into the system journal that can be viewed with {{{journalctl -u maxscale}}}.
 
 = Authentication Errors
 
@@ -381,18 +482,22 @@ If you got a grant containing a escaped underscore, you can add the [[https://ma
  MaxScale 22.08 no longer uses pipes for internal communication. This means that this error is never logged and the pipe size no longer needs to be adjusted.
 &lt;&lt;/product&gt;&gt;
 
-Starting with MaxScale 2.1 and until MaxScale 6, MaxScale can log the {{{Failed to write message: 11, Resource temporarily unavailable}}} message under extremely intensive workloads (see [[https://jira.mariadb.org/browse/MXS-1983|MXS-1983]]).
+&lt;&lt;product maxscale from=6.4.5&gt;&gt;
+Older MaxScale versions suffer from a bug (MXS-4474) that caused messages in the queue to take up 4096 bytes of memory per message instead of the intended 24 bytes which translates to a maximum of 256 messages instead of the expected 43690 messages with a 1MiB pipe size. 
+
+Starting with MaxScale 6.4.5 and 2.5.25, the size is 24 bytes as expected which causes the maximum limit to be the expected 43690 messages. The problem still theoretically exists under extreme workloads where there are more than 43k concurrent clients but in practice the problem should almost never occur.
+&lt;&lt;/product&gt;&gt;
+
+The MaxScale can log the {{{Failed to write message: 11, Resource temporarily unavailable}}} message under extremely intensive workloads (see MXS-1983 and MXS-4474).
 
 The first action to take when these messages are encountered is to upgrade your MaxScale installation to the latest version. Whenever this message is seen, it means that something is causing the internal message queue in MaxScale to fill up. More often than not it is a sign of a possible bug in MaxScale and most likely has been fixed in the most recent release of MaxScale.  
 
-To correct it increase the pipe buffer size from the default 1MB to a higher value. At least 8MB is recommended and should be increased until the message stops appearing.
+If this is still seen even after upgrading to the latest release, the pipe buffer size can be increased from the default 1MB to a higher value to prevent the problem from occurring. At least 8MB is recommended and should be increased until the message stops appearing.
 
 To set the pipe buffer size, execute the following command.
 {{{
 sudo sysctl -w fs.pipe-max-size=8388608
 }}}
-
-Before MaxScale 6.4.5, messages in the queue would end up taking 4096 bytes of memory which translated to a maximum of 256 messages with a 1MiB pipe size. In MaxScale 6.4.5, the size is 24 bytes which causes the maximum limit to be increased to about 43k messages.
 
 If after all these actions you still see these warnings, please open a bug report on the MariaDB Jira under the MaxScale project.
 
@@ -403,6 +508,40 @@ This is a common error when system limits for open files is too low. The fix to 
 === Systemd
 
 Edit or add {{{LimitNOFILE=&lt;number of files&gt;}}} under the {{{[Service]}}} section in {{{/usr/lib/systemd/system/maxscale.service}}}.
+
+= MaxCtrl
+
+== {{{Error: ENOENT: no such file or directory, uv_cwd}}}
+
+If MaxCtrl fails to start and throws the following error, it means that the current working directory no longer exists. Moving into a directory that does exist fixes the problem.
+
+&lt;&lt;code&gt;&gt;
+pkg/prelude/bootstrap.js:1872
+      throw error;
+      ^
+
+Error: ENOENT: no such file or directory, uv_cwd
+1) If you want to compile the package/file into executable, please pay attention to compilation warnings and specify a literal in &#39;require&#39; call. 2) If you don&#39;t want to compile the package/file into executable and want to &#39;require&#39; it from filesystem (likely plugin), specify an absolute path in &#39;require&#39; call using process.cwd() or process.execPath.
+    at Object.wrappedCwd [as cwd] (internal/bootstrap/switches/does_own_process_state.js:130:28)
+    at /snapshot/maxctrl/node_modules/yargs/build/index.cjs:1:59463
+    at Argv (/snapshot/maxctrl/node_modules/yargs/index.cjs:12:16)
+    at Object.&lt;anonymous&gt; (/snapshot/maxctrl/node_modules/yargs/index.cjs:7:1)
+    at Module._compile (pkg/prelude/bootstrap.js:1926:22)
+    at Object.Module._extensions..js (internal/modules/cjs/loader.js:1114:10)
+    at Module.load (internal/modules/cjs/loader.js:950:32)
+    at Function.Module._load (internal/modules/cjs/loader.js:790:12)
+    at Module.require (internal/modules/cjs/loader.js:974:19)
+    at Module.require (pkg/prelude/bootstrap.js:1851:31) {
+  errno: -2,
+  code: &#39;ENOENT&#39;,
+  syscall: &#39;uv_cwd&#39;,
+  pkg: true
+}
+&lt;&lt;/code&gt;&gt;
+
+== {{{Pkg: Error reading from file.}}}
+
+If MaxCtrl fails to start and throws this error, it most likely means that the {{{maxctrl}}} executable has been stripped of symbols. To fix this problem, reinstall the MaxScale package.
 
 = Binlogrouter
 

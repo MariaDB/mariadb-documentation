@@ -292,7 +292,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-system-tablespaces/+r/88909/">88909</a></dd>
+            <dd><a href="/kb/en/innodb-system-tablespaces/+r/127460/">127460</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5454">
@@ -301,7 +301,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2019-09-03 18:30">2019-09-03 18:30</span></dd>
+<span class="datetime" title="2023-06-21 18:47">2023-06-21 18:47</span></dd>
         </dl>
     </div>
     
@@ -343,11 +343,26 @@ Under this configuration, when the last system tablespace grows beyond the size 
 
 === Decreasing the Size
 
-In cases where the InnoDB system tablespace has grown too large, the process to reduce it in size is a little more complicated than increasing the size.  MariaDB does not allow you to remove data from the tablespace file itself.  Instead you need to delete the tablespace files themselves, then restore the database from backups.
 
-The backup utility mysqldump produces backup files containing the SQL statements needed to recreate the database.  As a result, it restores a database with the bare minimum data rather than any additional information that might have built up in the tablespace file.
+&lt;&lt;product mariadb from=11.2.0&gt;&gt;
+From MariaDB 11.2.0, when MariaDB starts up, unused InnoDB tablespace is reclaimed, reducing the file size (MDEV-14795).
 
-Use mysqldump to backup all of your InnoDB database tables, including the system tables in the ##mysql## database that use InnoDB.  You can find out what they are using the Information Schema.
+Technically, how this works is:
+# Find the last used extent in the system tablespace by iterating through the BITMAP in the extent descriptor page.
+# Check whether the tablespace is being used within fixed size, and if the last used extent is less than the fixed size, then set the desired target size to fixed size.
+# Flush all pages belonging to the system tablespace in flush list.
+# Truncate the truncated pages from FSP_FREE and FSP_FREE_FRAG list.
+# Reset the bitmap in descriptor pages for the truncated pages.
+# Update the FSP_SIZE and FSP_FREE_LIMIT in header page.
+# In case of multiple files, calculate the truncated last file size and do the truncation in last file.
+&lt;&lt;/product&gt;&gt;
+
+&lt;&lt;product mariadb to=11.2.0&gt;&gt;
+In cases where the InnoDB system tablespace has grown too large, before MariaDB 11.2, the process to reduce it in size is a little more complicated than increasing the size.  MariaDB does not allow you to remove data from the tablespace file itself.  Instead you need to delete the tablespace files themselves, then restore the database from backups.
+
+The backup utility [[mariadb-dump]] produces backup files containing the SQL statements needed to recreate the database.  As a result, it restores a database with the bare minimum data rather than any additional information that might have built up in the tablespace file.
+
+Use mariadb-dump to backup all of your InnoDB database tables, including the system tables in the ##mysql## database that use InnoDB.  You can find out what they are using the Information Schema.
 
 &lt;&lt;sql&gt;&gt;
 SELECT TABLE_NAME FROM information_schema.TABLES
@@ -357,7 +372,7 @@ WHERE TABLE_SCHEMA = &#39;mysql&#39; AND ENGINE = &#39;InnoDB&#39;;
 If you only use InnoDB, you may find it easier to back up all databases and tables.
 
 &lt;&lt;code&gt;&gt;
-$ mysqldump -u root -p --all-databases &gt; full-backup.sql
+$ mariadb-dump -u root -p --all-databases &gt; full-backup.sql
 &lt;&lt;/code&gt;&gt;
 
 Then stop the MariaDB Server and remove the InnoDB tablespace files.  In the data directory or the InnoDB data home directory, delete all the ##ibdata## and ##ib_log## files as well as any file with an ##.ibd## or ##.frm## extension.
@@ -367,7 +382,7 @@ Once this is done, restart the server and import the dump file:
 &lt;&lt;code&gt;&gt;
 $ mysql -u root -p &lt; full-backup.sql
 &lt;&lt;/code&gt;&gt;
-
+&lt;&lt;/product&gt;&gt;
 
 == Using Raw Disk Partitions
 
@@ -415,7 +430,7 @@ InnoDB creates some system tables within the InnoDB System Tablespace:
 * ##SYS_ZIP_DICT##
 * ##SYS_ZIP_DICT_COLS##
 
-These tables cannot be queried. However, you might see references to them in some places, such as in the ##[[information-schema-innodb_sys_tables-table|INNODB_SYS_TABLES]]## table in the ##[[information-schema-tables|information_schema]]## database.</textarea>
+These tables cannot be queried. However, you might see references to them in some places, such as in the [[information-schema-innodb_sys_tables-table|INNODB_SYS_TABLES]] table in the [[information-schema-tables|information_schema]] database.</textarea>
     
 
 

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Mariadb upgrade problem</title><link>https://mariadb.com/kb/en/mariadb-upgrade-problem/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/mariadb-upgrade-problem/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Wed, 28 Jun 2023 20:08:34 +0000</lastBuildDate><item><title>Re: Mariadb upgrade problem</title><link>https://mariadb.com/kb/en/mariadb-upgrade-problem/+comments/6174</link><description>&lt;p&gt;retorecon changes the extended attributes on the files only.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/mariadb-upgrade-problem/+comments/6174</guid></item><item><title>Re: Mariadb upgrade problem</title><link>https://mariadb.com/kb/en/mariadb-upgrade-problem/+comments/6169</link><description>&lt;p&gt;I tried:&lt;/p&gt;
+&lt;p&gt;restorecon -Rv /var/lib/mysql&lt;/p&gt;
+&lt;p&gt;and am still getting the same error.  As far as I can tell, my file permissions are also fine.&lt;/p&gt;
+&lt;pre class="fixed"&gt;$ ls -la /var/lib/mysql
+total 436380
+drwxr-xr-x 12 mysql mysql      4096 Mar 23 20:06 .
+drwxr-xr-x 51 root  root       4096 Mar 23 09:41 ..
+-rw-rw----  1 mysql mysql     90112 Mar 23 20:06 aria_log.00000001
+-rw-rw----  1 mysql mysql        52 Mar 23 20:06 aria_log_control
+drwx------  2 mysql mysql      4096 Mar 23 10:10 gitea
+-rw-rw----  1 mysql mysql      2695 Mar 23 20:06 ib_buffer_pool
+-rw-rw----  1 mysql mysql 346030080 Mar 23 20:06 ibdata1
+-rw-rw----  1 mysql mysql 100663296 Mar 23 20:06 ib_logfile0
+drwx------  2 mysql mysql      4096 Dec 14 15:34 mhc
+-rw-rw----  1 mysql mysql         0 Mar 23 09:46 multi-master.info
+drwx------  2 mysql mysql      4096 Mar 23 10:06 mysql
+srwxrwxrwx  1 mysql mysql         0 Mar 23 20:06 mysql.sock
+drwx------  2 mysql mysql      4096 Mar 23 10:06 performance_schema
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ted To</dc:creator><guid>https://mariadb.com/kb/en/mariadb-upgrade-problem/+comments/6169</guid></item><item><title>Re: Mariadb upgrade problem</title><link>https://mariadb.com/kb/en/mariadb-upgrade-problem/+comments/6168</link><description>&lt;p&gt;I have selinux disabled:&lt;/p&gt;
+&lt;pre class="fixed"&gt;$ cat /etc/selinux/config 
+
+# This file controls the state of SELinux on the system.
+# SELINUX= can take one of these three values:
+#     enforcing - SELinux security policy is enforced.
+#     permissive - SELinux prints warnings instead of enforcing.
+#     disabled - No SELinux policy is loaded.
+SELINUX=disabled
+# SELINUXTYPE= can take one of these two values:
+#     targeted - Targeted processes are protected,
+#     minimum - Modification of targeted policy. Only selected processes are protected. 
+#     mls - Multi Level Security protection.
+SELINUXTYPE=targeted
+&lt;/pre&gt;&lt;p&gt;but if `restorecon -Rv /var/lib/mysql` isn't potentially damaging, I'll give it a try.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ted To</dc:creator><guid>https://mariadb.com/kb/en/mariadb-upgrade-problem/+comments/6168</guid></item><item><title>Re: Mariadb upgrade problem</title><link>https://mariadb.com/kb/en/mariadb-upgrade-problem/+comments/6167</link><description>&lt;p&gt;So error 13 is a permission denied.&lt;/p&gt;
+&lt;p&gt;I'd normally assume &lt;a href="/kb/en/systemd/#useful-systemd-options"&gt;Systemd's ProtectHome&lt;/a&gt; however you seem to be on /var/lib/mysql.&lt;/p&gt;
+&lt;p&gt;Ensure the [[selinux/#file-system-permission-errors|selinux content] of the /var/lib/mysql directory is correct with:&lt;/p&gt;
+&lt;p&gt;restorecon -Rv /var/lib/mysql&lt;/p&gt;
+&lt;p&gt;After trying a restart after that, if unsuccessful look at /var/log/audit/audit.log to see if selinux is block other interactions. It might be the file label on mariadbd executable isn't correctly.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/mariadb-upgrade-problem/+comments/6167</guid></item></channel></rss>

@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>将表从 MyISAM 转换为 InnoDB - Source - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+        <meta name="robots" content="noindex, nofollow">
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="将表从 MyISAM 转换为 InnoDB - Source" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/zh-cn/converting-tables-from-myisam-to-innodb/+source/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="" />
+
+    <meta name="description" content="" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes autoresize nodes_source jqui" id="nodes_source">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/zh-cn/converting-tables-from-myisam-to-innodb/+source/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/zh-cn/converting-tables-from-myisam-to-innodb/+source/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/zh-cn/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/zh-cn/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/zh-cn/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb/">MariaDB - 简体中文</a>
+    
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb-server/">MariaDB Server文档</a>
+    
+
+    
+    » <a class="crumb" href="/kb/zh-cn/columns-storage-engines-and-plugins/">列、存储引擎和插件</a>
+    
+
+    
+    » <a class="crumb" href="/kb/zh-cn/storage-engines/">存储引擎</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/zh-cn/converting-tables-from-myisam-to-innodb/">将表从 MyISAM 转换为 InnoDB</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/zh-cn/">首页</a></li>
+                            
+                                
+                                    <li><a href="/kb/zh-cn/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/zh-cn/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/zh-cn/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/zh-cn/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/zh-cn/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+                        <div>
+    
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-small" href="/kb/zh-cn/converting-tables-from-myisam-to-innodb/">Return to article</a>
+    
+</div>
+</div>
+
+</div>
+                    
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+            <section id="content" class="limited_width col-md-10 clearfix">
+                
+                    <h1>将表从 MyISAM 转换为 InnoDB - Source</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+
+    
+
+    
+    <div class="revision_info">
+        <dl class="table">
+            <dt>Revision</dt>
+            <dd><a href="/kb/zh-cn/converting-tables-from-myisam-to-innodb/+r/127519/">127519</a></dd>
+            <dt>用户</dt>
+            <dd>
+<span class="user" id="user-13772">
+<a href="/kb/user/id/13772" title="Yingquan He">Yingquan He</a>
+</span></dd>
+            <dt>Date</dt>
+            <dd>
+
+<span class="datetime" title="2023-06-25 12:48">2023-06-25 12:48</span></dd>
+        </dl>
+    </div>
+    
+
+
+    
+
+    
+        
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+== 任务
+
+您决定将一个或多个表从[[MyISAM]]更改为[[InnoDB]]。这应该很简单，只需执行##ALTER TABLE foo ENGINE=InnoDB##命令即可。但是您听说可能会出现一些微妙的问题。
+
+本文描述了可能出现的问题以及如何解决这些问题。
+
+//建议// 搜索问题的一种方法是（至少在*nix中）：
+
+&lt;&lt;code lang=sh inline=false&gt;&gt;
+mysqldump --no-data --all-databases &gt;schemas
+egrep &#39;CREATE|PRIMARY&#39; schemas   # 关注主键
+egrep &#39;CREATE|FULLTEXT&#39; schemas  # 查找全文索引
+egrep &#39;CREATE|KEY&#39; schemas       # 查找各种组合的索引
+&lt;&lt;/code&gt;&gt;
+
+了解索引的工作原理将有助于更好地理解在InnoDB中可能运行得更快或更慢的内容。
+
+== 索引问题
+
+//（这些建议中的大部分和这些事实中的一些有例外。）//
+
+//事实// 每个InnoDB表都有一个主键。如果您没有提供，则使用第一个非NULL UNIQUE键。如果无法完成，则提供一个6字节的隐藏整数。
+
+//建议// 查找没有主键的表。明确指定一个主键，即使它是人造的AUTO_INCREMENT。这不是绝对要求，但对于InnoDB而言，它比MyISAM更强烈。有一天您可能需要遍历该表；如果没有明确的PK，则无法完成。
+
+//事实// 主键的字段包括在每个二级键中。
+
+* 请牢记这一点，以检查冗余索引。
+&lt;&lt;code indent=1&gt;&gt;
+PRIMARY KEY(id),
+INDEX(b), -- 实际上与INDEX(b, id)相同
+INDEX(b, id) -- 实际上与INDEX(b)相同
+&lt;&lt;/code&gt;&gt;
+*none (保留其中一个INDEX，而不是两个)
+
+* 注意微妙的事情，例如
+&lt;&lt;code indent=1&gt;&gt;
+PRIMARY KEY(id),
+UNIQUE(b), -- 保留唯一性约束
+INDEX(b, id) -- 删除此项
+&lt;&lt;/code&gt;&gt;
+
+* 另外，由于PK和数据是共存的：
+&lt;&lt;code indent=1&gt;&gt;
+PRIMARY KEY(id),
+INDEX(id, b) -- 删除这个索引；它几乎没什么用
+&lt;&lt;/code&gt;&gt;
+
+//对比// MyISAM的这个特性在InnoDB中不可用；&#39;id&#39;的值将在每个不同的&#39;abc&#39;值处重新开始：
+
+&lt;&lt;code&gt;&gt;
+id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+PRIMARY KEY (abc, id)
+&lt;&lt;/code&gt;&gt;
+
+模拟MyISAM“特性”的方法可能是这样的：您想要的是这个，但它不起作用，因为它引用了表两次：
+
+&lt;&lt;code&gt;&gt;
+INSERT INTO foo
+    (other, id, ...)
+    VALUES
+    (123, (SELECT MAX(id)+1 FROM foo WHERE other = 123), ...);
+&lt;&lt;/code&gt;&gt;
+
+相反，您需要类似于这样的变体。（您可能已经有了BEGIN...COMMIT。）
+
+&lt;&lt;code&gt;&gt;
+BEGIN;
+SELECT @id := MAX(id)+1 FROM foo WHERE other = 123 FOR UPDATE;
+INSERT INTO foo
+    (other, id, ...)
+    VALUES
+    (123, @id, ...);
+COMMIT;
+&lt;&lt;/code&gt;&gt;
+
+必须使用事务以防止另一个线程获取相同的id。
+
+//建议// 查找此类主键。如果找到这样的主键，请考虑如何更改设计。没有简单的解决方法。但是，以下可能是可以的。（确保id的数据类型足够大，因为它不会重新开始。）：
+
+&lt;&lt;code&gt;&gt;
+id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+PRIMARY KEY (abc, id),
+UNIQUE(id)
+&lt;&lt;/code&gt;&gt;
+
+//建议// 保持主键短小。如果有辅助索引，请记住它们包括PK字段。长PK会使辅助索引变得臃肿。好吧，也许不会 &lt;&lt;entity&gt;&gt;mdash&lt;&lt;/entity&gt;&gt; 如果字段有很多重叠。 示例：##PRIMARY KEY(a,b,c), INDEX(c,b,a)##&lt;&lt;entity&gt;&gt;mdash&lt;&lt;/entity&gt;&gt;没有额外的臃肿。
+
+//建议// 检查AUTO_INCREMENT大小。
+
+* 几乎从不需要BIGINT。它至少会浪费4个字节/行（与INT相比）。
+* 总是使用UNSIGNED和NOT NULL。
+* MEDIUMINT UNSIGNED（最大16M）可能足以代替INT
+* 要保持悲观 &lt;&lt;entity&gt;&gt;mdash&lt;&lt;/entity&gt;&gt;更改很痛苦。
+
+//对比// “垂直分割”。这里是指您人为地将表拆分为另一个并行表，以移动笨重的列（例如BLOB）。在MyISAM中，这是有益的，可以避免在不需要读取它时跨越BLOB。InnoDB以不同的方式存储BLOB和TEXT &lt;&lt;entity&gt;&gt;mdash&lt;&lt;/entity&gt;&gt;767字节在记录中，其余部分在其他块中。因此，将表重新组合起来可能（也可能不）值得。注意：InnoDB行限制为8KB，而767计入其中。
+
+ //事实。// 在MariaDB 10.0.5之前，FULLTEXT和SPATIAL索引在InnoDB中不可用。请注意，MyISAM和InnoDB [[full-text-indexes|FULLTEXT索引]]使用不同的[[stopword]]列表和不同的系统变量。
+
+ //推荐。// 搜索此类索引。将此类表保留在MyISAM中。最好从InnoDB中拆分出最少的列进行垂直分割（请参见上文）。
+
+ //事实。// INDEX的最大长度在引擎之间是不同的。（这种变化不太可能影响到您，但要小心。）MyISAM允许1000字节；InnoDB允许767字节，刚好足够一个
+
+&lt;&lt;code&gt;&gt;
+VARCHAR(255) CHARACTER SET utf8.
+
+ERROR 1071 (42000): 指定的键太长；最大键长度为767字节
+&lt;&lt;/code&gt;&gt;
+
+ //事实。// PRIMARY KEY包含在数据中。因此，对于没有辅助索引的表，SHOW TABLE STATUS将显示0字节（或16KB）的##Index_length##。否则，##Index_length##是辅助键的总大小。
+
+ //事实。// PRIMARY KEY包含在数据中。因此，通过PK进行精确匹配可能会比InnoDB快一点。并且，“范围”扫描通过PK可能更快。
+
+ //事实。// 通过辅助键进行查找会遍历辅助键的B树，抓取PRIMARY KEY，然后遍历PK的B树。因此，在InnoDB中，辅助键查找有点更加麻烦。
+
+ //对比// PRIMARY KEY的字段包含在每个辅助键中。这可能会导致在InnoDB中出现“Using index”（在EXPLAIN计划中）的情况，而在MyISAM中没有发生。 （这是一个轻微的性能提升，并抵消了否则需要的双重查找。）但是，当“Using index”对PRIMARY KEY有用时，MyISAM会执行“index scan”，而InnoDB实际上必须执行“table scan”。
+
+ //与MyISAM相同。// 几乎总是
+&lt;&lt;code&gt;&gt;
+INDEX(a)   -- 删除这个索引，因为另一个处理它。
+INDEX(a,b)
+&lt;&lt;/code&gt;&gt;
+
+ //对比// 数据按PK顺序存储。这意味着“最近”的记录在末尾“聚集”在一起。这可能比MyISAM具有更好的“引用局部性”。
+
+ //与MyISAM相同。// 优化器几乎从不在单个SELECT中使用两个索引。（5.1偶尔会执行“index merge”。）子查询和UNION中的SELECT可以独立选择索引。
+
+ //微妙问题。// 当您删除行时，AUTO_INCREMENT id将被删除。REPLACE也是如此，它是DELETE加INSERT。
+
+ //非常微妙的问题。// 复制发生在COMMIT上。如果您有多个使用事务的线程，则AUTO_INCREMENT可能以无序方式到达从站。一个事务BEGINs，抓取一个id。然后另一个事务抓取一个id但在第一个完成之前COMMIT。
+
+ //与MyISAM相同。// 在InnoDB和MyISAM中，通常都不使用“前缀”索引。例如：##INDEX(foo(30))##
+
+== 非索引问题
+
+InnoDB 的磁盘空间可能是 MyISAM 的 2-3 倍。
+
+MyISAM 和 InnoDB 在使用 RAM 方面有很大的差异。如果更改了所有表，则应进行重大调整：
+
+* [[myisam-system-variables#key_buffer_size|key_buffer_size]] &lt;&lt;entity&gt;&gt;mdash&lt;&lt;/entity&gt;&gt; 小但非零；比如 10M；
+* [[xtradbinnodb-server-system-variables#innodb_buffer_pool_size|innodb_buffer_pool_size]] &lt;&lt;entity&gt;&gt;mdash&lt;&lt;/entity&gt;&gt; 可用 RAM 的 70%
+
+InnoDB 实际上不需要 CHECK、OPTIMIZE 或 ANALYZE。从维护脚本中删除它们（如果保留它们，也不会有真正的危害）。
+
+备份脚本可能需要检查。MyISAM 表可以通过复制三个文件进行备份。对于 InnoDB，仅当设置 [[xtradbinnodb-server-system-variables#innodb_file_per_table|innodb_file_per_table]] 为 1 时才可能进行备份。在 MariaDB 10.0 之前，从生产环境复制表或数据库以用于开发环境是不可能的。改用 [[mysqldump]]。自 MariaDB 10.0 起，可以创建热备份 - 请参见[[backup-and-restore-overview|备份和恢复概述]]。
+
+在 MariaDB 5.5 之前，不支持 DATA DIRECTORY [[create-table#table-options|表选项]]用于 InnoDB。自 MariaDB 5.5 起，它得到支持，但仅在 CREATE TABLE 中支持。INDEX DIRECTORY 没有效果，因为 InnoDB 不使用单独的索引文件。为了更好地平衡几个磁盘的工作负载，还可以更改某些 InnoDB 日志文件的路径。
+
+了解 autocommit 和 BEGIN/COMMIT。
+
+* （默认）autocommit = 1：没有 BEGIN 或 COMMIT 语句存在时，每个语句本身就是一个事务。这接近于 MyISAM 的行为，但并不是最好的选择。
+* autocommit = 0：COMMIT 将关闭一个事务并开始另一个事务。对我来说，这很笨拙。
+* （推荐）BEGIN ... COMMIT 可以让您控制要被视为事务和“原子”的操作序列。如果需要将某些内容撤消回 BEGIN，则包括 ROLLBACK 语句。
+
+Perl 的 DBIx::DWIW 和 Java 的 JDBC 具有执行 BEGIN 和 COMMIT 的 API 调用。这些可能比“执行” BEGIN 和 COMMIT 更好。
+
+在任何地方都要测试错误！由于 InnoDB 使用行级锁定，因此可能会遇到意外死锁。引擎将自动回滚到 BEGIN。正常恢复是从 BEGIN 开始重新执行。请注意，这是具有 BEGIN 的一个强有力的理由。
+
+LOCK/UNLOCK TABLES &lt;&lt;entity&gt;&gt;mdash&lt;&lt;/entity&gt;&gt; 删除它们。用 BEGIN ... COMMIT 替换它们（有点）。如果将 innodb_table_locks 设置为 1，则 LOCK 将起作用，但效率较低，并且可能存在微妙问题。
+
+在 5.1 中，ALTER ONLINE TABLE 可以显著加速某些操作。（通常 ALTER TABLE 将表复制并重建索引。）
+
+几乎所有东西的“限制”在 MyISAM 和 InnoDB 之间是不同的。除非您有巨大的表、宽行、许多索引等等，否则您不太可能遇到不同的限制。
+
+MyISAM 和 InnoDB 混合？这没问题。但是有一些注意事项。
+
+* 应相应地调整 RAM 设置。
+* 不同引擎的表 JOIN 可以工作。
+* 影响两种类型表的事务可以撤消 InnoDB 更改，但会保留 MyISAM 更改。
+* 复制：MyISAM 语句在完成后被复制；InnoDB 语句会等待 COMMIT。
+
+在 InnoDB 中，FIXED（与 DYNAMIC 相对）毫无意义。
+
+PARTITION &lt;&lt;entity&gt;&gt;mdash&lt;&lt;/entity&gt;&gt; 您可以对 MyISAM 和 InnoDB 表进行分区。请记住奇怪的规则：您必须
+
+* 没有 UNIQUE（或 PRIMARY）键；或者
+* 在每个 UNIQUE 键中都有您要“分区”的值。
+
+对 InnoDB 不建议使用前者。如果您想要 AUTO_INCREMENT，则后者会很混乱。
+
+PARTITION 中的 PRIMARY KEY &lt;&lt;entity&gt;&gt;mdash&lt;&lt;/entity&gt;&gt; 由于每个键都必须包含您正在 PARTITION 的字段，那么 AUTO_INCREMENT 如何工作呢？好吧，似乎有一个方便的特殊情况：
+
+* 有效：PRIMARY KEY(autoinc，partition_key)
+
+* 对于 InnoDB无效：PRIMARY KEY(partition_key，autoinc)
+
+也就是说，当 AUTO_INCREMENT 是 PRIMARY KEY 的第一个字段时，它将正确递增，并且在所有 PARTITION 上都是唯一的，否则不会。
+
+== 参见
+&lt;&lt;include slug=&#34;rickjames&#34;&gt;&gt;
+原始来源：http://mysql.rjweb.org/doc.php/myisam2innodb</textarea>
+    
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>

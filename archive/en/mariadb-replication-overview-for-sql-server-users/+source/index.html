@@ -292,7 +292,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-replication-overview-for-sql-server-users/+r/106339/">106339</a></dd>
+            <dd><a href="/kb/en/mariadb-replication-overview-for-sql-server-users/+r/125976/">125976</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-125">
@@ -301,7 +301,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2021-04-29 18:27">2021-04-29 18:27</span></dd>
+<span class="datetime" title="2023-05-22 15:49">2023-05-22 15:49</span></dd>
         </dl>
     </div>
     
@@ -326,19 +326,19 @@ Similar synonyms will be created in the future for status variables and system v
 
 == Asynchronous Replication
 
-The original MariaDB replication system is asynchronous master-slave replication.
+The original MariaDB replication system is asynchronous primary-replica replication.
 
-A master needs to have the [[binary-log|binary log]] enabled. The master logs all data changes in the binary log. Every //event// (a binary log entry) is sent to all the slaves.
+A primary needs to have the [[binary-log|binary log]] enabled. The primary logs all data changes in the binary log. Every //event// (a binary log entry) is sent to all the replicas.
 
 For a high-level description of the binary log for SQL Server users, see [[understanding-mariadb-architecture#the-binary-log|Understanding MariaDB Architecture]].
 
-The events can be written in two formats: as an SQL statement (//statement-based replication//, or SBR), or as a binary representation of the change (//row-based replication//, or RBR). The former is generally slower, because the statement needs to be re-executed by the slaves. It is also less reliable, because some SQL statements are [[unsafe-statements-for-statement-based-replication|not deterministic]], so they could produce different results on the slaves. On the other hand row-based replication could make the binary log much bigger, and require more network traffic. For this reason, DML statements are always logged in statement format.
+The events can be written in two formats: as an SQL statement (//statement-based replication//, or SBR), or as a binary representation of the change (//row-based replication//, or RBR). The former is generally slower, because the statement needs to be re-executed by the replicas. It is also less reliable, because some SQL statements are [[unsafe-statements-for-statement-based-replication|not deterministic]], so they could produce different results on the replicas. On the other hand row-based replication could make the binary log much bigger, and require more network traffic. For this reason, DML statements are always logged in statement format.
 
 For more details on replication formats, see [[binary-log-formats|binary log formats]].
 
-The slaves have an [[replication-threads#slave-io-thread|I/O thread]] that receives the binary log events and writes them to the [[relay-log|relay log]]. These events are then read by the [[replication-threads#slave-sql-thread|SQL thread]]. This thread could directly apply the changes to the local databases, and this was the only option before MariaDB 10.0.5. If [[#parallel-replication-and-group-commit|parallel replication]] is enabled, the SQL thread hands the events to the worker thread, that apply them to the databases. The latter method is recommended for performance reasons.
+The replicas have an [[replication-threads#slave-io-thread|I/O thread]] that receives the binary log events and writes them to the [[relay-log|relay log]]. These events are then read by the [[replication-threads#slave-sql-thread|SQL thread]]. This thread could directly apply the changes to the local databases, and this was the only option before MariaDB 10.0.5. If [[#parallel-replication-and-group-commit|parallel replication]] is enabled, the SQL thread hands the events to the worker thread, that apply them to the databases. The latter method is recommended for performance reasons.
 
-When a slave cannot apply an event to the local data, the SQL thread stops. This happens, for example, if the event is a row deletion but that row doesn&#39;t exist on the slave. There can be several reasons for this, for example non-deterministic statements, or a user deleted the row in the slave. To reduce the risk, it is recommended to set [[server-system-variables#read_only|read_only]] to 1 in the slaves.
+When a replica cannot apply an event to the local data, the SQL thread stops. This happens, for example, if the event is a row deletion but that row doesn&#39;t exist on the replica. There can be several reasons for this, for example non-deterministic statements, or a user deleted the row in the replica. To reduce the risk, it is recommended to set [[server-system-variables#read_only|read_only]] to 1 in the replicas.
 
 [[show-slave-status|SHOW SLAVE STATUS]] has columns named ##Slave_SQL_State## and ##Slave_IO_State## that show, respectively, if the SQL thread and the IO thread are running. If they are not, the column ##Last_IO_Errno## and ##Last_IO_Error## (for the IO thread) or ##Last_SQL_Errno## and ##Last_SQL_Error## (for the SQL thread) show what the problem is.
 
@@ -348,39 +348,39 @@ For more information on replication, see [[standard-replication|standard replica
 
 === Binary Log Coordinates, Relay Log Coordinates and GTID
 
-The binary log coordinates provide a way to identify a certain data change made by a server. Coordinates consist of a file name and the position of the latest event, expressed as an integer. The last event coordinates can be seen with the [[show-master-status|SHOW MASTER STATUS]] columns ##File## and ##Position##. [[mysqldump]] includes them in a dump if the ##--master-data## option is used.
+The binary log coordinates provide a way to identify a certain data change made by a server. Coordinates consist of a file name and the position of the latest event, expressed as an integer. The last event coordinates can be seen with the [[show-master-status|SHOW MASTER STATUS]] columns ##File## and ##Position##. [[mariadb-dump]] includes them in a dump if the ##--master-data## option is used.
 
-A slave uses master binary log coordinates to identify the last event it read. This can be seen with the [[show-slave-status|SHOW SLAVE STATUS]],columns ##Master_Log_File## and ##Read_Master_Log_Pos##.
+A replica uses primary binary log coordinates to identify the last event it read. This can be seen with the [[show-slave-status|SHOW SLAVE STATUS]] columns ##Master_Log_File## and ##Read_Master_Log_Pos##.
 
-The columns ##Relay_Master_Log_File## and ##Exec_Master_Log_Pos## identify the master event that corresponds to the last event applied by the SQL thread.
+The columns ##Relay_Master_Log_File## and ##Exec_Master_Log_Pos## identify the primary event that corresponds to the last event applied by the SQL thread.
 
-The slave relay log also has coordinates. The coordinates of the last applied event can be seen with the ##SHOW SLAVE STATUS## columns ##Relay_Log_File## and ##Relay_Log_Pos##.
+The replica relay log also has coordinates. The coordinates of the last applied event can be seen with the ##SHOW SLAVE STATUS## columns ##Relay_Log_File## and ##Relay_Log_Pos##.
 
-To easily find out how far the slave is lagging behind the master, we can look at ##Seconds_Behind_Master##.
+To easily find out how far the replica is lagging behind the primary, we can look at ##Seconds_Behind_Master##.
 
-Coordinates represented in this way have a problem: they are different on each server. Each server can use files with different (or the same) names, depending on its configuration. And files can be rotated at different times, including when a user runs [[flush|FLUSH LOGS]]. By enabling the GTID (global transaction id) an event will have the same id on the master and on all the slaves.
+Coordinates represented in this way have a problem: they are different on each server. Each server can use files with different (or the same) names, depending on its configuration. And files can be rotated at different times, including when a user runs [[flush|FLUSH LOGS]]. By enabling the GTID (global transaction id) an event will have the same id on the primary and on all the replicas.
 
-When [[GTID]] is enabled, ##SHOW SLAVE STATUS## shows two GTIDs: ##Gtid_IO_Pos## is the last event written into the relay log, and ##Gtid_Slave_Pos## is the last event applied by the SQL thread. There is no need for a column identifying the same event in the master, because the id is the same.
+When [[GTID]] is enabled, ##SHOW SLAVE STATUS## shows two GTIDs: ##Gtid_IO_Pos## is the last event written into the relay log, and ##Gtid_Slave_Pos## is the last event applied by the SQL thread. There is no need for a column identifying the same event in the primary, because the id is the same.
 
-=== Provisioning a Slave
+=== Provisioning a Replica
 
 MariaDB does not have an equivalent to SQL Server&#39;s snapshot replication.
 
-To setup a slave, it is necessary to manually provision it. It can be provisioned from the master in this way:
-* A backup from the master must be restored on the new slave;
-* The binary log coordinates at the moment of the backup should be set as replication coordinates in the slave, via [[change-master-to|CHANGE MASTER TO]].
+To setup a replica, it is necessary to manually provision it. It can be provisioned from the primary in this way:
+* A backup from the primary must be restored on the new replica;
+* The binary log coordinates at the moment of the backup should be set as replication coordinates in the replica, via [[change-master-to|CHANGE MASTER TO]].
 
-However, if there is at least one existing slave, it is better to use it to provision the new slave:
-* A backup from the existing slave must be restored in the new slave;
+However, if there is at least one existing replica, it is better to use it to provision the new replica:
+* A backup from the existing replica must be restored in the new replica;
 * The backup should include the system tables. In this way it will not be necessary to set the correct coordinates manually.
 
-For more information see [[setting-up-replication|Setting Up Replication]] and [[setting-up-a-replication-slave-with-mariabackup|Setting up a Replication Slave with Mariabackup]].
+For more information see [[setting-up-replication|Setting Up Replication]] and [[setting-up-a-replica-with-mariabackup|Setting up a Replica with Mariabackup]].
 
 === Replication and Permissions
 
-A slave connects to a master using its credentials. See [[change-master-to|CHANGE MASTER TO]].
+A replica connects to a primary using its credentials. See [[change-master-to|CHANGE MASTER TO]].
 
-The appropriate account must be created in the master, and it needs to have the ##REPLICATION SLAVE## permission.
+The appropriate account must be created in the primary, and it needs to have the ##REPLICATION SLAVE## permission.
 
 See [[setting-up-replication|Setting Up Replication]] for more information.
 
@@ -388,7 +388,7 @@ See [[setting-up-replication|Setting Up Replication]] for more information.
 
 MariaDB uses [[group-commit-for-the-binary-log|group commit]], which means that a group of events are physically written in the binary log altogether. This reduces the number of IOPS (input/output operations per second). Group commit cannot be disabled, but it can be tuned with variables like [[replication-and-binary-log-system-variables#binlog_commit_wait_count|binlog_commit_wait_count]] and [[replication-and-binary-log-system-variables#binlog_commit_wait_usec|binlog_commit_wait_usec]].
 
-Slaves can apply the changes using multiple threads. This is known as [[parallel-replication|parallel replication]]. Before MariaDB 10.0.5 only one thread was used to apply changes. Since a master can use many threads to write data, mono-thread replication is a well-known bottleneck. Parallel replication is not enabled by default. To use it, set the [[replication-and-binary-log-system-variables#slave_parallel_threads|slave_parallel_threads]] variable to a number greater than 1. If replication is running, the slave threads must be stopped in order to change this value:
+Replicas can apply the changes using multiple threads. This is known as [[parallel-replication|parallel replication]]. Before MariaDB 10.0.5 only one thread was used to apply changes. Since a primary can use many threads to write data, mono-thread replication is a well-known bottleneck. Parallel replication is not enabled by default. To use it, set the [[replication-and-binary-log-system-variables#slave_parallel_threads|slave_parallel_threads]] variable to a number greater than 1. If replication is running, the replica threads must be stopped in order to change this value:
 
 &lt;&lt;sql&gt;&gt;
 STOP SLAVE SQL_THREAD;
@@ -396,53 +396,49 @@ SET GLOBAL slave_parallel_threads = 4;
 START SLAVE SQL_THREAD;
 &lt;&lt;/sql&gt;&gt;
 
-There are different parallel replication styles available: in-order and out-of-order. The exact mode in use is determined by the [[replication-and-binary-log-system-variables#slave_parallel_mode|slave_parallel_mode]] system variable. In parallel replication, the events are not replicated exactly in the same order as they occurred in the master. But with an in-order replication mode the commit phase is always applied simultaneously. In this way data in the slave always reflect data as they have been in the master at a certain point in time. Out-of-order replication is faster because there is less queuing, but it&#39;s not completely consistent with the master. If two transactions modified different sets of rows in the master, they could become visible in the slave in a different order.
+There are different parallel replication styles available: in-order and out-of-order. The exact mode in use is determined by the [[replication-and-binary-log-system-variables#slave_parallel_mode|slave_parallel_mode]] system variable. In parallel replication, the events are not replicated exactly in the same order as they occurred in the primary. But with an in-order replication mode the commit phase is always applied simultaneously. In this way data in the replica always reflect data as they have been in the primary at a certain point in time. Out-of-order replication is faster because there is less queuing, but it&#39;s not completely consistent with the primary. If two transactions modified different sets of rows in the primary, they could become visible in the replica in a different order.
 
-##conservative## relies on master group commit: events in different groups are executed in a parallel way.
+##conservative## relies on primary group commit: events in different groups are executed in a parallel way.
 
-##optimistic## does not try to find out which transaction can be executed in a parallel way - except for transactions that conflicted on the master. Instead, it always tries to apply many events together, and rolls transactions back when there is a conflict.
+##optimistic## does not try to find out which transaction can be executed in a parallel way - except for transactions that conflicted on the primary. Instead, it always tries to apply many events together, and rolls transactions back when there is a conflict.
 
-##aggressive## is similar to optimistic, but it does not take into account which transactions conflicted in the master.
+##aggressive## is similar to optimistic, but it does not take into account which transactions conflicted in the primary.
 
 ##minimal## applies commits together, but all other events are applied in order.
 
-Out-of-order replication cannot be enabled automatically by changing a variable in the slave. Instead, it must be enabled by the applications that run transactions in the master. They can do this if the GTID is enabled. They can set different values for the [[replication-and-binary-log-system-variables#gtid_domain_id|gtid_domain_id]] variable in different transactions. This shifts a lot of responsibility to the application layer; however, if the application is aware of which transactions are not going to conflict and this information allows one to sensibly increase the parallelism, and using out-of-order replication can be a good idea.
+Out-of-order replication cannot be enabled automatically by changing a variable in the replica. Instead, it must be enabled by the applications that run transactions in the primary. They can do this if the GTID is enabled. They can set different values for the [[replication-and-binary-log-system-variables#gtid_domain_id|gtid_domain_id]] variable in different transactions. This shifts a lot of responsibility to the application layer; however, if the application is aware of which transactions are not going to conflict and this information allows one to sensibly increase the parallelism, and using out-of-order replication can be a good idea.
 
 Even if out-of-order replication is not normally used, it can be a good idea to use it for long running transactions or [[alter-table|ALTER TABLEs]], so they can be applied at the same time as normal operations that are not conflicting.
 
 The impact of the number of threads and mode on performance can be partly seen with [[show-processlist|SHOW PROCESSLIST]], which shows the state of all threads. This includes the replication worker threads, and shows if they are blocking each other.
 
-=== Differences Between the Master and the Slaves
+=== Differences Between the Primary and the Replicas
 
-As a general rule, we want the master and the slaves to contain exactly the same data. In this way, no conflicts are possible. Conflicts are the most likely cause of replication outages.
+As a general rule, we want the primary and the replicas to contain exactly the same data. In this way, no conflicts are possible. Conflicts are the most likely cause of replication outages.
 
 To reduce the possible causes of conflicts, the following best practices are recommended:
-* Users must not change data in the slaves directly. Set [[server-system-variables#read_only|read_only]] to 1. Note that this won&#39;t prevent root from making changes.
-* Use the same table definitions in the master and in the slave.
-* Use ##ROW## binary log format on the master.
+* Users must not change data in the replica directly. Set [[server-system-variables#read_only|read_only]] to 1. Note that this won&#39;t prevent root from making changes.
+* Use the same table definitions in the primary and in the replica.
+* Use ##ROW## binary log format on the primary.
 
-Another cause of inconsistencies include MariaDB bugs and failover in case the master crashes.
+Another cause of inconsistencies include MariaDB bugs and failover in case the primary crashes.
 
-An open source third party tool is available to check if the master and a slave are consistent. It is called pt-table-checksum. Another tool, pt-table-sync, can be used to eliminate the differences. Both are part of Percona Toolkit. The advice is to run pt-table-checksum periodically, and use pt-table-sync if inconsistencies are found.
+An open source third party tool is available to check if the primary and a replica are consistent. It is called pt-table-checksum. Another tool, pt-table-sync, can be used to eliminate the differences. Both are part of Percona Toolkit. The advice is to run pt-table-checksum periodically, and use pt-table-sync if inconsistencies are found.
 
-If a replication outage occurs because an inconsistency is found, sometimes we want to quickly bring the slave up again as quickly as possible, and solve the core problem later. If GTID is not used, a way to do this is to run [[set-global-sql_slave_skip_counter|SET GLOBAL SQL_SLAVE_SKIP_COUNTER = 1]], which skips the problematic replication event.
+If a replication outage occurs because an inconsistency is found, sometimes we want to quickly bring the replica up again as quickly as possible, and solve the core problem later. If GTID is not used, a way to do this is to run [[set-global-sql_slave_skip_counter|SET GLOBAL SQL_SLAVE_SKIP_COUNTER = 1]], which skips the problematic replication event.
 
 If GTID is used, the [[gtid#gtid_slave_pos|gtid_slave_pos]] variable can be used instead. See the link for an explanation of how it works.
 
-There are ways to have different data on the slaves. For example:
-* Multi-source replication is possible. In this way, a slave will replicate data from multiple masters. This feature is described below.
-* [[replication-filters|Replication filters]] are supported. This allows one to exclude or include in replication specific tables, entire databases, or tables whose name matches a certain pattern. This allows one to avoid replicating data that is present in the master but can always be rebuilt.
-* [[replication-when-the-master-and-slave-have-different-table-definitions|Differences in table definitions]] are also possible. For example, a slave could have [[replication-when-the-master-and-slave-have-different-table-definitions#different-number-or-order-of-columns|more columns or less columns]] compared to the master. In this way we can avoid replicating columns whose values can be rebuilt. Or we can add columns for analytics purposes, without having them in the master. Be sure to understand the limitations and risks of this technique.
+There are ways to have different data on the replicas. For example:
+* Multi-source replication is possible. In this way, a replica will replicate data from multiple primaries. This feature is described below.
+* [[replication-filters|Replication filters]] are supported. This allows one to exclude or include in replication specific tables, entire databases, or tables whose name matches a certain pattern. This allows one to avoid replicating data that is present in the primary but can always be rebuilt.
+* [[replication-when-the-master-and-slave-have-different-table-definitions|Differences in table definitions]] are also possible. For example, a replica could have [[replication-when-the-master-and-slave-have-different-table-definitions#different-number-or-order-of-columns|more columns or less columns]] compared to the primary. In this way we can avoid replicating columns whose values can be rebuilt. Or we can add columns for analytics purposes, without having them in the primary. Be sure to understand the limitations and risks of this technique.
 
 === Delayed Replication
 
-&lt;&lt;product mariadb from=10.2.3&gt;&gt;
-Delayed replication was introduced in MariaDB 10.2.3.
-&lt;&lt;/product&gt;&gt;
-
 MariaDB supports delayed replication. This is the equivalent of setting a ##pollinginterval## in SQL Server.
 
-To delay replication in a MariaDB slave, use [[change-master-to|CHANGE MASTER TO]] to specify a delay in seconds.
+To delay replication in a MariaDB replica, use [[change-master-to|CHANGE MASTER TO]] to specify a delay in seconds.
 
 For more information, see [[delayed-replication|Delayed Replication]].
 
@@ -450,9 +446,9 @@ For more information, see [[delayed-replication|Delayed Replication]].
 
 [[multi-source-replication|Multi-source replication]] is an equivalent to peer-to-peer replication, available in SQL Server Enterprise Edition.
 
-A MariaDB slave can replicate from any number of masters. It is very important that different masters don&#39;t have the same tables. Otherwise there could be conflicts between data changes made on different masters, and this will result in a replication outage.
+A MariaDB replica can replicate from any number of primaries. It is very important that different primaries don&#39;t have the same tables. Otherwise there could be conflicts between data changes made on different primaries, and this will result in a replication outage.
 
-In multi-source replication different channels exist, one for each master.
+In multi-source replication different channels exist, one for each primary.
 
 This changed the way [[replication-commands|SQL replication statements]] work. [[show-processlist|SHOW PROCESSLIST]] returns a different row for each channel. Several statements, like [[change-master-to|CHANGE MASTER TO]], [[start-slave|START SLAVE]] or [[stop-slave|STOP SLAVE]]. accept a parameter which specifies which replication channel they should affect. For example, to stop a channel called ##wp1##:
 
@@ -466,21 +462,21 @@ Furthermore, variables that affect parallel replication can be prefixed with a c
 SET GLOBAL wp1.slave_parallel_threads = 4;
 &lt;&lt;/sql&gt;&gt;
 
-=== Dual Master
+=== Dual Primary
 
-It is possible to configure two servers in a way that each of them acts as a master for the other server.
+It is possible to configure two servers in a way that each of them acts as a primary for the other server.
 
 In this way, data could theoretically be inserted into any of these servers, and will then be replicated to the other server. However, in such a configuration conflicts are very likely. So it is impractical to use this technique to scale writes.
 
-A dual master (or master-master) configuration however can be useful for failover. In this case we talk about an //active master// that receives reads and writes from the clients, and a //passive master// that is not used until the active master crashes.
+A dual primary (or primary-primary) configuration however can be useful for failover. In this case we talk about an //active primary// that receives reads and writes from the clients, and a //passive primary// that is not used until the active primary crashes.
 
 Several problems should be considered in this scenario:
-* If the active master crashes, it is very possible that the passive master did not receive all events yet, because replication is asynchronous. If the master data are lost (for example because the disk is damaged), some data are also lost.
-* If data is not lost, when we bring the master up again, the latest events will be replicated by the other server. There could be conflicts that will break replication.
-* When is the active master considered down? Even if a server cannot reach it, the active master could be running and it could be able to communicate with the passive master. Switching the clients to the passive master could lead to unnecessary problems. It is a good idea to always check ##SHOW SLAVE STATUS## to be sure that the two masters are not communicating.
-* If we want to have more slaves, we should attach some of them to the active master, and some of them to the passive master. The reason is that when a server crashes, its slaves stop receiving any data. Failover is still possible, but it&#39;s better to have some servers that will not need any failover.
+* If the active primary crashes, it is very possible that the passive primary did not receive all events yet, because replication is asynchronous. If the primary data are lost (for example because the disk is damaged), some data are also lost.
+* If data is not lost, when we bring the primary up again, the latest events will be replicated by the other server. There could be conflicts that will break replication.
+* When is the active primary considered down? Even if a server cannot reach it, the active primary could be running and it could be able to communicate with the passive primary. Switching the clients to the passive primary could lead to unnecessary problems. It is a good idea to always check ##SHOW SLAVE STATUS## to be sure that the two primary are not communicating.
+* If we want to have more replicas, we should attach some of them to the active primary, and some of them to the passive primary. The reason is that when a server crashes, its replicas stop receiving any data. Failover is still possible, but it&#39;s better to have some servers that will not need any failover.
 
-A safe master-master configuration where both servers accept writes, however, is possible. This is the case is data never conflicts. For example, the two servers could accept writes on different databases. We will have to decide what should happens in case of a server crash:
+A safe primary-primary configuration where both servers accept writes, however, is possible. This is the case is data never conflicts. For example, the two servers could accept writes on different databases. We will have to decide what should happens in case of a server crash:
 * Writes can be stopped until the server is up again. Reads can be sent to the other server, but keep in mind that the most recently written data could be missing.
 * Both writes and reads can failover to the other server. All the problems mentioned above may apply to this situation.
 
@@ -488,24 +484,22 @@ See Sveta Smirnova&#39;s slides at MariaDB Day 2020: &#34;[[https://www.slidesha
 
 == Semi-Synchronous Replication
 
-&lt;&lt;product mariadb from=&#34;10.3.3&#34;&gt;&gt;
-Semi-synchronous replication was initially implemented as a plugin, in MySQL. Two different plugins needed to be used, one on the master and the other on the slaves. Starting from MariaDB 10.3.3 it is built-in, which improved its performance.
-&lt;&lt;/product&gt;&gt;
+Semi-synchronous replication was initially implemented as a plugin, in MySQL. Two different plugins needed to be used, one on the primary and the other on the replicas. Starting from MariaDB 10.3.3 it is built-in, which improved its performance.
 
-The problem with standard replication is that there is no guarantee that it will not lag, even by long amounts of time. [[semisynchronous-replication|Semi-synchronous replication]] reduces this problem, at the cost of reducing the speed of the master.
+The problem with standard replication is that there is no guarantee that it will not lag, even by long amounts of time. [[semisynchronous-replication|Semi-synchronous replication]] reduces this problem, at the cost of reducing the speed of the primary.
 
-In semi-synchronous replication, when a transaction is committed on the master, the master does not immediately return control to the client. Instead, it sends the event to the slaves. After one slave reported that the commit was executed with success, the master reports success to the client.
+In semi-synchronous replication, when a transaction is committed on the primary, the primary does not immediately return control to the client. Instead, it sends the event to the replicas. After one replica reported that the commit was executed with success, the primary reports success to the client.
 
-Semi-synchronous replication is useful for failover, therefore a dual master setup is not needed in this case. If the master crashes, the most up-to-date slave can be promoted to master without losing any data.
+Semi-synchronous replication is useful for failover, therefore a dual primary setup is not needed in this case. If the primary crashes, the most up-to-date replica can be promoted to primary without losing any data.
 
 === Enabling Semi-Synchronous Replication
 
-Semi-synchronous replication can be enabled at runtime in this way on the master:
+Semi-synchronous replication can be enabled at runtime in this way on the primary:
 &lt;&lt;sql&gt;&gt;
 SET GLOBAL rpl_semi_sync_master_enabled = ON;
 &lt;&lt;/sql&gt;&gt;
 
-Semi-synchronous replication is not used until it has been enabled on the slaves also. If the slaves are already replicating, the io_thread needs to be stopped and restarted. This can be done as follows:
+Semi-synchronous replication is not used until it has been enabled on the replicas also. If the replicas are already replicating, the io_thread needs to be stopped and restarted. This can be done as follows:
 
 &lt;&lt;sql&gt;&gt;
 SET GLOBAL rpl_semi_sync_slave_enabled = ON;
@@ -513,23 +507,23 @@ STOP SLAVE IO_THREAD;
 START SLAVE IO_THREAD;
 &lt;&lt;/sql&gt;&gt;
 
-=== Tuning the Wait Point and the Master Timeout
+=== Tuning the Wait Point and the Primary Timeout
 
-The most important aspects to tune are the wait point and the master timeout.
+The most important aspects to tune are the wait point and the primary timeout.
 
-When the binary log is enabled, transactions must be committed both in the [[understanding-mariadb-architecture#storage-engines|storage engine]] (usually [[InnoDB]]) and in the [[understanding-mariadb-architecture#the-binary-log|binary log]]. Semi-synchronous replication requires that the transaction is also acknowledged by at least one slave before the master can report success to the client.
+When the binary log is enabled, transactions must be committed both in the [[understanding-mariadb-architecture#storage-engines|storage engine]] (usually [[InnoDB]]) and in the [[understanding-mariadb-architecture#the-binary-log|binary log]]. Semi-synchronous replication requires that the transaction is also acknowledged by at least one replica before the primary can report success to the client.
 
-The wait point determines at which point the master must stop and wait for a confirmation from a slave. This is an important decision from disaster recovery standpoint, in case the master crashes when a transaction is not fully committed. The [[semisynchronous-replication#rpl_semi_sync_master_wait_point|rpl_semi_sync_master_wait_point]] is used to set the wait point, Its allowed values are:
+The wait point determines at which point the primary must stop and wait for a confirmation from a replica. This is an important decision from disaster recovery standpoint, in case the primary crashes when a transaction is not fully committed. The [[semisynchronous-replication#rpl_semi_sync_master_wait_point|rpl_semi_sync_master_wait_point]] is used to set the wait point, Its allowed values are:
 * ##AFTER_SYNC##: After committing the transaction in the binary log, but before committing it to the storage engine. After a crash, a transaction may be present in the binary log even if it was not committed.
-* ##AFTER_COMMIT##. After committing a transaction both in the binary log and in the storage engine. In case of a crash, a transaction could possibly be committed in the master but not replicated in the slaves. This is the default.
+* ##AFTER_COMMIT##. After committing a transaction both in the binary log and in the storage engine. In case of a crash, a transaction could possibly be committed in the primary but not replicated in the slaves. This is the default.
 
-Master timeout is meant to avoid that a master remains stuck for a long time, or virtually forever, because no slave acknowledges a transaction. If master timeout is reached, the master switches to asynchronous replication. Before doing that, the master writes an error in the [[error-log|error log]] and increments the [[semisynchronous-replication-plugin-status-variables#rpl_semi_sync_master_no_times|Rpl_semi_sync_master_no_times]] status variable.
+Primary timeout is meant to avoid that a primary remains stuck for a long time, or virtually forever, because no replica acknowledges a transaction. If primary timeout is reached, the primary switches to asynchronous replication. Before doing that, the primary writes an error in the [[error-log|error log]] and increments the [[semisynchronous-replication-plugin-status-variables#rpl_semi_sync_master_no_times|Rpl_semi_sync_master_no_times]] status variable.
 
 The timeout is set via the [[semisynchronous-replication#rpl_semi_sync_master_timeout|rpl_semi_sync_master_timeout]] variable.
 
 == Galera Cluster
 
-[[galera-cluster|Galera]] is a technology that implements virtually synchronous, master-master replication for a cluster of MariaDB servers.
+[[galera-cluster|Galera]] is a technology that implements virtually synchronous, primary-primary replication for a cluster of MariaDB servers.
 
 === Raft and the Primary Cluster
 

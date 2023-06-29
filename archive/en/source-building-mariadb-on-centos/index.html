@@ -247,12 +247,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2010-06-14 19:45">12 years, 9 months ago</span></dd>
+<span class="datetime" title="2010-06-14 19:45">13 years ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2021-08-24 04:33">1 year, 6 months ago</span></dd>
+<span class="datetime" title="2023-06-22 12:59">6 days, 3 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -406,7 +406,9 @@
 <h3>Contents</h3>
  <ol class="toc">
 
-    <li class=""><a href="#installing-build-dependencies" title="Installing Build Dependencies">Installing Build Dependencies</a></li>
+    <li class=""><a href="#installing-build-dependencies-for-mariadb-55" title="Installing Build Dependencies for MariaDB 5.5">Installing Build Dependencies for MariaDB 5.5</a></li>
+
+    <li class=""><a href="#installing-build-dependencies-for-newer-mariadb-versions" title="Installing Build Dependencies for newer MariaDB versions">Installing Build Dependencies for newer MariaDB versions</a></li>
 
     <li class=""><a href="#building-mariadb" title="Building MariaDB">Building MariaDB</a></li>
 
@@ -418,28 +420,62 @@
 </li>
 </div><p>
 In the event that you are using the Linux-based operating system CentOS or any of its derivatives, you can optionally compile MariaDB from source code.  This is useful in cases where you want use a more advanced release than the one that's available in the official repositories, or when you want to enable certain feature that are not otherwise accessible.</p>
-<h2 class="anchored_heading" id="installing-build-dependencies">Installing Build Dependencies</h2>
+<h2 class="anchored_heading" id="installing-build-dependencies-for-mariadb-55">Installing Build Dependencies for <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a></h2>
 <p>Before you start building MariaDB, you first need to install the build dependencies required to run the compile.  CentOS provides a tool for installing build dependencies.  The <code>yum-builddep</code> utility reads a package and generates a list of the packages required to build from source, then calls YUM to install them for you.  In the event that this utility is not available on your system, you can install it through the <code>yum-utils</code> package.  Once you have it, install the MariaDB build dependencies.</p>
-<pre class="fixed"># yum-builddep mariadb-server
-</pre><p>Running this command installs many of the build dependencies, but it doesn't install all of them.  Not all the required packages are noted and it's run against the official CentOS package of MariaDB, not necessarily the version that you want to install.  Use YUM to install the remaining packages.</p>
-<pre class="fixed"># yum install git \
-      gcc \
-      gcc-c++ \
-      bison \
-      libxml2-devel \
-      libevent-devel \
-      rpm-build
-</pre><p>In addition to these, you also need to install <code>gnutls</code> or <code>openssl</code>, depending on the TLS implementation you want to use.</p>
-<p>For more information on dependencies, see <a href="/kb/en/Build_Environment_Setup_for_Linux/">Linux Build Environment</a>.</p>
+<pre class="fixed">yum install yum-utils
+yum-builddep mariadb-server
+</pre><p>Running the above command installs many of the build dependencies, but it <strong>doesn't install all of them</strong>. It will only install dependencies for <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a>, which is not enough if you want to compile a newer MariaDB version!</p>
+<h2 class="anchored_heading" id="installing-build-dependencies-for-newer-mariadb-versions">Installing Build Dependencies for newer MariaDB versions</h2>
+<p>The following commands installs all packages needed to get and compile <a href="/kb/en/what-is-mariadb-1011/">MariaDB 10.11</a>:</p>
+<pre class="fixed">yum install git
+yum install gcc
+yum install gcc-c++
+yum install tar make cmake
+yum install bison
+yum install ncurses-devel
+yum install openssl openssl-devel
+yum install snappy snappy-devel
+yum install valgrind
+yum install libcurl-devel
+yum install gzip
+yum install zlib-devel
+yum install lz4-devel
+yum install lzo-devel
+yum install bzip2-devel
+yum install libxml2-devel
+yum install libevent-devel
+yum install libaio-devel
+yum install boost
+yum install pcre2-devel
+yum install systemd-devel
+yum install rpm-build
+yum install libaio-devel
+yum install zstd
+yum install pam-devel
+yum install checkpolicy
+yum install policycoreutils-python
+yum install galera.x86_64
+</pre><p>You can replace   <code>openssl</code> with <code>gnutls</code> above, depending on the TLS implementation you want to use.</p>
+<p>If you plan to use the BUILD scripts to make it easier to build different configurations of MariaDB,
+then you should also install ccache to speed up your compilations:</p>
+<pre class="fixed">yum install ccache
+</pre><p>If you want to test the MariaDB installation, with the include mysql-test-run (mtr) system, you also need to install and configure cpan:</p>
+<pre class="fixed">yum install cpan
+# Complete Perl installing with the next command. Use the default answer to all questions
+cpan App::cpanminus
+</pre><p>For more information on dependencies, see <a href="/kb/en/Build_Environment_Setup_for_Linux/">Linux Build Environment</a>.</p>
 <h2 class="anchored_heading" id="building-mariadb">Building MariaDB</h2>
 <p>Once you have the base dependencies installed, you can retrieve the source code and start building MariaDB.  The source code is available on GitHub.  Use the <code>--branch</code> option to specify the particular version of MariaDB you want to build.</p>
-<pre class="fixed">$ git clone --branch 10.3 https://github.com/MariaDB/server.git
-</pre><p>With the source repository cloned onto your system, you can start building MariaDB.  Run CMake to read MariaDB for the build,</p>
+<pre class="fixed">$ git clone --branch 10.11 https://github.com/MariaDB/server.git
+</pre><p>With the source repository cloned onto your system, you can start building MariaDB.  Run CMake to ready MariaDB for the build,</p>
 <pre class="fixed">$ cmake -DRPM=centos7 server/
 </pre><p>Once CMake readies the relevant Makefile for your system, use Make to build MariaDB.</p>
 <pre class="fixed">$ make package
 </pre><p>This generates an RPM file, which you can then install on your system or copy over to install on other CentOS hosts.</p>
-<h2 class="anchored_heading" id="creating-mariadb-compat-package">Creating MariaDB-compat package</h2>
+<p>Alternative, use one of the build scripts in the <code>BUILD</code> directory that allows you to compile different versions of MariaDB (debug, optimized, profiling etc).</p>
+<p>A good option for developers is:</p>
+<pre class="fixed">./BUILD/compile-pentium64-debug
+</pre><h2 class="anchored_heading" id="creating-mariadb-compat-package">Creating MariaDB-compat package</h2>
 <p>MariaDB-compat package contains libraries from older MariaDB releases. They cannot be built from the current source tree, so cpack creates them by repackaging old MariaDB-shared packages. If you want to have -compat package created, you need to download MariaDB-shared-5.3 and MariaDB-shared-10.1 rpm packages for your architecture (any minor version will do) and put them <em>one level above</em> the source tree you're building. CMake will pick them up and create a MariaDB-compat package. CMake reports it as</p>
 <pre class="fixed">$ ls ../*.rpm
 ../MariaDB-shared-10.1.17-centos7-x86_64.rpm

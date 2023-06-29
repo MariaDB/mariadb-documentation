@@ -292,7 +292,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/grant/+r/123572/">123572</a></dd>
+            <dd><a href="/kb/en/grant/+r/126729/">126729</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -301,7 +301,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-02-21 13:28">2023-02-21 13:28</span></dd>
+<span class="datetime" title="2023-06-02 12:42">2023-06-02 12:42</span></dd>
         </dl>
     </div>
     
@@ -430,6 +430,8 @@ select host, user from mysql.user where user=&#39;user123&#39; ;
 Privileges can be set globally, for an entire database, for a table or routine,
 or for individual columns in a table. Certain privileges can only be set at
 certain levels.
+
+Global privileges do not take effect immediately and are only applied to connections created after the ##GRANT## statement was executed.
 
 * [[#global-privileges|Global privileges //priv_type//]] are granted using ##*.*## for
 //priv_level//. Global privileges include privileges to administer the database
@@ -574,7 +576,7 @@ Read and write files on the server, using statements like [[load-data-infile|LOA
 Grant global privileges. You can only grant privileges that you have.
 
 =====PROCESS
-Show information about the active processes, for example via [[show-processlist|SHOW PROCESSLIST]] or [[mysqladmin|mysqladmin processlist]]. If you have the PROCESS privilege, you can see all threads. Otherwise, you can see only your own threads (that is, threads associated with the MariaDB account that you are using).
+Show information about the active processes, for example via [[show-processlist|SHOW PROCESSLIST]] or [[mariadb-admin|mariadb-admin processlist]]. If you have the PROCESS privilege, you can see all threads. Otherwise, you can see only your own threads (that is, threads associated with the MariaDB account that you are using).
 
 ===== READ_ONLY ADMIN
 User can set the [[server-system-variables/#read_only|read_only]] system variable and allows the user to perform write operations, even when the ##read_only## option is active. Added in MariaDB 10.5.2.
@@ -582,7 +584,7 @@ User can set the [[server-system-variables/#read_only|read_only]] system variabl
 From [[mdb-10-11-0-rn|MariaDB 10.11.0]], the ##READ_ONLY ADMIN## privilege has been removed from [[#super|SUPER]]. The benefit of this is that one can remove the READ_ONLY ADMIN privilege from all users and ensure that no one can make any changes on any non-temporary tables. This is useful on replicas when one wants to ensure that the replica is kept identical to the primary.
 
 =====RELOAD
-Execute [[FLUSH]] statements or equivalent [[mysqladmin|mariadb-admin/mysqladmin]] commands.
+Execute [[FLUSH]] statements or equivalent [[mariadb-admin|mariadb-admin]] commands.
 
 ===== REPLICATION CLIENT
 Execute [[show-master-status|SHOW MASTER STATUS]] and [[show-binary-logs/|SHOW BINARY LOGS]] informative statements. Renamed to [[#binlog-monitor|BINLOG MONITOR]] in MariaDB 10.5.2 (but still supported as an alias for compatibility reasons). [[show-slave-status|SHOW SLAVE STATUS]] was part of [[#replication-client|REPLICATION CLIENT]] prior to MariaDB 10.5.
@@ -653,10 +655,10 @@ Enables setting the ##DEFINER## when creating [[triggers]], [[views]], [[stored-
 List all databases using the [[show-databases|SHOW DATABASES]] statement. Without the ##SHOW DATABASES## privilege, you can still issue the ##SHOW DATABASES## statement, but it will only list databases containing tables on which you have privileges.
 
 ===== SHUTDOWN
-Shut down the server using [[shutdown|SHUTDOWN]] or the [[mysqladmin|mysqladmin shutdown]] command.
+Shut down the server using [[shutdown|SHUTDOWN]] or the [[mariadb-admin|mariadb-admin shutdown]] command.
 
 ===== SUPER
-Execute superuser statements: [[change-master-to|CHANGE MASTER TO]], [[kill|KILL]] (users who do not have this privilege can only ##KILL## their own threads), [[purge-binary-logs|PURGE LOGS]], [[set|SET global system variables]], or the [[mysqladmin|mysqladmin debug]] command. Also, this permission allows the user to write data even if the [[server-system-variables#read_only|read_only]] startup option is set, enable or disable logging, enable or disable replication on replica, specify a ##DEFINER## for statements that support that clause, connect once reaching the ##MAX_CONNECTIONS##. If a statement has been specified for the [[server-system-variables#init_connect|init-connect]] ##mysqld## option, that command will not be executed when a user with ##SUPER## privileges connects to the server.
+Execute superuser statements: [[change-master-to|CHANGE MASTER TO]], [[kill|KILL]] (users who do not have this privilege can only ##KILL## their own threads), [[purge-binary-logs|PURGE LOGS]], [[set|SET global system variables]], or the [[mariadb-admin|mariadb-admin debug]] command. Also, this permission allows the user to write data even if the [[server-system-variables#read_only|read_only]] startup option is set, enable or disable logging, enable or disable replication on replica, specify a ##DEFINER## for statements that support that clause, connect once reaching the ##MAX_CONNECTIONS##. If a statement has been specified for the [[server-system-variables#init_connect|init-connect]] ##mysqld## option, that command will not be executed when a user with ##SUPER## privileges connects to the server.
 
 The SUPER privilege has been split into multiple smaller privileges from MariaDB 10.5.2 to allow for more fine-grained privileges.
 
@@ -692,7 +694,7 @@ to specify the default database.
 | ##CREATE##  | Create a table using the [[create-table|CREATE TABLE]] statement.  You can grant the ##CREATE## privilege on tables that do not yet exist. |
 | ##CREATE VIEW##  | Create a view using the [[create-view|CREATE_VIEW]] statement. |
 | ##DELETE## | Remove rows from a table using the [[delete|DELETE]] statement. |
-| ##DELETE HISTORY## | Remove [[system-versioned-tables|historical rows]] from a table using the [[delete|DELETE HISTORY]] statement. Displays as ##DELETE VERSIONING ROWS## when running [[show-grants|SHOW GRANTS]] until MariaDB 10.3.15 and until MariaDB 10.4.5 (MDEV-17655), or when running SHOW PRIVILEGES until MariaDB 10.5.2, MariaDB 10.4.13 and MariaDB 10.3.23 (MDEV-20382). From MariaDB 10.3.4. From MariaDB 10.3.5, if a user has the ##SUPER## privilege but not this privilege, running [[mysql_upgrade]] will grant this privilege as well. |
+| ##DELETE HISTORY## | Remove [[system-versioned-tables|historical rows]] from a table using the [[delete|DELETE HISTORY]] statement. Displays as ##DELETE VERSIONING ROWS## when running [[show-grants|SHOW GRANTS]] until MariaDB 10.3.15 and until MariaDB 10.4.5 (MDEV-17655), or when running SHOW PRIVILEGES until MariaDB 10.5.2, MariaDB 10.4.13 and MariaDB 10.3.23 (MDEV-20382). From MariaDB 10.3.4. From MariaDB 10.3.5, if a user has the ##SUPER## privilege but not this privilege, running [[mariadb-upgrade]] will grant this privilege as well. |
 | ##DROP##   | Drop a table using the [[drop-table|DROP TABLE]] statement or a view using the [[drop-view|DROP VIEW]] statement. Also required to execute the [[truncate-table|TRUNCATE TABLE]] statement. |
 | ##GRANT OPTION##  | Grant table privileges. You can only grant privileges that you have. |
 | ##INDEX##  | Create an index on a table using the [[create-index|CREATE INDEX]] statement. Without the ##INDEX## privilege, you can still create indexes when creating a table using the [[create-table|CREATE TABLE]] statement if the you have the ##CREATE## privilege, and you can create indexes using the [[alter-table|ALTER TABLE]] statement if you have the ##ALTER## privilege. |
@@ -864,7 +866,7 @@ GRANT PROXY ON &#39;app2_dba&#39;@&#39;localhost&#39; TO &#39;carol&#39;@&#39;lo
 Query OK, 0 rows affected (0.004 sec)
 &lt;&lt;/code&gt;&gt;
 
-The default ##root## user accounts created by [[mysql_install_db]] have this privilege. For example:
+The default ##root## user accounts created by [[mariadb-install-db]] have this privilege. For example:
 
 &lt;&lt;sql&gt;&gt;
 GRANT ALL PRIVILEGES ON *.* TO &#39;root&#39;@&#39;localhost&#39; WITH GRANT OPTION;
@@ -995,7 +997,7 @@ GRANT USAGE ON *.* TO &#39;someone&#39;@&#39;localhost&#39; WITH
 
 The resources are tracked per account, which means ##&#39;user&#39;@&#39;server&#39;##; not per user name or per connection.
 
-The count can be reset for all users using [[flush|FLUSH USER_RESOURCES]], [[flush|FLUSH PRIVILEGES]] or [[mysqladmin|mysqladmin reload]].
+The count can be reset for all users using [[flush|FLUSH USER_RESOURCES]], [[flush|FLUSH PRIVILEGES]] or [[mariadb-admin|mariadb-admin reload]].
 
 Users with the ##CONNECTION ADMIN## privilege (in MariaDB 10.5.2 and later) or the ##SUPER## privilege are not restricted by ##max_user_connections##, ##max_connections##, or ##max_password_errors##.
 

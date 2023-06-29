@@ -292,7 +292,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/authentication-plugin-pam/+r/115693/">115693</a></dd>
+            <dd><a href="/kb/en/authentication-plugin-pam/+r/126723/">126723</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-27">
@@ -301,7 +301,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-04-27 20:50">2022-04-27 20:50</span></dd>
+<span class="datetime" title="2023-06-02 11:30">2023-06-02 11:30</span></dd>
         </dl>
     </div>
     
@@ -492,7 +492,7 @@ For clients that use the ##libmysqlclient## or [[mariadb-connector-c|MariaDB Con
 When connecting with a [[clients-utilities|client or utility]] to a server as a user account that authenticates with the ##pam## authentication plugin, you may need to tell the client where to find the relevant client authentication plugin by specifying the ##--plugin-dir## option. For example:
 
 &lt;&lt;code&gt;&gt;
-mysql --plugin-dir=/usr/local/mysql/lib64/mysql/plugin --user=alice
+mariadb --plugin-dir=/usr/local/mysql/lib64/mysql/plugin --user=alice
 &lt;&lt;/code&gt;&gt;
 
 &lt;&lt;style class=&#34;redbox&#34;&gt;&gt;
@@ -791,6 +791,25 @@ allow this access for now by executing:
 Sometimes issues like this can be fixed by updating the system&#39;s SELinux policies. You may be able to update the policies using [[https://linux.die.net/man/1/audit2allow|audit2allow]]. See [[selinux/#generating-selinux-policies-with-audit2allow|SELinux: Generating SELinux Policies with audit2allow]] for more information.
 
 If you can&#39;t get the ##pam## authentication plugin to work with SELinux at all, then it can help to disable SELinux entirely. See [[selinux/#changing-selinuxs-mode|SELinux: Changing SELinux&#39;s Mode]] for information on how to do this.
+
+=== Memory Overcommit 
+
+On MariaDB 10.4 and later you may run into authentication failures with the following log message in the MariaDB error log:
+
+&lt;&lt;code&gt;&gt;
+pam: cannot exec /usr/lib64/mysql/plugin/auth_pam_tool_dir/auth_pam_tool (errno: 12 &#34;Cannot allocate memory&#34;) 
+&lt;&lt;/code&gt;&gt;
+
+This can happen on operating system setups that are configured to prevent memory overcommit. When the MariaDB server process spawns the ##auth_pam_tool## helper process there&#39;s a brief period where the new process inherits the memory of the MariaDB process before releasing that memory and executing the new command. When having a MariaDB server configured to use more than 50% of the server machnines RAM -- which is common for dedicated database servers -- this duplication would lead to an over-commit situation.
+
+Starting with MariaDB 10.4.25, MariaDB 10.5.16, MariaDB 10.6.8, and MariaDB 10.7.4, we changed to use ##posix_spawn()## instead of the classic ##fork();exec()## to prevent this, but systems with older glibc versions prior to 2.26 still use ##fork();exec()## to implement ##posix_spawn()## internally and so are still affected; this is for example still the case on RedHat Enterprise Linux 7.
+
+To solve this you can either:
+
+* change the ##vm.overcommit_memory## kernel setting to allow memory overcommit
+* install the older ##auth_pam_v1## plugin version that does not spawn a helper process (but may run into problems with file permissions or multi threading with some PAM modules)
+
+See also MDEV-26212 and MDEV-30734
 
 == Tutorials
 

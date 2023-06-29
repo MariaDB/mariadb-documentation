@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/what-to-do-if-mariadb-doesnt-start/+r/115557/">115557</a></dd>
+            <dd><a href="/kb/en/what-to-do-if-mariadb-doesnt-start/+r/126527/">126527</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-04-26 13:59">2022-04-26 13:59</span></dd>
+<span class="datetime" title="2023-05-30 11:15">2023-05-30 11:15</span></dd>
         </dl>
     </div>
     
@@ -382,7 +382,7 @@ If errors like this occur, then critical [[system-tables|system tables]] are eit
 
 If you&#39;re unsure where the option file is located, see [[configuring-mariadb-with-option-files/#default-option-file-locations|Configuring MariaDB with Option Files: Default Option File Locations]] for information on the default locations.
 
-If the [[system-tables|system tables]] really do not exist, then you may need to create them with ##[[mysql_install_db]]##. See [[installing-system-tables-mysql_install_db|Installing System Tables (mysql_install_db)]] for more information.
+If the [[system-tables|system tables]] really do not exist, then you may need to create them with [[mariadb-install-db]]. See [[installing-system-tables-mariadb-install-db|Installing System Tables (mariadb-install-db)]] for more information.
 
 == Can&#39;t Create Test File
 
@@ -395,7 +395,32 @@ May 13 10:24:28 mariadb3 mysqld[19221]: 2019-05-13 10:24:28 0 [ERROR] Aborting
 
 This is usually a permission error on the directory in which this file is being written. Ensure that the entire ##[[server-system-variables#datadir|datadir]]## is owned by the user running ##mysqld##, usually ##mysql##. Ensure that directories have the &#34;x&#34; (execute) directory permissions for the owner. Ensure that all the parent directories of the ##[[server-system-variables#datadir|datadir]]## upwards have &#34;x&#34; (execute) permissions for all (##user##, ##group##, and ##other##).
 
-Once this is checked look at the [[#systemd|systemd]] and [[#selinux|selinux]] documentation below, or [[https://blogs.oracle.com/jsmyth/apparmor-and-mysql|apparmor]].
+Once this is checked look at the [[#systemd|systemd]] and [[#selinux|selinux]] documentation below, or [[#AppArmorl|AppArmor]].
+
+== Can&#39;t Lock Aria Control File
+
+On starting MariaDB, the ##aria_log_control## file is locked. If a lock cannot be obtained, it will log and error like this:
+
+&lt;&lt;code wrap=true&gt;&gt;
+2023-05-01 16:27:03 0 [ERROR] mariadbd: Can&#39;t lock aria control file &#39;/var/lib/mysql/aria_log_control&#39; for exclusive use, error: 11. Will retry for 30 seconds
+&lt;&lt;/code&gt;&gt;
+
+This almost always cause for this is that there is already an existing MariaDB service running on this data directory. Recommend aborting this startup and looking closely for the other MariaDB instance.
+
+The less likely case is there isn&#39;t locking available which might occur on a NFS data directory with explictly disable locking.
+
+== Unable to lock ./ibdata1 error 11
+
+Like the above for the Aria Control File, this is a attempting to exclusively lock the ##ibdata1## InnoDB system tablespace. Error 11 corresponds to the system error &#34;OS error code  11:  Resource temporarily unavailable&#34; meaning the lock cannot be created.
+
+&lt;&lt;code wrap=true&gt;&gt;
+2023-05-01 16:27:34 0 [ERROR] InnoDB: Unable to lock ./ibdata1 error: 11
+2023-05-01 16:27:34 0 [Note] InnoDB: Check that you do not already have another mariadbd process using the same InnoDB data or log files.
+2023-05-01 16:27:34 0 [ERROR] InnoDB: Plugin initialization aborted with error Generic error
+2023-05-01 16:27:35 0 [Note] InnoDB: Starting shutdown...
+&lt;&lt;/code&gt;&gt;
+
+Like the above, this is an indication that a second MariaDB instance is already running on the data directory.
 
 == InnoDB
 
@@ -459,7 +484,21 @@ You might need to troubleshoot SELinux-related issues in cases, such as:
 
 Setting SELinux state to ##permissive## is a common way to investigate what is going wrong while allowing MariaDB to function normally. ##permissive## is supposed to produce a log entry every time it should block a resource access, without actually blocking it. However, [[https://danwalsh.livejournal.com/67855.html|there are situations]] when SELinux blocks resource accesses even in ##permissive## mode.
 
-See [[selinux|SELinux]] for more information.</textarea>
+See [[selinux|SELinux]] for more information.
+
+== AppArmor
+
+Add the following to ##/etc/apparmor.d/tunables/alias## if you have moved the datadir:
+
+&lt;&lt;code&gt;&gt;
+alias /var/lib/mysql/ -&gt; /data/mariadb/,
+&lt;&lt;/code&gt;&gt;
+
+The restart AppArmor:
+
+&lt;&lt;code&gt;&gt;
+sudo systemctl restart apparmor
+&lt;&lt;/code&gt;&gt;</textarea>
     
 
 

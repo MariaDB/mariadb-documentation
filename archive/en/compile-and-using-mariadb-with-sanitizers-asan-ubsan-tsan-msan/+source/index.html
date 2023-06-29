@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/compile-and-using-mariadb-with-sanitizers-asan-ubsan-tsan-msan/+r/118540/">118540</a></dd>
+            <dd><a href="/kb/en/compile-and-using-mariadb-with-sanitizers-asan-ubsan-tsan-msan/+r/125811/">125811</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-7">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-08-22 18:32">2022-08-22 18:32</span></dd>
+<span class="datetime" title="2023-05-11 07:13">2023-05-11 07:13</span></dd>
         </dl>
     </div>
     
@@ -373,6 +373,42 @@ Note: keep in mind that only clang supports MSAN, g++ or other compilers will no
 &lt;&lt;code&gt;&gt;
 cmake . -DWITH_MSAN=ON
 &lt;&lt;/code&gt;&gt;
+
+== Running an MSAN Build
+
+The time consuming aspect of building with MSAN is having instrumented system libraries. As MariaDB Foundation have built the MSAN container already for buildbot, this is how you re-use this for building locally.
+
+First, run the container where your current directory is the source directory:
+&lt;&lt;code&gt;&gt;
+podman run -v $PWD:/source:z -ti --user buildbot --entrypoint bash --shm-size 5G --env MSAN_SYMBOLIZER_PATH=/msan-libs/bin/llvm-symbolizer-msan --env  MSAN_OPTIONS=abort_on_error=1:poison_in_dtor=0 quay.io/mariadb-foundation/bb-worker:debian11-msan
+&lt;&lt;/code&gt;&gt;
+
+Note: docker can be used instead of the lighter weight podman if you so desire.
+
+The shm-size is for the MTR tests which exceed the 64k default shm-size.
+
+All the following instructions are executed within the container. Now run the configure stage of cmake:
+&lt;&lt;code&gt;&gt;
+cmake /source -DCMAKE_C_COMPILER=clang-15 -DCMAKE_CXX_COMPILER=clang++-15 &#39;-DCMAKE_C_FLAGS=-O2 -Wno-unused-command-line-argument -fdebug-macro&#39; &#39;-DCMAKE_CXX_FLAGS=-stdlib=libc++ -O2 -Wno-unused-command-line-argument -fdebug-macro&#39; -DWITH_EMBEDDED_SERVER=OFF -DWITH_UNIT_TESTS=OFF -DCMAKE_BUILD_TYPE=Debug -DWITH_INNODB_BZIP2=OFF -DWITH_INNODB_LZ4=OFF -DWITH_INNODB_LZMA=OFF -DWITH_INNODB_LZO=OFF -DWITH_INNODB_SNAPPY=OFF -DPLUGIN_ARCHIVE=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_MROONGA=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DWITH_SAFEMALLOC=OFF -DWITH_ZLIB=bundled -DWITH_SSL=bundled -DWITH_PCRE=bundled -DHAVE_LIBAIO_H=0 -DCMAKE_DISABLE_FIND_PACKAGE_URING=1 -DCMAKE_DISABLE_FIND_PACKAGE_LIBAIO=1 -DWITH_MSAN=ON -DWITH_DBUG_TRACE=OFF
+&lt;&lt;/code&gt;&gt;
+
+Run the build stage:
+&lt;&lt;code&gt;&gt;
+cmake --build . --parallel 
+...
+[100%] Built target mariadbd
+[100%] Linking CXX executable mariadb-backup
+Creating mariabackup link
+[100%] Built target mariadb-backup
+&lt;&lt;/code&gt;&gt;
+
+As the important MTR step needs to use the instrumented libraries MTR is run using the LD_LIBRARY_PATH to use those.
+
+&lt;&lt;code&gt;&gt;
+LD_LIBRARY_PATH=/msan-libs mysql-test/mtr  --mem --big-test --force --retry=0 --skip-test=.*compression.*  --parallel=auto
+&lt;&lt;/code&gt;&gt;
+
+As newer versions occur and improvements happen these instructions may change. Look at the execution on the [[https://buildbot.mariadb.org/#/builders/amd64-debian-11-msan|buildbot builder]] to see if any changes have been made.
 
 == Running an ASAN Build
 

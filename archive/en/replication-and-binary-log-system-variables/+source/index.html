@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/replication-and-binary-log-system-variables/+r/124599/">124599</a></dd>
+            <dd><a href="/kb/en/replication-and-binary-log-system-variables/+r/127504/">127504</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-03-24 11:00">2023-03-24 11:00</span></dd>
+<span class="datetime" title="2023-06-23 09:46">2023-06-23 09:46</span></dd>
         </dl>
     </div>
     
@@ -314,7 +314,7 @@ Also see [[mysqld-options#replication-and-binary-logging-options|mysqld replicat
 See also the [[full-list-of-mariadb-options-system-and-status-variables|Full list of MariaDB options, system and status variables]]. 
 
 ==== ##auto_increment_increment##
-* **Description:** The increment for all [[auto_increment|AUTO_INCREMENT]] values on the server, by default ##1##. Intended for use in master-to-master [[replication]].
+* **Description:** The increment for all [[auto_increment|AUTO_INCREMENT]] values on the server, by default ##1##. Intended for use in primary-to-primary [[replication]].
 * **Commandline:** &lt;&lt;code&gt;&gt;--auto-increment-increment[=#]&lt;&lt;/code&gt;&gt;
 * **Scope:** Global, Session
 * **Dynamic:** Yes
@@ -324,7 +324,7 @@ See also the [[full-list-of-mariadb-options-system-and-status-variables|Full lis
 ----
 
 ==== ##auto_increment_offset##
-* **Description:** The offset for all [[auto_increment|AUTO_INCREMENT]] values on the server, by default ##1##. Intended for use in master-to-master [[replication]]. Should be smaller than &lt;&lt;code&gt;&gt;auto_increment_increment&lt;&lt;/code&gt;&gt;, except when both variables are 1 (default setup).
+* **Description:** The offset for all [[auto_increment|AUTO_INCREMENT]] values on the server, by default ##1##. Intended for use in primary-to-primary [[replication]]. Should be smaller than &lt;&lt;code&gt;&gt;auto_increment_increment&lt;&lt;/code&gt;&gt;, except when both variables are 1 (default setup).
 * **Commandline:** &lt;&lt;code&gt;&gt;--auto-increment-offset[=#]&lt;&lt;/code&gt;&gt;
 * **Scope:** Global, Session
 * **Dynamic:** Yes
@@ -345,7 +345,7 @@ it could start on replica before its actual execution on primary.
 ----
 
 ==== ##binlog_annotate_row_events##
-* **Description:** This option tells the master to write [[Annotate_rows_log_event|annotate_rows_events]] to the binary log.
+* **Description:** This option tells the primary to write [[Annotate_rows_log_event|annotate_rows_events]] to the binary log.
 * **Commandline:** &lt;&lt;code&gt;&gt;--binlog-annotate-row-events[={0|1}]&lt;&lt;/code&gt;&gt;
 * **Scope:** Global, Session
 * **Dynamic:** Yes
@@ -353,6 +353,20 @@ it could start on replica before its actual execution on primary.
 * **Default Value:**
 ** ##ON## (&gt;= MariaDB 10.2.4)
 ** ##OFF## (&lt;= MariaDB 10.2.3)
+
+==== ##binlog_do_db##
+* **Description:** This option allows you to configure a [[replication|replication primary]] to write statements and transactions affecting databases that match a specified name into its [[binary-log|binary log]]. Since the filtered statements or transactions will not be present in the [[binary-log|binary log]], its replicas will not be able to replicate them.
+** This option will **not** work with cross-database updates with [[binary-log-formats/#statement-based-logging|statement-based logging]]. See the [[replication-filters/#statement-based-logging|Statement-Based Logging]] section for more information. 
+** Until MariaDB 11.2.0, only available as an option, not a system variable. This option can **not** be set dynamically.
+** When setting it on the command-line or in a server [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]], the option does not accept a comma-separated list. If you would like to specify multiple filters, then you need to specify the option multiple times.
+** See [[replication-filters|Replication Filters]] for more information. 
+* **Commandline:** &lt;&lt;code&gt;&gt;--binlog-do-db=#&lt;&lt;/code&gt;&gt;
+* **Scope:** Global
+* **Dynamic:** No
+* **Data Type:** ##string##
+* **Default Value:** NULL
+* **Introduced:** MariaDB 11.2.0
+----
 
 ==== ##binlog_cache_size##
 * **Description:** If the [[binary-log|binary log]] is active, this variable determines the size in bytes, per-connection, of the cache holding a record of binary log changes during a transaction. A separate variable, [[#binlog_stmt_cache_size|binlog_stmt_cache_size]], sets the upper limit for the statement cache. The [[server-status-variables#binlog_cache_disk_use|binlog_cache_disk_use]] and [[server-status-variables#binlog_cache_use|binlog_cache_use]] [[server-status-variables|server status variables]] will indicate whether this variable needs to be increased (you want a low ratio of binlog_cache_disk_use to binlog_cache_use).
@@ -455,6 +469,20 @@ With [[group-commit-for-the-binary-log|group commit for the binary log]], the se
 * **Valid Values:** ##ROW##, ##STATEMENT## or ##MIXED##
 ----
 
+==== ##binlog_ignore_db##
+* **Description:** This option allows you to configure a [[replication|replication primary]] to **not** write statements and transactions affecting databases that match a specified name into its [[binary-log|binary log]]. Since the filtered statements or transactions will not be present in the [[binary-log|binary log]], its replicas will not be able to replicate them.
+** This option will **not** work with cross-database updates with [[binary-log-formats/#statement-based-logging|statement-based logging]]. See the [[replication-filters/#statement-based-logging|Statement-Based Logging]] section for more information.
+** Until MariaDB 11.2.0, only available as an option, not a system variable. This option can **not** be set dynamically.
+** When setting it on the command-line or in a server [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]], the option does not accept a comma-separated list. If you would like to specify multiple filters, then you need to specify the option multiple times.
+** See [[replication-filters|Replication Filters]] for more information. 
+* **Commandline:** &lt;&lt;code&gt;&gt;--binlog-ignore-db=name&lt;&lt;/code&gt;&gt;
+* **Scope:** Global
+* **Dynamic:** No
+* **Data Type:** ##string##
+* **Default Value:** NULL
+* **Introduced:** MariaDB 11.2.0
+----
+
 ==== ##binlog_optimize_thread_scheduling##
 * **Description:** Run fast part of group commit in a single thread, to optimize kernel thread scheduling. On by default. Disable to run each transaction in group commit in its own thread, which can be slower at very high concurrency. This option is mostly for testing one algorithm versus another, and it should not normally be necessary to change it.
 * **Commandline:** &lt;&lt;code&gt;&gt;--binlog-optimize-thread-scheduling&lt;&lt;/code&gt;&gt; or &lt;&lt;code&gt;&gt;--skip-binlog-optimize-thread-scheduling&lt;&lt;/code&gt;&gt;
@@ -462,6 +490,17 @@ With [[group-commit-for-the-binary-log|group commit for the binary log]], the se
 * **Dynamic:** No
 * **Data Type:** ##boolean##
 * **Default Value:** ##ON##
+----
+
+==== ##binlog_row_event_max_size##
+* **Description:** The maximum size of a row-based [[binary-log|binary log]] event in bytes. Rows will be grouped into events smaller than this size if possible. The value has to be a multiple of 256. Until MariaDB 11.2.0, only available as an option, not a system variable. 
+* **Commandline:** &lt;&lt;code&gt;&gt;--binlog-row-event-max-size=val&lt;&lt;/code&gt;&gt;
+* **Scope:** Global, Session
+* **Dynamic:** Yes
+* **Data Type:** ##numeric##
+* **Default Value:** ##8192##
+* **Range:** ##256## to ##4294967040## (in multiples of 256)
+* **Introduced:** MariaDB 11.2.0
 ----
 
 ==== ##binlog_row_image##
@@ -642,7 +681,7 @@ With [[group-commit-for-the-binary-log|group commit for the binary log]], the se
 ----
 
 ====  ##master_verify_checksum##
-* **Description:** Verify [[binlog-event-checksums|binlog checksums]] when reading events from the binlog on the master.
+* **Description:** Verify [[binlog-event-checksums|binlog checksums]] when reading events from the binlog on the primary.
 * **Commandline:** &lt;&lt;code&gt;&gt;--master-verify-checksum=[0|1]&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Access Type:** Can be changed dynamically
@@ -729,7 +768,7 @@ With [[group-commit-for-the-binary-log|group commit for the binary log]], the se
 ----
 
 ==== ##relay_log_info_file##
-* **Description:** Name and location of the file where the ##RELAY_LOG_FILE## and ##RELAY_LOG_POS## options (i.e. the [[relay-log|relay log]] position) for the ##[[change-master-to|CHANGE MASTER]]## statement  are written. The [[replication-threads/#slave-sql-thread|replica&#39;s SQL thread]] keeps this [[relay-log|relay log]] position updated as it applies events.
+* **Description:** Name and location of the file where the ##RELAY_LOG_FILE## and ##RELAY_LOG_POS## options (i.e. the [[relay-log|relay log]] position) for the [[change-master-to|CHANGE MASTER]] statement  are written. The [[replication-threads/#slave-sql-thread|replica&#39;s SQL thread]] keeps this [[relay-log|relay log]] position updated as it applies events.
 ** See [[change-master-to/#option-persistence|CHANGE MASTER TO: Option Persistence]] for more information.
 * **Commandline:** &lt;&lt;code&gt;&gt;--relay-log-info-file=file_name&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
@@ -749,7 +788,7 @@ With [[group-commit-for-the-binary-log|group commit for the binary log]], the se
 ----
 
 ==== ##relay_log_recovery##
-* **Description:** If set to ##1## (##0## is default), on startup the replica will drop all [[relay-log|relay logs]] that haven&#39;t yet been processed, and retrieve relay logs from the master. Can be useful after the replica has crashed to prevent the processing of corrupt relay logs. relay_log_recovery should always be set together with [[#relay_log_purge|relay_log_purge]]. Setting &lt;&lt;code&gt;&gt;relay-log-recovery=1&lt;&lt;/code&gt;&gt; with &lt;&lt;code&gt;&gt;relay-log-purge=0&lt;&lt;/code&gt;&gt; can cause the relay log to be read from files that were not purged, leading to data inconsistencies.
+* **Description:** If set to ##1## (##0## is default), on startup the replica will drop all [[relay-log|relay logs]] that haven&#39;t yet been processed, and retrieve relay logs from the primary. Can be useful after the replica has crashed to prevent the processing of corrupt relay logs. relay_log_recovery should always be set together with [[#relay_log_purge|relay_log_purge]]. Setting &lt;&lt;code&gt;&gt;relay-log-recovery=1&lt;&lt;/code&gt;&gt; with &lt;&lt;code&gt;&gt;relay-log-purge=0&lt;&lt;/code&gt;&gt; can cause the relay log to be read from files that were not purged, leading to data inconsistencies.
 * **Commandline:** &lt;&lt;code&gt;&gt;--relay-log-recovery&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
@@ -967,7 +1006,7 @@ With [[group-commit-for-the-binary-log|group commit for the binary log]], the se
 ----
 
 ==== ##slave_domain_parallel_threads##
-* **Description:** When set to a non-zero value, each [[replication]] domain in one master connection can reserve at most that many worker threads at any one time, leaving the rest (up to the value of
+* **Description:** When set to a non-zero value, each [[replication]] domain in one primary connection can reserve at most that many worker threads at any one time, leaving the rest (up to the value of
 [[#slave_parallel_threads|slave_parallel_threads]]) free for other primary connections
 or replication domains to use in parallel. See [[parallel-replication#configuration-variable-slave_domain_parallel_threads|Parallel Replication]] for details.
 * **Commandline:** &lt;&lt;code&gt;&gt;--slave-domain-parallel-threads=#&lt;&lt;/code&gt;&gt;
@@ -979,7 +1018,7 @@ or replication domains to use in parallel. See [[parallel-replication#configurat
 ----
 
 ==== ##slave_exec_mode##
-* **Description:** Determines the mode used for [[replication]] error checking and conflict resolution. STRICT mode is the default, and catches all errors and conflicts. IDEMPOTENT mode suppresses duplicate key or no key errors, which can be useful in certain replication scenarios, such as when there are multiple masters, or circular replication.
+* **Description:** Determines the mode used for [[replication]] error checking and conflict resolution. STRICT mode is the default, and catches all errors and conflicts. IDEMPOTENT mode suppresses duplicate key or no key errors, which can be useful in certain replication scenarios, such as when there are multiple primaries, or circular replication.
 * **Scope:** Global
 * **Dynamic:** Yes
 * **Data Type:** ##enumeration##
@@ -1007,7 +1046,7 @@ or replication domains to use in parallel. See [[parallel-replication#configurat
 ----
 
 ==== ##slave_net_timeout##
-* **Description:** Time in seconds for the replica to wait for more data from the master before considering the connection broken, after which it will abort the read and attempt to reconnect. The retry interval is determined by the MASTER_CONNECT_RETRY open for the [[change-master-to|CHANGE MASTER]] statement, while the maximum number of reconnection attempts is set by the [[mysqld-options#-master-retry-count|master-retry-count]] option. The first reconnect attempt takes place immediately.
+* **Description:** Time in seconds for the replica to wait for more data from the primary before considering the connection broken, after which it will abort the read and attempt to reconnect. The retry interval is determined by the MASTER_CONNECT_RETRY open for the [[change-master-to|CHANGE MASTER]] statement, while the maximum number of reconnection attempts is set by the [[mysqld-options#-master-retry-count|master-retry-count]] option. The first reconnect attempt takes place immediately.
 * **Commandline:** &lt;&lt;code&gt;&gt;--slave-net-timeout=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
@@ -1054,7 +1093,7 @@ replication is configured (i.e. when ##[[replication-and-binary-log-server-syste
 ** If this system variable is set to ##0## (which is the default value), then no replica [[replication-threads/#worker-threads|worker threads]] will be created. Instead, when replication is enabled, [[binary-log|binary log]] events are applied by the replica&#39;s [[replication-threads/#slave-sql-thread|SQL thread]].
 ** The [[replication-threads/#threads-on-the-slave|replica threads]] must be [[stop-slave|stopped]] in order to change this option&#39;s value dynamically.
 ** Events that were logged with [[gtid|GTIDs]] with different ##[[gtid/#gtid_domain_id|gtid_domain_id]]## values can be applied in parallel in an [[parallel-replication/#out-of-order-parallel-replication|out-of-order]] manner. Each ##[[gtid/#gtid_domain_id|gtid_domain_id]]## can use the number of threads configured by ##[[#slave_domain_parallel_threads|slave_domain_parallel_threads]]##.
-** Events that were [[group-commit-for-the-binary-log|group-committed]] on the master can be applied in parallel in an [[parallel-replication/#what-can-be-run-in-parallel|in-order]] manner, and the specific behavior can be configured by setting ##[[#slave_parallel_mode|slave_parallel_mode]]##. 
+** Events that were [[group-commit-for-the-binary-log|group-committed]] on the primary can be applied in parallel in an [[parallel-replication/#what-can-be-run-in-parallel|in-order]] manner, and the specific behavior can be configured by setting ##[[#slave_parallel_mode|slave_parallel_mode]]##. 
 * **Commandline:** &lt;&lt;code&gt;&gt;--slave-parallel-threads=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
@@ -1133,10 +1172,10 @@ replication is configured (i.e. when ##[[replication-and-binary-log-server-syste
 ----
 
 ==== ##slave_type_conversions##
-* **Description:** Determines the type conversion mode on the replica when using [[binary-log-formats#row-based|row-based]] [[replication]], including replications in MariaDB Galera cluster. Multiple options can be set, delimited by commas. If left empty, the default, type conversions are disallowed. The variable is dynamic and a change in its value takes effect immediately. This variable tells the server what to do if the table definition is different between the master and replica (for example a column is &#39;int&#39; on the master and &#39;bigint&#39; on the replica). 
+* **Description:** Determines the type conversion mode on the replica when using [[binary-log-formats#row-based|row-based]] [[replication]], including replications in MariaDB Galera cluster. Multiple options can be set, delimited by commas. If left empty, the default, type conversions are disallowed. The variable is dynamic and a change in its value takes effect immediately. This variable tells the server what to do if the table definition is different between the primary and replica (for example a column is &#39;int&#39; on the primary and &#39;bigint&#39; on the replica). 
 ** ##ALL_NON_LOSSY## means that all safe conversions (no data loss) are allowed. 
 ** ##ALL_LOSSY## means that all lossy conversions are allowed (for example &#39;bigint&#39; to &#39;int&#39;). This, however, does not imply that safe conversions (non-lossy) are allowed as well. In order to allow all conversions, one needs to allow both lossy as well as non-lossy conversions by setting this variable to ALL_NON_LOSSY,ALL_LOSSY.
-** Empty (default) means that the server should give an error and replication should stop if the table definition is different between the master and replica.
+** Empty (default) means that the server should give an error and replication should stop if the table definition is different between the primary and replica.
 * **Commandline:** &lt;&lt;code&gt;&gt;--slave-type-conversions=set&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
@@ -1154,7 +1193,7 @@ replication is configured (i.e. when ##[[replication-and-binary-log-server-syste
 ----
 
 ==== ##sql_slave_skip_counter##
-* **Description:** Number of events that a replica skips from the master. If this would cause the replica to begin in the middle of an event group, the replica will instead begin from the beginning of the next event group. See [[set-global-sql_slave_skip_counter|SET GLOBAL sql_slave_skip_counter]].
+* **Description:** Number of events that a replica skips from the primary. If this would cause the replica to begin in the middle of an event group, the replica will instead begin from the beginning of the next event group. See [[set-global-sql_slave_skip_counter|SET GLOBAL sql_slave_skip_counter]].
 * **Scope:** Global
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
@@ -1177,7 +1216,7 @@ replication is configured (i.e. when ##[[replication-and-binary-log-server-syste
 * **Scope:** Global
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Value:** ##10000## (&gt;= MariaDB 10.1.7)
+* **Default Value:** ##10000##
 ----
 
 ==== ##sync_relay_log##

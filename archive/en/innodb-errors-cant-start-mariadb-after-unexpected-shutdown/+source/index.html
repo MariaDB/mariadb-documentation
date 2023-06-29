@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-errors-cant-start-mariadb-after-unexpected-shutdown/+r/120784/">120784</a></dd>
+            <dd><a href="/kb/en/innodb-errors-cant-start-mariadb-after-unexpected-shutdown/+r/127581/">127581</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-12963">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-11-12 00:34">2022-11-12 00:34</span></dd>
+<span class="datetime" title="2023-06-26 22:17">2023-06-26 22:17</span></dd>
         </dl>
     </div>
     
@@ -369,6 +369,17 @@ I&#39;m not sure if I need it just yet, but I am the same person that run a data
 P.S. And yes, I will start backing up my MariaDB data from here on.</textarea>
     
 
+    
+        
+            <h2>Answer</h2>
+        
+        <textarea id="answer_source" class="creole_source autogrow">Questionable advice like the one that you encountered motivated me to implement MDEV-27199. That is, starting with MariaDB 10.8, InnoDB will no longer attempt to recreate a missing log file.
+
+The impact of setting innodb_force_recovery=6 or removing the write-ahead log depends on how many outstanding changes were lost by that, and which versions of modified pages had been last written from the buffer pool to the data files. The database contents could appear to be fine while some data is actually inconsistent. The database could also crash on an attempt to follow a corrupted pointer (say, when after a B-tree page split, only some of the involved pages had been written back). MDEV-13542 in MariaDB 10.6.9, 10.7.5, 10.8.4, 10.9.2 removed many of the crashes but ironically introduced two recovery bugs that were fixed in the unscheduled updates MariaDB 10.6.10, 10.7.6, 10.8.5, 10.9.3: MDEV-29374 and MDEV-29383.
+
+My talk https://archive.fosdem.org/2022/schedule/event/mariadb_innodb/ explains how the InnoDB crash recovery works and some performance improvements that were implemented in MariaDB 10.8.
+
+It is always a good idea to not only take regular backups of important data but also to test that the data can be recovered. When using MariaDB Backup, I recommend running ##mariadb-backup --prepare## on the freshly backed-up data.</textarea>
     
 
 

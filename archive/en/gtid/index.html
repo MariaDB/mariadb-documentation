@@ -243,12 +243,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2013-05-07 09:36">9 years, 10 months ago</span></dd>
+<span class="datetime" title="2013-05-07 09:36">10 years, 1 month ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-01-25 02:39">1 month, 2 weeks ago</span></dd>
+<span class="datetime" title="2023-05-30 21:35">4 weeks, 1 day ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -426,7 +426,7 @@
 
             <li class=""><a href="#setting-up-a-new-replica-with-mariabackup" title="Setting up a New Replica with Mariabackup">Setting up a New Replica with Mariabackup</a></li>
 
-            <li class=""><a href="#setting-up-a-new-replica-with-mysqldump" title="Setting up a New Replica with mysqldump">Setting up a New Replica with mysqldump</a>        </ol>
+            <li class=""><a href="#setting-up-a-new-replica-with-mariadb-dump" title="Setting up a New Replica with mariadb-dump">Setting up a New Replica with mariadb-dump</a>        </ol>
 </li>
 
         <li class=""><a href="#switching-an-existing-old-style-replica-to-use-gtid" title="Switching An Existing Old-Style Replica To Use GTID.">Switching An Existing Old-Style Replica To Use GTID.</a>    </ol>
@@ -581,7 +581,7 @@ default of 0 on all servers.</p>
 <h2 class="anchored_heading" id="using-global-transaction-ids">Using Global Transaction IDs</h2>
 <p>Global transaction ID is enabled automatically. Each event
 group logged to the binlog receives a GTID event, as can be seen with
-<a href="/kb/en/mysqlbinlog/">mysqlbinlog</a> or <a href="/kb/en/show-binlog-events/">SHOW BINLOG EVENTS</a>.</p>
+<a href="/kb/en/mariadb-binlog/">mariadb-binlog</a> or <a href="/kb/en/show-binlog-events/">SHOW BINLOG EVENTS</a>.</p>
 <p>The replica automatically keeps track of the GTID of the last applied event
 group, as can be seen from the <a href="#gtid_slave_pos">gtid_slave_pos</a> variable:</p>
 <pre class="fixed">SELECT @@GLOBAL.gtid_slave_pos
@@ -715,11 +715,11 @@ START SLAVE;
 correct GTID position stored in the <a href="/kb/en/mysqlgtid_slave_pos-table/">mysql.gtid_slave_pos</a> table. This is assuming that this table was backed up and that it was backed up in a consistent manner with changes to other tables. In this case, there is no need to explicitly look up the GTID position on the old server and set it on the new replica - it will be already correctly loaded from the <a href="/kb/en/mysqlgtid_slave_pos-table/">mysql.gtid_slave_pos</a> table. This however does not work if the backup was taken from the primary - because then the current GTID position is contained in the binary log, not in the <a href="/kb/en/mysqlgtid_slave_pos-table/">mysql.gtid_slave_pos</a> table or any other table.</p>
 <h4 class="anchored_heading" id="setting-up-a-new-replica-with-mariabackup">Setting up a New Replica with Mariabackup</h4>
 <p>A new replica can easily be set up with <a href="/kb/en/mariabackup/">Mariabackup</a>, which is a fork of <a href="/kb/en/backup-restore-and-import-clients-percona-xtrabackup/">Percona XtraBackup</a>. See <a href="/kb/en/setting-up-a-replication-slave-with-mariabackup/">Setting up a Replica with Mariabackup</a> for more information.</p>
-<h4 class="anchored_heading" id="setting-up-a-new-replica-with-mysqldump">Setting up a New Replica with mysqldump</h4>
-<p>A new replica can also be set up with <a href="/kb/en/mysqldump/">mysqldump</a>. </p>
-<p>Starting with <a href="/kb/en/mariadb-10013-release-notes/">MariaDB 10.0.13</a>, <a href="/kb/en/mysqldump/">mysqldump</a> automatically includes the
-GTID position as a comment in the backup file if either the <a href="/kb/en/mysqldump/#options">--master-data</a> or <a href="/kb/en/mysqldump/#options">--dump-slave</a> option is used. It also automatically includes the commands to set <a href="#gtid_slave_pos">gtid_slave_pos</a> and execute <a href="/kb/en/change-master-to/">CHANGE MASTER</a>
-in the backup file if the <a href="/kb/en/mysqldump/#options">--gtid</a> option is used with either the <a href="/kb/en/mysqldump/#options">--master-data</a> or <a href="/kb/en/mysqldump/#options">--dump-slave</a> option.</p>
+<h4 class="anchored_heading" id="setting-up-a-new-replica-with-mariadb-dump">Setting up a New Replica with mariadb-dump</h4>
+<p>A new replica can also be set up with <a href="/kb/en/mariadb-dump/">mariadb-dump</a>. </p>
+<p><a href="/kb/en/mariadb-dump/">mariadb-dump</a> automatically includes the
+GTID position as a comment in the backup file if either the <a href="/kb/en/mariadb-dump/#options">--master-data</a> or <a href="/kb/en/mariadb-dump/#options">--dump-slave</a> option is used. It also automatically includes the commands to set <a href="#gtid_slave_pos">gtid_slave_pos</a> and execute <a href="/kb/en/change-master-to/">CHANGE MASTER</a>
+in the backup file if the <a href="/kb/en/mariadb-dump/#options">--gtid</a> option is used with either the <a href="/kb/en/mariadb-dump/#options">--master-data</a> or <a href="/kb/en/mariadb-dump/#options">--dump-slave</a> option.</p>
 <h3 class="anchored_heading" id="switching-an-existing-old-style-replica-to-use-gtid">Switching An Existing Old-Style Replica To Use GTID.</h3>
 <p>If there is already an existing replica running using old-style binlog
 filename/offset position, then this can be changed to use GTID directly. This
@@ -1035,7 +1035,7 @@ offending replica, to be able to replicate past the problem point (perhaps using
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="gtid_domain_id"><code>gtid_domain_id</code></h4>
-<ul start="1"><li><strong>Description:</strong> This variable is used to decide which replication domain new GTIDs are logged in for a primary server. See <a href="#use-with-multi-source-replication-and-other-multi-primary-setups">Use with multi-source replication and other multi-primary setups</a> for details. This variable can also be set on the session level by a user with the SUPER privilege. This is used by <a href="/kb/en/mysqlbinlog/">mysqlbinlog</a> to preserve the domain ID of GTID events.
+<ul start="1"><li><strong>Description:</strong> This variable is used to decide which replication domain new GTIDs are logged in for a primary server. See <a href="#use-with-multi-source-replication-and-other-multi-primary-setups">Use with multi-source replication and other multi-primary setups</a> for details. This variable can also be set on the session level by a user with the SUPER privilege. This is used by <a href="/kb/en/mariadb-binlog/">mariadb-binlog</a> to preserve the domain ID of GTID events.
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--gtid-domain-id=#</code>
 </li><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Dynamic:</strong> Yes
@@ -1052,14 +1052,14 @@ offending replica, to be able to replicate past the problem point (perhaps using
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="server_id"><code>server_id</code></h4>
-<ul start="1"><li><strong>Description:</strong> Server_id can be set on the session level to change which server_id value is logged in binlog events (both GTID and other events). This is used by mysqlbinlog to preserve the server ID of GTID events.
+<ul start="1"><li><strong>Description:</strong> Server_id can be set on the session level to change which server_id value is logged in binlog events (both GTID and other events). This is used by mariadb-binlog to preserve the server ID of GTID events.
 </li><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Dynamic:</strong> Yes
 </li><li><strong>Data Type:</strong> numeric (32-bit unsigned integer)
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="gtid_seq_no"><code>gtid_seq_no</code></h4>
-<ul start="1"><li><strong>Description:</strong> gtid_seq_no can be set on the session level to change which sequence number is logged in the following GTID event. The variable, along with <a href="#gtid_domain_id">@@gtid_domain_id</a> and <a href="#server_id">@@server_id</a>, is typically used by <a href="/kb/en/mysqlbinlog/">mysqlbinlog</a> to set up the gtid value of the transaction being decoded into the output.
+<ul start="1"><li><strong>Description:</strong> gtid_seq_no can be set on the session level to change which sequence number is logged in the following GTID event. The variable, along with <a href="#gtid_domain_id">@@gtid_domain_id</a> and <a href="#server_id">@@server_id</a>, is typically used by <a href="/kb/en/mariadb-binlog/">mariadb-binlog</a> to set up the gtid value of the transaction being decoded into the output.
 </li><li><strong>Commandline:</strong> None
 </li><li><strong>Scope:</strong> Session
 </li><li><strong>Dynamic:</strong> Yes
@@ -1092,7 +1092,6 @@ possible to specify engines that are not enabled in the server. The server will 
 </li><li><strong>Dynamic:</strong> Yes
 </li><li><strong>Data Type:</strong> <code>string</code> (comma-separated list of engine names)
 </li><li><strong>Default:</strong> empty
-</li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-1031-release-notes/">MariaDB 10.3.1</a>
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="gtid_cleanup_batch_size"><code>gtid_cleanup_batch_size</code></h4>

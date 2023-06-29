@@ -276,7 +276,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/zh-cn/mariadb-vs-mysql-compatibility/+r/20577/">20577</a></dd>
+            <dd><a href="/kb/zh-cn/mariadb-vs-mysql-compatibility/+r/127174/">127174</a></dd>
             <dt>用户</dt>
             <dd>
 <span class="user" id="user-1225">
@@ -285,7 +285,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2013-09-29 00:19">2013-09-29 00:19</span></dd>
+<span class="datetime" title="2023-06-11 04:43">2023-06-11 04:43</span></dd>
         </dl>
     </div>
     
@@ -295,202 +295,257 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;style class=&#34;bluebox&#34; style=&#34;font-family:&#39;Droid Sans&#39;;font-size:0.8em;&#34;&gt;&gt;
-Monty Program has a **[[http://montyprogram.com/whitepapers/mariadb-vs-mysql|MariaDB vs MySQL]]** whitepaper available for download.
-&lt;&lt;/style&gt;&gt;
-
-&lt;&lt;style class=&#34;greenbox&#34; style=&#34;font-family:&#39;Droid Sans&#39;;font-size:0.8em;&#34;&gt;&gt;
-See also **[[mariadb-vs-mysql-features | MariaDB vs MySQL - Features]]**
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;style class=&#34;greenbox&#34;&gt;&gt;
+请参阅 **[[mariadb-vs-mysql-features | MariaDB vs MySQL - 功能]]**
 &lt;&lt;/style&gt;&gt;
 &lt;&lt;toc&gt;&gt;
-== MariaDB是MySQL代码级量身定制的替代者
 
-　　鉴于所有应用，MariaDB都是MySQL的代码级量身定制的替代者，相应的版本可以直接替换（如MySQL 5.1 -&gt; MariaDB 5.1， MariaDB 5.2 &amp; MariaDB 5.3也是兼容的。MySQL 5.5将与兼容），具体是：
+== 替换 MySQL
 
-* 数据及表的定义文件（.frm）在代码级兼容；
-* 所有客户端的API、协议和结构都是相同的；
-* 所有文件件名、二进制文件、路径、端口、套接字等……全都是一样的；
-* 所有的MySQL与其他语言（PHP、Perl、Python、Java、.NET、MyODBC、Rub、MySQL C……）的连接文件无需任何改动，在MariaDB就可工作；
-** 但有些[[installation-issues-with-php5|PHP5安装要点]]你要知道（旧的PHP5客户端库兼容性检查程序存在bug）；
-* ##mysql-client##程序也可在MariaDB服务器上工作。
+在 MariaDB 5.5 之前，MariaDB 版本作为相应 MySQL 版本的“插拔式替换”，但有一些限制。从 MariaDB 10.0 开始，通常仍然很容易从 MySQL 升级。
 
-　　意思也就是，在大多数情况下，你只要卸载MySQL后，[[getting-installing-and-upgrading-mariadb|安装MariaDB]]后就可工作（在使用相同的主版本（如5.1版）的情况下，不需任何数据文件的转换）．
+* MariaDB 的数据文件通常与相应 MySQL 版本的文件二进制兼容。
+** 所有文件名和路径通常相同。
+** 数据和表定义文件（.frm）文件是二进制兼容的。
+** 有关视图的不兼容性，请参阅下面的说明！
 
-　　我们每月都会将MySQL基本代码编译入MariaDB，从而保证MariaDB与Oracle添加的任何补丁和更新的MySQL相兼容。
+* MariaDB 的客户端协议与 MySQL 的客户端协议二进制兼容。
+** 所有客户端 API 和结构都是相同的。
+** 所有端口和套接字通常相同。
+** 所有 MySQL 连接器（PHP、Perl、Python、Java、.NET、MyODBC、Ruby、MySQL C
+  连接器等）与 MariaDB 一起工作，没有变化。
+** 有一些 [[installation-issues-with-php5|installation issues with PHP5]]，您应该了解一下（旧 PHP5 客户端检查库兼容性的错误）。
 
-　　同时我们为了容易地从[[upgrading-to-mariadb-from-mysql|从MySQL 5.0升级到MariaDB 5.1]]，我们在升级脚本上也做了大量的工作。
+这意味着对于许多情况，您只需卸载 MySQL 并 [[getting-installing-and-upgrading-mariadb|安装 MariaDB]]，即可轻松完成。通常不需要转换任何数据文件。
 
-　　也就是说：相对于MySQL，MariaDB有更多[[mariadb-versus-mysql-features|新选项、扩展、存储引擎及漏洞修复]]，你可以在[[what-is-in-the-different-mariadb-releases|MariaDB的不同之外]]页上查看详细。
+但是，您仍然必须运行 [[mysql_upgrade|mysql_upgrade]] 才能完成升级。这是必要的，以确保您的 mysql 权限和事件表使用 MariaDB 的新字段进行更新。
 
-== MariaDB 5.1与MySQL 5.1不兼容部分 
+话虽如此，MariaDB 具有许多 [[mariadb-versus-mysql-features|新选项、扩展、存储引擎和错误修复]]，这些选项在 MySQL 中不存在。您可以在 [[what-is-in-the-different-mariadb-releases|不同 MariaDB 发行版中的内容]] 页面上找到不同 MariaDB 版本的功能集。
 
-　　为了提供更多、更好的性能，MariaDB在有些地方与MySQL难免有所不兼容。 
+=== 特定 MariaDB 版本的插拔式兼容性
 
-　　下面列出的是从用户使用角度，你可能看到的MariaDB 5.1与 MySQL 5.1不同之外。
+就 [[innodb|InnoDB]] 而言，MariaDB 10.2、MariaDB 10.3 和 MariaDB 10.4 作为 MySQL 5.7 的有限插拔式替换。但是，每个新的 MariaDB 版本的实现差异继续增加。
 
-* The installation package names starts with MariaDB instead of MySQL.
-* Timings may be different as MariaDB is in many cases faster than MySQL.
-* mysqld in MariaDB reads also the &lt;&lt;code&gt;&gt;[mariadb]&lt;&lt;/code&gt;&gt; sections of your
-  my.cnf files.
-* You can&#39;t use a binary only storage engine library with MariaDB if it&#39;s not
-  compiled for exactly the same MariaDB version. (This is because the server
-  internal structure THD is different between MySQL and MariaDB. This is common
-  also between different MySQL versions). This should not be a problem as most
-  people don&#39;t load new storage engines and MariaDB comes with
-  [[mariadb-storage-engines|more storage engines]] than MySQL.
-* ##CHECKSUM TABLE## may give different result as MariaDB doesn&#39;t ignore NULL&#39;s
-  in the columns as MySQL 5.1 does (Future MySQL versions should calculate
-  checksums the same way as MariaDB). You can get the &#39;old style&#39; checksum in
-  MariaDB by starting mysqld with the &lt;&lt;code&gt;&gt;--old&lt;&lt;/code&gt;&gt; option. Note however that that
-  the MyISAM and Aria storage engines in MariaDB are using the new checksum
-  internally, so if you are using &lt;&lt;code&gt;&gt;--old&lt;&lt;/code&gt;&gt;, the ##CHECKSUM## command will be
-  slower as it needs to calculate the checksum row by row.
-* The slow query log has 
-  [[slow-query-log-extended-statistics|more information]] about the query,
-  which may be a problem if you have a script which parses the slow query log.
-* MariaDB by default takes a bit more memory than MySQL because we have by
-  default enabled the [[aria-formerly-known-as-maria|Aria storage engine]] for
-  handling internal temporary tables. If you need MariaDB to take very little
-  memory (at the expense of performance), you can set the value
-  of ##aria_pagecache_buffer_size## to ##1M## (the default is ##128M##).
-* If you are using [[mysqld-startup-options|new command options]],
-  [[mariadb-versus-mysql-features|new features of MariaDB]] or
-  [[mariadb-storage-engines|new storage engines]], you can&#39;t move easily back
-  and forth between MySQL and MariaDB anymore.
+就 [[innodb|InnoDB]] 而言，MariaDB 10.0 和 MariaDB 10.1 作为 MySQL 5.6 的有限插拔式替换。但是，在某些功能上存在一些实现差异。
 
-== MariaDB 5.2与MySQL 5.1不兼容部分
+MariaDB 5.5 作为 MySQL 5.5 的插拔式替换。
 
-The list is the same as between MariaDB 5.1 and MySQL 5.1, with one addition:
+MariaDB 5.1、MariaDB 5.2 和 MariaDB 5.3 作为 MySQL 5.1 的插拔式替换。
 
-* New &lt;&lt;code&gt;&gt;SQL_MODE&lt;&lt;/code&gt;&gt; value was added:
-  &lt;&lt;code&gt;&gt;IGNORE_BAD_TABLE_OPTIONS&lt;&lt;/code&gt;&gt;. If it is not set, using a table,
-  field, or index attribute (option) that is not supported by the chosen
-  storage engine will cause an error. This change might cause warnings in the
-  error log about incorrectly defined tables from the &lt;&lt;code&gt;&gt;mysql&lt;&lt;/code&gt;&gt;
-  database, fix that with &lt;&lt;code&gt;&gt;mysql_upgrade&lt;&lt;/code&gt;&gt;.
+== 复制兼容性
 
-For all practical purposes, MariaDB 5.2 is a drop in replacement for MariaDB 5.1 and MySQL 5.1.
+[[replication-overview|复制]] 兼容性取决于：
 
-== MariaDB 5.3与MySQL 5.1、MariaDB 5.2不兼容部分 
+* MariaDB Server 版本
+* MySQL Server 版本
+* 每个服务器的角色
 
-* A few error messages related to wrong conversions are different as MariaDB
-  provides more information in the message about what went wrong.
-* Error numbers for MariaDB specific errors has been moved to start from 1900
-  to not conflict with MySQL errors.
-* Microseconds now works in all contexts; MySQL did, in some contexts, lose the
-  microsecond part from datetime and time.
-* MariaDB does more strict checking of date, datetime and timestamp values. For example unix_timestamp(&#39;x&#39;) now returns NULL instead of 0.
-* The old &lt;&lt;code&gt;&gt;--maria-&lt;&lt;/code&gt;&gt; startup options are removed. You should use
-  the &lt;&lt;code&gt;&gt;--aria-&lt;&lt;/code&gt;&gt; prefix instead. (MariaDB 5.2 supports both &lt;&lt;code&gt;&gt;--maria-&lt;&lt;/code&gt;&gt;
-  and &lt;&lt;code&gt;&gt;--aria-&lt;&lt;/code&gt;&gt;)
-* ##[[show-processlist|SHOW PROCESSLIST]]## has an extra ##Progress## column
-  which shows progress for some commands. You can disable it by
-  starting ##mysqld## with the &lt;&lt;code&gt;&gt;--old&lt;&lt;/code&gt;&gt; flag.
-* ##INFORMATION_SCHEMA.PROCESSLIST## has three new columns for progress
-  reporting: ##STAGE##, ##MAX_STAGE##, and ##PROGRESS##.
-* [[comment-syntax|Long comments]] which start with &lt;&lt;code&gt;&gt;/*M!&lt;&lt;/code&gt;&gt;
-  or &lt;&lt;code&gt;&gt;/*M!#####&lt;&lt;/code&gt;&gt; are executed.
-* If you use &lt;&lt;code&gt;&gt;max_user_connections=0&lt;&lt;/code&gt;&gt; (which means any number
-  of connections) when starting mysqld, you can&#39;t change the global variable
-  anymore while mysqld remains running. This is because when mysqld is started
-  with &lt;&lt;code&gt;&gt;max_user_connections=0&lt;&lt;/code&gt;&gt; it does not allocate counting
-  structures (which also involve a mutex for each connection). This would lead
-  to wrong counters if you later changed the variable. If you want to be able
-  to change this variable at runtime, set it to a high value at startup.
-* You can set &lt;&lt;code&gt;&gt;max_user_connections&lt;&lt;/code&gt;&gt; (both the global variable
-  and the ##GRANT## option) to ##-1## to stop users from connecting to the
-  server. The global &lt;&lt;code&gt;&gt;max_user_connections&lt;&lt;/code&gt;&gt; variable does not
-  affect users with the &lt;&lt;code&gt;&gt;SUPER&lt;&lt;/code&gt;&gt; privilege.
-* The [[ignore|IGNORE]] directive does not ignore all errors (like fatal errors), only things that are safe to ignore.
+每个仍在维护的 MySQL 版本的复制兼容性详细信息如下所述。
 
-== MariaDB 5.5与MariaDB 5.3不兼容部分
+有关 MariaDB 版本之间的复制兼容性详细信息，请参见 [[replication-overview#cross-version-replication-compatibility|跨版本复制兼容性]]。
 
-=== XtraDB
+=== MySQL 5.7
 
-Percona, the provider of XtraDB, does not provided all earlier features of XtraDB in the 5.5 code base. Because of that, MariaDB 5.5 can&#39;t provide them either.
+MariaDB Server 10.2 及更高版本可以从 MySQL 5.7 主服务器进行复制。
 
-==== XtraDB options missing in 5.5
+MariaDB Server 不支持 Global Transaction IDs (GTIDs) 的 MySQL 实现，因此 MariaDB 副本服务器必须使用二进制日志文件和位置进行复制。如果在 MySQL 主服务器上启用了 GTID 模式，则 MariaDB 副本服务器将删除 MySQL GTID 事件并将其替换为 MariaDB GTID 事件。
 
-The following options are not supported by XtraDB 5.5. If you are using them in any of your my.cnf files, you should remove them before upgrading to 5.5.
+尽管 MariaDB Server 和 MySQL 5.7 在复制级别上兼容，但它们在 SQL 方面可能存在一些不兼容性（如下所述）。这些差异可能会导致某些情况下的复制失败。为了减少兼容性问题的风险，建议将 [[replication-and-binary-log-system-variables#binlog_format|binlog_format]] 设置为 ##ROW##。当您想要从 MySQL 5.7 复制到 MariaDB Server 时，建议测试您的应用程序，以便可以找到和修复任何兼容性问题。
 
-* innodb_adaptive_checkpoint ; Use
-  &lt;&lt;code&gt;&gt;innodb_adaptive_flushing_method&lt;&lt;/code&gt;&gt; instead.
-* innodb_auto_lru_dump ;Use
-  &lt;&lt;code&gt;&gt;innodb_buffer_pool_restore_at_startup&lt;&lt;/code&gt;&gt; instead.
-* innodb_blocking_lru_restore ; Use
-  &lt;&lt;code&gt;&gt;innodb_blocking_buffer_pool_restore&lt;&lt;/code&gt;&gt; instead.
-* innodb_enable_unsafe_group_commit
-* innodb_expand_import ; Use
-  &lt;&lt;code&gt;&gt;innodb_import_table_from_xtrabackup&lt;&lt;/code&gt;&gt; instead.
-* innodb_extra_rsegments ; Use &lt;&lt;code&gt;&gt;innodb_rollback_segment&lt;&lt;/code&gt;&gt;
-  instead.
-* innodb_extra_undoslots
-* innodb_fast_recovery
-* innodb_flush_log_at_trx_commit_session
-* innodb_overwrite_relay_log_info
-* innodb_pass_corrupt_table ; Use
-  &lt;&lt;code&gt;&gt;innodb_corrupt_table_action&lt;&lt;/code&gt;&gt; instead.
-* innodb_use_purge_thread 
-* xtradb_enhancements
+MariaDB 无法声明 MySQL 5.7 副本服务器是否可以从 MariaDB 主服务器进行复制。
 
-==== XtraDB options that has changed default value
+=== MySQL 8.0
 
-&lt;&lt;style class=&#34;darkheader-nospace-borders&#34; style=&#34;font-size:0.8em&#34;&gt;&gt;
-|= Option |= Old value |= New value
-| innodb_adaptive_checkpoint | TRUE | FALSE
-| innodb_change_buffering | inserts | all
-| innodb_flush_neighbor_pages | 1 | area
+MariaDB Server 无法从 MySQL 8.0 主服务器复制，因为 MySQL 8.0 具有不兼容的二进制日志格式。
+
+== 当前维护的 MariaDB 版本和 MySQL 之间的不兼容性
+
+=== MariaDB 10.11 和 MySQL 8.0 之间的不兼容性
+
+* 有关详细信息，请参见[[incompatibilities-and-feature-differences-between-mariadb-10-11-and-mysql-8|MariaDB 10.11 和 MySQL 8.0 之间的不兼容性和功能差异]]。
+* [[function-differences-between-mariadb-10-11-and-mysql-8-0|MariaDB 10.11 和 MySQL 8.0 之间的函数差异]]
+* [[system-variable-differences-between-mariadb-10-11-and-mysql-8-0|MariaDB 10.11 和 MySQL 8.0 之间的系统变量差异]]
+
+=== MariaDB 10.10 和 MySQL 8.0 之间的不兼容性
+
+* 有关详细信息，请参见[[incompatibilities-and-feature-differences-between-mariadb-10-10-and-mysql-8|MariaDB 10.10 和 MySQL 8.0 之间的不兼容性和功能差异]]。
+* [[function-differences-between-mariadb-10-10-and-mysql-8-0|MariaDB 10.10 和 MySQL 8.0 之间的函数差异]]
+* [[system-variable-differences-between-mariadb-10-10-and-mysql-8-0|MariaDB 10.10 和 MySQL 8.0 之间的系统变量差异]]
+
+=== MariaDB 10.9 和 MySQL 8.0 之间的不兼容性
+
+&lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
+* 有关详细信息，请参见[[incompatibilities-and-feature-differences-between-mariadb-10-9-and-mysql-8-0|MariaDB 10.9 和 MySQL 8.0 之间的不兼容性和功能差异]]。
 &lt;&lt;/style&gt;&gt;
+* [[function-differences-between-mariadb-10-9-and-mysql-8-0|MariaDB 10.9 和 MySQL 8.0 之间的函数差异]]
+* [[system-variable-differences-between-mariadb-109-and-mysql-80|MariaDB 10.9 和 MySQL 8.0 之间的系统变量差异]]
 
-==== New options in XtraDB 5.5
+=== MariaDB 10.8 和 MySQL 8.0 之间的不兼容性
 
-The following new options has been added to XtraDB / InnoDB in 5.5.
-(Listed here just to have all XtraDB information in the same place)
+* 有关详细信息，请参见[[incompatibilities-and-feature-differences-between-mariadb-108-and-mysql-80|MariaDB 10.8 和 MySQL 8.0 之间的不兼容性和功能差异]]。
+* [[function-differences-between-mariadb-10-8-and-mysql-8-0|MariaDB 10.8 和 MySQL 8.0 之间的函数差异]]
+* [[system-variable-differences-between-mariadb-108-and-mysql-80|MariaDB 10.8 和 MySQL 8.0 之间的系统变量差异]]
 
-* innodb_adaptive_flushing_method
-* innodb_adaptive_hash_index_partitions
-* innodb_blocking_buffer_pool_restore
-* innodb_buffer_pool_instances
-* innodb_buffer_pool_restore_at_startup
-* innodb_change_buffering_debug
-* innodb_corrupt_table_action
-* innodb_flush_checkpoint_debug
-* innodb_force_load_corrupted
-* innodb_import_table_from_xtrabackup
-* innodb_large_prefix
-* innodb_purge_batch_size
-* innodb_purge_threads
-* innodb_recovery_update_relay_log
-* innodb_rollback_segments
-* innodb_sys_columns
-* innodb_sys_fields
-* innodb_sys_foreign
-* innodb_sys_foreign_cols
-* innodb_sys_tablestats
-* innodb_use_global_flush_log_at_trx_commit
-* innodb_use_native_aio
+=== MariaDB 10.6 和 MySQL 8.0 之间的不兼容性
 
-See also [[http://www.percona.com/doc/percona-server/5.5/upgrading_guide_51_55.html|Perconas guide of how to upgrade to 5.5]]
+* 有关详细信息，请参见[[incompatibilities-and-feature-differences-between-mariadb-106-and-mysql-80|MariaDB 10.6 和 MySQL 8.0 之间的不兼容性和功能差异]]。
+* [[function-differences-between-mariadb-10-6-and-mysql-8-0|MariaDB 10.6 和 MySQL 8.0 之间的函数差异]]
+* [[system-variable-differences-between-mariadb-106-and-mysql-80|MariaDB 10.6 和 MySQL 8.0 之间的系统变量差异]]
 
-== 旧的、也不支持的配置选项
+=== MariaDB 10.5 和 MySQL 8.0 之间的不兼容性
 
-If you are using any of the following options in your ##/etc/my.cnf## or other
-##my.cnf## file you should remove them.  This is also true for MySQL 5.1 or
-newer:
+* 有关详细信息，请参见[[incompatibilities-and-feature-differences-between-mariadb-105-and-mysql-80|MariaDB 10.5 和 MySQL 8.0 之间的不兼容性和功能差异]]。
+* [[function-differences-between-mariadb-10-5-and-mysql-8-0|MariaDB 10.5 和 MySQL 8.0 之间的函数差异]]
+* [[system-variable-differences-between-mariadb-105-and-mysql-80|MariaDB 10.5 和 MySQL 8.0 之间的系统变量差异]]
+
+=== MariaDB 10.4 和 MySQL 8.0 之间的不兼容性
+
+* 有关详细信息，请参见[[incompatibilities-and-feature-differences-between-mariadb-104-and-mysql-80|MariaDB 10.4 和 MySQL 8.0 之间的不兼容性和功能差异]]。
+* [[function-differences-between-mariadb-10-4-and-mysql-8-0|MariaDB 10.4 和 MySQL 8.0 之间的函数差异]]
+* [[system-variable-differences-between-mariadb-104-and-mysql-80|MariaDB 10.4 和 MySQL 8.0 之间的系统变量差异]]
+
+=== MariaDB 10.3 和 MySQL 5.7 之间的不兼容性
+
+* 有关详细信息，请参见[[incompatibilities-and-feature-differences-between-mariadb-103-and-mysql-57|MariaDB 10.3 和 MySQL 5.7 之间的不兼容性和功能差异]]。
+* [[function-differences-between-mariadb-103-and-mysql-57|MariaDB 10.3 和 MySQL 5.7 之间的函数差异]]
+* [[system-variable-differences-between-mariadb-103-and-mysql-57|MariaDB 10.3 和 MySQL 5.7 之间的系统变量差异]]
+
+== 不维护的 MariaDB 版本和 MySQL 之间的不兼容性
+
+=== MariaDB 10.7 和 MySQL 8.0 之间的不兼容性
+
+* 有关详细信息，请参见[[incompatibilities-and-feature-differences-between-mariadb-107-and-mysql-80|MariaDB 10.7 和 MySQL 8.0 之间的不兼容性和功能差异]]。
+* [[function-differences-between-mariadb-10-7-and-mysql-8-0|MariaDB 10.7 和 MySQL 8.0 之间的函数差异]]
+* [[system-variable-differences-between-mariadb-107-and-mysql-80|MariaDB 10.7 和 MySQL 8.0 之间的系统变量差异]]
+
+=== MariaDB 10.2 和 MySQL 5.7 之间的不兼容性
+
+* 有关详细信息，请参见[[incompatibilities-and-feature-differences-between-mariadb-102-and-mysql-57|MariaDB 10.2 和 MySQL 5.7 之间的不兼容性和功能差异]]。
+* [[system-variable-differences-between-mariadb-107-and-mysql-80|MariaDB 10.2 和 MySQL 5.7 之间的系统变量差异]]
+
+=== MariaDB 10.1 和 MySQL 5.7 之间的不兼容性
+
+* MariaDB 10.1 及以上版本不支持 MySQL 5.7 的压缩 JSON 对象。MariaDB 遵循 SQL 标准，并将 JSON 存储为普通的 TEXT/BLOB。如果您想将 JSON 列从 MySQL 复制到 MariaDB，则应在 MySQL 中将 JSON 对象存储在 TEXT 列中或使用基于语句的复制。如果您正在使用 JSON 列并想升级到 MariaDB，则可以将 JSON 列转换为 TEXT 或使用 [[mysqldump]] 将这些表复制到 MariaDB。在 MySQL 中，JSON 是按 json 值进行比较的。在 MariaDB 中，JSON 字符串是普通字符串，并按字符串进行比较。
+* MariaDB 10.1 的 InnoDB 加密与 MySQL 5.7 的 InnoDB 加密实现方式不同。
+* MariaDB 10.1 不支持 ngram 和 MeCab 全文解析器插件 - MDEV-10267、MDEV-10268。
+* MariaDB 10.1 不支持表的多个触发器 - MDEV-6112。这在 MariaDB 10.2 中得到了修复。
+* MariaDB 10.1 不支持 InnoDB 的 [[create-tablespace|CREATE TABLESPACE]]。
+* MariaDB 10.1 不支持 MySQL 5.7 的“本地”InnoDB 分区处理程序。
+* MariaDB 不支持 MySQL 5.7 的 X 协议。
+* MariaDB 10.1 不支持为表使用同一类型的多个触发器。此功能在 MariaDB 10.2.2 中引入。
+* MariaDB 10.1 不支持 MySQL 5.7 的可传输表空间用于分区 InnoDB 表。ALTER TABLE ... {DISCARD|IMPORT} PARTITION 不受支持。有一个解决方法，请参见[[http://www.geoffmontee.com/importing-innodb-partitions-in-mysql-5-6-and-mariadb-10-010-1/|以下博客文章]]。
+* MariaDB 10.1 不支持 MySQL 5.7 的在线撤销表空间截断。但是，此功能已添加到 MariaDB 10.2 中。
+* MySQL 5.7 添加了 ##performance_schema## 的新实现和 ##sys## 模式包装器。这些尚未在 MariaDB 中得到支持。
+* MySQL 5.7 添加了多源复制和复制通道。[[multi-source-replication|多源复制]] 在之前的 MariaDB 版本中已添加，即在 MariaDB 10.0 中，并使用不同的语法。
+* MySQL 5.7 添加了组复制。此功能与 MariaDB 的[[Galera Cluster|galera-cluster]] 复制不兼容。
+* MariaDB 10.1 不支持 MySQL 5.7 的 ##ACCOUNT LOCK/UNLOCK## 句法用于 ##CREATE USER## 和 ##ALTER USER## 语句。
+* MariaDB 10.1 不支持 MySQL 5.7 的 ##ALTER TABLE...RENAME INDEX## 语句。
+* MariaDB 10.1 不支持 MySQL 5.7 的 ##STACKED## 操作用于 ##[[get-diagnostics|GET DIAGNOSTICS]]## 语句。
+* MariaDB 10.1 不支持 MySQL 5.7 的 ##{WITH|WITHOUT} VALIDATION## 句法用于 ##ALTER TABLE.. EXCHANGE PARTITION## 语句。
+* MariaDB 不支持 [[aes_encrypt|AES_ENCRYPT]] 和 [[aes_decrypt|AES_DECRYPT]] 的可选 //init_vector// 参数或 block_encryption_mode 变量 - MDEV-9069。
+* MariaDB 不支持 ##--initialize## 选项。请改用 ##[[mysql_install_db]]##。- MDEV-19010
+* 还请参阅 MariaDB 10.0 和 MySQL 5.6 之间的不兼容性。
+* 还请参阅详细的[[system-variable-differences-between-mariadb-101-and-mysql-57|MariaDB 10.1 和 MySQL 5.7 之间的系统变量差异]]。
+
+=== MariaDB 10.0 和 MySQL 5.6 之间的不兼容性
+
+* MySQL 不支持 MariaDB 的 Spider 存储引擎。
+* 所有 MySQL 二进制文件 (mysqld、myisamchk 等) 都会在使用选项的前缀 (例如 --big-tables 而不是 --big-table) 时发出警告。MariaDB 二进制文件的工作方式与大多数其他 Unix 命令相同，在使用唯一前缀时不会发出警告。
+* MariaDB GTID 与 MySQL 5.6 不兼容。这意味着无法将 MySQL 5.6 作为 MariaDB 10.0 的从库。但是，MariaDB 10.0 可以是 MySQL 5.6 或任何早期的 MySQL/MariaDB 版本的从库。请注意，MariaDB 和 MySQL 还具有不同的 GTID 系统变量，因此在迁移时需要进行调整。
+* MySQL 5.6 不支持 MariaDB 10.0 的多源复制。
+* 为了使 CREATE TABLE ... SELECT 在基于语句和基于行的复制中以相同的方式工作，默认情况下在从库上执行 CREATE OR REPLACE TABLE。其中一个好处是，如果从库在 CREATE ... SELECT 的中间死机，它将能够继续执行。
+** 可以使用 slave-ddl-exec-mode 变量来指定如何复制 CREATE TABLE 和 DROP TABLE。
+* 参见详细的 MariaDB 10.0 和 MySQL 5.6 系统变量差异。
+* MySQL 5.6 默认启用性能模式。出于性能原因，MariaDB 10.0 默认情况下禁用它。您可以通过使用选项 --performance-schema 启动 mysqld 来启用它。
+* MariaDB 10.0 不支持 MySQL Memcached 插件。但是，使用 memcached 存储的数据可以被检索，因为数据存储为 InnoDB 表。MariaDB 可以成功启动，并显示找不到 libmemcached.so 库的错误消息。
+* 使用 MySQL 的 SHA256 密码算法创建的用户不能在 MariaDB 10.0 中使用，因为 MariaDB 不包括 MySQL 的 sha256_password 插件。
+* MariaDB 10.0 不支持延迟复制 - MDEV-7145。
+* 参见详细的 MariaDB 10.0 和 MySQL 5.6 系统变量差异。
+* MySQL 5.6 和 MariaDB 10.0 中使用的 TIME、DATETIME 和 TIMESTAMP 所使用的低级时间格式不同。(在 MariaDB 10.1 中，默认情况下使用 MySQL 实现 - 参见 mysql56_temporal_format)。
+* MariaDB 在 SQL 查询优化器中实现了一些变化，超出了 MySQL 可用的范围。这可能导致 EXPLAIN 语句显示不同的计划。
+* MySQL 延迟复制 (通过 MASTER_DELAY) 在 MariaDB 10.0 中不受支持，它在 MariaDB 10.2.5 中实现。
+* MariaDB 不支持可选的 init_vector 参数用于 AES_ENCRYPT 和 AES_DECRYPT 或 block_encryption_mode 变量 - MDEV-9069
+
+=== MariaDB 5.5 和 MySQL 5.5 之间的不兼容性
+
+* 使用定义 ALGORITHM=MERGE 或 ALGORITHM=TEMPTABLE 的视图在 MariaDB 和 MySQL 之间被意外交换！您必须重新创建使用这些定义创建的视图！
+* [[ignore|INSERT IGNORE]] 对于重复键错误也会发出警告。您可以通过设置 &lt;&lt;fixed&gt;&gt;OLD_MODE=NO_DUP_KEY_WARNINGS_WITH_IGNORE&lt;&lt;/fixed&gt;&gt;（请参见 [[old_mode|OLD_MODE]]）来关闭此功能。
+* 在 MariaDB 5.5.31 之前，##X&#39;HHHH&#39;##，用于二进制字符串文字的标准 SQL 语法错误地以与 ##0xHHHH## 相同的方式工作，这取决于上下文是数字还是字符串。在 5.5.31 中，它被修复为在所有上下文中都作为字符串行为（而不是数字），从而引入了与早期版本的 MariaDB 和所有版本的 MySQL 不兼容的问题。有关更多详细信息和示例，请参见 [[cast|CAST]] 和 [[hexadecimal-literals|Hexadecimal Literals]]。
+* MySQL 不支持 MariaDB [[dynamic-columns-in-mariadb-10|dynamic columns]]。
+* MySQL 不支持 MariaDB [[virtual-computed-columns|virtual columns]]。
+* MySQL 不支持 MariaDB 的 [[handlersocket|HandlerSocket plugin]]。
+* MySQL 不支持 MariaDB 的 [[cassandra|Cassandra Storage Engine]]。
+* 从 MariaDB 5.5.35 开始，[[extract|EXTRACT (HOUR FROM ...)]] 遵循 SQL 标准并返回从 0 到 23 的结果。在 MySQL 和早期版本的 MariaDB 中，结果可能大于 23。
+* 还请参阅关于 MariaDB 5.5 和 MySQL 5.5 之间的[[system-variable-differences-between-mariadb-55-and-mysql-55|系统变量差异的详细说明]]。
+
+=== MariaDB 5.3 和 MySQL 5.1 之间的不兼容性
+
+* 使用定义 ALGORITHM=MERGE 或 ALGORITHM=TEMPTABLE 的视图在 MariaDB 5.2 和 MariaDB 5.3 之间被意外交换！您必须重新创建使用这些定义创建的视图！
+* 与 MariaDB 相关的一些错误转换错误消息与 MySQL 不同，因为 MariaDB 在消息中提供了有关出现问题的详细信息。
+* MariaDB 特定错误的错误编号已移动到从 1900 开始，以避免与 MySQL 错误发生冲突。
+* 微秒现在在所有上下文中都可以使用；MySQL 在某些上下文中从日期时间和时间中丢失了微秒部分。
+* [[unix_timestamp|UNIX_TIMESTAMP]](constant-date-string) 在 MariaDB 中返回带有 6 个小数位的时间戳，而 MySQL 返回不带小数位的时间戳。如果您将 UNIX_TIMESTAMP() 用作分区函数，则可能会出现问题。您可以通过使用 [[floor|FLOOR]](UNIX_TIMESTAMP(..)) 或将日期字符串更改为日期数字（如20080101000000）来解决此问题。
+* MariaDB 对日期、日期时间和时间戳值执行更严格的检查。例如，[[unix_timestamp|UNIX_TIMESTAMP]](&#39;x&#39;) 现在返回 NULL 而不是 0。
+* 旧的 &lt;&lt;code&gt;&gt;--maria-&lt;&lt;/code&gt;&gt; 启动选项已被删除。您应该使用 &lt;&lt;code&gt;&gt;--aria-&lt;&lt;/code&gt;&gt; 前缀代替。（MariaDB 5.2 支持 &lt;&lt;code&gt;&gt;--maria-&lt;&lt;/code&gt;&gt; 和 &lt;&lt;code&gt;&gt;--aria-&lt;&lt;/code&gt;&gt;）
+* ##[[show-processlist|SHOW PROCESSLIST]]## 具有额外的 ##Progress## 列，显示某些命令的进度。您可以通过使用 &lt;&lt;code&gt;&gt;--old-mode=NO_PROGRESS_INFO&lt;&lt;/code&gt;&gt; 或使用 &lt;&lt;code&gt;&gt;--old&lt;&lt;/code&gt;&gt; 标志启动 ##mysqld## 来禁用它（请参见 [[old_mode|OLD_MODE]]）。
+* ##INFORMATION_SCHEMA.PROCESSLIST## 具有三个新列，用于进度报告：##STAGE##、##MAX_STAGE## 和 ##PROGRESS##。
+* 开头为 &lt;&lt;code&gt;&gt;/*M!&lt;&lt;/code&gt;&gt; 或 &lt;&lt;code&gt;&gt;/*M!#####&lt;&lt;/code&gt;&gt; 的[[comment-syntax|长注释]]会被执行。
+* 如果您在启动 mysqld 时使用 [[server-system-variables#max_user_connections|max_user_connections=0]]（表示任意数量的连接），则不能在 mysqld 继续运行时更改全局变量。这是因为当使用 &lt;&lt;code&gt;&gt;max_user_connections=0&lt;&lt;/code&gt;&gt; 启动 mysqld 时，它不会分配计数结构（这也涉及每个连接的互斥体）。如果稍后更改变量，则会导致计数器出现错误。如果您希望能够在运行时更改此变量，请在启动时将其设置为较高的值。
+* 您可以将 &lt;&lt;code&gt;&gt;max_user_connections&lt;&lt;/code&gt;&gt;（全局变量和 ##GRANT## 选项）设置为 ##-1##，以阻止用户连接到服务器。全局变量&lt;&lt;code&gt;&gt;max_user_connections&lt;&lt;/code&gt;&gt; 不会影响具有&lt;&lt;code&gt;&gt;SUPER&lt;&lt;/code&gt;&gt; 特权的用户。
+* [[ignore|IGNORE]] 指令不会忽略所有错误（如致命错误），只会忽略可以安全忽略的内容。
+
+=== MariaDB 5.2 和 MySQL 5.1 之间的不兼容性
+
+此列表与 MariaDB 5.1 和 MySQL 5.1 之间的列表相同，但有一个新增内容：
+
+* 添加了一个新的 [[sql-mode|SQL_MODE]] 值：&lt;&lt;code&gt;&gt;IGNORE_BAD_TABLE_OPTIONS&lt;&lt;/code&gt;&gt;。如果未设置此值，在使用不受所选存储引擎支持的表、字段或索引属性（选项）时会导致错误。此更改可能会导致错误日志中出现有关“mysql”数据库中定义不正确的表的警告，请使用 [[mysql_upgrade|mysql_upgrade]] 进行修复。
+
+在所有实际用途中，MariaDB 5.2 可以作为 MariaDB 5.1 和 MySQL 5.1 的替代品。
+
+=== MariaDB 5.1 和 MySQL 5.1 之间的不兼容性
+
+在一些情况下，为了使 MariaDB 提供更多和更好的信息，MariaDB 必须是不兼容的。
+
+下面是您在使用 MariaDB 5.1 而不是 MySQL 5.1 时可能遇到的所有已知的用户级别的不兼容性列表：
+
+* 安装包名称以 MariaDB 而不是 MySQL 开头。
+* 由于 MariaDB 在许多情况下比 MySQL 更快，因此计时可能会不同。
+* MariaDB 中的 mysqld 还会读取 my.cnf 文件的 &lt;&lt;code&gt;&gt;[mariadb]&lt;&lt;/code&gt;&gt; 部分。
+* 如果二进制存储引擎库未编译为完全相同的 MariaDB 版本，则无法将其与 MariaDB 一起使用。这是因为 MySQL 和 MariaDB 之间的服务器内部结构 THD 不同。这在不同的 MySQL 版本之间也很常见。这应该不是问题，因为大多数人不会加载新的存储引擎，并且 MariaDB 带有比 MySQL 更多的 [[mariadb-storage-engines|存储引擎]]。
+* ##CHECKSUM TABLE## 可能会给出不同的结果，因为 MariaDB 不像 MySQL 5.1 那样忽略列中的 NULL（未来的 MySQL 版本应该以与 MariaDB 相同的方式计算校验和）。您可以通过使用 &lt;&lt;code&gt;&gt;--old&lt;&lt;/code&gt;&gt; 选项启动 mysqld，在 MariaDB 中获取“旧式”校验和。但请注意，MariaDB 中的 MyISAM 和 Aria 存储引擎在内部使用新的校验和，因此如果您使用了 &lt;&lt;code&gt;&gt;--old&lt;&lt;/code&gt;&gt;，则 ##CHECKSUM## 命令将变慢，因为它需要逐行计算校验和。
+* 慢查询日志提供了关于查询的[[slow-query-log-extended-statistics|更多信息]]，如果您有解析慢查询日志的脚本，则可能会出现问题。
+* 默认情况下，MariaDB 比 MySQL 占用更多内存，因为我们默认启用 [[aria-formerly-known-as-maria|Aria 存储引擎]] 来处理内部临时表。如果您需要 MariaDB 占用非常少的内存（以牺牲性能为代价），则可以将 ##aria_pagecache_buffer_size## 的值设置为 ##1M##（默认值为 ##128M##）。
+* 如果您正在使用 [[mysqld-startup-options|新命令选项]]、[[mariadb-versus-mysql-features|MariaDB 的新功能]]或[[mariadb-storage-engines|新存储引擎]]，则不能轻松地在 MySQL 和 MariaDB 之间移动。
+
+以下是文本的中文翻译：
+
+== 旧的、不受支持的配置选项
+
+如果您在 ##/etc/my.cnf## 或其他 ##my.cnf## 文件中使用以下任何选项，则应将其删除。这对于 MySQL 5.1 或更新版本也适用：
 
 * ##skip-bdb##
 
-== Replacing a MySQL RPM ==
+== 替换 MySQL RPM
 
-If you uninstalled a MySQL RPM to install MariaDB, note that the MySQL RPM on
-uninstall renames ##/etc/my.cnf## to ##/etc/my.cnf.rpmsave##.
+如果您卸载了 MySQL RPM 以安装 MariaDB，请注意，卸载 MySQL RPM 会将 ##/etc/my.cnf## 重命名为 ##/etc/my.cnf.rpmsave##。
 
-After installing MariaDB you should do the following to restore your old
-configuration options:
+安装 MariaDB 后，您应执行以下操作以恢复旧的配置选项：
 
 &lt;&lt;code&gt;&gt;
 mv -vi /etc/my.cnf.rpmsave /etc/my.cnf
-&lt;&lt;/code&gt;&gt;</textarea>
+&lt;&lt;/code&gt;&gt;
+
+== MariaDB 和 MySQL-Proxy 之间的不兼容性
+
+MySQL 客户端 API 可以使用 MySQL-Proxy 连接到 MariaDB，但是 MariaDB 客户端 API 将接收到 MySQL-Proxy 没有实现的进度报告信息，为了在所有情况下获得完全兼容性，请在客户端或服务器端禁用进度报告。
+
+另一个选项是使用 [[maxscale|MariaDB MaxScale 代理]]，它可以与 MySQL 和 MariaDB 一起使用。
+
+== 相关链接
+* [[mariadb-vs-mysql-features | MariaDB vs MySQL - 功能]]
+* [[moving-from-mysql|从 MySQL 迁移到 MariaDB]]
+* [[troubleshooting-installation-issues|故障排除安装问题]]
+* [[works-with-mariadb|与 MariaDB 兼容的项目和应用程序]]</textarea>
     
 
 

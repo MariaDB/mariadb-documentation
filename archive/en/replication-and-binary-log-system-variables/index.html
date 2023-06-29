@@ -243,12 +243,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2013-07-07 13:12">9 years, 9 months ago</span></dd>
+<span class="datetime" title="2013-07-07 13:12">9 years, 11 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-03-24 11:00">3 weeks, 3 days ago</span></dd>
+<span class="datetime" title="2023-06-23 09:46">5 days, 5 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -426,6 +426,8 @@
 
             <li class=""><a href="#binlog_annotate_row_events" title="binlog_annotate_row_events">binlog_annotate_row_events</a></li>
 
+            <li class=""><a href="#binlog_do_db" title="binlog_do_db">binlog_do_db</a></li>
+
             <li class=""><a href="#binlog_cache_size" title="binlog_cache_size">binlog_cache_size</a></li>
 
             <li class=""><a href="#binlog_checksum" title="binlog_checksum">binlog_checksum</a></li>
@@ -442,7 +444,11 @@
 
             <li class=""><a href="#binlog_format" title="binlog_format">binlog_format</a></li>
 
+            <li class=""><a href="#binlog_ignore_db" title="binlog_ignore_db">binlog_ignore_db</a></li>
+
             <li class=""><a href="#binlog_optimize_thread_scheduling" title="binlog_optimize_thread_scheduling">binlog_optimize_thread_scheduling</a></li>
+
+            <li class=""><a href="#binlog_row_event_max_size" title="binlog_row_event_max_size">binlog_row_event_max_size</a></li>
 
             <li class=""><a href="#binlog_row_image" title="binlog_row_image">binlog_row_image</a></li>
 
@@ -606,7 +612,7 @@ This page lists system variables that are related to <a href="/kb/en/binary-log/
 <p>Also see <a href="/kb/en/mysqld-options/#replication-and-binary-logging-options">mysqld replication options</a> for related options that are not system variables (such as <a href="/kb/en/mysqld-options/#-binlog-do-db">binlog_do_db</a> and <a href="/kb/en/mysqld-options/#-binlog-ignore-db">binlog_ignore_db</a>).</p>
 <p>See also the <a href="/kb/en/full-list-of-mariadb-options-system-and-status-variables/">Full list of MariaDB options, system and status variables</a>. </p>
 <h4 class="anchored_heading" id="auto_increment_increment"><code>auto_increment_increment</code></h4>
-<ul start="1"><li><strong>Description:</strong> The increment for all <a href="/kb/en/auto_increment/">AUTO_INCREMENT</a> values on the server, by default <code>1</code>. Intended for use in master-to-master <a href="/kb/en/replication/">replication</a>.
+<ul start="1"><li><strong>Description:</strong> The increment for all <a href="/kb/en/auto_increment/">AUTO_INCREMENT</a> values on the server, by default <code>1</code>. Intended for use in primary-to-primary <a href="/kb/en/replication/">replication</a>.
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--auto-increment-increment[=#]</code>
 </li><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Dynamic:</strong> Yes
@@ -616,7 +622,7 @@ This page lists system variables that are related to <a href="/kb/en/binary-log/
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="auto_increment_offset"><code>auto_increment_offset</code></h4>
-<ul start="1"><li><strong>Description:</strong> The offset for all <a href="/kb/en/auto_increment/">AUTO_INCREMENT</a> values on the server, by default <code>1</code>. Intended for use in master-to-master <a href="/kb/en/replication/">replication</a>. Should be smaller than <code class="fixed" style="white-space:pre-wrap">auto_increment_increment</code>, except when both variables are 1 (default setup).
+<ul start="1"><li><strong>Description:</strong> The offset for all <a href="/kb/en/auto_increment/">AUTO_INCREMENT</a> values on the server, by default <code>1</code>. Intended for use in primary-to-primary <a href="/kb/en/replication/">replication</a>. Should be smaller than <code class="fixed" style="white-space:pre-wrap">auto_increment_increment</code>, except when both variables are 1 (default setup).
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--auto-increment-offset[=#]</code>
 </li><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Dynamic:</strong> Yes
@@ -637,7 +643,7 @@ it could start on replica before its actual execution on primary.
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="binlog_annotate_row_events"><code>binlog_annotate_row_events</code></h4>
-<ul start="1"><li><strong>Description:</strong> This option tells the master to write <a href="/kb/en/annotate_rows_log_event/">annotate_rows_events</a> to the binary log.
+<ul start="1"><li><strong>Description:</strong> This option tells the primary to write <a href="/kb/en/annotate_rows_log_event/">annotate_rows_events</a> to the binary log.
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--binlog-annotate-row-events[={0|1}]</code>
 </li><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Dynamic:</strong> Yes
@@ -647,6 +653,21 @@ it could start on replica before its actual execution on primary.
 </li><li><code>OFF</code> (&lt;= <a href="/kb/en/mariadb-1023-release-notes/">MariaDB 10.2.3</a>)
 </li></ul>
 </li></ul>
+<h4 class="anchored_heading" id="binlog_do_db"><code>binlog_do_db</code></h4>
+<ul start="1"><li><strong>Description:</strong> This option allows you to configure a <a href="/kb/en/replication/">replication primary</a> to write statements and transactions affecting databases that match a specified name into its <a href="/kb/en/binary-log/">binary log</a>. Since the filtered statements or transactions will not be present in the <a href="/kb/en/binary-log/">binary log</a>, its replicas will not be able to replicate them.
+<ul start="1"><li>This option will <strong>not</strong> work with cross-database updates with <a href="/kb/en/binary-log-formats/#statement-based-logging">statement-based logging</a>. See the <a href="/kb/en/replication-filters/#statement-based-logging">Statement-Based Logging</a> section for more information. 
+</li><li>Until <a href="/kb/en/mariadb-11-2-0-release-notes/">MariaDB 11.2.0</a>, only available as an option, not a system variable. This option can <strong>not</strong> be set dynamically.
+</li><li>When setting it on the command-line or in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>, the option does not accept a comma-separated list. If you would like to specify multiple filters, then you need to specify the option multiple times.
+</li><li>See <a href="/kb/en/replication-filters/">Replication Filters</a> for more information. 
+</li></ul>
+</li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--binlog-do-db=#</code>
+</li><li><strong>Scope:</strong> Global
+</li><li><strong>Dynamic:</strong> No
+</li><li><strong>Data Type:</strong> <code>string</code>
+</li><li><strong>Default Value:</strong> NULL
+</li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-11-2-0-release-notes/">MariaDB 11.2.0</a>
+</li></ul>
+<hr>
 <h4 class="anchored_heading" id="binlog_cache_size"><code>binlog_cache_size</code></h4>
 <ul start="1"><li><strong>Description:</strong> If the <a href="/kb/en/binary-log/">binary log</a> is active, this variable determines the size in bytes, per-connection, of the cache holding a record of binary log changes during a transaction. A separate variable, <a href="#binlog_stmt_cache_size">binlog_stmt_cache_size</a>, sets the upper limit for the statement cache. The <a href="/kb/en/server-status-variables/#binlog_cache_disk_use">binlog_cache_disk_use</a> and <a href="/kb/en/server-status-variables/#binlog_cache_use">binlog_cache_use</a> <a href="/kb/en/server-status-variables/">server status variables</a> will indicate whether this variable needs to be increased (you want a low ratio of binlog_cache_disk_use to binlog_cache_use).
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--binlog-cache-size=#</code>
@@ -751,6 +772,21 @@ With <a href="/kb/en/group-commit-for-the-binary-log/">group commit for the bina
 </li><li><strong>Valid Values:</strong> <code>ROW</code>, <code>STATEMENT</code> or <code>MIXED</code>
 </li></ul>
 <hr>
+<h4 class="anchored_heading" id="binlog_ignore_db"><code>binlog_ignore_db</code></h4>
+<ul start="1"><li><strong>Description:</strong> This option allows you to configure a <a href="/kb/en/replication/">replication primary</a> to <strong>not</strong> write statements and transactions affecting databases that match a specified name into its <a href="/kb/en/binary-log/">binary log</a>. Since the filtered statements or transactions will not be present in the <a href="/kb/en/binary-log/">binary log</a>, its replicas will not be able to replicate them.
+<ul start="1"><li>This option will <strong>not</strong> work with cross-database updates with <a href="/kb/en/binary-log-formats/#statement-based-logging">statement-based logging</a>. See the <a href="/kb/en/replication-filters/#statement-based-logging">Statement-Based Logging</a> section for more information.
+</li><li>Until <a href="/kb/en/mariadb-11-2-0-release-notes/">MariaDB 11.2.0</a>, only available as an option, not a system variable. This option can <strong>not</strong> be set dynamically.
+</li><li>When setting it on the command-line or in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>, the option does not accept a comma-separated list. If you would like to specify multiple filters, then you need to specify the option multiple times.
+</li><li>See <a href="/kb/en/replication-filters/">Replication Filters</a> for more information. 
+</li></ul>
+</li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--binlog-ignore-db=name</code>
+</li><li><strong>Scope:</strong> Global
+</li><li><strong>Dynamic:</strong> No
+</li><li><strong>Data Type:</strong> <code>string</code>
+</li><li><strong>Default Value:</strong> NULL
+</li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-11-2-0-release-notes/">MariaDB 11.2.0</a>
+</li></ul>
+<hr>
 <h4 class="anchored_heading" id="binlog_optimize_thread_scheduling"><code>binlog_optimize_thread_scheduling</code></h4>
 <ul start="1"><li><strong>Description:</strong> Run fast part of group commit in a single thread, to optimize kernel thread scheduling. On by default. Disable to run each transaction in group commit in its own thread, which can be slower at very high concurrency. This option is mostly for testing one algorithm versus another, and it should not normally be necessary to change it.
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--binlog-optimize-thread-scheduling</code> or <code class="fixed" style="white-space:pre-wrap">--skip-binlog-optimize-thread-scheduling</code>
@@ -758,6 +794,17 @@ With <a href="/kb/en/group-commit-for-the-binary-log/">group commit for the bina
 </li><li><strong>Dynamic:</strong> No
 </li><li><strong>Data Type:</strong> <code>boolean</code>
 </li><li><strong>Default Value:</strong> <code>ON</code>
+</li></ul>
+<hr>
+<h4 class="anchored_heading" id="binlog_row_event_max_size"><code>binlog_row_event_max_size</code></h4>
+<ul start="1"><li><strong>Description:</strong> The maximum size of a row-based <a href="/kb/en/binary-log/">binary log</a> event in bytes. Rows will be grouped into events smaller than this size if possible. The value has to be a multiple of 256. Until <a href="/kb/en/mariadb-11-2-0-release-notes/">MariaDB 11.2.0</a>, only available as an option, not a system variable. 
+</li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--binlog-row-event-max-size=val</code>
+</li><li><strong>Scope:</strong> Global, Session
+</li><li><strong>Dynamic:</strong> Yes
+</li><li><strong>Data Type:</strong> <code>numeric</code>
+</li><li><strong>Default Value:</strong> <code>8192</code>
+</li><li><strong>Range:</strong> <code>256</code> to <code>4294967040</code> (in multiples of 256)
+</li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-11-2-0-release-notes/">MariaDB 11.2.0</a>
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="binlog_row_image"><code>binlog_row_image</code></h4>
@@ -935,7 +982,7 @@ With <a href="/kb/en/group-commit-for-the-binary-log/">group commit for the bina
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="master_verify_checksum"><code>master_verify_checksum</code></h4>
-<ul start="1"><li><strong>Description:</strong> Verify <a href="/kb/en/binlog-event-checksums/">binlog checksums</a> when reading events from the binlog on the master.
+<ul start="1"><li><strong>Description:</strong> Verify <a href="/kb/en/binlog-event-checksums/">binlog checksums</a> when reading events from the binlog on the primary.
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--master-verify-checksum=[0|1]</code>
 </li><li><strong>Scope:</strong> Global
 </li><li><strong>Access Type:</strong> Can be changed dynamically
@@ -1022,7 +1069,7 @@ With <a href="/kb/en/group-commit-for-the-binary-log/">group commit for the bina
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="relay_log_info_file"><code>relay_log_info_file</code></h4>
-<ul start="1"><li><strong>Description:</strong> Name and location of the file where the <code>RELAY_LOG_FILE</code> and <code>RELAY_LOG_POS</code> options (i.e. the <a href="/kb/en/relay-log/">relay log</a> position) for the <code><a href="/kb/en/change-master-to/">CHANGE MASTER</a></code> statement  are written. The <a href="/kb/en/replication-threads/#slave-sql-thread">replica's SQL thread</a> keeps this <a href="/kb/en/relay-log/">relay log</a> position updated as it applies events.
+<ul start="1"><li><strong>Description:</strong> Name and location of the file where the <code>RELAY_LOG_FILE</code> and <code>RELAY_LOG_POS</code> options (i.e. the <a href="/kb/en/relay-log/">relay log</a> position) for the <a href="/kb/en/change-master-to/">CHANGE MASTER</a> statement  are written. The <a href="/kb/en/replication-threads/#slave-sql-thread">replica's SQL thread</a> keeps this <a href="/kb/en/relay-log/">relay log</a> position updated as it applies events.
 <ul start="1"><li>See <a href="/kb/en/change-master-to/#option-persistence">CHANGE MASTER TO: Option Persistence</a> for more information.
 </li></ul>
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--relay-log-info-file=file_name</code>
@@ -1043,7 +1090,7 @@ With <a href="/kb/en/group-commit-for-the-binary-log/">group commit for the bina
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="relay_log_recovery"><code>relay_log_recovery</code></h4>
-<ul start="1"><li><strong>Description:</strong> If set to <code>1</code> (<code>0</code> is default), on startup the replica will drop all <a href="/kb/en/relay-log/">relay logs</a> that haven't yet been processed, and retrieve relay logs from the master. Can be useful after the replica has crashed to prevent the processing of corrupt relay logs. relay_log_recovery should always be set together with <a href="#relay_log_purge">relay_log_purge</a>. Setting <code class="fixed" style="white-space:pre-wrap">relay-log-recovery=1</code> with <code class="fixed" style="white-space:pre-wrap">relay-log-purge=0</code> can cause the relay log to be read from files that were not purged, leading to data inconsistencies.
+<ul start="1"><li><strong>Description:</strong> If set to <code>1</code> (<code>0</code> is default), on startup the replica will drop all <a href="/kb/en/relay-log/">relay logs</a> that haven't yet been processed, and retrieve relay logs from the primary. Can be useful after the replica has crashed to prevent the processing of corrupt relay logs. relay_log_recovery should always be set together with <a href="#relay_log_purge">relay_log_purge</a>. Setting <code class="fixed" style="white-space:pre-wrap">relay-log-recovery=1</code> with <code class="fixed" style="white-space:pre-wrap">relay-log-purge=0</code> can cause the relay log to be read from files that were not purged, leading to data inconsistencies.
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--relay-log-recovery</code>
 </li><li><strong>Scope:</strong> Global
 </li><li><strong>Dynamic:</strong> Yes
@@ -1270,7 +1317,7 @@ With <a href="/kb/en/group-commit-for-the-binary-log/">group commit for the bina
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="slave_domain_parallel_threads"><code>slave_domain_parallel_threads</code></h4>
-<ul start="1"><li><strong>Description:</strong> When set to a non-zero value, each <a href="/kb/en/replication/">replication</a> domain in one master connection can reserve at most that many worker threads at any one time, leaving the rest (up to the value of
+<ul start="1"><li><strong>Description:</strong> When set to a non-zero value, each <a href="/kb/en/replication/">replication</a> domain in one primary connection can reserve at most that many worker threads at any one time, leaving the rest (up to the value of
 <a href="#slave_parallel_threads">slave_parallel_threads</a>) free for other primary connections
 or replication domains to use in parallel. See <a href="/kb/en/parallel-replication/#configuration-variable-slave_domain_parallel_threads">Parallel Replication</a> for details.
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--slave-domain-parallel-threads=#</code>
@@ -1282,7 +1329,7 @@ or replication domains to use in parallel. See <a href="/kb/en/parallel-replicat
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="slave_exec_mode"><code>slave_exec_mode</code></h4>
-<ul start="1"><li><strong>Description:</strong> Determines the mode used for <a href="/kb/en/replication/">replication</a> error checking and conflict resolution. STRICT mode is the default, and catches all errors and conflicts. IDEMPOTENT mode suppresses duplicate key or no key errors, which can be useful in certain replication scenarios, such as when there are multiple masters, or circular replication.
+<ul start="1"><li><strong>Description:</strong> Determines the mode used for <a href="/kb/en/replication/">replication</a> error checking and conflict resolution. STRICT mode is the default, and catches all errors and conflicts. IDEMPOTENT mode suppresses duplicate key or no key errors, which can be useful in certain replication scenarios, such as when there are multiple primaries, or circular replication.
 </li><li><strong>Scope:</strong> Global
 </li><li><strong>Dynamic:</strong> Yes
 </li><li><strong>Data Type:</strong> <code>enumeration</code>
@@ -1310,7 +1357,7 @@ or replication domains to use in parallel. See <a href="/kb/en/parallel-replicat
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="slave_net_timeout"><code>slave_net_timeout</code></h4>
-<ul start="1"><li><strong>Description:</strong> Time in seconds for the replica to wait for more data from the master before considering the connection broken, after which it will abort the read and attempt to reconnect. The retry interval is determined by the MASTER_CONNECT_RETRY open for the <a href="/kb/en/change-master-to/">CHANGE MASTER</a> statement, while the maximum number of reconnection attempts is set by the <a href="/kb/en/mysqld-options/#-master-retry-count">master-retry-count</a> option. The first reconnect attempt takes place immediately.
+<ul start="1"><li><strong>Description:</strong> Time in seconds for the replica to wait for more data from the primary before considering the connection broken, after which it will abort the read and attempt to reconnect. The retry interval is determined by the MASTER_CONNECT_RETRY open for the <a href="/kb/en/change-master-to/">CHANGE MASTER</a> statement, while the maximum number of reconnection attempts is set by the <a href="/kb/en/mysqld-options/#-master-retry-count">master-retry-count</a> option. The first reconnect attempt takes place immediately.
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--slave-net-timeout=#</code>
 </li><li><strong>Scope:</strong> Global
 </li><li><strong>Dynamic:</strong> Yes
@@ -1361,7 +1408,7 @@ replication is configured (i.e. when <code><a href="/kb/en/replication-and-binar
 </li><li>If this system variable is set to <code>0</code> (which is the default value), then no replica <a href="/kb/en/replication-threads/#worker-threads">worker threads</a> will be created. Instead, when replication is enabled, <a href="/kb/en/binary-log/">binary log</a> events are applied by the replica's <a href="/kb/en/replication-threads/#slave-sql-thread">SQL thread</a>.
 </li><li>The <a href="/kb/en/replication-threads/#threads-on-the-slave">replica threads</a> must be <a href="/kb/en/stop-slave/">stopped</a> in order to change this option's value dynamically.
 </li><li>Events that were logged with <a href="/kb/en/gtid/">GTIDs</a> with different <code><a href="/kb/en/gtid/#gtid_domain_id">gtid_domain_id</a></code> values can be applied in parallel in an <a href="/kb/en/parallel-replication/#out-of-order-parallel-replication">out-of-order</a> manner. Each <code><a href="/kb/en/gtid/#gtid_domain_id">gtid_domain_id</a></code> can use the number of threads configured by <code><a href="#slave_domain_parallel_threads">slave_domain_parallel_threads</a></code>.
-</li><li>Events that were <a href="/kb/en/group-commit-for-the-binary-log/">group-committed</a> on the master can be applied in parallel in an <a href="/kb/en/parallel-replication/#what-can-be-run-in-parallel">in-order</a> manner, and the specific behavior can be configured by setting <code><a href="#slave_parallel_mode">slave_parallel_mode</a></code>. 
+</li><li>Events that were <a href="/kb/en/group-commit-for-the-binary-log/">group-committed</a> on the primary can be applied in parallel in an <a href="/kb/en/parallel-replication/#what-can-be-run-in-parallel">in-order</a> manner, and the specific behavior can be configured by setting <code><a href="#slave_parallel_mode">slave_parallel_mode</a></code>. 
 </li></ul>
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--slave-parallel-threads=#</code>
 </li><li><strong>Scope:</strong> Global
@@ -1442,10 +1489,10 @@ replication is configured (i.e. when <code><a href="/kb/en/replication-and-binar
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="slave_type_conversions"><code>slave_type_conversions</code></h4>
-<ul start="1"><li><strong>Description:</strong> Determines the type conversion mode on the replica when using <a href="/kb/en/binary-log-formats/#row-based">row-based</a> <a href="/kb/en/replication/">replication</a>, including replications in MariaDB Galera cluster. Multiple options can be set, delimited by commas. If left empty, the default, type conversions are disallowed. The variable is dynamic and a change in its value takes effect immediately. This variable tells the server what to do if the table definition is different between the master and replica (for example a column is 'int' on the master and 'bigint' on the replica). 
+<ul start="1"><li><strong>Description:</strong> Determines the type conversion mode on the replica when using <a href="/kb/en/binary-log-formats/#row-based">row-based</a> <a href="/kb/en/replication/">replication</a>, including replications in MariaDB Galera cluster. Multiple options can be set, delimited by commas. If left empty, the default, type conversions are disallowed. The variable is dynamic and a change in its value takes effect immediately. This variable tells the server what to do if the table definition is different between the primary and replica (for example a column is 'int' on the primary and 'bigint' on the replica). 
 <ul start="1"><li><code>ALL_NON_LOSSY</code> means that all safe conversions (no data loss) are allowed. 
 </li><li><code>ALL_LOSSY</code> means that all lossy conversions are allowed (for example 'bigint' to 'int'). This, however, does not imply that safe conversions (non-lossy) are allowed as well. In order to allow all conversions, one needs to allow both lossy as well as non-lossy conversions by setting this variable to ALL_NON_LOSSY,ALL_LOSSY.
-</li><li>Empty (default) means that the server should give an error and replication should stop if the table definition is different between the master and replica.
+</li><li>Empty (default) means that the server should give an error and replication should stop if the table definition is different between the primary and replica.
 </li></ul>
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--slave-type-conversions=set</code>
 </li><li><strong>Scope:</strong> Global
@@ -1464,7 +1511,7 @@ replication is configured (i.e. when <code><a href="/kb/en/replication-and-binar
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="sql_slave_skip_counter"><code>sql_slave_skip_counter</code></h4>
-<ul start="1"><li><strong>Description:</strong> Number of events that a replica skips from the master. If this would cause the replica to begin in the middle of an event group, the replica will instead begin from the beginning of the next event group. See <a href="/kb/en/set-global-sql_slave_skip_counter/">SET GLOBAL sql_slave_skip_counter</a>.
+<ul start="1"><li><strong>Description:</strong> Number of events that a replica skips from the primary. If this would cause the replica to begin in the middle of an event group, the replica will instead begin from the beginning of the next event group. See <a href="/kb/en/set-global-sql_slave_skip_counter/">SET GLOBAL sql_slave_skip_counter</a>.
 </li><li><strong>Scope:</strong> Global
 </li><li><strong>Dynamic:</strong> Yes
 </li><li><strong>Data Type:</strong> <code>numeric</code>
@@ -1487,7 +1534,7 @@ replication is configured (i.e. when <code><a href="/kb/en/replication-and-binar
 </li><li><strong>Scope:</strong> Global
 </li><li><strong>Dynamic:</strong> Yes
 </li><li><strong>Data Type:</strong> <code>numeric</code>
-</li><li><strong>Default Value:</strong> <code>10000</code> (&gt;= <a href="/kb/en/mariadb-1017-release-notes/">MariaDB 10.1.7</a>)
+</li><li><strong>Default Value:</strong> <code>10000</code>
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="sync_relay_log"><code>sync_relay_log</code></h4>

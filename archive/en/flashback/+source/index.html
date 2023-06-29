@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/flashback/+r/119478/">119478</a></dd>
+            <dd><a href="/kb/en/flashback/+r/126571/">126571</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-09-29 14:17">2022-09-29 14:17</span></dd>
+<span class="datetime" title="2023-05-30 21:00">2023-05-30 21:00</span></dd>
         </dl>
     </div>
     
@@ -315,12 +315,12 @@ Flashback is currently supported only over DML statements ([[insert|INSERT]], [[
 
 Flashback is achieved in MariaDB Server using existing support for full image format binary logs ([[replication-and-binary-log-system-variables/#binlog_row_image|binlog_row_image=FULL]]), so it supports all engines.
 
-The real work of Flashback is done by [[mysqlbinlog|mariadb-binlog / mysqlbinlog]] with ##--flashback##. This causes events to be translated: INSERT to DELETE, DELETE to INSERT, and for UPDATEs, the before and after images are swapped.
+The real work of Flashback is done by [[mariadb-binlog]] with ##--flashback##. This causes events to be translated: INSERT to DELETE, DELETE to INSERT, and for UPDATEs, the before and after images are swapped.
 
-When executing ##mariadb-binlog / mysqlbinlog## with ##--flashback##, the Flashback events will be stored in memory. You should make sure your server has enough memory for this feature.
+When executing ##mariadb-binlog## with ##--flashback##, the Flashback events will be stored in memory. You should make sure your server has enough memory for this feature.
 
 == Arguments 
-* [[mysqlbinlog|mariadb-binlog / mysqlbinlog]] has the option ##--flashback## or ##-B## that will let it work in flashback mode.
+* [[mariadb-binlog]] has the option ##--flashback## or ##-B## that will let it work in flashback mode.
 * [[mysqld-options|mariadbd / mysqld]] has the option [[mysqld-options#-flashback|--flashback]] that enables the binary log and sets ##binlog_format=ROW##. It is not mandatory to use this option if you have already enabled those options directly.
 
 &lt;&lt;style class=&#34;redbox&#34;&gt;&gt;
@@ -332,11 +332,11 @@ Do not use ##-v## ##-vv## options, as this adds verbose information to the binar
 With a table &#34;mytable&#34; in database &#34;test&#34;, you can compare the output with ##--flashback## and without.
 
 &lt;&lt;code&gt;&gt;
- mysqlbinlog /var/lib/mysql/mysql-bin.000001 -vv -d test -T mytable \
+ mariadb-binlog /var/lib/mysql/mysql-bin.000001 -vv -d test -T mytable \
     --start-datetime=&#34;2013-03-27 14:54:00&#34; &gt; review.sql
 &lt;&lt;/code&gt;&gt;
 &lt;&lt;code&gt;&gt;
- mysqlbinlog /var/lib/mysql/mysql-bin.000001 -vv -d test -T mytable \
+ mariadb-binlog /var/lib/mysql/mysql-bin.000001 -vv -d test -T mytable \
     --start-datetime=&#34;2013-03-27 14:54:00&#34; --flashback &gt; flashback.sql
 &lt;&lt;/code&gt;&gt;
 
@@ -350,8 +350,8 @@ A common use case for Flashback is the following scenario:
 * You have one primary and two replicas, one started with ##--flashback## (i.e. with binary logging enabled, using [[replication-and-binary-log-system-variables/#binlog_format|binlog_format=ROW]], and [[replication-and-binary-log-system-variables/#binlog_row_image|binlog_row_image=FULL]]).
 * Something goes wrong on the primary (like a wrong update or delete) and you would like to revert to a state of the database (or just a table) at a certain point in time.
 * Remove the flashback-enabled replica from replication.
-* Invoke [[mysqlbinlog|mariadb-binlog / mysqlbinlog]] to find the exact log position of the first offending operation after the state you want to revert to.
-* Run ##mysqlbinlog --flashback --start-position=xyz | mysql## to pipe the output of ##mariadb-binlog / mysqlbinlog## directly to the ##mariadb / mysql## client, or save the output to a file and then direct the file to the command-line client.</textarea>
+* Invoke [[mariadb-binlog]] to find the exact log position of the first offending operation after the state you want to revert to.
+* Run ##mariadb-binlog --flashback --start-position=xyz | mysql## to pipe the output of ##mariadb-binlog## directly to the ##mariadb## client, or save the output to a file and then direct the file to the command-line client.</textarea>
     
 
 

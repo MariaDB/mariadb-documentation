@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-slap/+r/96681/">96681</a></dd>
+            <dd><a href="/kb/en/mariadb-slap/+r/126545/">126545</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2020-06-10 22:59">2020-06-10 22:59</span></dd>
+<span class="datetime" title="2023-05-30 12:50">2023-05-30 12:50</span></dd>
         </dl>
     </div>
     
@@ -311,7 +311,156 @@ From MariaDB 10.4.6, ##mariadb-slap## is a symlink to ##mysqlslap##, the tool fo
 From MariaDB 10.5.2, ##mysqlslap## is the symlink, and ##mariadb-slap## the binary name.
 &lt;&lt;/product&gt;&gt;
 
-See [[mysqlslap]] for details.</textarea>
+&lt;&lt;toc&gt;&gt;
+##mariadb-slap## is a tool for load-testing MariaDB. It allows you to emulate multiple concurrent connections, and run a set of queries multiple times.
+
+It returns a benchmark including the following information:
+*Average number of seconds to run all queries
+*Minimum number of seconds to run all queries
+*Maximum number of seconds to run all queries
+*Number of clients running queries
+*Average number of queries per client
+
+== Using mariadb-slap 
+
+The command to use ##mariadb-slap## and the general syntax is:
+
+&lt;&lt;code&gt;&gt;
+mariadb-slap [options]
+&lt;&lt;/code&gt;&gt;
+
+=== Options
+
+##mariadb-slap## supports the following options:
+
+&lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
+|= Option |= Description
+| ##-a##, ##--auto-generate-sql## | Generate SQL statements automatically when they are not supplied in files or via command options. |
+| ##--auto-generate-sql-add-autoincrement## | Add an [[auto_increment|AUTO_INCREMENT]] column to auto-generated tables. |
+| ##--auto-generate-sql-execute-number=num## | Specify how many queries to generate automatically. |
+| ##--auto-generate-sql-guid-primary## | Add GUID based primary keys to auto-generated tables. |
+| ##--auto-generate-sql-load-type=name ##| Specify the test load type. The allowable values are ##read## (scan tables), ##write## (insert into tables), ##key## (read primary keys), ##update## (update primary keys), or ##mixed## (half inserts, half scanning selects). The default is mixed. |
+| ##--auto-generate-sql-secondary-indexes=num## | Number of secondary indexes to add to auto-generated tables. By default, none are added. |
+| ##--auto-generate-sql-unique-query-number=num## | Number of unique queries to generate for automatic tests. For example, if you run a key test that performs 1000 selects, you can use this option with a value of 1000 to run 1000 unique queries, or with a value of 50 to perform 50 different selects. The default is 10. |
+| ##--auto-generate-sql-unique-write-number=num## | Number of unique queries to generate for ##auto-generate-sql-write-number##. |
+| ##--auto-generate-sql-write-number=num## | Number of row inserts to perform for each thread. The default is 100. |
+| ##--commit=num## | Number of statements to execute before committing. The default is 0. |
+| ##-C##, ##--compress## | Use compression in server/client protocol if both support it. |
+| ##-c name##, ##--concurrency=name## | Number of clients to simulate for query to run. |
+| ##--create=name## | File or string containing the statement to use for creating the table. |
+| ##--create-schema=name## | Schema to run tests in. |
+| ##--csv[=name]## | Generate comma-delimited output to named file or to standard output if no file is named. |
+| ##-# ##, ##--debug[=options]## | For debug builds, write a debugging log. A typical debug_options string is ##d:t:o,file_name##. The default is ##d:t:o,/tmp/mariadb-slap.trace##. |
+| ##--debug-check## | Check memory and open file usage at exit. |
+| ##-T, --debug-info## | Print some debug info at exit. |
+| ##--default-auth=name## | Default authentication client-side plugin to use. |
+| ##--defaults-extra-file=name## |  Read this file after the global files are read. Must be given as the first option.
+| ##--defaults-file=name## |  Only read default options from the given file //name// Must be given as the first option.
+| ##-F name##, ##--delimiter=name## | Delimiter to use in SQL statements supplied in file or command line. |
+| ##--detach=num## | Detach (close and reopen) connections after the specified number of requests. The default is 0 (connections are not detached). |
+| ##-e name##, ##--engine=name## | Comma separated list of storage engines to use for creating the table. The test is run for each engine. You can also specify an option for an engine after a #:#, for example ##memory:max_row=2300##. |
+| ##-?##, ##--help## | Display help and exit. |
+| ##-h name##, ##--host=name## | Connect to the MariaDB server on the given host. |
+| ##--init-command=name## | SQL Command to execute when connecting to the MariaDB server. Will automatically be re-executed when reconnecting. Added in MariaDB 5.5.34. |
+| ##-i num##, ##--iterations=num## | Number of times to run the tests. |
+| ##--no-defaults##     |  Don&#39;t read default options from any option file. Must be given as the first option.
+| ##--no-drop## | Do not drop any schema created during the test after the test is complete. |
+| ##-x name##, ##--number-char-cols=name | Number of [[varchar|VARCHAR]] columns to create in table if specifying ##--auto-generate-sql##. |
+| ##-y name##, ##--number-int-cols=name## | Number of [[int|INT]] columns to create in table if specifying ##--auto-generate-sql##. |
+| ##--number-of-queries=num## | Limit each client to approximately this number of queries. Query counting takes into account the statement delimiter. For example, if you invoke as follows, ##mariadb-slap --delimiter=&#34;;&#34; --number-of-queries=10 ## ##--query=&#34;use test;insert into t values(null)&#34;##, the #;# delimiter is recognized so that each instance of the query string counts as two queries. As a result, 5 rows (not 10) are inserted.   |
+| ##--only-print## | Do not connect to the databases, but instead print out what would have been done. |
+| ##-p[password]##, ##--password[=password]## | Password to use when connecting to server. If password is not given it&#39;s asked from the command line. Specifying a password on the command line should be considered insecure. You can use an option file to avoid giving the password on the command line. |
+| ##-W##, ##--pipe## | On Windows, connect to the server via a named pipe. This option applies only if the server supports named-pipe connections. |
+| ##--plugin-dir=name## | Directory for client-side plugins. |
+| ##-P num##, ##--port=num## | Port number to use for connection. |
+| ##--post-query=name## | Query to run or file containing query to execute after tests have completed. This execution is not counted for timing purposes. |
+| ##--post-system=name## | system() string to execute after tests have completed. This execution is not counted for timing purposes. |
+| ##--pre-query=name## | Query to run or file containing query to execute before running tests. This execution is not counted for timing purposes. |
+| ##--pre-system=name## | system() string to execute before running tests. This execution is not counted for timing purposes.|
+| ##--print-defaults##  |  Print the program argument list and exit. Must be given as the first option.
+| ##--protocol=name## | The protocol to use for connection (tcp, socket, pipe, memory). |
+| ##-q name##, ##--query=name## | Query to run or file containing query to run. |
+| ##--shared-memory-base-name## | Shared-memory name to use for Windows connections using shared memory to a local server (started with the ##--shared-memory## option). Case-sensitive. |
+| ##-s##, ##--silent## | Run program in silent mode - no output. |
+| ##-S##, ##--socket=name##  | For connections to localhost, the Unix socket file to use, or, on Windows, the name of the named pipe to use.
+| ##--ssl## | Enables [[data-in-transit-encryption|TLS]]. TLS is also enabled even without setting this option when certain other TLS options are set. The ##--ssl## option will not enable [[secure-connections-overview/#server-certificate-verification|verifying the server certificate]] by default. In order to verify the server certificate, the user must specify the ##--ssl-verify-server-cert## option. |
+| ##--ssl-ca=name## | Defines a path to a PEM file that should contain one or more X509 certificates for trusted Certificate Authorities (CAs) to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. See [[secure-connections-overview/#certificate-authorities-cas|Secure Connections Overview: Certificate Authorities (CAs)]] for more information. This option implies the ##--ssl## option. |
+| ##--ssl-capath=name##  | Defines a path to a directory that contains one or more PEM files that should each contain one X509 certificate for a trusted Certificate Authority (CA) to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. The directory specified by this option needs to be run through the ##[[https://www.openssl.org/docs/man1.1.1/man1/rehash.html|openssl rehash]]## command. See [[secure-connections-overview/#certificate-authorities-cas|Secure Connections Overview: Certificate Authorities (CAs)]] for more information. This option is only supported if the client was built with OpenSSL or yaSSL. If the client was built with GnuTLS or Schannel, then this option is not supported. See [[tls-and-cryptography-libraries-used-by-mariadb|TLS and Cryptography Libraries Used by MariaDB]] for more information about which libraries are used on which platforms. This option implies the ##--ssl## option. |
+| ##--ssl-cert=name##  | Defines a path to the X509 certificate file to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. This option implies the ##--ssl## option. |
+| ##--ssl-cipher=name## | List of permitted ciphers or cipher suites to use for [[data-in-transit-encryption|TLS]]. This option implies the ##--ssl## option. |
+| ##--ssl-crl=name## | Defines a path to a PEM file that should contain one or more revoked X509 certificates to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. See [[secure-connections-overview/#certificate-revocation-lists-crls|Secure Connections Overview: Certificate Revocation Lists (CRLs)]] for more information. This option is only supported if the client was built with OpenSSL or Schannel. If the client was built with yaSSL or GnuTLS, then this option is not supported. See [[tls-and-cryptography-libraries-used-by-mariadb|TLS and Cryptography Libraries Used by MariaDB]] for more information about which libraries are used on which platforms. |
+| ##--ssl-crlpath=name## | Defines a path to a directory that contains one or more PEM files that should each contain one revoked X509 certificate to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. The directory specified by this option needs to be run through the ##[[https://www.openssl.org/docs/man1.1.1/man1/rehash.html|openssl rehash]]## command. See [[secure-connections-overview/#certificate-revocation-lists-crls|Secure Connections Overview: Certificate Revocation Lists (CRLs)]] for more information. This option is only supported if the client was built with OpenSSL. If the client was built with yaSSL, GnuTLS, or Schannel, then this option is not supported. See [[tls-and-cryptography-libraries-used-by-mariadb|TLS and Cryptography Libraries Used by MariaDB]] for more information about which libraries are used on which platforms. |
+| ##--ssl-key=name## | Defines a path to a private key file to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. This option implies the ##--ssl## option. |
+| ##--ssl-verify-server-cert##     | Enables [[secure-connections-overview/#server-certificate-verification|server certificate verification]]. This option is disabled by default. |
+| ##-u##, ##--user=name## | User for login if not current user. |
+| ##-v##, ##--verbose## | More verbose output; you can use this multiple times to get even more verbose output. |
+| ##-V##, ##--version## | Output version information and exit. |
+&lt;&lt;/style&gt;&gt;
+
+=== Option Files
+
+In addition to reading options from the command-line, ##mariadb-slap## can also read options from [[configuring-mariadb-with-option-files|option files]]. If an unknown option is provided to ##mariadb-slap## in an option file, then it is ignored.
+
+The following options relate to how MariaDB command-line tools handles option files. They must be given as the first argument on the command-line:
+
+&lt;&lt;style class=&#34;darkheader-nospace-borders&#34;&gt;&gt;
+|= Option |= Description
+| ##--print-defaults## | Print the program argument list and exit.|
+| ##--no-defaults## | Don&#39;t read default options from any option file.|
+| ##--defaults-file=# ## | Only read default options from the given file #.|
+| ##--defaults-extra-file=# ## | Read this file after the global files are read.|
+| ##--defaults-group-suffix=# ## | In addition to the default option groups, also read option groups with this suffix.|
+&lt;&lt;/style&gt;&gt;
+
+##mariadb-slap## is linked with [[about-mariadb-connector-c|MariaDB Connector/C]]. However, MariaDB Connector/C does not yet handle the parsing of option files for this client. That is still performed by the server option file parsing code. See  MDEV-19035 for more information.
+
+==== Option Groups
+
+##mariadb-slap## reads options from the following [[configuring-mariadb-with-option-files/#option-groups|option groups]] from [[configuring-mariadb-with-option-files|option files]]:
+
+&lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
+|= Group |= Description |
+| ##[mysqlslap]## | Options read by ##mariadb-slap##, which includes both MariaDB Server and MySQL Server. |
+| ##[mariadb-slap]## | Options read by ##mariadb-slap##. Available starting with MariaDB 10.4.6. |
+| ##[client]## | Options read by all MariaDB and MySQL [[clients-utilities|client programs]], which includes both MariaDB and MySQL clients. For example, ##mysqldump##. |
+| ##[client-server]## | Options read by all MariaDB [[clients-utilities|client programs]] and the MariaDB Server. This is useful for options like socket and port, which is common between the server and the clients. |
+| ##[client-mariadb]## | Options read by all MariaDB [[clients-utilities|client programs]]. |
+&lt;&lt;/style&gt;&gt;
+
+== Examples
+Create a table with data, and then query it with 40 simultaneous connections 100 times each.
+&lt;&lt;code&gt;&gt;
+mariadb-slap 
+ --delimiter=&#34;;&#34; 
+ --create=&#34;CREATE TABLE t (a int);INSERT INTO t VALUES (5)&#34;
+ --query=&#34;SELECT * FROM t&#34;
+ --concurrency=40
+ --iterations=100
+
+Benchmark
+	Average number of seconds to run all queries: 0.010 seconds
+	Minimum number of seconds to run all queries: 0.009 seconds
+	Maximum number of seconds to run all queries: 0.020 seconds
+	Number of clients running queries: 40
+	Average number of queries per client: 1
+&lt;&lt;/code&gt;&gt;
+
+Using files to store the create and query SQL. Each file can contain multiple statements separated by the specified delimiter.
+&lt;&lt;code&gt;&gt;
+mariadb-slap
+ --create=define.sql
+ --query=query.sql
+ --concurrency=10
+ --iterations=20
+ --delimiter=&#34;;&#34;
+
+Benchmark
+	Average number of seconds to run all queries: 0.002 seconds
+	Minimum number of seconds to run all queries: 0.002 seconds
+	Maximum number of seconds to run all queries: 0.004 seconds
+	Number of clients running queries: 10
+	Average number of queries per client: 1
+&lt;&lt;/code&gt;&gt;</textarea>
     
 
 

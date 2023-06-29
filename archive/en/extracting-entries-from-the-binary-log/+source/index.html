@@ -276,7 +276,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/extracting-entries-from-the-binary-log/+r/58007/">58007</a></dd>
+            <dd><a href="/kb/en/extracting-entries-from-the-binary-log/+r/126684/">126684</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1029">
@@ -285,7 +285,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2017-08-24 12:01">2017-08-24 12:01</span></dd>
+<span class="datetime" title="2023-05-30 21:58">2023-05-30 21:58</span></dd>
         </dl>
     </div>
     
@@ -311,11 +311,11 @@ sudo chown $USER: ~/mysql-bin.000687
 
 **Step 2: Create an extract header**
 
-Binary logs have a header portion. Without the header [[mysqlbinlog]] won&#39;t be able to read it. The header also contains valuable session information
+Binary logs have a header portion. Without the header [[mariadb-binlog]] won&#39;t be able to read it. The header also contains valuable session information
 
 We look at the binary log to see how big the header and session information is:
 &lt;&lt;code lang=&#34;sh&#34; inline=&#34;false&#34;&gt;&gt;
-mysqlbinlog --base64-output=decode-rows --verbose mysql-bin.000687 | more
+mariadb-binlog --base64-output=decode-rows --verbose mysql-bin.000687 | more
 /*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=1*/;
 /*!40019 SET @@session.max_insert_delayed_threads=0*/;
 /*!50003 SET @OLD_COMPLETION_TYPE=@@COMPLETION_TYPE,COMPLETION_TYPE=0*/;
@@ -346,7 +346,7 @@ dd if=mysql-bin.000687 of=mysql-bin.000687-extract-offset-129619 bs=1 count=328
 
 We need to find out at what offset the entry at 129619 ends and it might be useful to extract some previous entries as well.
 &lt;&lt;code lang=&#34;sh&#34; inline=&#34;false&#34;&gt;&gt;
-mysqlbinlog --base64-output=decode-rows --verbose mysql-bin.000687 | grep  &#39;^# at &#39; |  grep -C 10 &#39;^# at 129619$&#39;
+mariadb-binlog --base64-output=decode-rows --verbose mysql-bin.000687 | grep  &#39;^# at &#39; |  grep -C 10 &#39;^# at 129619$&#39;
 # at 127602
 # at 127690
 # at 128201
@@ -372,7 +372,7 @@ mysqlbinlog --base64-output=decode-rows --verbose mysql-bin.000687 | grep  &#39;
 
 Take a look at those entries with:
 &lt;&lt;code lang=&#34;sh&#34; inline=&#34;false&#34;&gt;&gt;
-mysqlbinlog --base64-output=decode-rows --verbose --start-position 129006  --stop-position 130168  mysql-bin.000687 | more
+mariadb-binlog --base64-output=decode-rows --verbose --start-position 129006  --stop-position 130168  mysql-bin.000687 | more
 &lt;&lt;/code&gt;&gt;
 
 Now let&#39;s assume we want to start at our original 129619 and finish before 130168
@@ -382,7 +382,7 @@ dd if=mysql-bin.000687 bs=1 skip=129619 count=$(( 130168 - 129619 ))  &gt;&gt; m
 
 Check the extract:
 &lt;&lt;code lang=&#34;sh&#34; inline=&#34;false&#34;&gt;&gt;
-mysqlbinlog mysql-bin.000687-extract-offset-129619
+mariadb-binlog mysql-bin.000687-extract-offset-129619
 &lt;&lt;/code&gt;&gt;
 
 Upload this to the [[ftp|private uploads]] or attach to the public bug report if nothing sensitive there.</textarea>

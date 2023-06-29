@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>ColumnStore存储架构 - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="ColumnStore存储架构" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/zh-cn/columnstore-storage-architecture/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+当您在MariaDB ColumnStore上创建表时，系统会为表中的每个列创建至少一个文件。例如，使用三个列创建的表将在SAN上或性能模块的本地磁盘上创建至少三个可分别寻址的逻辑对象。
+ColumnStore将表模式写入/usr/local/mariadb/columnstore/mysql/db中，其中包括所有非ColumnStore表。您写..." />
+
+    <meta name="description" content="
+当您在MariaDB ColumnStore上创建表时，系统会为表中的每个列创建至少一个文件。例如，使用三个列创建的表将在SAN上或性能模块的本地磁盘上创建至少三个可分别寻址的逻辑对象。
+ColumnStore将表模式写入/usr/local/mariadb/columnstore/mysql/db中，其中包括所有非ColumnStore表。您写..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/zh-cn/columnstore-storage-architecture/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/zh-cn/columnstore-storage-architecture/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/zh-cn/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/zh-cn/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/zh-cn/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb/">MariaDB - 简体中文</a>
+    
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb-server/">MariaDB Server文档</a>
+    
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb-columnstore/">MariaDB ColumnStore</a>
+    
+
+    
+    » <a class="crumb" href="/kb/zh-cn/mariadb-columnstore-columnstore/">ColumnStore架构</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/zh-cn/columnstore-storage-architecture/">ColumnStore存储架构</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/zh-cn/">首页</a></li>
+                            
+                                
+                                    <li><a href="/kb/zh-cn/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/zh-cn/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/zh-cn/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/zh-cn/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/zh-cn/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/columnstore-storage-architecture/+history" rel="nofollow">历史</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/columnstore-storage-architecture/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/zh-cn/columnstore-storage-architecture/+flag"
+                data-flag-url="/kb/zh-cn/columnstore-storage-architecture/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/zh-cn/columnstore-storage-architecture/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>已创建</dt>
+        <dd>
+
+<span class="datetime" title="2023-05-21 13:12">1 month, 1 week ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2023-05-21 13:12">1 month, 1 week ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/zh-cn/columnstore-storage-architecture/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/zh-cn/columnstore-storage-architecture/+history/feed/">
+            历史</a>
+        </li>
+        <li><a href="/kb/zh-cn/columnstore-storage-architecture/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/zh-cn/columnstore-storage-architecture/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+        
+
+<div class="well well-small box"><div><h5>Localized Versions</h5></div><div>
+
+        <ul>
+            
+            <li><a href="/kb/en/columnstore-storage-architecture/">ColumnStore Storage Architecture</a> [en]</li>
+            
+            <li><a href="/kb/ja/columnstore-storage-architecture/">ColumnStoreストレージアーキテクチャー</a> [ja]</li>
+            
+        </ul>
+        
+</div>
+</div>
+
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>ColumnStore存储架构</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#extent" title="Extent">Extent</a>    <ol class="toc">
+
+        <li class=""><a href="#extent-maps" title="Extent Maps">Extent Maps</a></li>
+
+        <li class=""><a href="#extent-elimination" title="Extent Elimination">Extent Elimination</a>    </ol>
+</li>
+
+    <li class=""><a href="#带实时解压缩的压缩" title="带实时解压缩的压缩">带实时解压缩的压缩</a></li>
+
+    <li class=""><a href="#版本缓冲区" title="版本缓冲区">版本缓冲区</a>    <ol class="toc">
+
+        <li class=""><a href="#版本缓冲区的工作原理" title="版本缓冲区的工作原理">版本缓冲区的工作原理</a>    </ol>
+</li>
+
+    <li class=""><a href="#事务日志" title="事务日志">事务日志</a> </ol>
+</li>
+</div>
+<p>当您在MariaDB ColumnStore上创建表时，系统会为表中的每个列创建至少一个文件。例如，使用三个列创建的表将在SAN上或性能模块的本地磁盘上创建至少三个可分别寻址的逻辑对象。</p>
+<p>ColumnStore将表模式写入/usr/local/mariadb/columnstore/mysql/db中，其中包括所有非ColumnStore表。您写入ColumnStore表的数据存储在DB Roots中的性能模块上，这些模块位于/usr/local/mariadb/columnstore/datax中。</p>
+<p><img src="/kb/en/columnstore-storage-architecture/+image/datastorage-diagram" alt="datastorage-diagram" title="datastorage-diagram"></p>
+<h2 class="anchored_heading" id="extent">Extent</h2>
+<p>表中的每个列都独立地存储在一个称为Extent的逻辑度量中，每个Extent包含8,388,608行。1字节数据类型的Extent占用8MB；2字节数据类型需要16MB；4字节数据类型需要32MB；8字节数据类型需要64MB；而变量大小数据类型需要64MB。一旦Extent变满，ColumnStore就会创建一个新的Extent。大于8个字符的字符串列在主列文件中存储索引，并在单独的字典文件中存储实际值。</p>
+<p>Extent在物理上存储为一组块。每个块为8KB。每个数据库块都由其逻辑块标识符（LBID）唯一标识。</p>
+<p>ColumnStore写入磁盘的物理文件称为段文件。一旦段文件达到最大数量的Extents，ColumnStore会自动创建一个新的段文件。您可以使用ColumnStore.xml文件中的ExtentsPreSegmentFile设置段文件中的最大Extent数量。它应该设置为DB Roots数量的倍数。默认值为2。</p>
+<p>所有列的段文件的一个或多个Extents集合为分区。这是ColumnStore中的水平分区。分区按段（即文件夹）组织成分层结构。ColumnStore元数据存储将文件结构和位置映射到DB模式，以及在ColumnStore.xml文件中的FilesPerColumnPartition。默认值为4。此外，默认情况下，ColumnStore压缩数据。</p>
+<h3 class="anchored_heading" id="extent-maps">Extent Maps</h3>
+<p>ColumnStore使用称为Extent Map的智能结构来提供逻辑范围以进行分区，并消除索引、手动表分区、物化视图、汇总表和其他行数据库必须实现的查询性能结构和对象。</p>
+<p>Extent是存在于物理段文件中的逻辑空间块，大小在8到64MB之间。每个Extent支持相同数量的行，较小的数据类型使用较少的磁盘空间。Extent Map将Extent目录到其相应的块（LBID），以及Extent中列数据的最小值和最大值。</p>
+<p>主性能模块具有Extent Map的主副本。系统启动时，该文件被读入内存，然后物理复制到所有其他参与用户和性能模块以进行灾难恢复和故障转移。节点将Extent Map保留在内存中以进行快速访问。随着Extent的修改，更新会广播到参与节点。</p>
+<h3 class="anchored_heading" id="extent-elimination">Extent Elimination</h3>
+<p>使用Extent Map，ColumnStore可以执行逻辑范围分区，并仅检索满足查询给定连接和过滤条件的块。这是通过Extent Elimination完成的，即消除不符合查询结果的Extent的过程，从而减少总体I/O操作。</p>
+<p><img src="/kb/en/columnstore-storage-architecture/+image/extent-elimination" alt="extent-elimination" title="extent-elimination"></p>
+<p>在Extent Elimination中，ColumnStore会扫描连接和过滤条件中的列。然后提取每个Extent的逻辑水平分区信息以及列的最小值和最大值，以进一步消除Extent。在涉及到过滤器的列扫描时，如果过滤器值超出Extent中该列的最小值和最大值范围，则ColumnStore会消除该Extent。</p>
+<p>这种行为是自动的，并且非常适合于系列、有序、模式化和基于时间的数据，其中数据经常加载并经常按时间引用。任何具有聚集值的列都是Extent Elimination的良好候选。</p>
+<h2 class="anchored_heading" id="带实时解压缩的压缩">带实时解压缩的压缩</h2>
+<p>在列存储中，相似的数据存储在每个列文件中，这允许优秀的压缩率。虽然实际的空间节省取决于数据的随机性和存在的不同值的数量，但许多数据集显示出节省65%至95%的空间的压缩率。</p>
+<p>ColumnStore优化其压缩策略以提高从磁盘读取的性能。它被调整为加速解压缩速率，从而在从磁盘读取时最大化性能优势。这使得I/O受限的系统可以提高磁盘读取性能。</p>
+<p>默认情况下，在ColumnStore中启用了压缩。此外，您可以在表级别或列级别启用或禁用它，或通过设置<code><a href="/kb/en/columnstore-system-variables/#compression-mode">infinidb_compression_type</a></code>系统变量在会话级别控制它。启用时，ColumnStore使用snappy压缩。</p>
+<h2 class="anchored_heading" id="版本缓冲区">版本缓冲区</h2>
+<p>MariaDB ColumnStore使用版本缓冲区来存储正在修改的磁盘块、管理事务回滚并服务于数据库的MVCC（多版本并发控制）或“快照读”功能。这使它能够提供查询一致的数据库视图。</p>
+<p>ColumnStore中的所有语句都在数据库的特定版本（或快照）上运行，系统将其称为系统更改号（SCN）。</p>
+<div class="cstm-style greenbox"><p><strong>注意：</strong>尽管它被称为“缓冲区”，但版本缓冲区使用内存和磁盘结构。</p>
+</div><h3 class="anchored_heading" id="版本缓冲区的工作原理">版本缓冲区的工作原理</h3>
+<p>版本缓冲区使用内存哈希表来提供对正在进行的事务信息的内存访问。它从4MB开始，内存区域从该数量增长以处理由事务修改的块。哈希表中的每个条目都是对正在修改的8KB块的40字节引用。</p>
+<p>版本缓冲区的限制因素不是更新的行数，而是磁盘块的数量。您可以增加大小，但要小心，因为增加磁盘块的数量意味着长时间运行的<code><a href="/kb/en/update/">UPDATE</a></code>和<code><a href="/kb/en/delete/">DELETE</a></code>语句在需要回滚更改时可能需要更长时间。</p>
+<h2 class="anchored_heading" id="事务日志">事务日志</h2>
+<p>MariaDB ColumnStore支持将已提交的事务记录到服务器的<a href="/kb/en/binlog/">二进制日志</a>。</p>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/zh-cn/columnstore-storage-architecture/+subscriptions/add"
+                 data-unsubscribe-url="/kb/zh-cn/columnstore-storage-architecture/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                
+                    <li><a href="/kb/zh-cn/columnstore-architecture/">
+                        ↑ ColumnStore架构 ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/zh-cn/columnstore-performance-module/">
+                        ColumnStore性能模块 →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="12309" data-comments-url="/kb/zh-cn/columnstore-storage-architecture/+comments"
+         data-reply-url="/kb/zh-cn/columnstore-storage-architecture/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/zh-cn/columnstore-architecture/">
+                    ↑ ColumnStore架构 ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li class="active">
+                        <span>ColumnStore存储架构</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/columnstore-performance-module/">
+                            
+                            ColumnStore性能模块
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/columnstore-columnstore/">
+                            
+                            ColumnStore架构概述
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/columnstore-query-processing/">
+                            
+                            ColumnStore查询处理过程
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/columnstore-user-module/">
+                            
+                            ColumnStore用户模块
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/zh-cn/columnstore-system-databases/">
+                            
+                            ColumnStore系统数据库
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row row-10">
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/products" title="Products">Products</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-7816" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7816"><a href="https://mariadb.com/products/mariadb-platform/">MariaDB Platform</a></li>
+                        <li id="menu-item-7815" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7815"><a href="https://mariadb.com/products/skysql/">MariaDB SkySQL</a></li>
+                        <li id="menu-item-4172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4172"><a href="https://mariadb.com/pricing/">Pricing</a></li>
+                        <li id="menu-item-4163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4163"><a href="https://mariadb.com/downloads/">Download MariaDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/services" title="Services">Services</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/remote-dba/">Remote DBA</a></li>
+                        <li id="menu-item-41691" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4169"><a href="https://mariadb.com/services/skydba/">SkyDBA</a></li>
+                        <li id="menu-item-4167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4167"><a href="https://mariadb.com/services/enterprise-architect/">Enterprise Architect</a></li>
+                        <li id="menu-item-4170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4170"><a href="https://mariadb.com/services/technical-support-services/">Technical Support</a></li>
+                        <li id="menu-item-4168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4168"><a href="https://mariadb.com/services/migration-practice/">Migration Practice</a></li>
+                        <li id="menu-item-4166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4166"><a href="https://mariadb.com/services/consulting/">Consulting</a></li>
+                        <li id="menu-item-4171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4171"><a href="https://mariadb.com/services/training/">Training</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-xs-4 item">
+                    <h5>
+                        <a href="/resources" title="Resources">Resources</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-41751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/docs/">Documentation</a></li>
+                        <li id="menu-item-41752" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/developers/">Developers</a></li>
+                        <li id="menu-item-4175" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4175"><a href="https://mariadb.com/resources/blog/">Blog</a></li>
+                        <li id="menu-item-5462" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5462"><a href="https://support.mariadb.com">Support</a></li>
+                        <li id="menu-item-6004" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/openworks/">OpenWorks</a></li>
+                        <li id="menu-item-60041" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6004"><a href="https://mariadb.com/resources/customer-stories/">Customer Stories</a></li>
+                        <li id="menu-item-7817" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-7817"><a href="https://mariadb.com/resources/events/">Events</a></li>
+                        <li id="menu-item-4177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4177"><a href="https://mariadb.com/roadshow/">MariaDB Roadshow</a></li>
+                    </ul>
+                </div>
+                <div class="visible-xs visible-sm clear"></div>
+                <div class="col-md-2 col-xs-5 item">
+                    <h5>
+                        <a href="/about-us" title="About MariaDB">About</a>
+                    </h5>
+                    <ul>
+                        <li id="menu-item-4173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4173"><a href="https://mariadb.com/contact/">Contact</a></li>
+                        <li id="menu-item-4161" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4161"><a href="https://mariadb.com/about-us/leadership/">Leadership</a></li>
+                        <li id="menu-item-4162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4162"><a href="https://mariadb.com/about-us/partners/">Partners</a></li>
+                        <li id="menu-item-4174" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4174"><a href="https://mariadb.com/newsroom/">Newsroom</a></li>
+                        <li id="menu-item-4160" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4160"><a href="https://mariadb.com/about-us/investors/">Investors</a></li>
+                        <li id="menu-item-4159" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/about-us/careers/">Careers</a></li>
+                        <li id="menu-item-41591" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/trust/">Trust Center</a></li>
+                        <li id="menu-item-41592" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4159"><a href="https://mariadb.com/vulnerability-reporting/">Vulnerability Reporting</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-xs-7 item">
+                    <div id="block-footercontact" class="block block-block-content block-block-content22b3af28-0754-44ec-a5c6-4466568f37e3">
+                        <h5><a href="/contact" title="Contact">Contact</a></h5>
+                    </div>
+                    <div class="social">
+                        <ul class="list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/MariaDB.dbms/" title="Facebook">
+                                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/mariadb" title="Twitter">
+                                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/company/mariadb-corporation?trk=company_logo " title="LinkedIn">
+                                    <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <p>Subscribe to our newsletter!</p>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container text-center">
+            <ul class="list-inline no-margin">
+                <li>
+                    <a href="/legal" title="Legal">Legal</a>
+                </li>
+                <li>
+                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                </li>
+                <li>
+                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                </li>
+            </ul>
+            <p>Copyright &copy; 2023 MariaDB. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+
+</html>
