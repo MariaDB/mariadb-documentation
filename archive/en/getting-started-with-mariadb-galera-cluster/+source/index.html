@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/getting-started-with-mariadb-galera-cluster/+r/97940/">97940</a></dd>
+            <dd><a href="/kb/en/getting-started-with-mariadb-galera-cluster/+r/127699/">127699</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2020-07-23 15:42">2020-07-23 15:42</span></dd>
+<span class="datetime" title="2023-07-03 18:42">2023-07-03 18:42</span></dd>
         </dl>
     </div>
     
@@ -303,11 +303,12 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;include slug=&#34;latest-105&#34;&gt;&gt;
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;include slug=&#34;latest-1011&#34;&gt;&gt;
 &lt;&lt;include slug=&#34;latest-galera-wsrep&#34;&gt;&gt;
 
 &lt;&lt;style class=&#34;greenbox&#34;&gt;&gt;
-Currently, MariaDB Galera Cluster only supports the [[innodb|InnoDB]] storage engine.
+Currently, MariaDB Galera Cluster only supports the [[innodb|InnoDB]] storage engine (although there is
+experimental support for [[myisam|MyISAM]] and, from MariaDB 10.6, [[aria|Aria]]).
 &lt;&lt;/style&gt;&gt;
 
 &lt;&lt;style class=&#34;bluebox&#34;&gt;&gt;
@@ -408,7 +409,7 @@ To make the location of the ##libgalera_smm.so## library in binary tarballs more
 
 === Installing MariaDB Galera Cluster from Source
 
-To install MariaDB Galera Cluster by compiling it from source, you will have to compile both MariaDB Server and the Galera wsrep provider library. For some information on how to do this, see the pages at [[installing-galera-from-source|Installing Galera From Source]]. The pages at [[compiling-mariadb-from-source|Compiling MariaDB From Source]] and [[https://galeracluster.com/library/documentation/install-mysql-src.html#building-galera-cluster-for-mysql|Galera Cluster Documentation: Building Galera Cluster for MySQL]] may also be helpful. When compiling MariaDB 10.1 or earlier and you want to enable Galera Cluster support, be sure to set set ##-DWITH_WSREP=ON## and ##-DWITH_INNODB_DISALLOW_WRITES=ON## when running [[generic-build-instructions/#using-cmake|cmake]]. When compiling MariaDB 10.2 or later, it is enabled by default.
+To install MariaDB Galera Cluster by compiling it from source, you will have to compile both MariaDB Server and the Galera wsrep provider library. For some information on how to do this, see the pages at [[installing-galera-from-source|Installing Galera From Source]]. The pages at [[compiling-mariadb-from-source|Compiling MariaDB From Source]] and [[https://galeracluster.com/library/documentation/install-mysql-src.html#building-galera-cluster-for-mysql|Galera Cluster Documentation: Building Galera Cluster for MySQL]] may also be helpful.
 
 == Configuring MariaDB Galera Cluster
 
@@ -416,17 +417,17 @@ A number of options need to be set in order for Galera Cluster to work when usin
 
 == Bootstrapping a New Cluster
 
-To first node of a new cluster needs to be bootstrapped by starting ##[[mysqld-options|mysqld]]## on that node with the option ##[[mysqld-options/#-wsrep-new-cluster|--wsrep-new-cluster]]## option. This option tells the node that there is no existing cluster to connect to. The node will create a new UUID to identify the new cluster.
+To first node of a new cluster needs to be bootstrapped by starting [[mariadbd-options|mariadbd]] on that node with the option ##[[mariadbd-options/#-wsrep-new-cluster|--wsrep-new-cluster]]## option. This option tells the node that there is no existing cluster to connect to. The node will create a new UUID to identify the new cluster.
 
-Do not use the ##[[mysqld-options/#-wsrep-new-cluster|--wsrep-new-cluster]]## option when connecting to an existing cluster. Restarting the node with this option set will cause the node to create new UUID to identify the cluster again, and the node won&#39;t reconnect to the old cluster. See the next section about how to reconnect to an existing cluster.
+Do not use the [[mariadbd-options/#-wsrep-new-cluster|--wsrep-new-cluster]] option when connecting to an existing cluster. Restarting the node with this option set will cause the node to create new UUID to identify the cluster again, and the node won&#39;t reconnect to the old cluster. See the next section about how to reconnect to an existing cluster.
 
-For example, if you were manually starting ##[[mysqld-options|mysqld]]## on a node, then you could bootstrap it by executing the following:
+For example, if you were manually starting [[mariadbd-options|mariadbd]] on a node, then you could bootstrap it by executing the following:
 
 &lt;&lt;code&gt;&gt;
-$ mysqld --wsrep-new-cluster
+$ mariadbd --wsrep-new-cluster
 &lt;&lt;/code&gt;&gt;
 
-However, keep in mind that most users are not going to be starting ##[[mysqld-options|mysqld]]## manually. Instead, most users will use a [[starting-and-stopping-mariadb-starting-and-stopping-mariadb|service manager]] to start ##[[mysqld-options|mysqld]]##. See the following sections on how to bootstrap a node with the most common service managers.
+However, keep in mind that most users are not going to be starting [[mariadbd-options|mariadbd]] manually. Instead, most users will use a [[starting-and-stopping-mariadb-starting-and-stopping-mariadb|service manager]] to start [[mariadbd-options|mariadbd]]. See the following sections on how to bootstrap a node with the most common service managers.
 
 === Systemd and Bootstrapping
 
@@ -436,7 +437,7 @@ On operating systems that use [[systemd]], a node can be bootstrapped in the fol
 $ galera_new_cluster
 &lt;&lt;/code&gt;&gt;
 
-This wrapper uses [[systemd]] to run ##[[mysqld-options|mysqld]]## with the ##[[mysqld-options/#-wsrep-new-cluster|--wsrep-new-cluster]]## option.
+This wrapper uses [[systemd]] to run [[mariadbd-options|mariadbd]] with the [[mariadbd-options/#-wsrep-new-cluster|--wsrep-new-cluster]] option.
 
 If you are using the [[systemd]] service that supports the [[systemd/#interacting-with-multiple-mariadb-server-processes|systemd service&#39;s method for interacting with multiple MariaDB Server processes]], then you can bootstrap a specific instance by specifying the instance name as a suffix. For example:
 
@@ -444,9 +445,7 @@ If you are using the [[systemd]] service that supports the [[systemd/#interactin
 $ galera_new_cluster mariadb@node1
 &lt;&lt;/code&gt;&gt;
 
-&lt;&lt;product mariadb from=10.1.8&gt;&gt;
 Systemd support and the galera_new_cluster script were added in MariaDB 10.1.
-&lt;&lt;/product&gt;&gt;
 
 === SysVinit and Bootstrapping
 
@@ -456,7 +455,7 @@ On operating systems that use [[sysVinit|sysVinit]], a node can be bootstrapped 
 $ service mysql bootstrap
 &lt;&lt;/code&gt;&gt;
 
-This runs ##[[mysqld-options|mysqld]]## with the ##[[mysqld-options/#-wsrep-new-cluster|--wsrep-new-cluster]]## option.
+This runs [[mariadbd-options|mariadbd]] with the ##[[mariadbd-options/#-wsrep-new-cluster|--wsrep-new-cluster]]## option.
 
 == Adding Another Node to a Cluster
 
@@ -476,7 +475,7 @@ Once all members agree on the membership, the cluster&#39;s state will be exchan
 
 If you shut down all nodes at the same time, then you have effectively terminated the cluster. Of course, the cluster&#39;s data still exists, but the running cluster no longer exists. When this happens, you&#39;ll need to bootstrap the cluster again.
 
-If the cluster is not bootstrapped and ##[[mysqld-options|mysqld]]## on the first node is just [[starting-and-stopping-mariadb-starting-and-stopping-mariadb|started normally]], then the node willl try to connect to at least one of the nodes listed in the ##[[galera-cluster-system-variables/#wsrep_cluster_address|wsrep_cluster_address]]## option. If no nodes are currently running, then this will fail. Bootstrapping the first node solves this problem.
+If the cluster is not bootstrapped and [[mariadbd-options|mariadbd]] on the first node is just [[starting-and-stopping-mariadb-starting-and-stopping-mariadb|started normally]], then the node willl try to connect to at least one of the nodes listed in the ##[[galera-cluster-system-variables/#wsrep_cluster_address|wsrep_cluster_address]]## option. If no nodes are currently running, then this will fail. Bootstrapping the first node solves this problem.
 
 === Determining the Most Advanced Node
 
@@ -487,7 +486,7 @@ If you know for sure which node is the most advanced you can edit the ##grastate
 You can determine which node is the most advanced by checking ##grastate.dat## on each node and looking for the node with the highest ##seqno##. If the node crashed and ##seqno=-1##, then you can find the most advanced node by recovering the ##seqno## on each node with the ##[[galera-cluster-system-variables/#wsrep_recover|wsrep_recover]]## option. For example:
 
 &lt;&lt;code&gt;&gt;
-$ mysqld --wsrep_recover
+$ mariadbd --wsrep_recover
 &lt;&lt;/code&gt;&gt;
 
 ==== Systemd and Galera Recovery
@@ -504,15 +503,13 @@ If you are using the ##[[systemd]]## service that supports the [[systemd/#intera
 $ galera_recovery mariadb@node1
 &lt;&lt;/code&gt;&gt;
 
-The ##galera_recovery## script recovers the position of a node by running ##[[mysqld-options|mysqld]]## with the ##[[galera-cluster-system-variables/#wsrep_recover|wsrep_recover]]## option.
+The ##galera_recovery## script recovers the position of a node by running [[mariadbd-options|mariadbd]] with the ##[[galera-cluster-system-variables/#wsrep_recover|wsrep_recover]]## option.
 
-When the ##galera_recovery## script runs ##[[mysqld-options|mysqld]]##, it does not write to the [[error-log|error log]]. Instead, it redirects ##[[mysqld-options|mysqld]]## log output to a file named with the format ##/tmp/wsrep_recovery.XXXXXX##, where ##XXXXXX## is replaced with random characters.
+When the ##galera_recovery## script runs [[mariadbd-options|mariadbd]], it does not write to the [[error-log|error log]]. Instead, it redirects [[mariadbd-options|mariadbd]] log output to a file named with the format ##/tmp/wsrep_recovery.XXXXXX##, where ##XXXXXX## is replaced with random characters.
 
-When Galera is enabled, MariaDB&#39;s ##[[systemd]]## service automatically runs the ##galera_recovery## script prior to starting MariaDB, so that MariaDB starts with the proper Galera position.
+When Galera is enabled, MariaDB&#39;s [[systemd]] service automatically runs the ##galera_recovery## script prior to starting MariaDB, so that MariaDB starts with the proper Galera position.
 
-&lt;&lt;product mariadb from=10.1.8&gt;&gt;
-Support for ##[[systemd]]## and the ##galera_recovery## script were added in MariaDB 10.1.
-&lt;&lt;/product&gt;&gt;
+Support for [[systemd]] and the ##galera_recovery## script were added in MariaDB 10.1.
 
 == State Snapshot Transfers (SSTs)
 
