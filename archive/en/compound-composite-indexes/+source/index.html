@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/compound-composite-indexes/+r/49542/">49542</a></dd>
+            <dd><a href="/kb/en/compound-composite-indexes/+r/127760/">127760</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2016-11-14 19:15">2016-11-14 19:15</span></dd>
+<span class="datetime" title="2023-07-11 11:17">2023-07-11 11:17</span></dd>
         </dl>
     </div>
     
@@ -312,7 +312,7 @@ This document starts out trivial and perhaps boring, but builds up to more inter
 
 This also explains [[explain|EXPLAIN]] (to some extent).
 
-(Most of this applies to non-MySQL brands of databases, too.)
+(Most of this applies to other databases, too.)
 
 == The query to discuss
 The question is &#34;When was Andrew Johnson president of the US?&#34;.
@@ -353,7 +353,7 @@ Some INDEXes to try...
 == No indexes
 Well, I am fudging a little here. I have a PRIMARY KEY on `seq`, but that has no advantage on the query we are studying.
 &lt;&lt;code&gt;&gt;
-mysql&gt;  SHOW CREATE TABLE Presidents \G
+SHOW CREATE TABLE Presidents \G
 CREATE TABLE `presidents` (
   `seq` tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
   `last_name` varchar(30) NOT NULL,
@@ -362,10 +362,10 @@ CREATE TABLE `presidents` (
   PRIMARY KEY (`seq`)
 ) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8
 
-mysql&gt;  EXPLAIN  SELECT  term
-            FROM  Presidents
-            WHERE  last_name = &#39;Johnson&#39;
-              AND  first_name = &#39;Andrew&#39;;
+EXPLAIN  SELECT  term
+   FROM  Presidents
+   WHERE  last_name = &#39;Johnson&#39;
+   AND  first_name = &#39;Andrew&#39;;
 +----+-------------+------------+------+---------------+------+---------+------+------+-------------+
 | id | select_type | table      | type | possible_keys | key  | key_len | ref  | rows | Extra       |
 +----+-------------+------------+------+---------------+------+---------+------+------+-------------+
@@ -385,7 +385,7 @@ possible_keys: NULL
         Extra: Using where
 &lt;&lt;/code&gt;&gt;
 
-== Implementation details
+== Implementation Details
 First, let&#39;s describe how InnoDB stores and uses indexes.
 *The data and the PRIMARY KEY are &#34;clustered&#34; together in on BTree.
 *A BTree lookup is quite fast and efficient. For a million-row table there might be 3 levels of BTree, and the top two levels are probably cached.
@@ -398,7 +398,7 @@ For MyISAM, the PRIMARY KEY is not stored with the data, so think of it as being
 == INDEX(first_name), INDEX(last_name)
 The novice, once he learns about indexing, decides to index lots of columns, one at a time. But...
 
-MySQL rarely uses more than one index at a time in a query. So, it will analyze the possible indexes.
+MariaDB rarely uses more than one index at a time in a query. So, it will analyze the possible indexes.
 *first_name -- there are 2 possible rows (one BTree lookup, then scan consecutively)
 *last_name -- there are 2 possible rows
 Let&#39;s say it picks last_name. Here are the steps for doing the SELECT:
@@ -408,10 +408,10 @@ Let&#39;s say it picks last_name. Here are the steps for doing the SELECT:
     4.  Use the rest of the WHERE clause filter out all but the desired row.
     5.  Deliver the answer (1865-1869).
 &lt;&lt;code&gt;&gt;
-mysql&gt;  EXPLAIN  SELECT  term
-            FROM  Presidents
-            WHERE  last_name = &#39;Johnson&#39;
-              AND  first_name = &#39;Andrew&#39;  \G
+EXPLAIN  SELECT  term
+  FROM  Presidents
+  WHERE  last_name = &#39;Johnson&#39;
+  AND  first_name = &#39;Andrew&#39;  \G
   select_type: SIMPLE
         table: Presidents
          type: ref
@@ -424,7 +424,7 @@ possible_keys: last_name, first_name
 &lt;&lt;/code&gt;&gt;
 
 == &#34;Index Merge Intersect&#34;
-OK, so you get really smart and decide that MySQL should be smart enough to use both name indexes to get the answer. This is called &#34;Intersect&#34;.
+OK, so you get really smart and decide that MariaDB should be smart enough to use both name indexes to get the answer. This is called &#34;Intersect&#34;.
     1.  Using INDEX(last_name), find 2 index entries with last_name = &#39;Johnson&#39;; get (7, 17)
     2.  Using INDEX(first_name), find 2 index entries with first_name = &#39;Andrew&#39;; get (17, 36)
     3.  &#34;And&#34; the two lists together (7,17) &amp; (17,36) = (17)

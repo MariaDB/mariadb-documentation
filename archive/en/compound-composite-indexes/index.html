@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2016-11-14 19:15">6 years, 7 months ago</span></dd>
+<span class="datetime" title="2023-07-11 11:17">4 hours, 43 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -387,7 +387,7 @@
         <h2 class="anchored_heading" id="a-mini-lesson-in-compound-indexes-composite-indexes">A mini-lesson in "compound indexes" ("composite indexes")</h2>
 <p>This document starts out trivial and perhaps boring, but builds up to more interesting information, perhaps things you did not realize about how MariaDB and MySQL indexing works.</p>
 <p>This also explains <a href="/kb/en/explain/">EXPLAIN</a> (to some extent).</p>
-<p>(Most of this applies to non-MySQL brands of databases, too.)</p>
+<p>(Most of this applies to other databases, too.)</p>
 <h2 class="anchored_heading" id="the-query-to-discuss">The query to discuss</h2>
 <p>The question is "When was Andrew Johnson president of the US?".</p>
 <p>The available table `Presidents` looks like:</p>
@@ -419,7 +419,7 @@
 </li></ul>
 <h2 class="anchored_heading" id="no-indexes">No indexes</h2>
 <p>Well, I am fudging a little here. I have a PRIMARY KEY on `seq`, but that has no advantage on the query we are studying.</p>
-<pre class="fixed">mysql&gt;  SHOW CREATE TABLE Presidents \G
+<pre class="fixed">SHOW CREATE TABLE Presidents \G
 CREATE TABLE `presidents` (
   `seq` tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
   `last_name` varchar(30) NOT NULL,
@@ -428,10 +428,10 @@ CREATE TABLE `presidents` (
   PRIMARY KEY (`seq`)
 ) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8
 
-mysql&gt;  EXPLAIN  SELECT  term
-            FROM  Presidents
-            WHERE  last_name = 'Johnson'
-              AND  first_name = 'Andrew';
+EXPLAIN  SELECT  term
+   FROM  Presidents
+   WHERE  last_name = 'Johnson'
+   AND  first_name = 'Andrew';
 +----+-------------+------------+------+---------------+------+---------+------+------+-------------+
 | id | select_type | table      | type | possible_keys | key  | key_len | ref  | rows | Extra       |
 +----+-------------+------------+------+---------------+------+---------+------+------+-------------+
@@ -449,7 +449,7 @@ possible_keys: NULL
           ref: NULL
          rows: 44         &lt;-- That's about how many rows in the table, so table scan
         Extra: Using where
-</pre><h2 class="anchored_heading" id="implementation-details">Implementation details</h2>
+</pre><h2 class="anchored_heading" id="implementation-details">Implementation Details</h2>
 <p>First, let's describe how InnoDB stores and uses indexes.</p>
 <ul><li>The data and the PRIMARY KEY are "clustered" together in on BTree.
 </li><li>A BTree lookup is quite fast and efficient. For a million-row table there might be 3 levels of BTree, and the top two levels are probably cached.
@@ -460,7 +460,7 @@ possible_keys: NULL
 <p>For MyISAM, the PRIMARY KEY is not stored with the data, so think of it as being a secondary key (over-simplified).</p>
 <h2 class="anchored_heading" id="indexfirst_name-indexlast_name">INDEX(first_name), INDEX(last_name)</h2>
 <p>The novice, once he learns about indexing, decides to index lots of columns, one at a time. But...</p>
-<p>MySQL rarely uses more than one index at a time in a query. So, it will analyze the possible indexes.</p>
+<p>MariaDB rarely uses more than one index at a time in a query. So, it will analyze the possible indexes.</p>
 <ul><li>first_name -- there are 2 possible rows (one BTree lookup, then scan consecutively)
 </li><li>last_name -- there are 2 possible rows
 Let's say it picks last_name. Here are the steps for doing the SELECT:
@@ -470,10 +470,10 @@ Let's say it picks last_name. Here are the steps for doing the SELECT:
     4.  Use the rest of the WHERE clause filter out all but the desired row.
     5.  Deliver the answer (1865-1869).
 </li></ul>
-<pre class="fixed">mysql&gt;  EXPLAIN  SELECT  term
-            FROM  Presidents
-            WHERE  last_name = 'Johnson'
-              AND  first_name = 'Andrew'  \G
+<pre class="fixed">EXPLAIN  SELECT  term
+  FROM  Presidents
+  WHERE  last_name = 'Johnson'
+  AND  first_name = 'Andrew'  \G
   select_type: SIMPLE
         table: Presidents
          type: ref
@@ -484,7 +484,7 @@ possible_keys: last_name, first_name
          rows: 2                  &lt;-- Two 'Johnson's
         Extra: Using where
 </pre><h2 class="anchored_heading" id="index-merge-intersect">"Index Merge Intersect"</h2>
-<p>OK, so you get really smart and decide that MySQL should be smart enough to use both name indexes to get the answer. This is called "Intersect".
+<p>OK, so you get really smart and decide that MariaDB should be smart enough to use both name indexes to get the answer. This is called "Intersect".
     1.  Using INDEX(last_name), find 2 index entries with last_name = 'Johnson'; get (7, 17)
     2.  Using INDEX(first_name), find 2 index entries with first_name = 'Andrew'; get (17, 36)
     3.  "And" the two lists together (7,17) &amp; (17,36) = (17)
