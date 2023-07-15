@@ -251,12 +251,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-05-21 21:54">1 month, 2 weeks ago</span></dd>
+<span class="datetime" title="2023-05-21 21:54">1 month, 3 weeks ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-06-06 08:34">1 month ago</span></dd>
+<span class="datetime" title="2023-07-15 14:17">1 hour, 43 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -400,7 +400,7 @@
 
     <li class=""><a href="#new-storage-layout" title="New Storage Layout">New Storage Layout</a></li>
 
-    <li class=""><a href="#catalog-sql-commands" title="Catalog SQL commands">Catalog SQL commands</a></li>
+    <li class=""><a href="#catalog-sql-commandsfunctions" title="Catalog SQL commands/functions">Catalog SQL commands/functions</a></li>
 
     <li class=""><a href="#changes-needed-in-mariadb-code-base" title="Changes needed in MariaDB code base">Changes needed in MariaDB code base</a></li>
 
@@ -416,10 +416,13 @@
 
     <li class=""><a href="#migration-of-one-catalog-user-to-another-mariadb-server" title="Migration of one catalog user to another MariaDB server">Migration of one catalog user to another MariaDB server</a></li>
 
-    <li class=""><a href="#other-things" title="Other Things">Other Things</a> </ol>
+    <li class=""><a href="#other-things" title="Other Things">Other Things</a></li>
+
+    <li class=""><a href="#see-also" title="See also">See also</a> </ol>
 </li>
 </div>
-<div class="cstm-style greenbox"><p>Catalogs are an upcoming feature that will be included in a future release of MariaDB. The MariaDB catalogs will be a multi-tenancy feature where a single instance MariaDB server handles multiple independent tenants (customers), who have their own users, schemas etc.</p>
+<div class="cstm-style greenbox"><p>Catalogs are an upcoming feature that will be included in a future release of MariaDB. The MariaDB catalogs will be a multi-tenancy feature where a single instance MariaDB server handles multiple independent tenants (customers), who have their own users, schemas etc.
+See <a href="https://jira.mariadb.org/browse/MDEV-31542">MDEV-31542</a> "Add multi-tenancy catalogs to MariaDB" for details.</p>
 </div><h2 class="anchored_heading" id="background">Background</h2>
 <p>For hosting providers, a common solution, to drive down cost, is to have one MariaDB server support several different customers by creating one named schema for each of them.</p>
 <p>This has however a lot of limitations:</p>
@@ -529,12 +532,14 @@ the following new data structure:</p>
 </li><li>Each catalog has their own users, privilege tables, databases, error log and general logs
 </li></ul>
 <p>The MariaDB server will automatically start in catalog mode if it notices the new directory structure.</p>
-<h2 class="anchored_heading" id="catalog-sql-commands">Catalog SQL commands</h2>
-<ul start="1"><li>CREATE CATALOG
+<h2 class="anchored_heading" id="catalog-sql-commandsfunctions">Catalog SQL commands/functions</h2>
+<ul start="1"><li>USE CATALOG catalog_name;
+</li><li>CREATE CATALOG
 </li><li>DROP CATALOG
 </li><li>ALTER CATALOG
 </li><li>SHOW CATALOGS (and also information_schema.catalogs)
-</li><li>SHOW CREATE CATALOG
+</li><li>SHOW CREATE CATALOG catalog_name;
+</li><li>SELECT CATALOG();
 </li></ul>
 <h2 class="anchored_heading" id="changes-needed-in-mariadb-code-base">Changes needed in MariaDB code base</h2>
 <p>Client changes:</p>
@@ -555,10 +560,11 @@ the following new data structure:</p>
 <p>Changes to mysql-test-run:</p>
 <ul start="1"><li>Add support of running tests with catalogs (normal tests are run without catalogs)
 </li></ul>
-<p> Changes to MariaDB server</p>
+<p> Changes to MariaDB server (See <a href="https://jira.mariadb.org/browse/MDEV-31542">MDEV-31542</a>):</p>
 <ul start="1"><li>Add support for 'catalog' in the connection string.  For old clients, the user can specify the catalog as part of the database. If catalog is not specified, the 'def' catalog (like now) is assumed.
 </li><li>Add CATALOG() function that returns the current catalog.
 </li><li>Add ‘USE CATALOG xxx’
+</li><li>Add 'USE DATABASE xxx'
 </li><li>Create a global CATALOG object to hold all information related to the catalog.
 </li><li>Add the current catalog to the 'thd' object.
 </li><li>Add catalog argument to all functions that take 'database' as an argument.
@@ -650,7 +656,10 @@ con.connect(function(err) {
 <p>This procedure will be a bit easier after an in-the-works patch for InnoDB related to IMPORT will be pushed. (Should happen before we start on the catalog project)</p>
 <h2 class="anchored_heading" id="other-things">Other Things</h2>
 <ul start="1"><li>Drizzle’s default catalog was called "local". MariaDB’s default will be called ‘def’, as this is what we already have as the default catalog in information_schema, in current connectors and other places.
-</li><li>CONNECT engine will need testing against catalogs and maybe a small code change to support them. It could also be a way to join from one catalog to another.</li></ul>
+</li><li>CONNECT engine will need testing against catalogs and maybe a small code change to support them. It could also be a way to join from one catalog to another.
+</li></ul>
+<h2 class="anchored_heading" id="see-also">See also</h2>
+<ul start="1"><li><a href="https://jira.mariadb.org/browse/MDEV-31542">MDEV-31542</a> Add multi-tenancy catalogs to MariaDB</li></ul>
 
     </div>
 
@@ -733,6 +742,33 @@ con.connect(function(err) {
                         <a href="/kb/en/starting-with-catalogs/">
                             
                             Starting with Catalogs
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/catalog-status-variables/">
+                            
+                            Catalog status variables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/changing-catalog/">
+                            
+                            Changing Catalog
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/drop-catalog/">
+                            
+                            DROP CATALOG
                         </a>
                     </li>
                 
