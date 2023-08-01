@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-maxscale-6-mariadb-maxscale-configuration-guide/+r/126242/">126242</a></dd>
+            <dd><a href="/kb/en/mariadb-maxscale-6-mariadb-maxscale-configuration-guide/+r/128205/">128205</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1">
@@ -1625,10 +1625,12 @@ the requested operation. Leave or set both empty to disable PAM for REST-API.
 - **Default**: No default value
 - **Dynamic**: Yes
 
-This parameter controls which cluster is used to synchronize configuration
-changes between MaxScale instances. By default configuration synchronization is
-not enabled and it must be explicitly enabled by defining a monitor name for
-`config_sync_cluster`.
+This parameter controls which cluster (i.e. monitor) is used to synchronize
+configuration changes between MaxScale instances. The first server labeled
+`Master` will be used for the synchronization.
+
+By default configuration synchronization is not enabled and it must be
+explicitly enabled by defining a monitor name for `config_sync_cluster`.
 
 When `config_sync_cluster` is defined, `config_sync_user` and
 `config_sync_password` must also be defined.
@@ -1657,12 +1659,13 @@ grants must be adjusted to target that database instead.
 
 ### `config_sync_password`
 
-- **Type**: string
+- **Type**: password
 - **Default**: No default value
 - **Dynamic**: Yes
 
 The password for `config_sync_user`. Both this parameter and `config_sync_user`
-are required if `config_sync_cluster` is configured.
+are required if `config_sync_cluster` is configured. This password can
+optionally be encrypted using `maxpasswd`.
 
 ### `config_sync_db`
 
@@ -1923,15 +1926,6 @@ does not start with the number 5, a 5.5.5- prefix will be added to it. This
 means that a _version_string_ value of _MaxScale-Service_ would result in a
 _5.5.5-MaxScale-Service_ being sent to the client.
 
-### `weightby`
-
-This parameter has been removed. Server weights were deprecated in
-MaxScale 2.3.2 and removed in MaxScale 2.5.0. The feature has been
-replaced with the [`rank`](#rank) mechanism.
-
-If this value is found in the MaxScale configuration, a warning is logged
-and the value is ignored.
-
 ### `auth_all_servers`
 
 - **Type**: [boolean](#booleans)
@@ -2089,13 +2083,21 @@ max_connections=100
 - **Default**: false
 - **Dynamic**: Yes
 
-Enable or disable session transaction state tracking by offloading it to the backend servers.
-Getting current session transaction state from server side will be more accurate for that state
-inside stored procedures or prepare statments will be handle properly, and that is also faster
-as no parsing is needed on MaxScale.
+Enable transaction state tracking by offloading it to the backend servers.
+Getting the transaction state from the server will be more accurate for stored
+procedures or multi-statement SQL that modifies the transaction state
+non-atomically.
 
-This is only supported by MariaDB versions 10.3 or newer. Default is false.
-The following Server side config is needed too.
+In general, it is better to avoid using this type of SQL as tracking the
+transaction state via the server responses is not compatible with features such
+as `transaction_replay` in readwritesplit. `session_track_trx_state` should only
+be enabled if the default transaction tracking done by MaxScale does not produce
+the desired outcome.
+
+This is only supported by MariaDB versions 10.3 or newer. The following must be
+configured in the MariaDB server in order for this feature to work. Not
+configuring the MariaDB server with it can result in the transaction state being
+wrong in MaxScale which can result in data inconsistency.
 
 ```
 session_track_state_change = ON
@@ -2727,8 +2729,7 @@ if the disk space situation should be monitored.
 
 This parameter controls the order in which servers are used. Valid values for
 this parameter are `primary` and `secondary`. The default value is
-`primary`. This parameter replaces the use of the `weightby` parameter as the
-primary means of controlling server usage.
+`primary`.
 
 This behavior depends on the router implementation but the general rule of thumb
 is that primary servers will be used before secondary servers.
@@ -3213,7 +3214,7 @@ API. **Only do this if you know what you are doing.**
 
 ## Filter Modules
 
-![image alt text](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/6.4.7/Documentation/Getting-Started/images/image_10.png)
+![image alt text](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/6.4.8/Documentation/Getting-Started/images/image_10.png)
 
 Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
@@ -3306,10 +3307,10 @@ servers must be the same in every configuration.
 
 Whenever the MaxScale configuration is modified at runtime, the latest
 configuration is stored in the database cluster in the `mysql.maxscale_config`
-table. A local copy of the configuration is stored in the data directory to
-allow MaxScale to function even if a connection to the cluster cannot be
-made. By default this file is stored at
-`/var/lib/maxscale/maxscale-config.json`.
+table. The table is created when the first modification to the configuration is
+done. A local copy of the configuration is stored in the data directory to allow
+MaxScale to function even if a connection to the cluster cannot be made. By
+default this file is stored at `/var/lib/maxscale/maxscale-config.json`.
 
 Whenever MaxScale starts up, it checks if a local version of this configuration
 exists. If it does and it is a valid cached configuration, the static
