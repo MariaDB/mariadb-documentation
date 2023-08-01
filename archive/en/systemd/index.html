@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-05-30 11:52">2 months ago</span></dd>
+<span class="datetime" title="2023-08-01 11:25">4 hours, 40 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -419,7 +419,7 @@
 </li></ul>
 <p>MariaDB's <code>systemd</code> unit file is included in the server packages for <a href="/kb/en/rpm/">RPMs</a> and <a href="/kb/en/installing-mariadb-deb-files/">DEBs</a>. It is also included in certain <a href="/kb/en/installing-mariadb-binary-tarballs/">binary tarballs</a>.</p>
 <p>The service name is <code>mariadb.service</code>.</p>
-<p>When MariaDB is started with the <code>systemd</code> unit file, it directly starts the <code><a href="/kb/en/mysqld-options/">mysqld</a></code> process as the <code>mysql</code> user. Unlike with <code><a href="/kb/en/sysvinit/">sysVinit</a></code>, the <code><a href="/kb/en/mysqld-options/">mysqld</a></code> process is not started with <code><a href="/kb/en/mysqld_safe/">mysqld_safe</a></code>. As a consequence, options will not be read from the <code>[mysqld_safe]</code> <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> from <a href="/kb/en/configuring-mariadb-with-option-files/">option files</a>.</p>
+<p>When MariaDB is started with the <code>systemd</code> unit file, it directly starts the <code><a href="/kb/en/mariadbd-options/">mariadbd</a></code> process as the <code>mysql</code> user. Unlike with <code><a href="/kb/en/sysvinit/">sysVinit</a></code>, the <code><a href="/kb/en/mariadbd-options/">mariadbd</a></code> process is not started with <code><a href="/kb/en/mysqld_safe/">mysqld_safe</a></code>. As a consequence, options will not be read from the <code>[mysqld_safe]</code> <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> from <a href="/kb/en/configuring-mariadb-with-option-files/">option files</a>.</p>
 <div class="table_of_contents well well-small">
 <h3>Contents</h3>
  <ol class="toc">
@@ -513,9 +513,7 @@
 
     <li class=""><a href="#systemd-journal" title="Systemd Journal">Systemd Journal</a></li>
 
-    <li class=""><a href="#converting-mysqld_safe-options-to-systemd-options" title="Converting mysqld_safe Options to Systemd Options">Converting mysqld_safe Options to Systemd Options</a></li>
-
-    <li class=""><a href="#known-issues" title="Known Issues">Known Issues</a> </ol>
+    <li class=""><a href="#converting-mysqld_safe-options-to-systemd-options" title="Converting mysqld_safe Options to Systemd Options">Converting mysqld_safe Options to Systemd Options</a> </ol>
 </li>
 </div>
 <h2 class="anchored_heading" id="contents-of-the-mariadb-services-unit-file">Contents of the MariaDB Service's Unit File</h2>
@@ -528,7 +526,7 @@
 </pre><h3 class="anchored_heading" id="starting-the-mariadb-server-process">Starting the MariaDB Server Process</h3>
 <p>MariaDB's <code>systemd</code> service can be started by executing the following:</p>
 <pre class="fixed">sudo systemctl start mariadb.service
-</pre><p>MariaDB's <code>systemd</code> unit file has a default startup timeout of about 90 seconds on most systems. If certain startup tasks, such as crash recovery, take longer than this default startup timeout, then <code>systemd</code> will assume that <code>mysqld</code> has failed to startup, which causes <code>systemd</code> to kill the <code>mysqld</code> process. To work around this, you can reconfigure the MariaDB <code>systemd</code> unit to have an <a href="#configuring-the-systemd-service-timeout">infinite timeout</a>.</p>
+</pre><p>MariaDB's <code>systemd</code> unit file has a default startup timeout of about 90 seconds on most systems. If certain startup tasks, such as crash recovery, take longer than this default startup timeout, then <code>systemd</code> will assume that <code>mariadbd</code> has failed to startup, which causes <code>systemd</code> to kill the <code>mariadbd</code> process. To work around this, you can reconfigure the MariaDB <code>systemd</code> unit to have an <a href="#configuring-the-systemd-service-timeout">infinite timeout</a>.</p>
 <p>Note that <a href="https://lists.freedesktop.org/archives/systemd-devel/2017-December/039996.html">systemd 236 added the <code>EXTEND_TIMEOUT_USEC</code> environment variable</a> that allows services to extend the startup timeout during long-running processes. Starting with <a href="/kb/en/mariadb-10133-release-notes/">MariaDB 10.1.33</a>, <a href="/kb/en/mariadb-10215-release-notes/">MariaDB 10.2.15</a>, and <a href="/kb/en/mariadb-1036-release-notes/">MariaDB 10.3.6</a>, on systems with systemd versions that support it, MariaDB uses this feature to extend the startup timeout during certain startup processes that can run long. Therefore, if you are using <code>systemd</code> 236 or later, then you should not need to manually override <code>TimeoutStartSec</code>, even if your startup tasks, such as crash recovery, run for longer than the configured value. See <a href="https://jira.mariadb.org/browse/MDEV-14705">MDEV-14705</a> for more information.</p>
 <h3 class="anchored_heading" id="stopping-the-mariadb-server-process">Stopping the MariaDB Server Process</h3>
 <p>MariaDB's <code>systemd</code> service can be stopped by executing the following:</p>
@@ -556,7 +554,7 @@ ConditionPathExists=
 [Service]
 Environment='MYSQLD_MULTI_INSTANCE=--defaults-file=/etc/my%I.cnf'
 </pre><h4 class="anchored_heading" id="custom-configuration-of-multiple-instances-in-104-and-later">Custom configuration of Multiple Instances in 10.4 and Later</h4>
-<p>Because users may want to do many various things with their multiple instances, we've provided a way to let the user define how they wish their multiple instances to run. The systemd environment variable <code>MYSQLD_MULTI_INSTANCE</code> can be set to anything that <a href="/kb/en/mariadbd/">mysqld</a> and <a href="/kb/en/mariadb-install-db/">mariadb-install-db</a> will recognise.</p>
+<p>Because users may want to do many various things with their multiple instances, we've provided a way to let the user define how they wish their multiple instances to run. The systemd environment variable <code>MYSQLD_MULTI_INSTANCE</code> can be set to anything that <a href="/kb/en/mariadbd/">mariadbd</a> and <a href="/kb/en/mariadb-install-db/">mariadb-install-db</a> will recognise.</p>
 <p>A hosting environment where each user has their own instance may look like 
 (with <code>sudo systemctl edit mariadb@.service</code>):</p>
 <pre class="fixed">[Service]
@@ -583,7 +581,7 @@ Environment='MYSQLD_MULTI_INSTANCE=--defaults-file=/home/%I/my.cnf \
 <h3 class="anchored_heading" id="recovering-a-nodes-cluster-position">Recovering a Node's Cluster Position</h3>
 <p>When using <a href="/kb/en/galera/">Galera Cluster</a> with systemd, a node's position in the cluster can be recovered with <code>galera_recovery</code>. See <a href="/kb/en/getting-started-with-mariadb-galera-cluster/#determining-the-most-advanced-node">Getting Started with MariaDB Galera Cluster: Determining the Most Advanced Node</a> for more information.</p>
 <h3 class="anchored_heading" id="ssts-and-systemd">SSTs and Systemd</h3>
-<p>MariaDB's <code>systemd</code> unit file has a default startup timeout of about 90 seconds on most systems. If an SST takes longer than this default startup timeout on a joiner node, then <code>systemd</code> will assume that <code>mysqld</code> has failed to startup, which causes <code>systemd</code> to kill the <code>mysqld</code> process on the joiner node. To work around this, you can reconfigure the MariaDB <code>systemd</code> unit to have an <a href="#configuring-the-systemd-service-timeout">infinite timeout</a>. See <a href="/kb/en/introduction-to-state-snapshot-transfers-ssts/#ssts-and-systemd">Introduction to State Snapshot Transfers (SSTs): SSTs and Systemd</a> for more information.</p>
+<p>MariaDB's <code>systemd</code> unit file has a default startup timeout of about 90 seconds on most systems. If an SST takes longer than this default startup timeout on a joiner node, then <code>systemd</code> will assume that <code>mariadbd</code> has failed to startup, which causes <code>systemd</code> to kill the <code>mariadbd</code> process on the joiner node. To work around this, you can reconfigure the MariaDB <code>systemd</code> unit to have an <a href="#configuring-the-systemd-service-timeout">infinite timeout</a>. See <a href="/kb/en/introduction-to-state-snapshot-transfers-ssts/#ssts-and-systemd">Introduction to State Snapshot Transfers (SSTs): SSTs and Systemd</a> for more information.</p>
 <p>Note that <a href="https://lists.freedesktop.org/archives/systemd-devel/2017-December/039996.html">systemd 236 added the <code>EXTEND_TIMEOUT_USEC</code> environment variable</a> that allows services to extend the startup timeout during long-running processes. Starting with <a href="/kb/en/mariadb-10135-release-notes/">MariaDB 10.1.35</a>, <a href="/kb/en/mariadb-10217-release-notes/">MariaDB 10.2.17</a>, and <a href="/kb/en/mariadb-1038-release-notes/">MariaDB 10.3.8</a>, on systems with systemd versions that support it, MariaDB uses this feature to extend the startup timeout during long SSTs. Therefore, if you are using <code>systemd</code> 236 or later, then you should not need to manually override <code>TimeoutStartSec</code>, even if your SSTs run for longer than the configured value. See <a href="https://jira.mariadb.org/browse/MDEV-15607">MDEV-15607</a> for more information.</p>
 <h2 class="anchored_heading" id="configuring-the-systemd-service">Configuring the Systemd Service</h2>
 <p>You can configure MariaDB's <code>systemd</code> service by creating a "drop-in" configuration file for the <code>systemd</code> service. On most systems, the <code>systemd</code> service's directory for "drop-in" configuration files is <code>/etc/systemd/system/mariadb.service.d/</code>. You can confirm the directory and see what "drop-in" configuration files are currently loaded by executing:</p>
@@ -597,7 +595,7 @@ Environment='MYSQLD_MULTI_INSTANCE=--defaults-file=/home/%I/my.cnf \
 <pre class="fixed wrap">[Service]
 
 ExecStart=
-ExecStart=/usr/bin/numactl --interleave=all  /usr/sbin/mysqld $MYSQLD_OPTS $_WSREP_NEW_CLUSTER $_WSREP_START_POSITION
+ExecStart=/usr/bin/numactl --interleave=all  /usr/sbin/mariadbd $MYSQLD_OPTS $_WSREP_NEW_CLUSTER $_WSREP_START_POSITION
 </pre><p>After any configuration change, you will need to execute the following for the change to go into effect:</p>
 <pre class="fixed">sudo systemctl daemon-reload
 </pre><h3 class="anchored_heading" id="useful-systemd-options">Useful Systemd Options</h3>
@@ -607,10 +605,10 @@ ExecStart=/usr/bin/numactl --interleave=all  /usr/sbin/mysqld $MYSQLD_OPTS $_WSR
 <tr><td>no option</td><td><code><a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#PrivateDevices=">PrivateDevices=false</a></code></td><td>If any MariaDB storage references raw block devices</td></tr>
 <tr><td>no option</td><td><code><a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#ProtectSystem=">ProtectSystem=</a></code></td><td>If any MariaDB write any files to anywhere under /boot, /usr or /etc</td></tr>
 <tr><td>no option</td><td><code><a href="https://www.freedesktop.org/software/systemd/man/systemd.service.html#TimeoutStartSec=">TimeoutStartSec={time}</a></code></td><td>Service startup timeout. See <a href="#configuring-the-systemd-service-timeout">Configuring the Systemd Service Timeout</a>.</td></tr>
-<tr><td>no option (see <a href="https://jira.mariadb.org/browse/MDEV-9264">MDEV-9264</a>)</td><td><code><a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#OOMScoreAdjust=">OOMScoreAdjust={priority}</a></code></td><td>e.g. -600 to lower priority of OOM killer for mysqld</td></tr>
+<tr><td>no option (see <a href="https://jira.mariadb.org/browse/MDEV-9264">MDEV-9264</a>)</td><td><code><a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#OOMScoreAdjust=">OOMScoreAdjust={priority}</a></code></td><td>e.g. -600 to lower priority of OOM killer for mariadbd</td></tr>
 <tr><td><code><a href="/kb/en/mysqld_safe/#mysqld_safe-options">open-files-limit</a></code></td><td><code><a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#LimitCPU=">LimitNOFILE={limit}</a></code></td><td>Limit on number of open files. See <a href="#configuring-the-open-files-limit">Configuring the Open Files Limit</a>.</td></tr>
 <tr><td><code><a href="/kb/en/mysqld_safe/#mysqld_safe-options">core-file-size</a></code></td><td><code><a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#LimitCPU=">LimitCORE={size}</a></code></td><td>Limit on core file size. Useful when <a href="/kb/en/enabling-core-dumps/">enabling core dumps</a>. See <a href="#configuring-the-core-file-size">Configuring the Core File Size</a>.</td></tr>
-<tr><td></td><td><code><a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#LimitCPU=">LimitMEMLOCK={size}</a></code> or <code>infinity</code></td><td>Limit on how much can be locked in memory. Useful when <a href="/kb/en/server-system-variables/#large_pages">large-pages</a> or <a href="/kb/en/mysqld-options/#-memlock">memlock</a> is used</td></tr>
+<tr><td></td><td><code><a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#LimitCPU=">LimitMEMLOCK={size}</a></code> or <code>infinity</code></td><td>Limit on how much can be locked in memory. Useful when <a href="/kb/en/server-system-variables/#large_pages">large-pages</a> or <a href="/kb/en/mariadbd-options/#-memlock">memlock</a> is used</td></tr>
 <tr><td><code><a href="/kb/en/mysqld_safe/#mysqld_safe-options">nice</a></code></td><td><code><a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Nice=">Nice={nice value}</a></code></td><td></td></tr>
 <tr><td><code><a href="/kb/en/mysqld_safe/#mysqld_safe-options">syslog</a></code></td><td><code><a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#StandardOutput=">StandardOutput=syslog</a></code></td><td>See <a href="#configuring-mariadb-to-write-the-error-log-to-syslog">Configuring MariaDB to Write the Error Log to Syslog</a>.</td></tr>
 <tr><td></td><td><code><a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#StandardError=">StandardError=syslog</a></code></td><td></td></tr>
@@ -621,13 +619,13 @@ ExecStart=/usr/bin/numactl --interleave=all  /usr/sbin/mysqld $MYSQLD_OPTS $_WSR
 <tr><td></td><td>ExecStartPre=/usr/sbin/sysctl -q -w vm.drop_caches=3</td><td></td></tr>
 <tr><td><code><a href="/kb/en/mysqld_safe/#mysqld_safe-options">malloc-lib</a></code></td><td><code><a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Environment=">Environment=LD_PRELOAD=/path/to/library</a></code></td><td></td></tr>
 <tr><td><code><a href="/kb/en/mysqld_safe/#mysqld_safe-options">numa-interleave</a></code></td><td><code><a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#NUMAPolicy=">NUMAPolicy=interleave</a></code></td><td>from systemd v243 onwards</td></tr>
-<tr><td></td><td>or: <code>ExecStart=/usr/bin/numactl --interleave=all /usr/sbin/mysqld $MYSQLD_OPTS $_WSREP_NEW_CLUSTER  $_WSREP_START_POSITION</code></td><td>prepending <code>ExecStart=/usr/bin/numactl --interleave=all</code> to existing <code>ExecStart</code> setting</td></tr>
+<tr><td></td><td>or: <code>ExecStart=/usr/bin/numactl --interleave=all /usr/sbin/mariadbd $MYSQLD_OPTS $_WSREP_NEW_CLUSTER  $_WSREP_START_POSITION</code></td><td>prepending <code>ExecStart=/usr/bin/numactl --interleave=all</code> to existing <code>ExecStart</code> setting</td></tr>
 <tr><td><code><a href="/kb/en/mysqld_safe/#mysqld_safe-options">no-auto-restart</a></code></td><td>Restart={exit-status}</td><td></td></tr>
 </table>
 </div><p>Note: the <code><a href="http://www.freedesktop.org/software/systemd/man/systemd.service.html">systemd</a></code> manual contains the official meanings for these options. The manual also lists considerably more options than the ones listed above.</p>
 <p>There are other options and the <code>mariadb-service-convert</code> script will attempt to convert these as accurately as possible.</p>
 <h3 class="anchored_heading" id="configuring-the-systemd-service-timeout">Configuring the Systemd Service Timeout</h3>
-<p>MariaDB's <code><a href="/kb/en/systemd/">systemd</a></code> unit file has a default startup timeout of about 90 seconds on most systems. If a service startup takes longer than this default startup timeout, then <code>systemd</code> will assume that <code>mysqld</code> has failed to startup, which causes <code>systemd</code> to kill the <code>mysqld</code> process. To work around this, it can be changed by configuring the <code><a href="https://www.freedesktop.org/software/systemd/man/systemd.service.html#TimeoutStartSec=">TimeoutStartSec</a></code> option for the <code>systemd</code> service.</p>
+<p>MariaDB's <code><a href="/kb/en/systemd/">systemd</a></code> unit file has a default startup timeout of about 90 seconds on most systems. If a service startup takes longer than this default startup timeout, then <code>systemd</code> will assume that <code>mariadbd</code> has failed to startup, which causes <code>systemd</code> to kill the <code>mariadbd</code> process. To work around this, it can be changed by configuring the <code><a href="https://www.freedesktop.org/software/systemd/man/systemd.service.html#TimeoutStartSec=">TimeoutStartSec</a></code> option for the <code>systemd</code> service.</p>
 <p>A similar problem can happen when stopping the MariaDB service. Therefore, it may also be a good idea to set <code><a href="https://www.freedesktop.org/software/systemd/man/systemd.service.html#TimeoutStopSec=">TimeoutStopSec</a></code>.</p>
 <p>For example, you can reconfigure the MariaDB <code>systemd</code> service to have an infinite timeout by executing one of the following commands:</p>
 <p>If you are using <code>systemd</code> 228 or older, then you can execute the following to set an infinite timeout:</p>
@@ -688,13 +686,13 @@ SyslogFacility=daemon
 SysLogLevel=err
 </pre><p>If you have multiple instances of MariaDB, then you may also want to set <code><a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#SyslogIdentifier=">SyslogIdentifier</a></code> with a different tag for each instance.</p>
 <h3 class="anchored_heading" id="configuring-limitmemlock">Configuring LimitMEMLOCK</h3>
-<p>If using <a href="/kb/en/mysqld-options/#-memlock">--memlock</a> or the iouring in InnoDB in <a href="/kb/en/what-is-mariadb-106/">MariaDB 10.6</a> with a Linux Kernel version &lt; 5.12, you will need to raise the LimitMEMLOCK limit.</p>
+<p>If using <a href="/kb/en/mariadbd-options/#-memlock">--memlock</a> or the iouring in InnoDB in <a href="/kb/en/what-is-mariadb-106/">MariaDB 10.6</a> with a Linux Kernel version &lt; 5.12, you will need to raise the LimitMEMLOCK limit.</p>
 <pre class="fixed">sudo systemctl edit mariadb.service
 
 [Service]
 
 LimitMEMLOCK=2M
-</pre><p>Note: Prior to <a href="/kb/en/mariadb-10110-release-notes/">MariaDB 10.1.10</a>, the <a href="/kb/en/mysqld-options/#-memlock">--memlock</a> option could not be used with the MariaDB <code>systemd</code> service.</p>
+</pre><p>Note: Prior to <a href="/kb/en/mariadb-10110-release-notes/">MariaDB 10.1.10</a>, the <a href="/kb/en/mariadbd-options/#-memlock">--memlock</a> option could not be used with the MariaDB <code>systemd</code> service.</p>
 <h3 class="anchored_heading" id="configuring-access-to-home-directories">Configuring Access to Home Directories</h3>
 <p>MariaDB's <a href="/kb/en/systemd/">systemd</a> unit file restricts access to <code>/home</code>, <code>/root</code>, and <code>/run/user</code> by default. This restriction can be overridden by setting the <a href="https://www.freedesktop.org/software/systemd/man/systemd.exec.html#ProtectHome=">ProtectHome</a> option to <code>false</code> for the MariaDB <code>systemd</code> service. This is done by creating a "drop-in" directory <code>/etc/systemd/system/mariadb.service.d/</code> and in it a file with a <code>.conf</code> suffix that contains the <code>ProtectHome=false</code> directive.</p>
 <p>You can reconfigure the MariaDB <code>systemd</code> service to allow access to <code>/home</code> by executing the following commands:</p>
@@ -704,7 +702,7 @@ LimitMEMLOCK=2M
 
 ProtectHome=false
 </pre><h3 class="anchored_heading" id="configuring-the-umask">Configuring the umask</h3>
-<p>When using <code>systemd</code>, the default file permissions of <code>mysqld</code> can be set by setting the <code>UMASK</code> and <code>UMASK_DIR</code> environment variables for the <code>systemd</code> service. For example, you can configure the MariaDB <code>systemd</code> service's umask by executing the following commands:</p>
+<p>When using <code>systemd</code>, the default file permissions of <code>mariadbd</code> can be set by setting the <code>UMASK</code> and <code>UMASK_DIR</code> environment variables for the <code>systemd</code> service. For example, you can configure the MariaDB <code>systemd</code> service's umask by executing the following commands:</p>
 <pre class="fixed">sudo systemctl edit mariadb.service
 
 [Service]
@@ -712,7 +710,7 @@ ProtectHome=false
 Environment=&#34;UMASK=0750&#34;
 Environment=&#34;UMASK_DIR=0750&#34;
 </pre><div class="cstm-style greenbox"><p>These environment variables do not set the umask. They set the default file system permissions. See <a href="https://jira.mariadb.org/browse/MDEV-23058">MDEV-23058</a> for more information.</p>
-</div><div class="cstm-style greenbox"><p>Keep in mind that configuring the umask this way will only affect the permissions of files created by the <code>mysqld</code> process that is managed by <code>systemd</code>. The permissions of files created by components that are not managed by <code>systemd</code>, such as <a href="/kb/en/mariadb-install-db/">mariadb-install-db</a>, will not be affected.</p>
+</div><div class="cstm-style greenbox"><p>Keep in mind that configuring the umask this way will only affect the permissions of files created by the <code>mariadbd</code> process that is managed by <code>systemd</code>. The permissions of files created by components that are not managed by <code>systemd</code>, such as <a href="/kb/en/mariadb-install-db/">mariadb-install-db</a>, will not be affected.</p>
 </div><p>See <a href="/kb/en/specifying-permissions-for-schema-data-directories-and-tables/">Specifying Permissions for Schema (Data) Directories and Tables</a> for more information.</p>
 <h3 class="anchored_heading" id="configuring-the-data-directory">Configuring the data directory</h3>
 <p>When doing a standard binary tarball install the datadir will be under /usr/local/data. The default systemd service file makes the whole /usr directory tree write protected however.</p>
@@ -875,7 +873,6 @@ Jan 25 18:08:32 ip-172-30-0-249.us-west-2.compute.internal systemd[1]: mariadb.s
 </pre><h2 class="anchored_heading" id="converting-mysqld_safe-options-to-systemd-options">Converting mysqld_safe Options to Systemd Options</h2>
 <p><code>mariadb-service-convert</code> is a script included in many MariaDB packages that is used by the package manager to convert <code><a href="/kb/en/mysqld_safe/#mysqld_safe-options">mysqld_safe</a></code> options to <code>systemd</code> options. It reads any explicit settings in the <code>[mysqld_safe]</code> <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> from <a href="/kb/en/configuring-mariadb-with-option-files/">option files</a>, and its output is directed to <code>/etc/systemd/system/mariadb.service.d/migrated-from-my.cnf-settings.conf</code>. This helps to keep the configuration the same when upgrading from a version of MariaDB that does not use <code>systemd</code> to one that does.</p>
 <p>Implicitly high defaults of <code><a href="/kb/en/mysqld_safe/#mysqld_safe-options">open-files-limit</a></code> may be missed by the conversion script and require explicit configuration. See <a href="#configuring-the-open-files-limit">Configuring the Open Files Limit</a>.</p>
-<h2 class="anchored_heading" id="known-issues">Known Issues</h2>
 
     </div>
 

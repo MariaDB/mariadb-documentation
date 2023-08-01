@@ -23,9 +23,9 @@
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
     <meta property="og:site_name" content="MariaDB KnowledgeBase" />
     <meta property="fb:admins" content="514852603" />
-    <meta property="og:description" content="Downgrading MariaDB is not supported." />
+    <meta property="og:description" content="Downgrading MariaDB is not officially supported between major versions." />
 
-    <meta name="description" content="Downgrading MariaDB is not supported." />
+    <meta name="description" content="Downgrading MariaDB is not officially supported between major versions." />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
@@ -248,7 +248,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2018-02-08 11:42">5 years, 5 months ago</span></dd>
+<span class="datetime" title="2023-08-01 14:21">1 hour, 45 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -306,6 +306,22 @@
 
 
 
+
+
+    
+
+<div class="well well-small box"><div><h5>Parents</h5></div><div>
+
+        <ul>
+            
+                <li><a href="/kb/en/getting-installing-and-upgrading-mariadb/">Getting, Installing, and Upgrading MariaDB</a></li>
+            
+                <li><a href="/kb/en/upgrading-mariadb/">Upgrading MariaDB</a></li>
+            
+        </ul>
+    
+</div>
+</div>
 
 
 
@@ -380,10 +396,35 @@
 
     
     <div class="answer formatted">
-        <p>Downgrading MariaDB is not supported. The only reliable way to downgrade is to <a href="/kb/en/backing-up-and-restoring-databases/">restore from a full backup</a> made before upgrading, and start the old version of MariaDB.</p>
-<p>Some people have reported successfully downgrading, but there are many possible things that can go wrong, and downgrading is not tested in any way by the MariaDB developers.</p>
-<p>Between major releases, there are often substantial changes, even if none of the new features are used. For example, both <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> and <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a> introduce new versions of the redo log.</p>
-<p>Even within minor releases, there may be problems, for example <a href="/kb/en/mariadb-10121-release-notes/">MariaDB 10.1.21</a> fixed a file format incompatibility bug that prevents a downgrade to earlier <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> releases.</p>
+        <p>Downgrading MariaDB is not officially supported between major versions.</p>
+<p>For minor versions, upgrade is supported to an earlier <a href="/kb/en/release-criteria/#commitment-for-gammarc-releases">gamma/RC/GA</a> version as we do not change the storage format after <a href="/kb/en/release-criteria/#commitment-for-alpha-releases">Alpha</a> and very rarely during <a href="/kb/en/release-criteria/#commitment-for-beta-releases">Beta</a> (it has to be a very critical bug to require such a change).
+There are a few very rare cases when incompatible changes happen on a GA version, for example <a href="/kb/en/mariadb-10121-release-notes/">MariaDB 10.1.21</a> fixed a file format incompatibility bug that prevents a downgrade to earlier <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> releases. After <a href="/kb/en/mariadb-10121-release-notes/">MariaDB 10.1.21</a> this has not happened in a GA release.</p>
+<p>The main reason why downgrades between major versions do not work are:</p>
+<ul start="1"><li>Changes in the privilege/status tables in the <a href="/kb/en/the-mysql-database-tables/">mysql schema</a>.  These changes happen between most major versions as we are continuously improving the privilege system.
+</li><li>Changes that affect how data is stored on disk. This happens more rarely and is usually table specific. For example, if one has used <a href="/kb/en/instant-add-column-for-innodb/">Instant add column</a> on a table in <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a>, that table cannot be opened in <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>.
+</li><li>Between major releases there are often substantial changes, even if none of the new features are used. For example, both <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> and <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a> introduce new versions of the redo log.
+</li></ul>
+<p>The only reliable way to downgrade is to <a href="/kb/en/backing-up-and-restoring-databases/">restore from a full backup</a> made before upgrading, and start the old version of MariaDB. At least one should take a backup of the <a href="/kb/en/the-mysql-database-tables/">mysql</a> schema as most upgrade changes happens in this directory. This may be of help if one needs to downgrade to an earlier MariaDB version. More about this later.</p>
+<p>Some people have reported successfully downgrading, but there are many possible things that can go wrong, and downgrading between two major versions is not tested in any way by the MariaDB developers.</p>
+<p>In general, one can downgrade a major version to an earlier version if one has not yet run <a href="/kb/en/mariadb-upgrade/">mariadb-upgrade</a> on the new version. Note however that it's recommended that one always uses <a href="/kb/en/mariadb-upgrade/">mariadb-upgrade</a> after upgrading to a new major version as otherwise some security features in the new server may not work and tables that have indexes using a character collation that has changed may not work properly.</p>
+<p>Assuming one <strong>must</strong> downgrade to an earlier major version, here is a list of things one has to do:</p>
+<ul start="1"><li>MariaDB <strong>must</strong> be shut down cleanly. This means that:
+<ul start="1"><li>One should ensure that  <a href="/kb/en/innodb-system-variables/#innodb_fast_shutdown">innodb_fast_shutdown is set to 0</a>.
+</li><li>One uses the <a href="/kb/en/shutdown/">SHUTDOWN</a> command, <a href="/kb/en/mariadb-admin/">mariadb-admin shutdown</a> or the operating system official commands, like <a href="/kb/en/systemd/#stopping-the-mariadb-server-process">systemctl stop mariadb.service</a>.
+</li></ul>
+</li><li>Start the old server with <a href="/kb/en/mariadbd-options/#-skip-grant-tables">--skip-privilege-tables</a>.
+</li><li>Use ALTER TABLE to restore the <a href="/kb/en/the-mysql-database-tables/">mysql schema tables</a> to their original definition or drop and recreate the mysql tables.  One can find the old definition by using <a href="/kb/en/mariadb-install-db/">mariadb-install-db</a> to create a separate temporary data directory. Starting the MariaDB server on the temporary directory will allow you to use <a href="/kb/en/show-create-table/">SHOW CREATE TABLE</a> to find the old definition.
+</li><li>Execute <a href="/kb/en/flush/">FLUSH PRIVILEGES</a>  to reload the old tables.
+</li></ul>
+<p>The cases when the above will not work are when the table format has changed in an incompatible manner. In this case the affected tables may not be usable in the earlier version.</p>
+<p>The following is an incomplete list of when one will not be able to use a table in an earlier major version:</p>
+<ul start="1"><li><a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a> -&gt; <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a>
+<ul start="1"><li>Any InnoDB table where one has used <code>ALTER TABLE ALGORITHM=INSTANT DROP COLUMN</code>
+</li><li>In <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a>, the MariaDB mysql.user table was replaced by <a href="/kb/en/mysql-user-table/">mysql.global_priv table</a> which may cause problems if ones wants to downgrade to 10.3.
+</li></ul>
+</li><li><a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a> -&gt; <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>
+<ul start="1"><li>Any InnoDB table where one has used <code>ALTER TABLE ALGORITHM=INSTANT ADD COLUMN</code>.</li></ul>
+</li></ul>
 
     </div>
 
