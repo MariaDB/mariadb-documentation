@@ -267,7 +267,7 @@ configuration parameters w..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/22.08.6/Documentation/Routers/ReadConnRoute.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/22.08.7/Documentation/Routers/ReadConnRoute.md">GitHub</a></dd>
         
     </dl>
 
@@ -417,6 +417,13 @@ is fixed and will not be changed for the duration of the session. If the
 connection between MaxScale and the server breaks, the connection can not
 be re-established and the session will be closed. The fact that the server
 is fixed when the client connects also means that routing hints are ignored.</p>
+<p><strong>Warning:</strong> <code>readconnroute</code> will not prevent writes from being done even if you
+  define <code>router_options=slave</code>. The client application is responsible for
+  making sure that it only performs read-only queries in such
+  cases. <code>readconnroute</code> is simple by design: it selects a server for each
+  client connection and routes all queries there. If something more complex is
+  required, the <a href="/kb/en/mariadb-maxscale-2208-readwritesplit/">readwritesplit</a> router is usually the right
+  choice.</p>
 <h2 id="configuration">Configuration</h2>
 <p>For more details about the standard service parameters, refer to the
 <a href="/kb/en/mariadb-maxscale-2208-mariadb-maxscale-configuration-guide/">Configuration Guide</a>.</p>
@@ -493,11 +500,11 @@ from server selection (and thus from receiving reads).</p>
 <li><strong>Default</strong>: 0s</li>
 </ul>
 <p>The maximum acceptable replication lag. The value is in seconds and is specified
-as documented <a href="/kb/en/mariadb-maxscale-2208-mariadb-maxscale-configuration-guide/#durations">here</a>. This
-feature is disabled by default.</p>
+as documented <a href="/kb/en/mariadb-maxscale-2208-mariadb-maxscale-configuration-guide/#durations">here</a>. The
+default value is <code>0s</code>, which means that the lag is ignored.</p>
 <p>The replication lag of a server must be less than the configured value in order
 for it to be used for routing. To configure the router to not allow any lag, use
-<code>max_slave_replication_lag=1</code>.</p>
+the smallest duration larger than 0, that is, <code>max_replication_lag=1s</code>.</p>
 <h2 id="examples">Examples</h2>
 <p>The most common use for the readconnroute is to provide either a read or
 write port for an application. This provides a more lightweight routing
