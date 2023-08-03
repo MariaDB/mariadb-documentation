@@ -248,7 +248,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-08-01 14:21">1 day, 1 hour ago</span></dd>
+<span class="datetime" title="2023-08-03 05:34">10 hours, 30 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -409,7 +409,7 @@ There are a few very rare cases when incompatible changes happen on a GA version
 <p>In general, one can downgrade a major version to an earlier version if one has not yet run <a href="/kb/en/mariadb-upgrade/">mariadb-upgrade</a> on the new version. Note however that it's recommended that one always uses <a href="/kb/en/mariadb-upgrade/">mariadb-upgrade</a> after upgrading to a new major version as otherwise some security features in the new server may not work and tables that have indexes using a character collation that has changed may not work properly.</p>
 <p>Assuming one <strong>must</strong> downgrade to an earlier major version, here is a list of things one has to do:</p>
 <ul start="1"><li>MariaDB <strong>must</strong> be shut down cleanly. This means that:
-<ul start="1"><li>One should ensure that  <a href="/kb/en/innodb-system-variables/#innodb_fast_shutdown">innodb_fast_shutdown is set to 0</a>.
+<ul start="1"><li>One should ensure that  <a href="/kb/en/innodb-system-variables/#innodb_fast_shutdown">innodb_fast_shutdown≠2</a>.
 </li><li>One uses the <a href="/kb/en/shutdown/">SHUTDOWN</a> command, <a href="/kb/en/mariadb-admin/">mariadb-admin shutdown</a> or the operating system official commands, like <a href="/kb/en/systemd/#stopping-the-mariadb-server-process">systemctl stop mariadb.service</a>.
 </li></ul>
 </li><li>Start the old server with <a href="/kb/en/mariadbd-options/#-skip-grant-tables">--skip-privilege-tables</a>.
@@ -418,12 +418,24 @@ There are a few very rare cases when incompatible changes happen on a GA version
 </li></ul>
 <p>The cases when the above will not work are when the table format has changed in an incompatible manner. In this case the affected tables may not be usable in the earlier version.</p>
 <p>The following is an incomplete list of when one will not be able to use a table in an earlier major version:</p>
-<ul start="1"><li><a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a> -&gt; <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a>
-<ul start="1"><li>Any InnoDB table where one has used <code>ALTER TABLE ALGORITHM=INSTANT DROP COLUMN</code>
+<ul start="1"><li><a href="/kb/en/what-is-mariadb-110/">MariaDB 11.0</a> or later
+<ul start="1"><li>A downgrade to <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a> or earlier is not possible, because <a href="https://jira.mariadb.org/browse/MDEV-29694">MDEV-29694</a> removed the InnoDB change buffer.
+</li><li>A downgrade to <a href="/kb/en/what-is-mariadb-105/">MariaDB 10.5</a> or later is only possible if <a href="/kb/en/innodb-system-variables/#innodb_change_buffering">innodb_change_buffering=none</a> (the default starting with <a href="https://jira.mariadb.org/browse/MDEV-27734">MDEV-27734</a>).
+</li></ul>
+</li><li><a href="/kb/en/what-is-mariadb-108/">MariaDB 10.8</a> or later
+<ul start="1"><li>The InnoDB redo log file <code>ib_logfile0</code> would have to be replaced with a logically equivalent file, or the shutdown LSN has to be written to the <code>FIL_PAGE_FILE_FLUSH_LSN</code> field in the system tablespace (see <a href="https://jira.mariadb.org/browse/MDEV-27199">MDEV-27199</a>), or the data may be accessed read-only when using <a href="/kb/en/innodb-system-variables/#innodb_force_recovery">innodb_force_recovery=6</a>.
+</li></ul>
+</li><li><a href="/kb/en/what-is-mariadb-105/">MariaDB 10.5</a> → <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a>
+<ul start="1"><li>The InnoDB redo log file <code>ib_logfile0</code> has to be deleted between a clean shutdown of the newer version and a startup of the older version. This is *not recommended*.
+</li></ul>
+</li><li><a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a> → <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a>
+<ul start="1"><li>Any InnoDB table where one has used <code>ALTER TABLE ALGORITHM=INSTANT DROP COLUMN</code> while <a href="/kb/en/innodb-system-variables/#innodb_instant_alter_column_allowed">innodb_instant_alter_column_allowed=add_drop_reorder</a>
+</li><li>Any InnoDB table that was created or rebuilt while <a href="/kb/en/innodb-system-variables/#innodb_checksum_algorithm">innodb_checksum_algorithm=full_crc32</a>
 </li><li>In <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a>, the MariaDB mysql.user table was replaced by <a href="/kb/en/mysql-user-table/">mysql.global_priv table</a> which may cause problems if ones wants to downgrade to 10.3.
 </li></ul>
-</li><li><a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a> -&gt; <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>
-<ul start="1"><li>Any InnoDB table where one has used <code>ALTER TABLE ALGORITHM=INSTANT ADD COLUMN</code>.</li></ul>
+</li><li><a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a> → <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>
+<ul start="1"><li>Any InnoDB table where one has used <code>ALTER TABLE…ADD COLUMN</code> (unless <a href="/kb/en/innodb-system-variables/#innodb_instant_alter_column_allowed">innodb_instant_alter_column_allowed=never</a>).
+</li><li>A prior shutdown with <a href="/kb/en/innodb-system-variables/#innodb_fast_shutdown">innodb_fast_shutdown=0</a> will be needed in order to empty the undo logs whose format changed in <a href="https://jira.mariadb.org/browse/MDEV-12288">MDEV-12288</a>, and even then, you might need to set <a href="/kb/en/innodb-system-variables/#innodb_force_recovery">innodb_force_recovery=3</a>.</li></ul>
 </li></ul>
 
     </div>

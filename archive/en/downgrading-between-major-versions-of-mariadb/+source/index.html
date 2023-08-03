@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/downgrading-between-major-versions-of-mariadb/+r/128341/">128341</a></dd>
+            <dd><a href="/kb/en/downgrading-between-major-versions-of-mariadb/+r/128461/">128461</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-08-01 14:21">2023-08-01 14:21</span></dd>
+<span class="datetime" title="2023-08-03 05:34">2023-08-03 05:34</span></dd>
         </dl>
     </div>
     
@@ -321,7 +321,7 @@ In general, one can downgrade a major version to an earlier version if one has n
 
 Assuming one **must** downgrade to an earlier major version, here is a list of things one has to do:
 * MariaDB **must** be shut down cleanly. This means that:
-** One should ensure that  [[innodb-system-variables/#innodb_fast_shutdown|innodb_fast_shutdown is set to 0]].
+** One should ensure that  [[innodb-system-variables/#innodb_fast_shutdown|innodb_fast_shutdown≠2]].
 ** One uses the [[shutdown|SHUTDOWN]] command, [[mariadb-admin|mariadb-admin shutdown]] or the operating system official commands, like [[systemd/#stopping-the-mariadb-server-process|systemctl stop mariadb.service]].
 * Start the old server with [[mariadbd-options/#-skip-grant-tables|--skip-privilege-tables]].
 * Use ALTER TABLE to restore the [[the-mysql-database-tables|mysql schema tables]] to their original definition or drop and recreate the mysql tables.  One can find the old definition by using [[mariadb-install-db]] to create a separate temporary data directory. Starting the MariaDB server on the temporary directory will allow you to use [[show-create-table|SHOW CREATE TABLE]] to find the old definition.
@@ -330,11 +330,20 @@ Assuming one **must** downgrade to an earlier major version, here is a list of t
 The cases when the above will not work are when the table format has changed in an incompatible manner. In this case the affected tables may not be usable in the earlier version.
 
 The following is an incomplete list of when one will not be able to use a table in an earlier major version:
-* MariaDB 10.4 -&gt; MariaDB 10.3
-** Any InnoDB table where one has used ##ALTER TABLE ALGORITHM=INSTANT DROP COLUMN##
+* MariaDB 11.0 or later
+** A downgrade to MariaDB 10.4 or earlier is not possible, because MDEV-29694 removed the InnoDB change buffer.
+** A downgrade to MariaDB 10.5 or later is only possible if [[innodb-system-variables/#innodb_change_buffering|innodb_change_buffering=none]] (the default starting with MDEV-27734).
+* MariaDB 10.8 or later
+** The InnoDB redo log file ##ib_logfile0## would have to be replaced with a logically equivalent file, or the shutdown LSN has to be written to the ##FIL_PAGE_FILE_FLUSH_LSN## field in the system tablespace (see MDEV-27199), or the data may be accessed read-only when using [[innodb-system-variables/#innodb_force_recovery|innodb_force_recovery=6]].
+* MariaDB 10.5 → MariaDB 10.4
+** The InnoDB redo log file ##ib_logfile0## has to be deleted between a clean shutdown of the newer version and a startup of the older version. This is *not recommended*.
+* MariaDB 10.4 → MariaDB 10.3
+** Any InnoDB table where one has used ##ALTER TABLE ALGORITHM=INSTANT DROP COLUMN## while [[innodb-system-variables/#innodb_instant_alter_column_allowed|innodb_instant_alter_column_allowed=add_drop_reorder]]
+** Any InnoDB table that was created or rebuilt while [[innodb-system-variables/#innodb_checksum_algorithm|innodb_checksum_algorithm=full_crc32]]
 ** In MariaDB 10.4, the MariaDB mysql.user table was replaced by [[mysql-user-table|mysql.global_priv table]] which may cause problems if ones wants to downgrade to 10.3.
-* MariaDB 10.3 -&gt; MariaDB 10.2
-** Any InnoDB table where one has used ##ALTER TABLE ALGORITHM=INSTANT ADD COLUMN##.</textarea>
+* MariaDB 10.3 → MariaDB 10.2
+** Any InnoDB table where one has used ##ALTER TABLE…ADD COLUMN## (unless [[innodb-system-variables/#innodb_instant_alter_column_allowed|innodb_instant_alter_column_allowed=never]]).
+** A prior shutdown with [[innodb-system-variables/#innodb_fast_shutdown|innodb_fast_shutdown=0]] will be needed in order to empty the undo logs whose format changed in MDEV-12288, and even then, you might need to set [[innodb-system-variables/#innodb_force_recovery|innodb_force_recovery=3]].</textarea>
     
 
 
