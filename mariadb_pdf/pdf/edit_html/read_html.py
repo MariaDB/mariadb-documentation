@@ -22,7 +22,8 @@ def process_pages(kburls: list[CsvItem], outline: list[TocItem], config: Config)
     
     length = len(kburls)
     for index, (row, outline_row) in enumerate(zip(kburls, outline, strict=True)):
-        print(f"\rProgress: {index+1}/{length}", end="")
+        if config.verbose:
+            print(f"\rProgress: {index+1}/{length}", end="")
         assert row.include != 0
 
         if row.include == 2:
@@ -36,7 +37,8 @@ def process_pages(kburls: list[CsvItem], outline: list[TocItem], config: Config)
             html_tag, header = process_article(row, config.port)
             outline_row.header = header
         html_pages.append(html_tag)
-    print(f"\rProgress: {length}/{length}")
+    if config.verbose:
+        print(f"\rProgress: {length}/{length}")
     return html_pages
 
 

@@ -24,6 +24,7 @@ class TocConfig(NamedTuple):
 class Config(NamedTuple):
     port: int
     pdf: bool
+    verbose: bool
     repeat_outline: bool
     languages: list[str]
     num_rows: int
@@ -51,12 +52,12 @@ class _ArgConfig:
     langs: list[str]
     numrows: int
     quiet: bool
-    verbose: bool
 
 def generate_config(arg_config: _ArgConfig, dict_config: dict[str, Any]) -> Config:
     return Config(
         port=arg_config.port,
         pdf=not arg_config.nopdf,
+        verbose=not arg_config.quiet,
         repeat_outline=not arg_config.norepeat,
         languages=["en"] if not arg_config.langs else arg_config.langs,
         num_rows=-1 if arg_config.numrows is None else arg_config.numrows,
@@ -74,8 +75,7 @@ def _read_args() -> _ArgConfig:
 
     # verbosity
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-q", "--quiet", action="store_true", help="Quiet/Hide Logging")
-    group.add_argument("-v", "--verbose", action="store_true", help="Verbose")
+    group.add_argument("-q", "--quiet", action="store_true", help="Quiet/Hide Progress Bar")
     
     parser.add_argument("-c", "--config", type=Path, default=Path("./config.toml"), help="config filepath")
     parser.add_argument("-p", "--port", type=int, default=7032, help="mariadb_kb_server port")
