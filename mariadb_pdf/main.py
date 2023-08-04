@@ -7,7 +7,6 @@ from pdf.generate_pdf import generate_full_pdf
 from pathlib import Path
 
 def main():
-    log.info("Started")
     config = read_config()
     csv = read_csv(config.num_rows, config.port)
     language_csvs = read_languages(csv, config)
