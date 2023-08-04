@@ -183,7 +183,8 @@ def make_table_information(
     csv_info: CsvInfo,
     version: Version,
     concat_size: int,
-    port: int
+    port: int,
+    verbose: bool
 ) -> TableInfo:
     topics: list[str] = []
     topic_to_keyword: list[tuple[int, str]] = []
@@ -220,10 +221,11 @@ def make_table_information(
             row_num: int = help_topic_id
             percent = int((row_num / num_rows) * 100)
 
-            if row_num < num_rows+2: # to for help_date and help_version (TODO fix hack)
-                print(f"\rProgess: {percent}%", end="")
-            else:
-                debug.success(f"Finished {percent}%")
+            if verbose:
+                if row_num < num_rows+2: # to for help_date and help_version (TODO fix hack)
+                    print(f"\rProgess: {percent}%", end="")
+                else:
+                    debug.success(f"Finished {percent}%")
     except KeyboardInterrupt:
         debug.error("Keyboard Interrupt")
     
@@ -270,9 +272,9 @@ def insert_help_relations(topic_id: int, keyword_id: int) -> str:
     return f"insert into help_relation values ({topic_id}, {keyword_id});"
 
 #main import function
-def generate_help_table(version: Version, concat_size: int, port: int) -> str:
+def generate_help_table(version: Version, concat_size: int, port: int, verbose: bool) -> str:
     pre_topic_text, category_info = get_pre_topic_text(version)
     csv_information = read_csv_information(version, port)
     link_help_categories(csv_information, category_info)
-    table_information = make_table_information(csv_information, version, concat_size, port)
+    table_information = make_table_information(csv_information, version, concat_size, port, verbose)
     return pre_topic_text + table_information.to_string()
