@@ -222,8 +222,6 @@ MariaDB Monitor optional par..." />
                             <li><a href="/kb/en/">Home</a></li>
                             
                                 
-                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
-                                
                                 <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
                                 <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
                                 <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
@@ -267,12 +265,12 @@ MariaDB Monitor optional par..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-02-27 21:22">5 months ago</span></dd>
+<span class="datetime" title="2023-02-27 21:22">5 months, 1 week ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-02-27 21:22">5 months ago</span></dd>
+<span class="datetime" title="2023-02-27 21:22">5 months, 1 week ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -289,7 +287,7 @@ MariaDB Monitor optional par..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.2/Documentation/Monitors/MariaDB-Monitor.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.3/Documentation/Monitors/MariaDB-Monitor.md">GitHub</a></dd>
         
     </dl>
 
@@ -539,6 +537,12 @@ set), then the FILE-grant is required with MariaDB Server versions 10.4.7,
 </pre></div>
 
 
+<p>MariaDB Server 10.5.2 introduces CONNECTION ADMIN. This is recommended since it
+allows the monitor to log in even if server connection limit has been reached.</p>
+<div><pre><span></span>GRANT CONNECTION ADMIN ON *.* TO 'maxscale'@'maxscalehost';
+</pre></div>
+
+
 <h3 id="cluster-manipulation-grants">Cluster Manipulation Grants</h3>
 <p>If <a href="#cluster-manipulation-operations">cluster manipulation operations</a> are used,
 the following additional grants are required:</p>
@@ -547,16 +551,18 @@ GRANT SELECT ON mysql.user TO 'maxscale'@'maxscalehost';
 </pre></div>
 
 
-<p>If <code>replication_user</code> and <code>replication_password</code> are used, the following grants
-must be given to the user defined by them:</p>
-<div><pre><span></span>CREATE USER 'replication'@'replicationhost' IDENTIFIED BY 'replication-password';
-GRANT REPLICATION SLAVE ON *.* TO 'replication'@'replicationhost';
+<p>As of MariaDB Server 11.0.1, the SUPER-privilege no longer contains several of
+its former sub-privileges. These must be given separately.</p>
+<div><pre><span></span>GRANT RELOAD, PROCESS, SHOW DATABASES, EVENT, SET USER, READ_ONLY ADMIN ON *.* TO 'maxscale'@'maxscalehost';
+GRANT REPLICATION SLAVE ADMIN, BINLOG ADMIN, CONNECTION ADMIN ON *.* TO 'maxscale'@'maxscalehost';
+GRANT SELECT ON mysql.user TO 'maxscale'@'maxscalehost';
 </pre></div>
 
 
-<p>MariaDB 10.5.8 and newer versions require a different set of grants:</p>
+<p>If a separate replication user is defined (with <code>replication_user</code> and
+<code>replication_password</code>), it requires the following grant:</p>
 <div><pre><span></span>CREATE USER 'replication'@'replicationhost' IDENTIFIED BY 'replication-password';
-GRANT REPLICATION SLAVE, SLAVE MONITOR ON *.* TO 'replication'@'replicationhost';
+GRANT REPLICATION SLAVE ON *.* TO 'replication'@'replicationhost';
 </pre></div>
 
 
@@ -821,12 +827,12 @@ privileges:</p>
 <ul>
 <li>SUPER, to modify replica connections, set globals such as <em>read_only</em> and kill
 connections from other super-users</li>
-<li>SELECT on mysql.user, to see which users have SUPER</li>
 <li>REPLICATION CLIENT (REPLICATION SLAVE ADMIN in MariaDB Server 10.5), to list
 replica connections</li>
 <li>RELOAD, to flush binary logs</li>
 <li>PROCESS, to check if the <em>event_scheduler</em> process is running</li>
 <li>SHOW DATABASES and EVENT, to list and modify server events</li>
+<li>SELECT on mysql.user, to see which users have SUPER</li>
 </ul>
 <p>A list of the grants can be found in the <a href="#required-grants">Required Grants</a>
 section.</p>
@@ -834,6 +840,19 @@ section.</p>
 the MaxScale monitor user are minor, as the SUPER-privilege contains many of the
 required privileges and is still required to kill connections from other
 super-users.</p>
+<p>In MariaDB Server 11.0.1 and later, SUPER no longer contains all the required
+grants. The monitor requires:</p>
+<ul>
+<li>READ_ONLY ADMIN, to set <em>read_only</em></li>
+<li>REPLICA MONITOR and REPLICATION SLAVE ADMIN, to view and manage replication
+connections</li>
+<li>RELOAD, to flush binary logs</li>
+<li>PROCESS, to check if the <em>event_scheduler</em> process is running</li>
+<li>SHOW DATABASES, EVENT and SET USER, to list and modify server events</li>
+<li>BINLOG ADMIN, to delete binary logs (during <em>reset-replication</em>)</li>
+<li>CONNECTION ADMIN, to kill connections</li>
+<li>SELECT on mysql.user, to see which users have SUPER</li>
+</ul>
 <p>In addition, the monitor needs to know which username and password a
 replica should use when starting replication. These are given in
 <code>replication_user</code> and <code>replication_password</code>.</p>

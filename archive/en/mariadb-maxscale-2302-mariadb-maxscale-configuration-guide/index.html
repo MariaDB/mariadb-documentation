@@ -234,8 +234,6 @@ Administra..." />
                             <li><a href="/kb/en/">Home</a></li>
                             
                                 
-                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
-                                
                                 <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
                                 <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
                                 <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
@@ -279,12 +277,12 @@ Administra..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-02-27 21:22">5 months ago</span></dd>
+<span class="datetime" title="2023-02-27 21:22">5 months, 1 week ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-02-27 21:22">5 months ago</span></dd>
+<span class="datetime" title="2023-02-27 21:22">5 months, 1 week ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -301,7 +299,7 @@ Administra..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.2/Documentation/Getting-Started/Configuration-Guide.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.3/Documentation/Getting-Started/Configuration-Guide.md">GitHub</a></dd>
         
     </dl>
 
@@ -559,7 +557,6 @@ Administra..." />
 <li><a href="#enable_root_user">enable_root_user</a></li>
 <li><a href="#localhost_match_wildcard_host">localhost_match_wildcard_host</a></li>
 <li><a href="#version_string">version_string</a></li>
-<li><a href="#weightby">weightby</a></li>
 <li><a href="#auth_all_servers">auth_all_servers</a></li>
 <li><a href="#strip_db_esc">strip_db_esc</a></li>
 <li><a href="#log_auth_warnings">log_auth_warnings</a></li>
@@ -2154,10 +2151,11 @@ setting is ignored in the main configuration file (usually maxscale.cnf).</p>
 <li><strong>Default</strong>: No default value</li>
 <li><strong>Dynamic</strong>: Yes</li>
 </ul>
-<p>This parameter controls which cluster is used to synchronize configuration
-changes between MaxScale instances. By default configuration synchronization is
-not enabled and it must be explicitly enabled by defining a monitor name for
-<code>config_sync_cluster</code>.</p>
+<p>This parameter controls which cluster (i.e. monitor) is used to synchronize
+configuration changes between MaxScale instances. The first server labeled
+<code>Master</code> will be used for the synchronization.</p>
+<p>By default configuration synchronization is not enabled and it must be
+explicitly enabled by defining a monitor name for <code>config_sync_cluster</code>.</p>
 <p>When <code>config_sync_cluster</code> is defined, <code>config_sync_user</code> and
 <code>config_sync_password</code> must also be defined.</p>
 <p>For a detailed description of this feature, refer to the <a href="#configuration-synchronization">Configuration
@@ -2180,12 +2178,13 @@ required if <code>config_sync_cluster</code> is configured.</p>
 grants must be adjusted to target that database instead.</p>
 <h3 id="config_sync_password"><code>config_sync_password</code></h3>
 <ul>
-<li><strong>Type</strong>: string</li>
+<li><strong>Type</strong>: password</li>
 <li><strong>Default</strong>: No default value</li>
 <li><strong>Dynamic</strong>: Yes</li>
 </ul>
 <p>The password for <code>config_sync_user</code>. Both this parameter and <code>config_sync_user</code>
-are required if <code>config_sync_cluster</code> is configured.</p>
+are required if <code>config_sync_cluster</code> is configured. This password can
+optionally be encrypted using <code>maxpasswd</code>.</p>
 <h3 id="config_sync_db"><code>config_sync_db</code></h3>
 <ul>
 <li><strong>Type</strong>: string</li>
@@ -2404,7 +2403,7 @@ password=Mhu87p2D
 </pre></div>
 
 
-<p>See <a href="/kb/en/mariadb-maxscale-2302-authentication-modules/">MySQL protocol authentication documentation</a>
+<p>See <a href="/kb/en/maxscale-23-02-authentication-modules/">MySQL protocol authentication documentation</a>
 for more information (such as required grants) and troubleshooting tips
 regarding user account management and client authentication.</p>
 <h3 id="enable_root_user"><code>enable_root_user</code></h3>
@@ -2430,12 +2429,6 @@ where <code>&lt;MaxScale version&gt;</code> is the version of MaxScale. If the p
 does not start with the number 5, a 5.5.5- prefix will be added to it. This
 means that a <em>version_string</em> value of <em>MaxScale-Service</em> would result in a
 <em>5.5.5-MaxScale-Service</em> being sent to the client.</p>
-<h3 id="weightby"><code>weightby</code></h3>
-<p>This parameter has been removed. Server weights were deprecated in
-MaxScale 2.3.2 and removed in MaxScale 2.5.0. The feature has been
-replaced with the <a href="#rank"><code>rank</code></a> mechanism.</p>
-<p>If this value is found in the MaxScale configuration, a warning is logged
-and the value is ignored.</p>
 <h3 id="auth_all_servers"><code>auth_all_servers</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
@@ -2575,12 +2568,19 @@ max_connections=100
 <li><strong>Default</strong>: false</li>
 <li><strong>Dynamic</strong>: Yes</li>
 </ul>
-<p>Enable or disable session transaction state tracking by offloading it to the backend servers.
-Getting current session transaction state from server side will be more accurate for that state
-inside stored procedures or prepare statments will be handle properly, and that is also faster
-as no parsing is needed on MaxScale.</p>
-<p>This is only supported by MariaDB versions 10.3 or newer. Default is false.
-The following Server side config is needed too.</p>
+<p>Enable transaction state tracking by offloading it to the backend servers.
+Getting the transaction state from the server will be more accurate for stored
+procedures or multi-statement SQL that modifies the transaction state
+non-atomically.</p>
+<p>In general, it is better to avoid using this type of SQL as tracking the
+transaction state via the server responses is not compatible with features such
+as <code>transaction_replay</code> in readwritesplit. <code>session_track_trx_state</code> should only
+be enabled if the default transaction tracking done by MaxScale does not produce
+the desired outcome.</p>
+<p>This is only supported by MariaDB versions 10.3 or newer. The following must be
+configured in the MariaDB server in order for this feature to work. Not
+configuring the MariaDB server with it can result in the transaction state being
+wrong in MaxScale which can result in data inconsistency.</p>
 <div><pre><span></span>session_track_state_change = ON
 session_track_transaction_info = CHARACTERISTICS
 </pre></div>
@@ -3137,8 +3137,7 @@ if the disk space situation should be monitored.</p>
 <h3 id="rank"><code>rank</code></h3>
 <p>This parameter controls the order in which servers are used. Valid values for
 this parameter are <code>primary</code> and <code>secondary</code>. The default value is
-<code>primary</code>. This parameter replaces the use of the <code>weightby</code> parameter as the
-primary means of controlling server usage.</p>
+<code>primary</code>.</p>
 <p>This behavior depends on the router implementation but the general rule of thumb
 is that primary servers will be used before secondary servers.</p>
 <p>Readconnroute will always use primary servers before secondary servers as long
@@ -3560,7 +3559,7 @@ run MariaDB MaxScale without a monitor module. In this case an external
 monitoring system must the status of each server via MaxCtrl or the REST
 API. <strong>Only do this if you know what you are doing.</strong></p>
 <h2 id="filter-modules">Filter Modules</h2>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.2/Documentation/Getting-Started/images/image_10.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.3/Documentation/Getting-Started/images/image_10.png"></p>
 <p>Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
 explanation of each filter's functionality can be found in its documentation.</p>
@@ -3641,10 +3640,10 @@ MaxScale instances and the cluster (i.e. the monitor) pointed by it and its
 servers must be the same in every configuration.</p>
 <p>Whenever the MaxScale configuration is modified at runtime, the latest
 configuration is stored in the database cluster in the <code>mysql.maxscale_config</code>
-table. A local copy of the configuration is stored in the data directory to
-allow MaxScale to function even if a connection to the cluster cannot be
-made. By default this file is stored at
-<code>/var/lib/maxscale/maxscale-config.json</code>.</p>
+table. The table is created when the first modification to the configuration is
+done. A local copy of the configuration is stored in the data directory to allow
+MaxScale to function even if a connection to the cluster cannot be made. By
+default this file is stored at <code>/var/lib/maxscale/maxscale-config.json</code>.</p>
 <p>Whenever MaxScale starts up, it checks if a local version of this configuration
 exists. If it does and it is a valid cached configuration, the static
 configuration file as well as any other generated configuration files are
