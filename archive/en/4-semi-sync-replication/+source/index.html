@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/4-semi-sync-replication/+r/128200/">128200</a></dd>
+            <dd><a href="/kb/en/4-semi-sync-replication/+r/128673/">128673</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5649">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-07-31 14:13">2023-07-31 14:13</span></dd>
+<span class="datetime" title="2023-08-11 08:07">2023-08-11 08:07</span></dd>
         </dl>
     </div>
     
@@ -315,25 +315,28 @@ MariaDB, since MariaDB 5.5, has included [[semisynchronous-replication|semisynch
 
 === Event Header Changes
 
-After the status byte of a [[3-binlog-network-stream|binlog network stream]], 2 bytes are added before the normal Binlog Event.
+If the user variable {{{@rpl_semi_sync_slave}}}  is set, 2 exta bytes are added after the status byte of a [[3-binlog-network-stream|binlog network stream]] and before the normal binlog event header.
 
 &lt;&lt;style style=&#34;padding: 16px;background-color: #f7f7f7;border-radius: 3px;&#34;&gt;&gt;
 * [[protocol-data-types/#fixed-length-integers|uint&lt;1&gt;]] semi-sync indicator, always **0xef**
-* [[protocol-data-types/#fixed-length-integers|uint&lt;1&gt;]] semi-sync flags
+* [[protocol-data-types/#fixed-length-integers|uint&lt;1&gt;]] semi-sync flags, either **0x00** (no ACK) or **0x01** (ACK)
 &lt;&lt;/style&gt;&gt;
 
-**Note** : The packet size, as in the network protocol header, is then: event_size + 1 byte status + 2 bytes semi-sync replication.
+**Note** : The packet size, as in the network protocol header, is then: {{{event_size + 1 byte status + 2 bytes semi-sync replication}}}.
 
-The SemiSync flag is SEMI_SYNC_ACK_REQ (0x01).
+The MariaDB server sets the user variable whenever it is starting replication. For MariaDB Connector/C , the following query must be executed before the call to {{{mariadb_rpl_open()}}} is made to enable semi-sync replication.
+&lt;&lt;sql&gt;&gt;
+SET @rpl_semi_sync_slave=1
+&lt;&lt;/sql&gt;&gt;
 
-If the SEMI_SYNC_ACK_REQ flag is set, the master waits for a Semi Sync ACK packet from the slave and when the Semi Sync ACK is seen, the master acknowledges the client which has issued the transaction with a standard OK_Packet or a ERR_Packet.
+If the semi-sync flag is set to 0x01, the master waits for a Semi Sync ACK packet from the slave and when the Semi Sync ACK is seen, the master acknowledges the client which has issued the transaction with a standard OK_Packet or a ERR_Packet.
 
 The master can then write the transaction to the binary log and send the next events to the slave.
 
-**Note** : The master only sends Semi Sync ACKs if the user variable {{{@rpl_semi_sync_slave}}} is set to {{{1}}}. The MariaDB server sets this variable as a part of the replication startup sequence.
+**Note** : The master only requests Semi Sync ACKs if [[semisynchronous-replication/#rpl_semi_sync_master_enabled|rpl_semi_sync_master_enabled]] is enabled. If it is not enabled, the semi-sync flag will always be 0x00.
 
 ==== Semi Sync ACK Details
-This event is sent by the slave (when requested: SEMI_SYNC_ACK_REQ is set)
+This event is sent by the slave **only if** the semi-sync flag is set to 0x01.
 
 &lt;&lt;style style=&#34;padding: 16px;background-color: #f7f7f7;border-radius: 3px;&#34;&gt;&gt;
 * [[protocol-data-types/#fixed-length-integers|uint&lt;1&gt;]] semi-sync indicator, always **0xef**
@@ -343,6 +346,7 @@ This event is sent by the slave (when requested: SEMI_SYNC_ACK_REQ is set)
 
 **Note**: __this packet sent by the slave never includes the CRC32.__
 
+Sending an ACK when the semi-sync flag is set to 0x0 will cause an error and the connection is closed.
 
 ==== Example of Heartbeat Event With Semi-Sync Protocol and CRC32
 

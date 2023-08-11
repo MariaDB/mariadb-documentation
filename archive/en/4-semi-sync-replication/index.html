@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-07-31 14:13">1 week ago</span></dd>
+<span class="datetime" title="2023-08-11 08:07">7 hours, 53 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -404,22 +404,24 @@
 <a href="/kb/en/standard-replication/">Regular MariaDB replication</a> is asynchronous.<br>
 MariaDB, since <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a>, has included <a href="/kb/en/semisynchronous-replication/">semisynchronous replication</a> semi-synchronous Binlog Event.</p>
 <h3 class="anchored_heading" id="event-header-changes">Event Header Changes</h3>
-<p>After the status byte of a <a href="/kb/en/3-binlog-network-stream/">binlog network stream</a>, 2 bytes are added before the normal Binlog Event.</p>
+<p>If the user variable <code>@rpl_semi_sync_slave</code>  is set, 2 exta bytes are added after the status byte of a <a href="/kb/en/3-binlog-network-stream/">binlog network stream</a> and before the normal binlog event header.</p>
 <div class="cstm-style" style="padding: 16px;background-color: #f7f7f7;border-radius: 3px;"><ul start="1"><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">uint&lt;1&gt;</a> semi-sync indicator, always <strong>0xef</strong>
-</li><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">uint&lt;1&gt;</a> semi-sync flags
+</li><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">uint&lt;1&gt;</a> semi-sync flags, either <strong>0x00</strong> (no ACK) or <strong>0x01</strong> (ACK)
 </li></ul>
-</div><p><strong>Note</strong> : The packet size, as in the network protocol header, is then: event_size + 1 byte status + 2 bytes semi-sync replication.</p>
-<p>The SemiSync flag is SEMI_SYNC_ACK_REQ (0x01).</p>
-<p>If the SEMI_SYNC_ACK_REQ flag is set, the master waits for a Semi Sync ACK packet from the slave and when the Semi Sync ACK is seen, the master acknowledges the client which has issued the transaction with a standard OK_Packet or a ERR_Packet.</p>
+</div><p><strong>Note</strong> : The packet size, as in the network protocol header, is then: <code>event_size + 1 byte status + 2 bytes semi-sync replication</code>.</p>
+<p>The MariaDB server sets the user variable whenever it is starting replication. For MariaDB Connector/C , the following query must be executed before the call to <code>mariadb_rpl_open()</code> is made to enable semi-sync replication.</p>
+<pre class="fixed"><span class="k">SET</span> <span class="o">@</span><span class="n">rpl_semi_sync_slave</span><span class="o">=</span><span class="mi">1</span>
+</pre><p>If the semi-sync flag is set to 0x01, the master waits for a Semi Sync ACK packet from the slave and when the Semi Sync ACK is seen, the master acknowledges the client which has issued the transaction with a standard OK_Packet or a ERR_Packet.</p>
 <p>The master can then write the transaction to the binary log and send the next events to the slave.</p>
-<p><strong>Note</strong> : The master only sends Semi Sync ACKs if the user variable <code>@rpl_semi_sync_slave</code> is set to <code>1</code>. The MariaDB server sets this variable as a part of the replication startup sequence.</p>
+<p><strong>Note</strong> : The master only requests Semi Sync ACKs if <a href="/kb/en/semisynchronous-replication/#rpl_semi_sync_master_enabled">rpl_semi_sync_master_enabled</a> is enabled. If it is not enabled, the semi-sync flag will always be 0x00.</p>
 <h4 class="anchored_heading" id="semi-sync-ack-details">Semi Sync ACK Details</h4>
-<p>This event is sent by the slave (when requested: SEMI_SYNC_ACK_REQ is set)</p>
+<p>This event is sent by the slave <strong>only if</strong> the semi-sync flag is set to 0x01.</p>
 <div class="cstm-style" style="padding: 16px;background-color: #f7f7f7;border-radius: 3px;"><ul start="1"><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">uint&lt;1&gt;</a> semi-sync indicator, always <strong>0xef</strong>
 </li><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">uint&lt;8&gt;</a> the next position of received event
 </li><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">string&lt;EOF&gt;</a>  binlog file name.
 </li></ul>
 </div><p><strong>Note</strong>: <u>this packet sent by the slave never includes the CRC32.</u></p>
+<p>Sending an ACK when the semi-sync flag is set to 0x0 will cause an error and the connection is closed.</p>
 <h4 class="anchored_heading" id="example-of-heartbeat-event-with-semi-sync-protocol-and-crc32">Example of Heartbeat Event With Semi-Sync Protocol and CRC32</h4>
 <p>We can clearly see:</p>
 <ul start="1"><li>2a 00 00 [3 bytes] packet size:
