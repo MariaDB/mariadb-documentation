@@ -1,2 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: JSON_OBJECT</title><link>https://mariadb.com/kb/en/json_object/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/json_object/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Mon, 07 Aug 2023 17:49:48 +0000</lastBuildDate></channel></rss>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: JSON_OBJECT</title><link>https://mariadb.com/kb/en/json_object/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/json_object/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Mon, 14 Aug 2023 17:42:19 +0000</lastBuildDate><item><title>Re: JSON_OBJECT</title><link>https://mariadb.com/kb/en/json_object/+comments/6328</link><description>&lt;p&gt;WARNING!
+JSON_OBJECT will flatten a sub JSON object/array if the key's value has conditional paths that return a non-JSON type: eg&lt;/p&gt;
+&lt;pre class="fixed"&gt;SELECT 
+	JSON_DETAILED(
+		JSON_OBJECT(
+			'key'
+		, 
+			IF(
+				TRUE
+			,
+				JSON_ARRAY(1,2)
+			,
+				JSON_COMPACT('XXX')
+			)
+		)
+	)
+&lt;/pre&gt;&lt;p&gt;will return &lt;/p&gt;
+&lt;pre class="fixed"&gt;{
+    &amp;#34;key&amp;#34;: 
+    [
+        1,
+        2
+    ]
+}
+&lt;/pre&gt;&lt;p&gt;but &lt;/p&gt;
+&lt;pre class="fixed"&gt;SELECT 
+	JSON_DETAILED(
+		JSON_OBJECT(
+			'key'
+		, 
+			IF(
+				TRUE
+			,
+				JSON_ARRAY(1,2)
+			,
+				'XXX'
+			)
+		)
+	)
+&lt;/pre&gt;&lt;p&gt;will return&lt;/p&gt;
+&lt;pre class="fixed"&gt;{
+    &amp;#34;key&amp;#34;: &amp;#34;[1, 2]&amp;#34;
+}
+&lt;/pre&gt;&lt;p&gt;because the JSON array has been flattened due to the competing path returning a string ... even though it will NEVER use that path.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Todd MICHAEL</dc:creator><guid>https://mariadb.com/kb/en/json_object/+comments/6328</guid></item></channel></rss>
