@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-03-22 17:10">4 months, 3 weeks ago</span></dd>
+<span class="datetime" title="2023-08-18 12:04">3 hours, 56 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -426,14 +426,21 @@
 </li>
 </div><p>
 INSERT, UPDATE and DELETE statements can be particularly heavy operations to perform, as all indexes need to be updated after each change. For this reason these changes are often buffered.</p>
-<p>Pages are modified in the <a href="/kb/en/innodb-buffer-pool/">buffer pool</a>, and not immediately on disk. When rows are deleted, a flag is set, thus rows are not immediately deleted on disk. Later the changes will be written to disk (''flushed'') by InnoDB background threads. Pages that have been modified in memory and not yet flushed are called dirty pages. The buffering of data changes is called Change Buffer.</p>
+<p>Pages are modified in the <a href="/kb/en/innodb-buffer-pool/">buffer pool</a>, and not immediately on disk. After all the records that cover the changes to a data page have been written to the InnoDB redo log, the changed page may be written (''flushed'') to a data file. Pages that have been modified in memory and not yet flushed are called dirty pages.</p>
+<p>The Change Buffer is an optimization that allows some data to be modified even though the data page does not exist in the buffer pool. Instead of modifying the data in its final destination, we would insert a record into a special Change Buffer that resides in the system tablespace. When the page is read into the buffer pool for any reason, the buffered changes will be applied to it.</p>
+<p>The Change Buffer only contains changes to secondary index leaf pages.</p>
 <p>Before <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a>, only inserted rows could be buffered, so this buffer was called Insert Buffer. The old name still appears in several places, for example in the output of <a href="/kb/en/show-engine-innodb-status/">SHOW ENGINE INNODB STATUS</a>.</p>
-<p>The change buffer only contains changes to the indexes. Inserts to UNIQUE secondary indexes cannot be buffered unless unique_checks=0 is used. Delete-mark and purge buffering of UNIQUE secondary indexes is allowed.</p>
+<p>Inserts to UNIQUE secondary indexes cannot be buffered unless <a href="/kb/en/server-system-variables/#unique_checks">unique_checks=0</a> is used. This may sometimes allow duplicates to be inserted into the UNIQUE secondary index. Much of the time, the UNIQUE constraint would be checked because the change buffer could only be used if the index page is not located in the buffer pool.</p>
+<p>When rows are deleted, a flag is set, thus rows are not immediately deleted. Delete-marked records may be purged after the transaction has been committed and any read views that were created before the commit have been closed. Delete-mark and purge buffering of any secondary indexes is allowed.</p>
+<p>ROLLBACK never makes use of the change buffer; it would force a merge of any changes that were buffered during the execution of the transaction.</p>
 <p>The Change Buffer is an optimization because:</p>
-<ul start="1"><li>A page can be modified several times in memory and be flushed to disk only once.
+<ul start="1"><li>Some random-access page reads will be transformed into modifications of change buffer pages.
+</li><li>A change buffer page can be modified several times in memory and be flushed to disk only once.
 </li><li>Dirty pages are flushed together, so the number of IO operations is lower.
 </li></ul>
-<p>If the server crashes, usually the Change Buffer is not empty. However, changes are not lost because they are written to the transaction logs, so they can be applied at server restart.</p>
+<p>If the server crashes or is shut down, the Change Buffer might not be empty. The Change Buffer resides in the InnoDB system tablespace, covered by the write-ahead log, so they can be applied at server restart. A shutdown with <a href="/kb/en/innodb-system-variables/#innodb_fast_shutdown">innodb_fast_shutdown=0</a> will merge all buffered changes.</p>
+<p>Starting with <a href="/kb/en/what-is-mariadb-105/">MariaDB 10.5</a>, there no longer is a background task that would merge the change buffer to the secondary index pages. The changes would only be merged on demand.</p>
+<p>The Change Buffer was removed in <a href="/kb/en/what-is-mariadb-110/">MariaDB 11.0</a> because it has been a prominent source of corruption bugs that have been extremely hard to reproduce.</p>
 <p>The main server system variable here is <a href="/kb/en/innodb-system-variables/#innodb_change_buffering">innodb_change_buffering</a>, which determines which form of change buffering, if any, to use.</p>
 <p>The following settings are available:</p>
 <ul><li>inserts
