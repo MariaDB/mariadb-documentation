@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-maxscale-6-mariadb-maxscale-configuration-guide/+r/128205/">128205</a></dd>
+            <dd><a href="/kb/en/mariadb-maxscale-6-mariadb-maxscale-configuration-guide/+r/129202/">129202</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1">
@@ -683,6 +683,20 @@ If both are defined, the query needs to match *match* but not match *exclude*.
 
 Even if a filter does not act on a query, the query is not lost. The query is simply
 passed on to the next module in the processing chain as if the filter was not there.
+
+### Enumerations
+
+Enumeration type parameters have a pre-defined set of accepted values. For types
+declared as `enum`, only one value is accepted. For `enum_mask` types, multiple
+values can be defined by separating them with commas. All enumeration values in
+MaxScale are case-sensitive.
+
+For example the `router_options` parameter in the `readconnroute` router is a
+mask type enumeration:
+
+```
+router_options=master,slave
+```
 
 ## Global Settings
 
@@ -1411,9 +1425,16 @@ than `0`, this configuration setting will not have an effect.
 
 How many log entries are stored in the session specific trace log. This log is
 written to disk when a session ends abnormally and can be used for debugging
-purposes. It would be good to enable this if a session is disconnected and the
-log is not detailed enough. In this case the info log might reveal the true
-cause of why the connection was closed.
+purposes. Currently the session trace log is written to the log in the following situations:
+
+* When MaxScale receives a fatal signal and is about to crash.
+* Whenever an unexpected response is read from a server
+* If the session is not closed gracefully (i.e. client doesn&#39;t send a  COM_QUIT packet)
+* Whenever readwritesplit receives a responce that is was not expecting.
+
+It would be good to enable this if a session is disconnected and the log is not
+detailed enough. In this case the info log might reveal the true cause of why
+the connection was closed.
 
 ```
 session_trace=20
@@ -1422,6 +1443,43 @@ Default is `0`.
 
 The session trace log is also exposed by REST API and is shown with
 `maxctrl show sessions`.
+
+The order in which the session trace messages are logged into the log changed in
+MaxScale 6.4.9 (MXS-4716). Newer versions will log the messages in the &#34;normal
+log order&#34; of older events coming first and newer events appearing later in the
+file. Older versions of MaxScale logged the trace dump in the reverse order with
+the newest messages first and oldest ones last.
+
+### `session_trace_match`
+
+**Type**: [regex](#regular-expressions)
+**Default**: none
+**Dynamic**: Yes
+
+If both `session_trace` and `session_trace_match` are defined, and a trace log
+entry of a session matches the regular expression, the trace log is written to
+disk. The check for the match is done when the session is stopping.
+
+The most effective way to debug MaxScale related issues is to turn on `log_info`
+and observe the events written into the MaxScale log. The only problem with this
+approach is that it can cause a severe performance bottleneck and can easily
+fill up the disk as the amount of data written to it is significant. With
+`session_trace` and `session_trace_match`, the content that actually gets logged
+can be filtered to only what is needed.
+
+For example, the following configuration would only log the trace log messages
+from sessions that execute SQL queries with syntax errors:
+
+```
+session_trace=1000
+session_trace_match=/You have an error in your SQL syntax/
+```
+
+This could be used to easily identify which applications execute the queries
+without having to gather the info level log output from all the sessions that
+connect to MaxScale. For every session that ends up logging a syntax error
+message, the last 1000 lines of log output done by that session is written into
+the MaxScale log.
 
 ### `writeq_high_water`
 
@@ -2159,6 +2217,27 @@ performance will be the same with or without `connection_keepalive`.
 
 If you want to avoid the performance cost and you don&#39;t need the connection
 keepalive feature, you can disable it with `connection_keepalive=0s`.
+
+### `force_connection_keepalive`
+
+- **Type**: boolean
+- **Default**: false
+- **Dynamic**: Yes
+
+By default, connection keepalive pings are only sent if the client is either
+executing a query or has been idle for less than the duration configured in
+`connection_keepalive`. When this parameter is enabled, keepalive pings are
+unconditionally sent to any backends that have been idle for longer than
+`connection_keepalive` seconds. This option can be used to emulate the
+pre-2.5.21 behavior if long-lived application connections rely on the old
+unconditional keepalive pings.
+
+*Note:* if `force_connection_keepalive` is enabled and `connection_keepalive` in
+MaxScale is set to a lower value than the `wait_timeout` on the database, the
+client idle timeouts that `wait_timeout` control are no longer effective. This
+happens because MaxScale unconditionally sends the pings which make the client
+behave like it is not idle and thus the connections will never be killed due to
+`wait_timeout`.
 
 ### `net_write_timeout`
 
@@ -3214,7 +3293,7 @@ API. **Only do this if you know what you are doing.**
 
 ## Filter Modules
 
-![image alt text](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/6.4.8/Documentation/Getting-Started/images/image_10.png)
+![image alt text](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/6.4.9/Documentation/Getting-Started/images/image_10.png)
 
 Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full

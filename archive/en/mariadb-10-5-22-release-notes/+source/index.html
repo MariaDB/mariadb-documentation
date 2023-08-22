@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-10-5-22-release-notes/+r/128728/">128728</a></dd>
+            <dd><a href="/kb/en/mariadb-10-5-22-release-notes/+r/128932/">128932</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-08-14 18:47">2023-08-14 18:47</span></dd>
+<span class="datetime" title="2023-08-19 15:08">2023-08-19 15:08</span></dd>
         </dl>
     </div>
     
@@ -327,33 +327,43 @@ Thanks, and enjoy MariaDB!
 
 === General
 * As per the [[deprecation-policy|MariaDB Deprecation Policy]], this will be the last release of MariaDB 10.5 for Ubuntu 18.04 LTS &#34;Bionic&#34;
-* ##mysqldump --force## doesn&#39;t ignore error as it should (MDEV-31092)
+* [[mariadb-dump|mariadb-dump --force]] doesn&#39;t ignore error as it should (MDEV-31092)
 * 280 Bytes lost in mysys/array.c, mysys/hash.c, sql/sp.cc, sql/sp.cc, sql/item_create.cc, sql/item_create.cc, sql/sql_yacc.yy:10748 when using oracle sql_mode (MDEV-26186)
 * SQL/PL package body does not appear in ##I_S.ROUTINES.ROUTINE_DEFINITION## (MDEV-30662)
-* Unexpected result when combining DISTINCT, subselect and LIMIT (MDEV-28285)
-* ROW variables do not get assigned from subselects (MDEV-31250)
+* Unexpected result when combining [[select/#distinct|DISTINCT]], subselect and [[limit|LIMIT]] (MDEV-28285)
+* [[row|ROW]] variables do not get assigned from subselects (MDEV-31250)
+* Crash after setting global session_track_system_variables to an invalid value (MDEV-25237)
+* ODKU of non-versioning column inserts history row (MDEV-23100)
+* UPDATE not working properly on transaction precise system versioned table (MDEV-25644)
+* Assertion ##`const_item_cache == true&#39;## failed in ##Item_func::fix_fields## (MDEV-31319)
+* ANALYZE doesn&#39;t work with pushed derived tables (MDEV-29284)
+* ##get_partition_set## is never executed in ##ha_partition::multi_range_key_create_key## due to bitwise &amp; with 0 constant (MDEV-24712)
+* Client can crash the server with a ##mysql_list_fields(&#34;view&#34;)## call (MDEV-30159)
+* ##I_S.parameters## not immediatly changed updated after procedure change (MDEV-31064)
 
 === Character Sets, Data Types
 * UBSAN: null pointer passed as argument 1, which is declared to never be null in ##my_strnncoll_binary## on ##SELECT  ... COUNT## or ##GROUP_CONCAT## (MDEV-28384)
 * Possibly wrong result or Assertion `0&#39; failed in ##Item_func_round::native_op## (MDEV-23838)
 * Assertion ##`(length % 4) == 0&#39;## failed in ##my_lengthsp_utf32## on ##SELECT## (MDEV-29019)
 * UBSAN: negation of -X cannot be represented in type ##&#39;long long int&#39;##; cast to an unsigned type to negate this value to itself in ##Item_func_mul::int_op## and ##Item_func_round::int_op## (MDEV-30932)
+* Assorted assertion failures in json_find_path with certain collations (MDEV-23187)
 
 === InnoDB
 * innochecksum dies with Floating point exception (MDEV-31641)
-* Deadlock with 3 concurrent DELETEs by unique key (MDEV-10962)
+* Deadlock with 3 concurrent [[delete|DELETEs]] by [[getting-started-with-indexes/#unique-index|unique key]] (MDEV-10962)
 * innodb protection against dual processes accessing data insufficient (MDEV-31568)
 * Assertion ##`!strcmp(index-&gt;table-&gt;name.m_name, &#34;SYS_FOREIGN&#34;) || !strcmp(index-&gt;table-&gt;name.m_name, &#34;SYS_FOREIGN_COLS&#34;)&#39;## failed in ##btr_node_ptr_max_size## (MDEV-19216)
 * ##MODIFY COLUMN## can break FK constraints, and lead to unrestorable dumps (MDEV-31086)
-* Recovery or backup failure after ##innodb_undo_log_truncate=ON## (MDEV-31487)
+* Recovery or backup failure after [[innodb-system-variables/#innodb_undo_log_truncate|innodb_undo_log_truncate=ON]] (MDEV-31487)
 * Assertion ##&#39;n &amp; PENDING&#39;## failed in ##fil_space_t::set_needs_flush()## (MDEV-31442)
 * ##fil_node_open_file()## releases ##fil_system.mutex## allowing other thread to open its file node (MDEV-31256)
 * Freed data pages are not always being scrubbed (MDEV-31253)
-* ##innodb_undo_log_truncate=ON## fails to wait for purge of enough transaction history (MDEV-31355)
-* ##SET GLOBAL innodb_undo_log_truncate=ON## does not free space when no undo logs exist (MDEV-31382)
-* ##innodb_read_ahead_threshold## (linear read-ahead) does not work (MDEV-29967)
+* [[innodb-system-variables/#innodb_undo_log_truncate|innodb_undo_log_truncate=ON]] fails to wait for purge of enough transaction history (MDEV-31355)
+* SET GLOBAL [[innodb-system-variables/#innodb_undo_log_truncate|innodb_undo_log_truncate=ON]] does not free space when no undo logs exist (MDEV-31382)
+* [[innodb-system-variables/#innodb_read_ahead_threshold|innodb_read_ahead_threshold]] (linear read-ahead) does not work (MDEV-29967)
 * ##fil_ibd_create()## may hijack the file handle of an old file (MDEV-31347)
-* ##innodb_undo_log_truncate=ON## recovery results in a corrupted undo log (MDEV-31373)
+* [[innodb-system-variables/#innodb_undo_log_truncate|innodb_undo_log_truncate=ON]] recovery results in a corrupted undo log (MDEV-31373)
+* Foreign Key Constraint actions don&#39;t affect Virtual Column (MDEV-18114)
 
 === Aria
 * Various crashes upon INSERT/UPDATE after changing Aria settings (MDEV-28054)
@@ -361,24 +371,26 @@ Thanks, and enjoy MariaDB!
 
 === Spider
 * SIGSEGV in ##spider_db_open_item_field## and SIGSEGV in ##spider_db_print_item_type##, on SELECT (MDEV-29447)
-* Spider variables that double as table params overriding mechanism is buggy (MDEV-31524)
+* [[spider-server-system-variables|Spider variables]] that double as table params overriding mechanism is buggy (MDEV-31524)
 
 === Optimizer
 * Assertion ##`last_key_entry &gt;= end_pos&#39;## failed in virtual bool ##JOIN_CACHE_HASHED::put_record()## (MDEV-31348)
 * Problem with open ranges on prefix blobs keys (MDEV-31800)
-* Equal on two RANK window functions create wrong result (MDEV-20010)
+* Equal on two [[rank|RANK]] [[window-functions|window functions]] create wrong result (MDEV-20010)
 * Recursive CTE execution is interrupted without errors or warnings (MDEV-31214)
 * Assertion ##`s-&gt;table-&gt;opt_range_condition_rows &lt;= s-&gt;found_records&#39;## failed in ##apply_selectivity_for_table## (MDEV-31449)
 * Inconsistency between MRR and SQL layer costs can cause poor query plan (MDEV-31479)
 * ##MAX_SEL_ARG## memory exhaustion is not visible in the optimizer trace (MDEV-30964)
-* ##SHOW TABLES## not working properly with ##lower_case_table_names=2## (MDEV-30765)
+* [[show-tables|SHOW TABLES]] not working properly with ##lower_case_table_names=2## (MDEV-30765)
 * Segfault on select query using index for group-by and filesort (MDEV-30143)
+* Server crash in ##store_length##, assertion failure in ##Type_handler_string_result::sort_length## (MDEV-31743)
 
 === Replication
 * Parallel Slave SQL Thread Can Update Seconds_Behind_Master with Active Workers (MDEV-30619)
-* ##ALTER SEQUENCE## ends up in optimistic parallel slave binlog out-of-order (MDEV-31503)
-* ##STOP SLAVE## takes very long time on a busy system (MDEV-13915)
-* On slave XA COMMIT/XA ROLLBACK fail to return an error in read-only mode (MDEV-30978)
+* [[alter-sequence|ALTER SEQUENCE]] ends up in optimistic parallel slave binlog out-of-order (MDEV-31503)
+* [[stop-replica|STOP SLAVE]] takes very long time on a busy system (MDEV-13915)
+* On slave [[xa-transactions|XA COMMIT/XA ROLLBACK]] fail to return an error in read-only mode (MDEV-30978)
+* ##rpl.rpl_manual_change_index_file## occasionally fails in BB with Result length mismatch (MDEV-30214)
 
 === Galera
 * Node has been dropped from the cluster on Startup / Shutdown with async replica (MDEV-31413)
@@ -401,10 +413,8 @@ Thanks, and enjoy MariaDB!
 For a complete list of changes made in MariaDB 10.5.22, with links to detailed
 information on each push, see the [[mariadb-10-5-22-changelog|changelog]].
 
-&lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 == Contributors
-For a full list of contributors to MariaDB 10.5.22, see the [[https://mariadb.org/mariadb-10-11-4-10-10-5-10-9-7-10-6-14-10-5-21-10-4-30-now-available/|MariaDB Foundation release announcement]].
-&lt;&lt;/style&gt;&gt;
+For a full list of contributors to MariaDB 10.5.22, see the [[https://mariadb.org/mariadb-11-0-3-10-11-5-10-10-6-10-9-8-10-6-15-10-5-22-10-4-31-now-available/|MariaDB Foundation release announcement]].
 
 &lt;&lt;include slug=&#34;release-notification&#34;&gt;&gt;</textarea>
     

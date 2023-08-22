@@ -279,12 +279,12 @@ Administra..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2020-06-18 14:49">3 years, 1 month ago</span></dd>
+<span class="datetime" title="2020-06-18 14:49">3 years, 2 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2020-06-18 14:49">3 years, 1 month ago</span></dd>
+<span class="datetime" title="2020-06-18 14:49">3 years, 2 months ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -301,7 +301,7 @@ Administra..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/2.5.27/Documentation/Getting-Started/Configuration-Guide.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/2.5.28/Documentation/Getting-Started/Configuration-Guide.md">GitHub</a></dd>
         
     </dl>
 
@@ -451,6 +451,7 @@ Administra..." />
 <li><a href="#standard-regular-expression-settings-for-filters">Standard regular expression settings for filters</a></li>
 </ul>
 </li>
+<li><a href="#enumerations">Enumerations</a></li>
 </ul>
 </li>
 <li><a href="#global-settings">Global Settings</a><ul>
@@ -548,6 +549,7 @@ Administra..." />
 <li><a href="#session_track_trx_state">session_track_trx_state</a></li>
 <li><a href="#retain_last_statements_1">retain_last_statements</a></li>
 <li><a href="#connection_keepalive">connection_keepalive</a></li>
+<li><a href="#force_connection_keepalive">force_connection_keepalive</a></li>
 <li><a href="#net_write_timeout">net_write_timeout</a></li>
 </ul>
 </li>
@@ -985,6 +987,17 @@ not defined, all queries are considered to match.</p>
 <p>If both are defined, the query needs to match <em>match</em> but not match <em>exclude</em>.</p>
 <p>Even if a filter does not act on a query, the query is not lost. The query is simply
 passed on to the next module in the processing chain as if the filter was not there.</p>
+<h3 id="enumerations">Enumerations</h3>
+<p>Enumeration type parameters have a pre-defined set of accepted values. For types
+declared as <code>enum</code>, only one value is accepted. For <code>enum_mask</code> types, multiple
+values can be defined by separating them with commas. All enumeration values in
+MaxScale are case-sensitive.</p>
+<p>For example the <code>router_options</code> parameter in the <code>readconnroute</code> router is a
+mask type enumeration:</p>
+<div><pre><span></span>router_options=master,slave
+</pre></div>
+
+
 <h2 id="global-settings">Global Settings</h2>
 <p>The global settings, in a section named <code>[MaxScale]</code>, allow various parameters
 that affect MariaDB MaxScale as a whole to be tuned. This section must be
@@ -2057,6 +2070,25 @@ rely on result tracking (e.g. <code>readwritesplit</code> and <code>schemarouter
 performance will be the same with or without <code>connection_keepalive</code>.</p>
 <p>If you want to avoid the performance cost and you don't need the connection
 keepalive feature, you can disable it with <code>connection_keepalive=0s</code>.</p>
+<h3 id="force_connection_keepalive"><code>force_connection_keepalive</code></h3>
+<ul>
+<li><strong>Type</strong>: boolean</li>
+<li><strong>Default</strong>: false</li>
+<li><strong>Dynamic</strong>: Yes</li>
+</ul>
+<p>By default, connection keepalive pings are only sent if the client is either
+executing a query or has been idle for less than the duration configured in
+<code>connection_keepalive</code>. When this parameter is enabled, keepalive pings are
+unconditionally sent to any backends that have been idle for longer than
+<code>connection_keepalive</code> seconds. This option can be used to emulate the
+pre-2.5.21 behavior if long-lived application connections rely on the old
+unconditional keepalive pings.</p>
+<p><em>Note:</em> if <code>force_connection_keepalive</code> is enabled and <code>connection_keepalive</code> in
+MaxScale is set to a lower value than the <code>wait_timeout</code> on the database, the
+client idle timeouts that <code>wait_timeout</code> control are no longer effective. This
+happens because MaxScale unconditionally sends the pings which make the client
+behave like it is not idle and thus the connections will never be killed due to
+<code>wait_timeout</code>.</p>
 <h3 id="net_write_timeout"><code>net_write_timeout</code></h3>
 <p>This parameter controls how long a network write to the client can stay
 buffered. This feature is disabled by default.</p>
@@ -2502,7 +2534,7 @@ run MariaDB MaxScale without a monitor module. In this case an external
 monitoring system must the status of each server via MaxCtrl or the REST
 API. <strong>Only do this if you know what you are doing.</strong></p>
 <h2 id="filter-modules">Filter Modules</h2>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/2.5.27/Documentation/Getting-Started/images/image_10.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/2.5.28/Documentation/Getting-Started/images/image_10.png"></p>
 <p>Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
 explanation of each filter's functionality can be found in its documentation.</p>

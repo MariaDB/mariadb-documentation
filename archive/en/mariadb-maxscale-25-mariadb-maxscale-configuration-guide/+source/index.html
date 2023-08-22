@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-maxscale-25-mariadb-maxscale-configuration-guide/+r/128042/">128042</a></dd>
+            <dd><a href="/kb/en/mariadb-maxscale-25-mariadb-maxscale-configuration-guide/+r/129088/">129088</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5571">
@@ -668,6 +668,20 @@ If both are defined, the query needs to match *match* but not match *exclude*.
 
 Even if a filter does not act on a query, the query is not lost. The query is simply
 passed on to the next module in the processing chain as if the filter was not there.
+
+### Enumerations
+
+Enumeration type parameters have a pre-defined set of accepted values. For types
+declared as `enum`, only one value is accepted. For `enum_mask` types, multiple
+values can be defined by separating them with commas. All enumeration values in
+MaxScale are case-sensitive.
+
+For example the `router_options` parameter in the `readconnroute` router is a
+mask type enumeration:
+
+```
+router_options=master,slave
+```
 
 ## Global Settings
 
@@ -2017,6 +2031,27 @@ performance will be the same with or without `connection_keepalive`.
 If you want to avoid the performance cost and you don&#39;t need the connection
 keepalive feature, you can disable it with `connection_keepalive=0s`.
 
+### `force_connection_keepalive`
+
+- **Type**: boolean
+- **Default**: false
+- **Dynamic**: Yes
+
+By default, connection keepalive pings are only sent if the client is either
+executing a query or has been idle for less than the duration configured in
+`connection_keepalive`. When this parameter is enabled, keepalive pings are
+unconditionally sent to any backends that have been idle for longer than
+`connection_keepalive` seconds. This option can be used to emulate the
+pre-2.5.21 behavior if long-lived application connections rely on the old
+unconditional keepalive pings.
+
+*Note:* if `force_connection_keepalive` is enabled and `connection_keepalive` in
+MaxScale is set to a lower value than the `wait_timeout` on the database, the
+client idle timeouts that `wait_timeout` control are no longer effective. This
+happens because MaxScale unconditionally sends the pings which make the client
+behave like it is not idle and thus the connections will never be killed due to
+`wait_timeout`.
+
 ### `net_write_timeout`
 
 This parameter controls how long a network write to the client can stay
@@ -2587,7 +2622,7 @@ API. **Only do this if you know what you are doing.**
 
 ## Filter Modules
 
-![image alt text](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/2.5.27/Documentation/Getting-Started/images/image_10.png)
+![image alt text](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/2.5.28/Documentation/Getting-Started/images/image_10.png)
 
 Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
