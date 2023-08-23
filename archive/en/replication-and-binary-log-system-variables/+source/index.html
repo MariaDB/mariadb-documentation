@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/replication-and-binary-log-system-variables/+r/128901/">128901</a></dd>
+            <dd><a href="/kb/en/replication-and-binary-log-system-variables/+r/129368/">129368</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-08-17 14:37">2023-08-17 14:37</span></dd>
+<span class="datetime" title="2023-08-22 22:47">2023-08-22 22:47</span></dd>
         </dl>
     </div>
     
@@ -309,7 +309,7 @@ This page lists system variables that are related to [[binary-log|binary logging
 
 See [[server-system-variables|Server System Variables]] for a complete list of system variables and instructions on setting them, as well as [[gtid/#system-variables-for-global-transaction-id|System variables for global transaction ID]].
 
-Also see [[mysqld-options#replication-and-binary-logging-options|mysqld replication options]] for related options that are not system variables (such as [[mysqld-options#-binlog-do-db|binlog_do_db]] and [[mysqld-options#-binlog-ignore-db|binlog_ignore_db]]).
+Also see [[mariadbd-options#replication-and-binary-logging-options|mariadbd replication options]] for related options that are not system variables (such as [[mariadbd-options#-binlog-do-db|binlog_do_db]] and [[mariadbd-options#-binlog-ignore-db|binlog_ignore_db]]).
 
 See also the [[full-list-of-mariadb-options-system-and-status-variables|Full list of MariaDB options, system and status variables]]. 
 
@@ -506,7 +506,7 @@ With [[group-commit-for-the-binary-log|group commit for the binary log]], the se
 ==== ##binlog_row_image##
 * **Description:** Controls whether, in [[binary-log-formats#row-based|row-based]] [[replication]], rows should be logged in &#39;FULL&#39;, &#39;NOBLOB&#39; or &#39;MINIMAL&#39; formats. In row-based replication (the variable has no effect with [[binary-log-formats#statement-based|statement-based replication]]), each row change event contains an image for matching against when choosing the row to be updated, and another image containing the changes. Before the introduction of this variable, all columns were logged for both of these images. In certain circumstances, this is not necessary, and memory, disk and network resources can be saved by partial logging. Note that to safely change this setting from the default, the table being replicated to must contain identical primary key definitions, and columns must be present, in the same order, and use the same data types as the original table. If these conditions are not met, matches may not be correctly determined and updates and deletes may diverge on the replica, with no warnings or errors returned.
 ** ##FULL##: All columns in the before and after image are logged. This is the default, and the only behavior in earlier versions.
-** ##NOBLOB##: mysqld avoids logging blob and text columns whenever possible (eg, blob column was not changed or is not part of primary key).
+** ##NOBLOB##: mariadbd avoids logging blob and text columns whenever possible (eg, blob column was not changed or is not part of primary key).
 ** ##MINIMAL##: A PK equivalent (PK columns or full row if there is no PK in the table) is logged in the before image, and only changed columns are logged in the after image.
 * **Commandline:** &lt;&lt;code&gt;&gt;--binlog-row-image=value&lt;&lt;/code&gt;&gt;
 * **Scope:** Global, Session
@@ -597,7 +597,7 @@ With [[group-commit-for-the-binary-log|group commit for the binary log]], the se
 &lt;&lt;toc-item slug=&#34;global-transaction-id#last_gtid&#34; level=3&gt;&gt;##last_gtid##&lt;&lt;/toc-item&gt;&gt;
 
 ==== ##log_bin##
-* **Description:** Whether [[binary-log|binary logging]] is enabled or not. If the --log-bin [[mysqld-options-full-list|option]] is used, log_bin will be set to ON, otherwise it will be OFF.  If no ##name## option is given for ##--log-bin##, ##datadir/&#39;log-basename&#39;-bin## or ##&#39;datadir&#39;/mysql-bin## will be used (the latter if [[mysqld-options#-log-basename|--log-basename]] is not specified). We strongly recommend you use either &lt;&lt;code&gt;&gt;--log-basename&lt;&lt;/code&gt;&gt; or specify a filename to ensure that [[replication]] doesn&#39;t stop if the real hostname of the computer changes. The name option can optionally include an absolute path. If no path is specified, the log will be written to the [[server-system-variables#datadir|data directory]]. The name can optionally include the file extension; it will be stripped and only the file basename will be used.
+* **Description:** Whether [[binary-log|binary logging]] is enabled or not. If the --log-bin [[mariadbd-options-full-list|option]] is used, log_bin will be set to ON, otherwise it will be OFF.  If no ##name## option is given for ##--log-bin##, ##datadir/&#39;log-basename&#39;-bin## or ##&#39;datadir&#39;/mysql-bin## will be used (the latter if [[mariadbd-options#-log-basename|--log-basename]] is not specified). We strongly recommend you use either &lt;&lt;code&gt;&gt;--log-basename&lt;&lt;/code&gt;&gt; or specify a filename to ensure that [[replication]] doesn&#39;t stop if the real hostname of the computer changes. The name option can optionally include an absolute path. If no path is specified, the log will be written to the [[server-system-variables#datadir|data directory]]. The name can optionally include the file extension; it will be stripped and only the file basename will be used.
 * **Commandline:** &lt;&lt;code&gt;&gt;--log-bin[=name]&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** No
@@ -661,7 +661,7 @@ With [[group-commit-for-the-binary-log|group commit for the binary log]], the se
 ----
 
 ==== ##log_slow_slave_statements##
-* **Description:** Log slow statements executed by replica thread to the [[slow-query-log|slow log]] if it is open. Before MariaDB 10.1.13, this was only available as a mysqld option, not a server variable.
+* **Description:** Log slow statements executed by replica thread to the [[slow-query-log|slow log]] if it is open. Before MariaDB 10.1.13, this was only available as a mariadbd option, not a server variable.
 * **Commandline:** &lt;&lt;code&gt;&gt;--log-slow-slave-statements&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
@@ -886,7 +886,7 @@ With [[group-commit-for-the-binary-log|group commit for the binary log]], the se
 ** This option only affects statements that involve tables. This option does not affect statements involving the database itself, such as [[create-database|CREATE DATABASE]], [[alter-database|ALTER DATABASE]], and [[drop-database|DROP DATABASE]]. 
 ** When setting it on the command-line or in a server [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]], the option does not accept a comma-separated list. If you would like to specify multiple filters, then you need to specify the option multiple times.
 ** See [[replication-filters|Replication Filters]] for more information. 
-** Before MariaDB 10.11, ##replicate_rewrite_db## was not available as a system variable, only as a mariadbd/mysqld option, and could not be set dynamically. From MariaDB 10.11 it is available as a dynamic system variable
+** Before MariaDB 10.11, ##replicate_rewrite_db## was not available as a system variable, only as a mariadbd option, and could not be set dynamically. From MariaDB 10.11 it is available as a dynamic system variable
 * **Commandline:** &lt;&lt;code&gt;&gt;--replicate-rewrite-db=primary_database-&gt;replica_database&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
@@ -1045,8 +1045,19 @@ or replication domains to use in parallel. See [[parallel-replication#configurat
 * **Range:** ##1024## to ##1073741824##
 ----
 
+==== ##slave_max_statement_time##
+* **Description:** A query that has taken more than this in seconds to run on the replica will be aborted. The argument will be treated as a decimal value with microsecond precision. A value of 0 (default) means no timeout.
+* **Commandline:** &lt;&lt;code&gt;&gt;--slave-max-statement-time=#&lt;&lt;/code&gt;&gt;
+* **Scope:** Global
+* **Dynamic:** Yes
+* **Data Type:** ##numeric##
+* **Default Value:** ##0.000000##
+* **Range:** ##0## to ##31536000##
+* **Introduced:** MariaDB 10.10
+----
+
 ==== ##slave_net_timeout##
-* **Description:** Time in seconds for the replica to wait for more data from the primary before considering the connection broken, after which it will abort the read and attempt to reconnect. The retry interval is determined by the MASTER_CONNECT_RETRY open for the [[change-master-to|CHANGE MASTER]] statement, while the maximum number of reconnection attempts is set by the [[mysqld-options#-master-retry-count|master-retry-count]] option. The first reconnect attempt takes place immediately.
+* **Description:** Time in seconds for the replica to wait for more data from the primary before considering the connection broken, after which it will abort the read and attempt to reconnect. The retry interval is determined by the MASTER_CONNECT_RETRY open for the [[change-master-to|CHANGE MASTER]] statement, while the maximum number of reconnection attempts is set by the [[mariadbd-options#-master-retry-count|master-retry-count]] option. The first reconnect attempt takes place immediately.
 * **Commandline:** &lt;&lt;code&gt;&gt;--slave-net-timeout=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
