@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/flush/+r/128329/">128329</a></dd>
+            <dd><a href="/kb/en/flush/+r/129484/">129484</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-08-01 11:31">2023-08-01 11:31</span></dd>
+<span class="datetime" title="2023-08-28 10:55">2023-08-28 10:55</span></dd>
         </dl>
     </div>
     
@@ -348,7 +348,7 @@ ERROR 1347 (HY000): &#39;test.v&#39; is not BASE TABLE
 
 By default, ##FLUSH## statements are written to the [[binary-log|binary log]] and will be [[replication|replicated]]. The ##NO_WRITE_TO_BINLOG## keyword (##LOCAL## is an alias) will ensure the statement is not written to the binary log. 
 
-\\\\The different flush options are:\\\\\\
+\\\\\\The different flush options are:\\\\\\\\
 
 &lt;&lt;style class=&#34;darkheader-nospace-borders&#34;&gt;&gt;
 |= Option |= Description
@@ -395,7 +395,7 @@ FLUSH RELAY LOGS FOR CHANNEL &#39;connection_name&#39;;
 &lt;&lt;/sql&gt;&gt;
 &lt;&lt;/product&gt;&gt;
 
-== ##FLUSH STATUS##
+== FLUSH STATUS
 
 [[server-status-variables|Server status variables]] can be reset by executing the following:
 
@@ -424,6 +424,7 @@ Not all global status variables support being reset by ##FLUSH STATUS##. Current
 * [[server-status-variables/#delayed_writes|Delayed_writes]]
 * [[server-status-variables/#feature_check_constraint|Feature_check_constraint]]
 * [[server-status-variables/#feature_delay_key_write|Feature_delay_key_write]]
+* [[server-status-variables/#max_used_connection_time|Max_used_connection_time]]
 * [[server-status-variables/#max_used_connections|Max_used_connections]]
 * [[server-status-variables/#opened_plugin_libraries|Opened_plugin_libraries]]
 * [[performance-schema-status-variables#performance_schema_accounts_lost|Performance_schema_accounts_lost]]
@@ -481,9 +482,9 @@ Not all global status variables support being reset by ##FLUSH STATUS##. Current
 * [[replication-and-binary-log-status-variables/#transactions_gtid_foreign_engine|Transactions_gtid_foreign_engine]]
 * [[replication-and-binary-log-status-variables/#transactions_multi_engine|Transactions_multi_engine]]
 
-== The different usage of ##FLUSH TABLES##
+== The different usage of FLUSH TABLES
 
-=== The purpose of ##FLUSH TABLES##
+=== Purpose of FLUSH TABLES
 
 The purpose of ##FLUSH TABLES## is to clean up the open table cache and
 table definition cache from not in use tables.  This frees up memory
@@ -491,7 +492,7 @@ and file descriptors. Normally this is not needed as the caches works
 on a FIFO bases, but can be useful if the server seams to use up to
 much memory for some reason.
 
-=== The purpose of ##FLUSH TABLES WITH READ LOCK ##
+=== Purpose of FLUSH TABLES WITH READ LOCK
 
 ##FLUSH TABLES WITH READ LOCK## is useful if you want to take a backup
 of some tables.  When ##FLUSH TABLES WITH READ LOCK## returns, all
@@ -499,7 +500,7 @@ write access to tables are blocked and all tables are marked as
 &#39;properly closed&#39; on disk.  The tables can still be used for read
 operations.
 
-=== The purpose of ##FLUSH TABLES table_list##
+=== Purpose of FLUSH TABLES table_list
 
 ##FLUSH TABLES## table_list is useful if you want to copy a table
 object/files to or from the server. This command puts a lock that
@@ -518,7 +519,7 @@ writes on the table.  For now this works works with most tables,
 except InnoDB as InnoDB may do background purges on the table even
 while it&#39;s write locked.
  
-=== The purpose of ##FLUSH TABLES table_list WITH READ LOCK##
+=== Purpose of FLUSH TABLES table_list WITH READ LOCK
 
 ##FLUSH TABLES table_list WITH READ LOCK## should work as ##FLUSH TABLES WITH READ LOCK##, but only those tables that are listed will be
 properly closed.  However in practice this works exactly like ##FLUSH TABLES WITH READ LOCK## as the ##FLUSH## command has anyway to wait
@@ -526,13 +527,13 @@ for all WRITE operations to end because we are depending on a global
 read lock for this code.  In the future we should consider fixing this
 to instead use meta data locks.
 
-== Implementation of ##FLUSH TABLES## commands in MariaDB 10.4.8 and above
+== Implementation of FLUSH TABLES commands from MariaDB 10.4.8
 
-=== Implementation of ##FLUSH TABLES##
+=== Implementation of FLUSH TABLES
 
 * Free memory and file descriptors not in use
 
-=== Implementation of ##FLUSH TABLES WITH READ LOCK##
+=== Implementation of FLUSH TABLES WITH READ LOCK
 
 * Lock all tables read only for simple old style backup.
 * All background writes are suspended and tables are marked as closed.
@@ -541,14 +542,14 @@ to instead use meta data locks.
 Instead of using ##FLUSH TABLE WITH READ LOCK## one should in most cases instead use
 [[backup-stage|BACKUP STAGE BLOCK_COMMIT]].
 
-=== Implementation of ##FLUSH TABLES table_list##
+=== Implementation of FLUSH TABLES table_list
 
 * Free memory and file descriptors for tables not in use from table list.
 * Lock given tables as read only.
 * Wait until all translations has ended that uses any of the given tables.
 * Wait until all background writes are suspended and tables are marked as closed.
 
-=== Implementation of ##FLUSH TABLES table_list FOR EXPORT##
+=== Implementation of FLUSH TABLES table_list FOR EXPORT
 
 * Free memory and file descriptors for tables not in use from table list
 * Lock given tables as read.
@@ -560,10 +561,6 @@ This is basically the same behavior as in old MariaDB version if one first lock 
 ##FLUSH TABLES##.  The tables will be copyable until ##UNLOCK TABLES##.
 
 == FLUSH SSL
-
-&lt;&lt;product mariadb from=&#34;10.4&#34;&gt;&gt;
-The ##FLUSH SSL## command was first added in MariaDB 10.4.
-&lt;&lt;/product&gt;&gt;
 
 In MariaDB 10.4 and later, the ##FLUSH SSL## command can be used to dynamically reinitialize the server&#39;s [[data-in-transit-encryption|TLS]] context. This is most useful if you need to replace a certificate that is about to expire without restarting the server.
 
