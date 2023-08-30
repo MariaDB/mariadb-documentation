@@ -292,7 +292,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/setting-character-sets-and-collations/+r/115638/">115638</a></dd>
+            <dd><a href="/kb/en/setting-character-sets-and-collations/+r/129608/">129608</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -301,7 +301,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-04-27 12:38">2022-04-27 12:38</span></dd>
+<span class="datetime" title="2023-08-29 16:27">2023-08-29 16:27</span></dd>
         </dl>
     </div>
     
@@ -678,32 +678,24 @@ SELECT @param_coll;
 +-------------+
 &lt;&lt;/code&gt;&gt;
 
-=== Illegal Collation Mix 
-
-&lt;&lt;product mariadb from=&#34;10.1.28&#34; to=&#34;10.1.29&#34;&gt;&gt;
-
-In MariaDB 10.1.28, you may encounter Error 1267 when performing comparison operations in views on tables that use binary constants.  For instance,
-
-&lt;&lt;sql&gt;&gt;
-CREATE TABLE test.t1 (
-   a TEXT CHARACTER SET gbk 
-) ENGINE=InnoDB 
-CHARSET=latin1
-COLLATE=latin1_general_cs;
-
-INSERT INTO t1 VALUES (&#39;user_a&#39;);
-
-CREATE VIEW v1 AS
-SELECT a &lt;&gt; 0xEE5D FROM t1;
-
-SELECT * FROM v1;
-Error 1267 (HY000): Illegal mix of collations (gbk_chinese_ci, IMPLICIT)
-and (latin_swedish_ci, COERCIBLE) for operation
-&lt;&lt;/sql&gt;&gt;
-
-When the view query is written to file, MariaDB converts the binary character into a string literal, which causes it to be misinterpreted when you execute the ##[[select|SELECT]]## statement.  If you encounter this issue, set the character set in the view to force it to the value you want.
-
-MariaDB throws this error due to a bug that was fixed in MariaDB 10.1.29.  Later releases do not throw errors in this situation.
+==Changing Default Collation
+&lt;&lt;product mariadb from=&#34;11.2.1&#34;&gt;&gt;
+From MariaDB 11.2, it is possible to change the default collation associated with a particular character set. The [[server-system-variables/#character_set_collations|character_set_collations]] system variable accepts a comma-delimited list of character sets and new default collations, for example:
+&lt;&lt;code&gt;&gt;
+SET @@character_set_collations = &#39;utf8mb4=uca1400_ai_ci, latin2=latin2_hungarian_ci&#39;;
+&lt;&lt;/code&gt;&gt;
+The new variable will take effect in all cases where a character set is explicitly or implicitly specified without an explicit COLLATE clause, including but not limited to:
+*Column collation
+*Table collation
+*Database collation
+*CHAR(expr USING csname)
+*CONVERT(expr USING csname)
+*CAST(expr AS CHAR CHARACTER SET csname)
+*&#39;&#39; - character string literal
+*_utf8mb3&#39;text&#39; - a character string literal with an introducer
+*_utf8mb3 X&#39;61&#39; - a character string literal with an introducer with hex notation
+*_utf8mb3 0x61 - a character string literal with an introducer with hex hybrid notation
+*@@collation_connection after a SET NAMES without COLLATE
 &lt;&lt;/product&gt;&gt;
 
 == Example: Changing the Default Character Set To UTF-8
