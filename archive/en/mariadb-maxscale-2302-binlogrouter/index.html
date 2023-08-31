@@ -24,14 +24,14 @@
     <meta property="og:site_name" content="MariaDB KnowledgeBase" />
     <meta property="fb:admins" content="514852603" />
     <meta property="og:description" content="Binlogrouter
-NOTE: The binlog router delivered with 2.5 is completely new and is not
-          100% backward compatible with the binlog router delivered with earlier
-         ..." />
+The binlogrouter is a router that acts as a replication proxy for MariaDB
+primary-replica replication. The router connects to a primary, retrieves the binary
+logs..." />
 
     <meta name="description" content="Binlogrouter
-NOTE: The binlog router delivered with 2.5 is completely new and is not
-          100% backward compatible with the binlog router delivered with earlier
-         ..." />
+The binlogrouter is a router that acts as a replication proxy for MariaDB
+primary-replica replication. The router connects to a primary, retrieves the binary
+logs..." />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
@@ -271,7 +271,7 @@ NOTE: The binlog router delivered with 2.5 is completely new and is not
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.3/Documentation/Routers/Binlogrouter.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.4/Documentation/Routers/Binlogrouter.md">GitHub</a></dd>
         
     </dl>
 
@@ -390,9 +390,6 @@ NOTE: The binlog router delivered with 2.5 is completely new and is not
     
     <div class="answer formatted">
         <h1 id="binlogrouter">Binlogrouter</h1>
-<p><strong>NOTE:</strong> The binlog router delivered with 2.5 is completely new and is <strong>not</strong>
-          100% backward compatible with the binlog router delivered with earlier
-          versions of MaxScale.</p>
 <p>The binlogrouter is a router that acts as a replication proxy for MariaDB
 primary-replica replication. The router connects to a primary, retrieves the binary
 logs and stores them locally. Replica servers can connect to MaxScale like they
@@ -409,8 +406,8 @@ replicating replicas.</p>
 <div>
 <ul>
 <li><a href="#binlogrouter">Binlogrouter</a><ul>
-<li><a href="#differences-between-old-and-new-binlogrouter-implementations">Differences Between Old and New Binlogrouter Implementations</a></li>
 <li><a href="#supported-sql-commands">Supported SQL Commands</a></li>
+<li><a href="#semi-sync-replication">Semi-sync replication</a></li>
 <li><a href="#configuration-parameters">Configuration Parameters</a><ul>
 <li><a href="#datadir">datadir</a></li>
 <li><a href="#server_id">server_id</a></li>
@@ -421,10 +418,11 @@ replicating replicas.</p>
 <li><a href="#ddl_only">ddl_only</a></li>
 <li><a href="#encryption_key_id">encryption_key_id</a></li>
 <li><a href="#encryption_cipher">encryption_cipher</a></li>
+<li><a href="#rpl_semi_sync_slave_enabled">rpl_semi_sync_slave_enabled</a></li>
 </ul>
 </li>
 <li><a href="#new-installation">New installation</a></li>
-<li><a href="#upgrading-to-version-25">Upgrading to version 2.5</a><ul>
+<li><a href="#upgrading-from-legacy-versions">Upgrading from legacy versions</a><ul>
 <li><a href="#before-you-start">Before you start</a></li>
 <li><a href="#deployment">Deployment</a></li>
 </ul>
@@ -436,47 +434,6 @@ replicating replicas.</p>
 </li>
 </ul>
 </div>
-<h2 id="differences-between-old-and-new-binlogrouter-implementations">Differences Between Old and New Binlogrouter Implementations</h2>
-<p>The binlogrouter in MaxScale 2.5.0 is a new and improved version of the original
-binlogrouter found in older MaxScale versions. The new implementation contains
-most of the features that were in the original binlogrouter but some of them
-were removed as they were either redundant or not useful.</p>
-<p>The major differences between the new and old binlog router are:</p>
-<ul>
-<li>
-<p>The list of servers where the database users for authentication are loaded
-   must be explicitly configured with the <code>cluster</code>, <code>servers</code> or
-   <code>targets</code> parameter. Alternatively, the users can be read from a file. See
-   <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#user_accounts_file">user_accounts_file</a>
-   for more information.</p>
-</li>
-<li>
-<p>The old binlog router had both <code>server_id</code> and <code>master_id</code>, the new only
-   <code>server_id</code>.</p>
-</li>
-<li>
-<p>No need to configure <em>heartbeat</em> and <em>burst interval</em> anymore as they are
-   now automatically configured.</p>
-</li>
-<li>
-<p>Traditional replication that uses the binary log name and file offset to
-   start the replication process is not supported.</p>
-</li>
-<li>
-<p>Semi-sync support is not implemented.</p>
-</li>
-<li>
-<p><em>Secondary masters</em> are not supported, but the functionality provided by
-   <code>select_master</code> is roughly equivalent.</p>
-</li>
-<li>
-<p>The new binlogrouter will write its own binlog files to prevent problems that
-   could happen when the primary changes. This causes the binlog names to be
-   different in the binlogrouter when compared to the ones on the primary.</p>
-</li>
-</ul>
-<p>The documentation for the binlogrouter in MaxScale 2.4 is provided for reference
-<a href="/kb/en/binlogrouter-2-4/">here</a>.</p>
 <h2 id="supported-sql-commands">Supported SQL Commands</h2>
 <p>The binlogrouter supports a subset of the SQL constructs that the MariaDB server
 supports. The following commands are supported:</p>
@@ -718,6 +675,9 @@ supports. The following commands are supported:</p>
  variable will return the configured server ID of the binlogrouter.</p>
 </li>
 </ul>
+<h2 id="semi-sync-replication">Semi-sync replication</h2>
+<p>If the server from which the binlogrouter replicates from is using semi-sync
+replication, the binlogrouter will acknowledge the replicated events.</p>
 <h2 id="configuration-parameters">Configuration Parameters</h2>
 <p>The binlogrouter is configured similarly to how normal routers are configured in
 MaxScale. It requires at least one listener where clients can connect to and one
@@ -839,6 +799,19 @@ used: only 128, 192 and 256 bit encryption keys are currently supported.</p>
 <p><a href="https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Counter_(CTR)">AES in Counter Mode</a>.</p>
 </li>
 </ul>
+<h3 id="rpl_semi_sync_slave_enabled"><code>rpl_semi_sync_slave_enabled</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#booleans">boolean</a></li>
+<li><strong>Default</strong>: false</li>
+<li><strong>Dynamic</strong>: Yes</li>
+</ul>
+<p>Enable
+<a href="https://mariadb.com/kb/en/semisynchronous-replication/">semi-synchronous</a>
+replication when replicating from a MariaDB server. If enabled, the binlogrouter
+will send acknowledgment for each received event. Note that the
+<a href="https://mariadb.com/kb/en/semisynchronous-replication/#rpl_semi_sync_master_enabled">rpl_semi_sync_master_enabled</a>
+parameter must be enabled in the MariaDB server where the replication is done
+from for the semi-synchronous replication to take place.</p>
 <h2 id="new-installation">New installation</h2>
 <ol>
 <li>
@@ -867,7 +840,7 @@ SHOW SLAVE STATUS \G
 </pre></div>
 
 
-<h2 id="upgrading-to-version-25">Upgrading to version 2.5</h2>
+<h2 id="upgrading-from-legacy-versions">Upgrading from legacy versions</h2>
 <p>Binlogrouter does not read any of the data that a version prior to 2.5
 has saved. By default binlogrouter will request the replication stream
 from the blank state (from the start of time), which is basically meant
@@ -886,7 +859,7 @@ and store all the data.</p>
 </ul>
 <h3 id="deployment">Deployment</h3>
 <p>The method described here inflicts the least downtime. Assuming you have
-configured version 2.5, and it is ready to go:</p>
+configured MaxScale version 2.5 or newer, and it is ready to go:</p>
 <ol>
 <li>Redirect each replica that replicates from Binlogrouter to replicate from the
     primary.</li>
@@ -1016,6 +989,10 @@ port=3306
 </li>
 <li>
 <p>Old encrypted binary logs are not re-encrypted with newer key versions (<a href="https://jira.mariadb.org/browse/MXS-4140">MXS-4140</a>)</p>
+</li>
+<li>
+<p>The MariaDB server where the replication is done from must be configured with
+  <code>binlog_checksum=CRC32</code>.</p>
 </li>
 </ul>
     </div>

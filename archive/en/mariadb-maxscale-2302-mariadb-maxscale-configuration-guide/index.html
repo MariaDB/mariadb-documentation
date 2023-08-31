@@ -301,7 +301,7 @@ Administra..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.3/Documentation/Getting-Started/Configuration-Guide.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.4/Documentation/Getting-Started/Configuration-Guide.md">GitHub</a></dd>
         
     </dl>
 
@@ -507,6 +507,7 @@ Administra..." />
 <li><a href="#retain_last_statements">retain_last_statements</a></li>
 <li><a href="#dump_last_statements">dump_last_statements</a></li>
 <li><a href="#session_trace">session_trace</a></li>
+<li><a href="#session_trace_match">session_trace_match</a></li>
 <li><a href="#writeq_high_water">writeq_high_water</a></li>
 <li><a href="#writeq_low_water">writeq_low_water</a></li>
 <li><a href="#persist_runtime_changes">persist_runtime_changes</a></li>
@@ -571,6 +572,7 @@ Administra..." />
 <li><a href="#session_track_trx_state">session_track_trx_state</a></li>
 <li><a href="#retain_last_statements_1">retain_last_statements</a></li>
 <li><a href="#connection_keepalive">connection_keepalive</a></li>
+<li><a href="#force_connection_keepalive">force_connection_keepalive</a></li>
 <li><a href="#net_write_timeout">net_write_timeout</a></li>
 <li><a href="#max_sescmd_history">max_sescmd_history</a></li>
 <li><a href="#prune_sescmd_history">prune_sescmd_history</a></li>
@@ -1097,7 +1099,8 @@ passed on to the next module in the processing chain as if the filter was not th
 <h3 id="enumerations">Enumerations</h3>
 <p>Enumeration type parameters have a pre-defined set of accepted values. For types
 declared as <code>enum</code>, only one value is accepted. For <code>enum_mask</code> types, multiple
-values can be defined by separating them with commas.</p>
+values can be defined by separating them with commas. All enumeration values in
+MaxScale are case-sensitive.</p>
 <p>For example the <code>router_options</code> parameter in the <code>readconnroute</code> router is a
 mask type enumeration:</p>
 <div><pre><span></span>router_options=master,slave
@@ -1792,9 +1795,16 @@ than <code>0</code>, this configuration setting will not have an effect.</p>
 <h3 id="session_trace"><code>session_trace</code></h3>
 <p>How many log entries are stored in the session specific trace log. This log is
 written to disk when a session ends abnormally and can be used for debugging
-purposes. It would be good to enable this if a session is disconnected and the
-log is not detailed enough. In this case the info log might reveal the true
-cause of why the connection was closed.</p>
+purposes. Currently the session trace log is written to the log in the following situations:</p>
+<ul>
+<li>When MaxScale receives a fatal signal and is about to crash.</li>
+<li>Whenever an unexpected response is read from a server</li>
+<li>If the session is not closed gracefully (i.e. client doesn't send a  COM_QUIT packet)</li>
+<li>Whenever readwritesplit receives a responce that is was not expecting.</li>
+</ul>
+<p>It would be good to enable this if a session is disconnected and the log is not
+detailed enough. In this case the info log might reveal the true cause of why
+the connection was closed.</p>
 <div><pre><span></span>session_trace=20
 </pre></div>
 
@@ -1802,6 +1812,38 @@ cause of why the connection was closed.</p>
 <p>Default is <code>0</code>.</p>
 <p>The session trace log is also exposed by REST API and is shown with
 <code>maxctrl show sessions</code>.</p>
+<p>The order in which the session trace messages are logged into the log changed in
+MaxScale 6.4.9 (MXS-4716). Newer versions will log the messages in the "normal
+log order" of older events coming first and newer events appearing later in the
+file. Older versions of MaxScale logged the trace dump in the reverse order with
+the newest messages first and oldest ones last.</p>
+<h3 id="session_trace_match"><code>session_trace_match</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#regular-expressions">regex</a></li>
+<li><strong>Default</strong>: none</li>
+<li><strong>Dynamic</strong>: Yes</li>
+</ul>
+<p>If both <code>session_trace</code> and <code>session_trace_match</code> are defined, and a trace log
+entry of a session matches the regular expression, the trace log is written to
+disk. The check for the match is done when the session is stopping.</p>
+<p>The most effective way to debug MaxScale related issues is to turn on <code>log_info</code>
+and observe the events written into the MaxScale log. The only problem with this
+approach is that it can cause a severe performance bottleneck and can easily
+fill up the disk as the amount of data written to it is significant. With
+<code>session_trace</code> and <code>session_trace_match</code>, the content that actually gets logged
+can be filtered to only what is needed.</p>
+<p>For example, the following configuration would only log the trace log messages
+from sessions that execute SQL queries with syntax errors:</p>
+<div><pre><span></span>session_trace=1000
+session_trace_match=/You have an error in your SQL syntax/
+</pre></div>
+
+
+<p>This could be used to easily identify which applications execute the queries
+without having to gather the info level log output from all the sessions that
+connect to MaxScale. For every session that ends up logging a syntax error
+message, the last 1000 lines of log output done by that session is written into
+the MaxScale log.</p>
 <h3 id="writeq_high_water"><code>writeq_high_water</code></h3>
 <p>High water mark for network write buffer. When the size of the outbound network
 buffer in MaxScale for a single connection exceeds this value, network traffic
@@ -2405,7 +2447,7 @@ password=Mhu87p2D
 </pre></div>
 
 
-<p>See <a href="/kb/en/maxscale-23-02-authentication-modules/">MySQL protocol authentication documentation</a>
+<p>See <a href="/kb/en/mariadb-maxscale-2302-maxscale-2302-authentication-modules/">MySQL protocol authentication documentation</a>
 for more information (such as required grants) and troubleshooting tips
 regarding user account management and client authentication.</p>
 <h3 id="enable_root_user"><code>enable_root_user</code></h3>
@@ -2639,6 +2681,25 @@ rely on result tracking (e.g. <code>readwritesplit</code> and <code>schemarouter
 performance will be the same with or without <code>connection_keepalive</code>.</p>
 <p>If you want to avoid the performance cost and you don't need the connection
 keepalive feature, you can disable it with <code>connection_keepalive=0s</code>.</p>
+<h3 id="force_connection_keepalive"><code>force_connection_keepalive</code></h3>
+<ul>
+<li><strong>Type</strong>: boolean</li>
+<li><strong>Default</strong>: false</li>
+<li><strong>Dynamic</strong>: Yes</li>
+</ul>
+<p>By default, connection keepalive pings are only sent if the client is either
+executing a query or has been idle for less than the duration configured in
+<code>connection_keepalive</code>. When this parameter is enabled, keepalive pings are
+unconditionally sent to any backends that have been idle for longer than
+<code>connection_keepalive</code> seconds. This option can be used to emulate the
+pre-2.5.21 behavior if long-lived application connections rely on the old
+unconditional keepalive pings.</p>
+<p><em>Note:</em> if <code>force_connection_keepalive</code> is enabled and <code>connection_keepalive</code> in
+MaxScale is set to a lower value than the <code>wait_timeout</code> on the database, the
+client idle timeouts that <code>wait_timeout</code> control are no longer effective. This
+happens because MaxScale unconditionally sends the pings which make the client
+behave like it is not idle and thus the connections will never be killed due to
+<code>wait_timeout</code>.</p>
 <h3 id="net_write_timeout"><code>net_write_timeout</code></h3>
 <p>This parameter controls how long a network write to the client can stay
 buffered. This feature is disabled by default.</p>
@@ -3561,7 +3622,7 @@ run MariaDB MaxScale without a monitor module. In this case an external
 monitoring system must the status of each server via MaxCtrl or the REST
 API. <strong>Only do this if you know what you are doing.</strong></p>
 <h2 id="filter-modules">Filter Modules</h2>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.3/Documentation/Getting-Started/images/image_10.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.4/Documentation/Getting-Started/images/image_10.png"></p>
 <p>Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
 explanation of each filter's functionality can be found in its documentation.</p>
