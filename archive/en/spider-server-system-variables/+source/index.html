@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/spider-server-system-variables/+r/128626/">128626</a></dd>
+            <dd><a href="/kb/en/spider-server-system-variables/+r/130050/">130050</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-08-09 09:09">2023-08-09 09:09</span></dd>
+<span class="datetime" title="2023-09-05 02:21">2023-09-05 02:21</span></dd>
         </dl>
     </div>
     
@@ -317,15 +317,13 @@ See also the [[full-list-of-mariadb-options-system-and-status-variables|Full lis
 Starting from MariaDB 10.4.31, MariaDB 10.5.22, MariaDB 10.6.15, MariaDB 10.9.8, MariaDB 10.10.6, MariaDB 10.11.5, MariaDB 11.0.3, all spider system variables with the value -1 for deferring to table parameter values follow the correct overriding mechanism: table parameter (if set) overrides system variables (if not -1) overrides actual variable default. As a side effect, all such system variables in all versions have the same default value as the table param default value.
 
 Before this change, a non-minus-one system variable value would override the table parameter value. That is, if both the system variable value and the table parameter value were set to be non-minus-one, the system variable value would prevail. For MariaDB 10.7+ where the system variable default values were the same as table param default instead of -1, this means that if the system variable were not set, but a table param is set to a non-default value, the default would override the non-default value.
-
-The descriptions of ##-1## and default values below in affected variables will be updated accordingly after the release of affected versions.
 &lt;&lt;/product&gt;&gt;
 
 &lt;&lt;toc&gt;&gt;
 
 ==== ##spider_auto_increment_mode##
 * **Description:** The [[auto_increment|auto increment]] mode.
-** ##-1## Uses the [[spider-table-parameters|table parameter]].
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set.
 ** ##0## Normal Mode. Uses a counter that Spider gets from the remote backend server with an exclusive lock for the auto-increment value.  This mode is slow.  Use Quick Mode (##2##), if you use Spider tables with the table partitioning feature and the auto-increment column is the first column of the index. Before MariaDB 10.3, this value works as &#34;1&#34; for partitioned Spider tables.
 ** ##1## Quick Mode. Uses an internal Spider counter for the auto-increment value. This mode is fast, but it is possible for duplicates to occur when updating the same table from multiple Spider proxies.
 ** ##2## Set Zero Mode. The auto-increment value is given by the remote backend.  Sets the column to ##0##, even if you set the value to the auto-increment column in your statement.  If you use the table with the table partitioning feature, it sets to zero after choosing an inserted partition.
@@ -333,7 +331,7 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##0## (&gt;= MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Default Table Value:** ##0##
 * **Range:** ##-1## to ##3##
 * **DSN Parameter Name:** ##aim##
@@ -342,13 +340,13 @@ The descriptions of ##-1## and default values below in affected variables will b
 
 ==== ##spider_bgs_first_read##
 * **Description:** Number of first read records to use when performing a concurrent background search. To start a range scan on the remote backend, the storage engine first needs to send the first record. Fetching a second record in the same query can save a network round trip stopping the plan if the backend has a single record. The first and second reads are used to warm up for background search.  When not using [[#spider_split_read|spider_split_read]] and [[#spider_semi_split_read|spider_semi_split_read]], the third read fetches the remaining data source in a single fetch.
-** ##-1## Uses the [[spider-table-parameters|table parameter]].
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set.
 ** ##0## Records are usually retrieved.
 ** ##1## and greater: Number of records.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##2## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##2##
 * **Default Table Value:** ##2##
 * **Range:** ##-1## to ##9223372036854775807##
 * **DSN Parameter Name:** ##bfr##
@@ -356,7 +354,7 @@ The descriptions of ##-1## and default values below in affected variables will b
 
 ==== ##spider_bgs_mode##
 * **Description:** Background search mode. This enables the use of a thread per data server connection if the query is not shard-based and must be distributed across shards. The partitioning plugin scans partitions one after the other to optimize memory usage. Because the shards are external, reading all shards can be performed in parallel when the plan prunes multiple partitions. 
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Disables background search. 
 ** ##1##  Uses background search when searching without locks
 ** ##2## Uses background search when searching without locks or with shared locks.
@@ -364,7 +362,7 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Default Table Value:**  ##0##
 * **Range:** ##-1## to ##3##
 * **DSN Parameter Name:** ##bmd##
@@ -372,12 +370,12 @@ The descriptions of ##-1## and default values below in affected variables will b
 
 ==== ##spider_bgs_second_read    
 * **Description:** Number of second read records on the backend server when using background search. When the first records are found from [[#spider_bgs_first_read|spider_bgs_first_read]], the engine continues scanning a range adding a ##LIMIT## of [[#spider_bgs_first_read|spider_bgs_first_read]] and [[#spider_bgs_second_read|spider_bgs_second_read]].
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Records are usually retrieved.
 ** ##1## and greater: Number of records.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
-* **Default Session Value:** ##100## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##100##
 * **Default Table Value:** ##100##
 * **Range:** ##-1## to ##9223372036854775807##
 * **DSN Parameter Name:** ##bsr##
@@ -395,14 +393,14 @@ The descriptions of ##-1## and default values below in affected variables will b
 
 ==== ##spider_bka_mode##
 * **Description:** Internal action to perform when multi-split reads are disabled.  If the [[#spider_multi_split_read|spider_multi_split_read]] system variable is set to ##0##, Spider uses this variable to determine how to handle statements when the optimizer resolves range retrieval to multiple conditions.
-** ## -1## Uses the [[spider-table-parameters|table parameter]]. 
+** ## -1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Uses &#34;union all&#34;.
 ** ##1## Uses a temporary table, if it is judged acceptable.
 ** ##2## Uses a temporary table, if it is judged acceptable and avoids replication delay.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Default Table Value:** ##1##
 * **Range:** ##-1## to ##2##
 * **DSN Parameter Name:** ##bkm##
@@ -413,7 +411,7 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Range:** ##-1## to ##1##
 ----
 
@@ -432,7 +430,8 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##16000## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##16000##
+* **Default Table Value:** ##16000##
 * **Range:** ##-1## to ##2147483647##
 * **Introduced:** MariaDB 10.5.4
 ----
@@ -444,7 +443,7 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##16000## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##16000##
 * **Default Table Value:** ##16000##
 * **Range:** ##-1## to ##2147483647##
 * **DSN Parameter Name:** ##bsz##
@@ -452,14 +451,14 @@ The descriptions of ##-1## and default values below in affected variables will b
 
 ==== ##spider_bulk_update_mode##
 * **Description:** Bulk update and delete mode.  Note: If you use a non-default value for the [[#spider_bgs_mode|spider_bgs_mode]] or [[#spider_split_read|spider_split_read]] system variables, Spider sets this variable to ##2##.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Sends ##UPDATE## and ##DELETE## statements one by one.
 ** ##1## Collects multiple ##UPDATE## and ##DELETE## statements, then sends the collected statements one by one.
 ** ##2## Collects multiple ##UPDATE## and ##DELETE## statements and sends them together.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Default Table Value:** ##0##
 * **Range:** ##-1## to ##2##
 * **DSN Parameter Name:** ##bum##
@@ -472,7 +471,7 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##16000## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##16000##
 * **Default Table Value:** ##16000##
 * **Range:** ##-1## to ##2147483647##
 * **DSN Parameter Name:** ##bus##
@@ -487,7 +486,7 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Default Table Value:** ##0##
 * **Range:** ##-1## to ##63##
 * **DSN Parameter Name:** ####
@@ -571,7 +570,7 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##6## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##6##
 * **Default Table Value:** ##0##
 * **Range:** ##-1## to ##2147483647##
 * **DSN Parameter Name:** ##cto##
@@ -579,13 +578,13 @@ The descriptions of ##-1## and default values below in affected variables will b
           
 ==== ##spider_crd_bg_mode## 
 * **Description:** Indexes cardinality statistics in the background. Disable when the [[#spider_crd_mode|spider_crd_mode]] system variable is set to ##3## or when the [[#spider_crd_interval|spider_crd_interval]] variable is set to ##0##.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Disables background confirmation.
 ** ##2## Enables background confirmation.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##2## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##2##
 * **Default Table Value:** ##1##
 * **Range:** ##-1## to ##2##
 * **DSN Parameter Name:** ##cbm##
@@ -598,7 +597,7 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##51## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##51##
 * **Default Table Value:** ##51##
 * **Range:** ##-1## to ##2147483647##
 * **DSN Parameter Name:** ##civ##
@@ -613,7 +612,7 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Default Table Value:** ##1##
 * **Range:** ##-1## to ##3##
 * **DSN Parameter Name:** ##cmd##
@@ -622,14 +621,14 @@ The descriptions of ##-1## and default values below in affected variables will b
 
 ==== ##spider_crd_sync##
 * **Description:**  Synchronize index cardinality statistics in partitioned tables.
-** ##-1## Uses the [[spider-table-parameters|table parameter]].
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set.
 ** ##0## Disables synchronization.
 ** ##1## Uses table state synchronization when opening a table, but afterwards performs no synchronization. 
 ** ##2## Enables synchronization.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Default Table Value:** ##0##
 * **Range:** ##-1## to ##2##
 * **DSN Parameter Name:** ##csy##        
@@ -637,14 +636,14 @@ The descriptions of ##-1## and default values below in affected variables will b
      
 ==== ##spider_crd_type##
 * **Description:** Type of cardinality calculation. Only effective when the [[#spider_crd_mode|spider_crd_mode]] system variable is set to use ##SHOW## (##1##) or to use the Information Schema (##2##).
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Uses the value of the [[#spider_crd_weight|spider_crd_weight]] system variable, as a fixed value.
 ** ##1## Uses the value of the [[#spider_crd_weight|spider_crd_weight]] system variable, as an addition value.
 ** ##2## Uses the value of the [[#spider_crd_weight|spider_crd_weight]] system variable, as a multiplication value.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##2## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##2##
 * **Default Table Value:** ##2##
 * **Range:** ##-1## to ##2##
 * **DSN Parameter Name:** ##ctp##    
@@ -653,12 +652,12 @@ The descriptions of ##-1## and default values below in affected variables will b
 
 ==== ##spider_crd_weight##
 * **Description:** Weight coefficient used to calculate effectiveness of index from the cardinality of column. For more information, see the description for the [[#spider_crd_type|spider_crd_type]] system variable.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## or greater: Weight.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##2## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##2##
 * **Default Table Value:** ##2##
 * **Range:** ##-1## to ##2147483647##
 * **DSN Parameter Name:** ##cwg##
@@ -670,19 +669,19 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Range:** ##-1## to ##1##
 ----
 
 ==== ##spider_direct_dup_insert##
 * **Description:** Manages duplicate key check for [[replace|REPLACE]], [[ignore|INSERT IGNORE]] and [[load-data-infile|LOAD DATA LOCAL INFILE]] to remote servers. This can save on network roundtrips if the key always maps to a single partition.  For bulk operations, records are checked for duplicate key errors one by one on the remote server, unless you set it to avoid duplicate checks on local servers (##1##).
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Performs duplicate checks on the local server.
 ** ##1## Avoids duplicate checks on the local server.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Default Table Value:** ##0##
 * **Range:** ##-1## to ##1##
 * **DSN Parameter Name:** ##ddi##              
@@ -690,13 +689,13 @@ The descriptions of ##-1## and default values below in affected variables will b
 
 ==== ##spider_direct_order_limit##
 * **Description:** Pushes ##ORDER BY## and ##LIMIT## operations to the remote server.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Uses local execution.
 ** ##1## Uses push down execution.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##2## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##2##
 * **Default Table Value:** ##9223372036854775807##
 * **Range:** ##-1## to ##9223372036854775807##
 * **DSN Parameter Name:** ##dol##
@@ -714,13 +713,13 @@ The descriptions of ##-1## and default values below in affected variables will b
 
 ==== ##spider_error_read_mode##
 * **Description:** Sends an empty result-set when reading a backend server raises an error.  Useful with applications that don&#39;t implement transaction replays.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Returns an error.
 ** ##1## Returns an empty result.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Default Table Value:** ##0##
 * **Range:** ##-1## to ##1##
 * **DSN Parameter Name:** ##erm##
@@ -728,13 +727,13 @@ The descriptions of ##-1## and default values below in affected variables will b
 
 ==== ##spider_error_write_mode##
 * **Description:** Sends an empty result-set when writing to a backend server raises an error.  Useful with applications that don&#39;t implement transaction replays.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Returns an error. 
 ** ##1## Returns an empty result-set on error. 
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Default Table Value:** ##0##
 * **Range:** ##-1## to ##1##
 * **DSN Parameter Name:** ##ewm##
@@ -748,7 +747,7 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Default Table Value:** ##2##
 * **Range:** ##-1## to ##9223372036854775807##
 * **DSN Parameter Name:** ##frd##    
@@ -789,12 +788,12 @@ The descriptions of ##-1## and default values below in affected variables will b
 
 ==== ##spider_init_sql_alloc_size##
 * **Description:** Initial size of the local SQL buffer.
-** ##-1## Uses the [[spider-table-parameters|table parameter]].
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set.
 ** ##0## or greater: Size of the buffer.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##1024## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1024##
 * **Default Table Value:** ##1024## 
 * **DSN Parameter Name:** ##isa## 
 * **Range:** ##-1## to ##2147483647##
@@ -808,7 +807,7 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##9223372036854775807## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##9223372036854775807##
 * **Default Table Value:** ##9223372036854775807##
 * **Range:** ##-1## to ##9223372036854775807##
 * **DSN Parameter Name:** ##ilm##
@@ -817,12 +816,12 @@ The descriptions of ##-1## and default values below in affected variables will b
 
 ==== ##spider_internal_offset                
 * **Description:** Skip records when acquired from the remote server.
-** ##-1## Uses the [[spider-table-parameters|table parameter]].
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set.
 ** ##0## or more : Number of records to skip.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Default Table Value:** ##0##
 * **Range:** ##-1## to ##9223372036854775807##
 * **DSN Parameter Name:** ##ios##  
@@ -831,13 +830,13 @@ The descriptions of ##-1## and default values below in affected variables will b
 
 ==== ##spider_internal_optimize##
 * **Description:** Whether to perform push down operations for [[optimize-table|OPTIMIZE TABLE]] statements.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Transmitted.
 ** ##1## Not transmitted.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Default Table Value:** ##0##
 * **Range:** ##-1## to ##1##
 * **DSN Parameter Name:** ##iom##       
@@ -845,10 +844,10 @@ The descriptions of ##-1## and default values below in affected variables will b
 
 ==== ##spider_internal_optimize_local##
 * **Description:** Whether to transmit to remote servers when [[optimize_table|OPTIMIZE TABLE]] statements are executed on the local server.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Not transmitted.
 ** ##1## Transmitted.
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Default Table Value:** ##0##
 * **Range:** ##-1## to ##1##
 * **DSN Parameter Name:** ##iol##    
@@ -915,7 +914,7 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Range:** ##-1## to ##1##
 * **Introduced:** MariaDB 10.3.3
 * **Deprecated:** MariaDB 10.7.4, MariaDB 10.8.3     
@@ -929,7 +928,7 @@ The descriptions of ##-1## and default values below in affected variables will b
 * **Scope:** Global
 * **Dynamic:** Yes
 * **Data Type:** ##boolean##
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Range:** ##-1## to ##1##
 * **Introduced:** MariaDB 10.3.3
 * **Deprecated:** MariaDB 10.7.4, MariaDB 10.8.3 
@@ -986,11 +985,11 @@ Whether to convert [[lock-in-share-mode|SELECT... LOCK IN SHARE MODE]] and [[for
 
 ==== ##spider_low_mem_read## 
 * **Description:** Whether to use low memory mode when executing queries issued internally to remote servers that return result-sets.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Doesn&#39;t use low memory mode.
 ** ##1## Uses low memory mode. 
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Default Table Value:** ##1##
 * **Range:** ##-1## to ##1##
 ----
@@ -1013,7 +1012,7 @@ Whether to convert [[lock-in-share-mode|SELECT... LOCK IN SHARE MODE]] and [[for
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##32767## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##32767##
 * **Default Table Value:** ##32767##
 * **Range:** ##-1## to ##32767##
 * **DSN Parameter Name:** ##mod##
@@ -1022,27 +1021,27 @@ Whether to convert [[lock-in-share-mode|SELECT... LOCK IN SHARE MODE]] and [[for
 ==== ##spider_multi_split_read##
 * **Description:** 
 Whether to divide a statement into multiple SQL statements sent to the remote backend server when the optimizer resolves range retrievals to multiple conditions.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Doesn&#39;t divide statements.
 ** ##1## Divides statements.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##100## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
-* **Default Table Value:** ##0##
+* **Default Session Value:** ##100##
+* **Default Table Value:** ##100##
 * **Range:** ##-1## to ##2147483647##
 * **DSN Parameter Name:** ##msr##
 ----
 
 ==== ##spider_net_read_timeout##
 * **Description:** TCP timeout in seconds to declare remote backend servers unresponsive when reading from a connection.  Change for high latency networks.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Less than 1 second timeout.
 ** ##1## and greater: Timeout in seconds.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##600## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##600##
 * **Default Table Value:** ##600##
 * **Range:** ##-1## to ##2147483647##
 * **DSN Parameter Name:** ##nrt##
@@ -1056,7 +1055,7 @@ Whether to divide a statement into multiple SQL statements sent to the remote ba
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##600## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##600##
 * **Default Table Value:** ##600##
 * **Range:** ##-1## to ##2147483647##
 * **DSN Parameter Name:** ##nwt##
@@ -1075,7 +1074,7 @@ Whether to divide a statement into multiple SQL statements sent to the remote ba
 
 ==== ##spider_quick_mode##
 * **Description:** Sets the backend query buffering to cache on the remote backend server or in the local buffer.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Local buffering, it acquires records collectively with ##store_result##.
 ** ##1## Remote buffering, it acquires records one by one.  Interrupts don&#39;t wait and recovery on context switch back.
 ** ##2## Remote buffering, it acquires records one by one.  Interrupts wait to the end of the acquisition.
@@ -1083,8 +1082,8 @@ Whether to divide a statement into multiple SQL statements sent to the remote ba
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##   
-* **Default Session Value:** ##3## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
-* **Default Table Value:** ##0##
+* **Default Session Value:** ##3##
+* **Default Table Value:** ##3##
 * **Range:** ##-1## to ##3##
 * **DSN Parameter Name:** ##qmd##
 ----
@@ -1096,7 +1095,7 @@ Whether to divide a statement into multiple SQL statements sent to the remote ba
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##   
-* **Default Session Value:** ##10485760## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##10485760##
 * **Range:** ##-1## to ##9223372036854775807##
 * **Introduced:** MariaDB 10.4.3, MariaDB 10.3.13
 ----
@@ -1116,7 +1115,7 @@ Whether to divide a statement into multiple SQL statements sent to the remote ba
 
 ==== ##spider_read_only_mode##
 * **Description:** Whether to allow writes on Spider tables. 
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Allows writes to Spider tables. 
 ** ##1## Makes tables read- only.
 * **Scope:** Global, Session
@@ -1203,13 +1202,13 @@ This can improve connection performance when you know the time zone.
    
 ==== ##spider_reset_sql_alloc##
 * **Description:** Resets the per connection SQL buffer after an SQL statement executes.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Doesn&#39;t reset.
 ** ##1## Resets.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##   
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Default Table Value:** ##1##
 * **Range:** ##-1## to ##1##
 * **DSN Parameter Name:** ##rsa##
@@ -1227,26 +1226,26 @@ This can improve connection performance when you know the time zone.
         
 ==== ##spider_second_read##
 * **Description:** Number of second read records on the backend server when the first records are found from the first read.  Spider continues scanning a range, adding a ##LIMIT## using the [[#spider_first_read|spider_first_read]] and [[#spider_second_read|spider_second_read]] variables.
-** ##-1## Uses the [[spider-table-parameters|table parameter]].
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set.
 ** ##0## Usually retrieves records. 
 ** ##1## and greater: Number of records.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
-* **Default Table Value:** ##9223372036854775807##
+* **Default Session Value:** ##0##
+* **Default Table Value:** ##0##
 * **Range:** ##-1## to ##9223372036854775807##
 * **DSN Parameter Name:** ##srd##
 ----
 
 ==== ##spider_select_column_mode##
 * **Description:** Mode for column retrieval from remote backend server.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Uses index columns when the ##SELECT## statement can resolve with an index, otherwise uses all columns.
 ** ##1## Uses all columns judged necessary to resolve the query.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##   
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Default Table Value:** ##1##
 * **Range:** ##-1## to ##1##
 * **DSN Parameter Name:** ##scm##
@@ -1254,14 +1253,14 @@ This can improve connection performance when you know the time zone.
 
 ==== ##spider_selupd_lock_mode##
 * **Description:** Local lock mode on ##INSERT SELECT##.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Takes no locks. 
 ** ##1## Takes shared locks. 
 ** ##2## Takes exclusive locks.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##   
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Default Table Value:** ##1##
 * **Range:** ##-1## to ##2##
 * **DSN Parameter Name:** ##slm#
@@ -1270,26 +1269,26 @@ This can improve connection performance when you know the time zone.
 ==== ##spider_semi_split_read## 
 * **Description:** 
 Whether to use chunk retrieval with offset and limit parameters on SQL statements sent to the remote backend server when using the [[#spider_split_read|spider_split_read]] system variable.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Doesn&#39;t use chunk retrieval.
 ** ##1 or more ## Uses chunk retrieval. 
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##   
-* **Default Session Value:** ##2## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
-* **Default Table Value:** ##0##
+* **Default Session Value:** ##2##
+* **Default Table Value:** ##2##
 * **Range:** ##-1## to ##2147483647##
 * **DSN Parameter Name:** ##ssr#
 ----
 
 ==== ##spider_semi_split_read_limit
 * **Description:** Sets the limit value for the [[#spider_semi_split_read|spider_semi_split_read]] system variable.
- ** ##-1## Uses the [[spider-table-parameters|table parameter]].
+ ** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set.
 ** ##0## or more: The limit value.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##   
-* **Default Session Value:** ##9223372036854775807## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##9223372036854775807##
 * **Default Table Value:** ##9223372036854775807##
 * **Range:** ##-1## to ##9223372036854775807##
 * **DSN Parameter Name:** ##ssl#
@@ -1309,13 +1308,13 @@ Whether to use chunk retrieval with offset and limit parameters on SQL statement
 
 ==== ##spider_semi_table_lock_connection## 
 * **Description:** Whether to use multiple connections with semi-table locking.  To enable semi-table locking, use the [[#spider_semi_table_lock|spider_semi_table_lock]] system variable.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Uses the same connection.
 ** ##1## Uses different connections.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##   
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Default Table Value:** ##1##
 * **Range:** ##-1## to ##1##
 * **DSN Parameter Name:** ##stc#
@@ -1347,13 +1346,13 @@ Whether to use chunk retrieval with offset and limit parameters on SQL statement
 
 ==== ##spider_skip_default_condition##  
  * **Description:** Whether to compute condition push downs.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Computes condition push downs.
 ** ##1## Doesn&#39;t compute condition push downs.
  * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Default Table Value:** ##0##
 * **Range:** ##-1## to ##1##
 * **DSN Parameter Name:** ##sdc##
@@ -1370,7 +1369,7 @@ Whether to use chunk retrieval with offset and limit parameters on SQL statement
  * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Range:** ##-1## to ##3##
 * **Introduced:** MariaDB 10.3.3
 ----
@@ -1393,12 +1392,12 @@ Whether to use chunk retrieval with offset and limit parameters on SQL statement
 
 ==== ##spider_split_read##
 * **Description:** Number of records in chunk to retry the result when a range query is sent to remote backend servers.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## or more: Number of records.
  * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##9223372036854775807## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##9223372036854775807##
 * **Default Table Value:** ##9223372036854775807##
 * **Range:** ##-1## to ##9223372036854775807##
 * **DSN Parameter Name:** ##srd##
@@ -1413,7 +1412,7 @@ Whether to use chunk retrieval with offset and limit parameters on SQL statement
  * **Scope:** Global
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Range:** ##-1## to ##1##
 * **Introduced:** MariaDB 10.3.3
 * **Deprecated:** MariaDB 10.7.4, MariaDB 10.8.3     
@@ -1428,7 +1427,7 @@ Whether to use chunk retrieval with offset and limit parameters on SQL statement
  * **Scope:** Global
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Range:** ##-1## to ##1##
 * **Introduced:** MariaDB 10.3.3
 * **Deprecated:** MariaDB 10.7.4, MariaDB 10.8.3     
@@ -1443,7 +1442,7 @@ Whether to use columns in select clause strictly for group by clause
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Range:** ##-1## to ##1##
 * **Introduced:** MariaDB 10.5.4
 ----
@@ -1451,27 +1450,27 @@ Whether to use columns in select clause strictly for group by clause
 ==== ##spider_sts_bg_mode##
 * **Description:** 
 Enables background confirmation for table statistics.  When background confirmation is enabled, Spider uses one thread per partition to maintain table status.  Disable when the [[#spider_sts_interval|spider_sts_interval]] system variable is set to ##0##, which causes Spider to always retrieve the latest information as need.  It is effective, when the [[#spider_sts_interval|spider_sts_interval]] system variable is set to ##10##.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Disables background confirmation. 
 ** ##1## Enables background confirmation (create thread per table/partition).
 ** ##2##  Enables background confirmation (use static threads). (from MariaDB 10.)
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##2## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##2##
 * **Range:** ##-1## to ##2##
 * **DSN Parameter Name:** ##sbm##
 ----
 
 ==== ##spider_sts_interval##
 * **Description:** Time interval of table statistics from the remote backend servers.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Retrieves the latest table statistics on request.
 ** ##1## or more: Interval in seconds for table state confirmation.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##10## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##10##
 * **Default Table Value:** ##10##
 * **Range:** ##-1## to ##2147483647##
 * **DSN Parameter Name:** ##siv##
@@ -1486,7 +1485,7 @@ Mode for table statistics. The [[show|SHOW]] command is used at the table level 
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##1##
 * **Default Table Value:** ##1##
 * **Range:** ##-1## to ##2##
 * **DSN Parameter Name:** ##smd##
@@ -1495,14 +1494,14 @@ Mode for table statistics. The [[show|SHOW]] command is used at the table level 
 
 ==== ##spider_sts_sync##
 * **Description:** Synchronizes table statistics in partitioned tables.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Doesn&#39;t synchronize table statistics in partitioned tables. 
 ** ##1## Synchronizes table state when opening a table, doesn&#39;t synchronize after opening.
 ** ##2## Synchronizes table statistics. 
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Session Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Session Value:** ##0##
 * **Default Table Value:** ##0##
 * **Range:** ##-1## to ##2##
 * **DSN Parameter Name:** ##ssy##
@@ -1598,8 +1597,8 @@ Mode for table statistics. The [[show|SHOW]] command is used at the table level 
 * **Scope:** Global
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Value:** ##-1##
-* **Default Table Value:** ##2147483647##
+* **Default Value:** ##10##
+* **Default Table Value:** ##10##
 * **Range:** ##-1## to ##2147483647##
 * **Deprecated:** MariaDB 10.7.4, MariaDB 10.8.3 
 * **Removed:** MariaDB 10.10    
@@ -1612,8 +1611,8 @@ Mode for table statistics. The [[show|SHOW]] command is used at the table level 
 * **Scope:** Global
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Value:** ##-1##
-* **Default Table Value:** ##18446744073709551615##
+* **Default Value:** ##100##
+* **Default Table Value:** ##100##
 * **Range:** ##-1## to ##9223372036854775807##
 * **Deprecated:** MariaDB 10.7.4, MariaDB 10.8.3
 * **Removed:** MariaDB 10.10    
@@ -1626,8 +1625,8 @@ Mode for table statistics. The [[show|SHOW]] command is used at the table level 
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Value:** ##-1##
-* **Default Table Value:** ##9223372036854775807##
+* **Default Value:** ##3000##
+* **Default Table Value:** ##3000##
 * **Range:** ##-1## to ##9223372036854775807##
 * **Deprecated:** MariaDB 10.7.4, MariaDB 10.8.3
 * **Removed:** MariaDB 10.10     
@@ -1635,14 +1634,14 @@ Mode for table statistics. The [[show|SHOW]] command is used at the table level 
 
 ==== ##spider_udf_ds_table_loop_mode##
 * **Description:** Whether to store the result-set in the same temporary table when the temporary table list count for UDF is less than the result-set count on UDF execution.
-** ##-1## Uses the [[spider-table-parameters|table parameter]].
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set.
 ** ##0## Drops records.
 ** ##1## Inserts the last table.
 ** ##2## Inserts the first table and loops again.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Value:** ##-1##
+* **Default Value:** ##0##
 * **Range:** ##-1## to ##2##
 * **Deprecated:** MariaDB 10.7.4, MariaDB 10.8.3
 * **Removed:** MariaDB 10.10    
@@ -1656,7 +1655,7 @@ Mode for table statistics. The [[show|SHOW]] command is used at the table level 
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Value:** ##-1##
+* **Default Value:** ##0##
 * **Range:** ##-1## to ##1##
 * **Deprecated:** MariaDB 10.7.4, MariaDB 10.8.3
 * **Removed:** MariaDB 10.10    
@@ -1737,7 +1736,7 @@ Whether to push a local ##START TRANSACTION WITH CONSISTENT## statement down to 
 ==== ##spider_use_handler##
 * **Description:** Converts [[handler|HANDLER]] SQL statements.
 When the [[#spider_sync_trx_isolation|spider_sync_trx_isolation]] system variable is set to ##0##, Spider disables [[handler|HANDLER]] conversions to prevent use of the statement on the [[set-transaction#serializable|SERIALIZABLE]] isolation level.
-** ##-1## Uses [[spider-table-parameters|table parameter]].
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set.
 ** ##0## Converts [[handler|HANDLER]] statements into [[select|SELECT]] statements.
 ** ##1## Passes [[handler|HANDLER]] to the remote backend server.
 ** ##2## Converts SQL statements to [[handler|HANDLER]] statements.
@@ -1745,7 +1744,7 @@ When the [[#spider_sync_trx_isolation|spider_sync_trx_isolation]] system variabl
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Value:** ##0## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Value:** ##0##
 * **Default Table Value:** ##0##
 * **Range:** ##-1## to ##3##
 * **DSN Parameter Name:** ##uhd##
@@ -1756,7 +1755,7 @@ When the [[#spider_sync_trx_isolation|spider_sync_trx_isolation]] system variabl
 ==== ##spider_use_pushdown_udf##
 * **Description:** 
 When using a UDF function in a condition and the [[server-system-variables#engine_condition_pushdown|engine_condition_pushdown]] system variable is set to ##1##, whether to execute the UDF function locally or push it down.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Doesn&#39;t transmit the UDF 
 ** ##1## Transmits the UDF. 
 * **Scope:** Global, Session
@@ -1784,13 +1783,13 @@ Synchronizes the snapshot using a [[lock-tables-and-unlock-tables|LOCK TABLES]] 
 
 ==== ##spider_use_table_charset##
 * **Description:** Whether to use the local table [[data-types-character-sets-and-collations|character set]] for the remote backend server connections.
-** ##-1## Uses the [[spider-table-parameters|table parameter]]. 
+** ##-1## Falls back to the default value, if the [[spider-table-parameters|table parameter]] is not set. 
 ** ##0## Use ##utf8##.
 ** ##1## Uses the table character set.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Value:** ##1## (&gt;=MariaDB 10.7), ##-1## (&lt;= MariaDB 10.6)
+* **Default Value:** ##1##
 * **Default Table Value:** ##1##
 * **Range:** ##-1## to ##1##
 * **DSN Parameter Name:** ##utc##
