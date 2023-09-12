@@ -256,7 +256,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-10 11:27">4 hours, 32 minutes ago</span></dd>
+<span class="datetime" title="2023-09-11 06:57">11 hours, 8 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -402,7 +402,8 @@
 
     
     <div class="answer formatted">
-        <p><a href="http://goog-perftools.sourceforge.net/doc/tcmalloc.html">TCMalloc</a> is a malloc replacement library optimized for multi-threaded usage. It also features a built-in heap debugger and profiler. You can build MariaDB with it or LD_PRELOAD it.</p>
+        <h3 class="anchored_heading" id="using-tcmalloc">Using tcmalloc</h3>
+<p><a href="http://goog-perftools.sourceforge.net/doc/tcmalloc.html">TCMalloc</a> is a malloc replacement library optimized for multi-threaded usage. It also features a built-in heap debugger and profiler. You can build MariaDB with it or LD_PRELOAD it.</p>
 <p>To build <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a> with <code>TCMalloc</code>, you need to use the following command</p>
 <pre class="fixed">cmake -DCMAKE_EXE_LINKER_FLAGS='-ltcmalloc'  -DWITH_SAFEMALLOC=OFF
 </pre><p>Many other malloc replacement libraries (as well as heap debuggers and profilers) can be used with MariaDB in a similar fashion.</p>
@@ -410,9 +411,22 @@
 <pre class="fixed">/usr/sbin/mysqld_safe --malloc-lib=tcmalloc
 </pre><p>or add it to <code>my.cnf</code>. Alternatively just set LD_PRELOAD to point to the to be used malloc library:</p>
 <pre class="fixed">export LD_PRELOAD=/path/to/library
-</pre><p>The above procedure also works with jemalloc.  Just replace tcmalloc with jemalloc in the above commands.</p>
-<h3 class="anchored_heading" id="see-also">See Also</h3>
-<ul start="1"><li><a href="/kb/en/debugging-a-running-server-on-linux/">Debugging a running server on Linux</a></li></ul>
+</pre><h2 class="anchored_heading" id="using-jemalloc">Using jemalloc</h2>
+<p>The above procedure also works with jemalloc.  Just replace tcmalloc with jemalloc in the above commands.</p>
+<h3 class="anchored_heading" id="finding-memory-leaks-with-jemalloc">Finding memory leaks with jemalloc</h3>
+<p>jemalloc can provide a report of memory leaks at program exit:</p>
+<pre class="fixed">MALLOC_CONF=prof_leak:true,lg_prof_sample:0,prof_final:true \
+LD_PRELOAD=${JEMALLOC_PATH}/lib/libjemalloc.so.2  path-to-mariadbd
+</pre><p>This will produce something like:</p>
+<pre class="fixed">&lt;jemalloc&gt;: Leak summary: 267184 bytes, 473 objects, 20 contexts
+&lt;jemalloc&gt;: Run jeprof on &#34;jeprof.19678.0.f.heap&#34; for leak detail
+</pre><p>You can learn more about the memory leaks with jeprof, that is included with jemalloc:</p>
+<pre class="fixed">jeprof --show_bytes path-to-mariadbd jeprof.19678.0.f.heap
+</pre><p>You can also generate a PDF call graph of the leak:</p>
+<pre class="fixed">jeprof --show_bytes --pdf path-to-mariadbd  jeprof.19678.0.f.heap &gt; /tmp/mariadbd.pdf
+</pre><h3 class="anchored_heading" id="see-also">See Also</h3>
+<ul start="1"><li><a href="/kb/en/debugging-a-running-server-on-linux/">Debugging a running server on Linux</a>
+</li><li><a href="https://github.com/jemalloc/jemalloc/wiki/Use-Case:-Leak-Checking">Jemalloc leak checking</a></li></ul>
 
     </div>
 
