@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/create-table/+r/127775/">127775</a></dd>
+            <dd><a href="/kb/en/create-table/+r/130282/">130282</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-07-12 12:06">2023-07-12 12:06</span></dd>
+<span class="datetime" title="2023-09-18 00:17">2023-09-18 00:17</span></dd>
         </dl>
     </div>
     
@@ -794,7 +794,7 @@ table_option:
 
 === [STORAGE] ENGINE
 
-##[STORAGE] ENGINE## specifies a [[mariadb-storage-engines|storage engine]] for the table. If this option is not used, the default storage engine is used instead. That is, the [[server-system-variables/#default_storage_engine|default_storage_engine]] session option value if it is set, or the value specified for the ##--default-storage-engine## [[mysqld-options-full-list|mysqld startup option]], or the default storage engine, [[innodb|InnoDB]]. If the specified storage engine is not installed and active, the default value will be used, unless the ##NO_ENGINE_SUBSTITUTION## [[sql-mode|SQL MODE]] is set (default). This is only true for ##CREATE TABLE##, not for ##ALTER TABLE##. For a list of storage engines that are present in your server, issue a [[show-engines|SHOW ENGINES]].
+##[STORAGE] ENGINE## specifies a [[mariadb-storage-engines|storage engine]] for the table. If this option is not used, the default storage engine is used instead. That is, the [[server-system-variables/#default_storage_engine|default_storage_engine]] session option value if it is set, or the value specified for the ##--default-storage-engine## [[mariadbd-options-full-list|mariadbd startup option]], or the default storage engine, [[innodb|InnoDB]]. If the specified storage engine is not installed and active, the default value will be used, unless the ##NO_ENGINE_SUBSTITUTION## [[sql-mode|SQL MODE]] is set (default). This is only true for ##CREATE TABLE##, not for ##ALTER TABLE##. For a list of storage engines that are present in your server, issue a [[show-engines|SHOW ENGINES]].
 
 === AUTO_INCREMENT
 
@@ -828,7 +828,7 @@ MyISAM uses ##MAX_ROWS## and ##AVG_ROW_LENGTH## to decide the maximum size of a 
 
 === DATA DIRECTORY/INDEX DIRECTORY
 
-##DATA DIRECTORY## and ##INDEX DIRECTORY## are supported for MyISAM and Aria, and DATA DIRECTORY is also supported by InnoDB if the [[innodb-system-variables#innodb_file_per_table|innodb_file_per_table]] server system variable is enabled, but only in CREATE TABLE, not in [[alter-table|ALTER TABLE]]. So, carefully choose a path for InnoDB tables at creation time, because it cannot be changed without dropping and re-creating the table. These options specify the paths for data files and index files, respectively. If these options are omitted, the database&#39;s directory will be used to store data files and index files. Note that these table options do not work for [[managing-mariadb-partitioning|partitioned]] tables (use the partition options instead), or if the server has been invoked with the [[mysqld-options-full-list|--skip-symbolic-links startup option]]. To avoid the overwriting of old files with the same name that could be present in the directories, you can use [[mysqld-options-full-list|the ##--keep_files_on_create## option]] (an error will be issued if files already exist). These options are ignored if the ##NO_DIR_IN_CREATE## [[sql-mode|SQL_MODE]] is enabled (useful for replication slaves). Also note that symbolic links cannot be used for InnoDB tables.
+##DATA DIRECTORY## and ##INDEX DIRECTORY## are supported for MyISAM and Aria, and DATA DIRECTORY is also supported by InnoDB if the [[innodb-system-variables#innodb_file_per_table|innodb_file_per_table]] server system variable is enabled, but only in CREATE TABLE, not in [[alter-table|ALTER TABLE]]. So, carefully choose a path for InnoDB tables at creation time, because it cannot be changed without dropping and re-creating the table. These options specify the paths for data files and index files, respectively. If these options are omitted, the database&#39;s directory will be used to store data files and index files. Note that these table options do not work for [[managing-mariadb-partitioning|partitioned]] tables (use the partition options instead), or if the server has been invoked with the [[mariadbd-options-full-list|--skip-symbolic-links startup option]]. To avoid the overwriting of old files with the same name that could be present in the directories, you can use [[mariadbd-options-full-list|the ##--keep_files_on_create## option]] (an error will be issued if files already exist). These options are ignored if the ##NO_DIR_IN_CREATE## [[sql-mode|SQL_MODE]] is enabled (useful for replication slaves). Also note that symbolic links cannot be used for InnoDB tables.
 
 ##DATA DIRECTORY## works by creating symlinks from where the table would normally have been (inside the [[server-system-variables#datadir|datadir]]) to where the option specifies. For security reasons, to avoid bypassing the privilege system, the server does not permit symlinks inside the datadir. Therefore, ##DATA DIRECTORY## cannot be used to specify a location inside the datadir. An attempt to do so will result in an error ##1210 (HY000) Incorrect arguments to DATA DIRECTORY##.
 
@@ -986,7 +986,7 @@ partition_options:
     [(partition_definition [, partition_definition] ...)]
 
 partition_definition:
-    PARTITION partition_name
+    [PARTITION] partition_name
         [VALUES {LESS THAN {(expr) | MAXVALUE} | IN (value_list)}]
         [[STORAGE] ENGINE [=] engine_name]
         [COMMENT [=] &#39;comment_text&#39; ]
@@ -1030,6 +1030,31 @@ It is possible to define up to 1024 partitions and subpartitions.
 The number of defined partitions can be optionally specified as ##PARTITION count##. This can be done to avoid specifying all partitions individually. But you can also declare each individual partition and, additionally, specify a ##PARTITIONS count## clause; in the case, the number of ##PARTITION##s must equal count.
 
 Also see [[partitioning-types-overview|Partitioning Types Overview]].
+
+&lt;&lt;product mariadb from=10.7.1&gt;&gt;
+From MariaDB 10.7, the PARTITION keyword is now optional as part of the partition definition, for example, instead of:
+&lt;&lt;sql&gt;&gt;
+create or replace table t1 (x int)
+  partition by range(x) (
+    partition p1 values less than (10),
+    partition p2 values less than (20),
+    partition p3 values less than (30),
+    partition p4 values less than (40),
+    partition p5 values less than (50),
+    partition pn values less than maxvalue);
+&lt;&lt;/sql&gt;&gt;
+the following can also be used:
+&lt;&lt;sql&gt;&gt;
+create or replace table t1 (x int)
+  partition by range(x) (
+    p1 values less than (10),
+    p2 values less than (20),
+    p3 values less than (30),
+    p4 values less than (40),
+    p5 values less than (50),
+    pn values less than maxvalue);
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/product&gt;&gt;
 
 == Sequences
 ##CREATE TABLE## can also be used to create a [[sequences|SEQUENCE]]. See [[create-sequence|CREATE SEQUENCE]] and [[sequence-overview|Sequence Overview]].
