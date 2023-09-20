@@ -248,7 +248,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-19 14:14">1 hour, 46 minutes ago</span></dd>
+<span class="datetime" title="2023-09-20 11:57">4 hours, 3 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -426,6 +426,8 @@
 
     <li class=""><a href="#system-variables" title="System Variables">System Variables</a>    <ol class="toc">
 
+        <li class=""><a href="#sql_error_log" title="sql_error_log">sql_error_log</a></li>
+
         <li class=""><a href="#sql_error_log_filename" title="sql_error_log_filename">sql_error_log_filename</a></li>
 
         <li class=""><a href="#sql_error_log_rate" title="sql_error_log_rate">sql_error_log_rate</a></li>
@@ -436,9 +438,7 @@
 
         <li class=""><a href="#sql_error_log_size_limit" title="sql_error_log_size_limit">sql_error_log_size_limit</a></li>
 
-        <li class=""><a href="#sql_error_log_warnings" title="sql_error_log_warnings">sql_error_log_warnings</a></li>
-
-        <li class=""><a href="#sql_error_log" title="sql_error_log">sql_error_log</a>    </ol>
+        <li class=""><a href="#sql_error_log_warnings" title="sql_error_log_warnings">sql_error_log_warnings</a>    </ol>
  </ol>
 </li>
 </div><p>
@@ -449,14 +449,14 @@ The <code>SQL_ERROR_LOG</code> plugin collects errors sent to clients in a log f
 <p>Although the plugin's shared library is distributed with MariaDB by default, the plugin is not actually installed by MariaDB by default. There are two methods that can be used to install the plugin with MariaDB.</p>
 <p>The first method can be used to install the plugin without restarting the server. You can install the plugin dynamically by executing <a href="/kb/en/install-soname/">INSTALL SONAME</a> or <a href="/kb/en/install-plugin/">INSTALL PLUGIN</a>. For example:</p>
 <pre class="fixed"><span class="n">INSTALL</span> <span class="n">SONAME</span> <span class="s1">&#39;sql_errlog&#39;</span><span class="p">;</span>
-</pre><p>The second method can be used to tell the server to load the plugin when it starts up. The plugin can be installed this way by providing the <a href="/kb/en/mysqld-options/#-plugin-load">--plugin-load</a> or the <a href="/kb/en/mysqld-options/#-plugin-load-add">--plugin-load-add</a> options. This can be specified as a command-line argument to <a href="/kb/en/mysqld-options/">mysqld</a> or it can be specified in a relevant server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>. For example:</p>
+</pre><p>The second method can be used to tell the server to load the plugin when it starts up. The plugin can be installed this way by providing the <a href="/kb/en/mariadbd-options/#-plugin-load">--plugin-load</a> or the <a href="/kb/en/mariadbd-options/#-plugin-load-add">--plugin-load-add</a> options. This can be specified as a command-line argument to <a href="/kb/en/mariadbd-options/">mariadbd</a> or it can be specified in a relevant server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>. For example:</p>
 <pre class="fixed">[mariadb]
 ...
 plugin_load_add = sql_errlog
 </pre><h2 class="anchored_heading" id="uninstalling-the-plugin">Uninstalling the Plugin</h2>
 <p>You can uninstall the plugin dynamically by executing <a href="/kb/en/uninstall-soname/">UNINSTALL SONAME</a> or <a href="/kb/en/uninstall-plugin/">UNINSTALL PLUGIN</a>. For example:</p>
 <pre class="fixed"><span class="n">UNINSTALL</span> <span class="n">SONAME</span> <span class="s1">&#39;sql_errlog&#39;</span><span class="p">;</span>
-</pre><p>If you installed the plugin by providing the <a href="/kb/en/mysqld-options/#-plugin-load">--plugin-load</a> or the <a href="/kb/en/mysqld-options/#-plugin-load-add">--plugin-load-add</a> options in a relevant server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>, then those options should be removed to prevent the plugin from being loaded the next time the server is restarted.</p>
+</pre><p>If you installed the plugin by providing the <a href="/kb/en/mariadbd-options/#-plugin-load">--plugin-load</a> or the <a href="/kb/en/mariadbd-options/#-plugin-load-add">--plugin-load-add</a> options in a relevant server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>, then those options should be removed to prevent the plugin from being loaded the next time the server is restarted.</p>
 <h2 class="anchored_heading" id="example">Example</h2>
 <pre class="fixed wrap">install plugin SQL_ERROR_LOG soname 'sql_errlog';
 Query OK, 0 rows affected (0.00 sec)
@@ -478,6 +478,22 @@ ERROR 1286 (42000): Unknown storage engine 'WHOOPSIE'
 <tr><td>1.0</td><td>Alpha</td><td><a href="/kb/en/mariadb-5522-release-notes/">MariaDB 5.5.22</a></td></tr>
 </table>
 </div><h2 class="anchored_heading" id="system-variables">System Variables</h2>
+<h3 class="anchored_heading" id="sql_error_log"><code>sql_error_log</code></h3>
+<ul start="1"><li><strong>Description:</strong> Controls how the server should treat the plugin when the server starts up.
+<ul start="1"><li>Valid values are:
+<ul start="1"><li><code>OFF</code> - Disables the plugin without removing it from the <a href="/kb/en/mysqlplugin-table/">mysql.plugins</a> table.
+</li><li><code>ON</code> - Enables the plugin. If the plugin cannot be initialized, then the server will still continue starting up, but the plugin will be disabled.
+</li><li><code>FORCE</code> - Enables the plugin. If the plugin cannot be initialized, then the server will fail to start with an error.
+</li><li><code>FORCE_PLUS_PERMANENT</code> - Enables the plugin. If the plugin cannot be initialized, then the server will fail to start with an error. In addition, the plugin cannot be uninstalled with <a href="/kb/en/uninstall-soname/">UNINSTALL SONAME</a> or <a href="/kb/en/uninstall-plugin/">UNINSTALL PLUGIN</a> while the server is running.
+</li></ul>
+</li><li>See <a href="/kb/en/plugin-overview/#configuring-plugin-activation-at-server-startup">Plugin Overview: Configuring Plugin Activation at Server Startup</a> for more information.
+</li></ul>
+</li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--sql-error-log=value</code>
+</li><li><strong>Data Type:</strong> <code>enumerated</code>
+</li><li><strong>Default Value:</strong> <code>ON</code>
+</li><li><strong>Valid Values:</strong> <code>OFF</code>, <code>ON</code>, <code>FORCE</code>, <code>FORCE_PLUS_PERMANENT</code>
+</li></ul>
+<hr>
 <h3 class="anchored_heading" id="sql_error_log_filename"><code>sql_error_log_filename</code></h3>
 <ul start="1"><li><strong>Description:</strong> The name of the logfile. Rotation of it will be named like <code><em>sql_error_log_filename</em>.001</code>
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--sql-error-log-filename=value</code>
@@ -526,29 +542,13 @@ ERROR 1286 (42000): Unknown storage engine 'WHOOPSIE'
 </li></ul>
 <hr>
 <h3 class="anchored_heading" id="sql_error_log_warnings"><code>sql_error_log_warnings</code></h3>
-<ul start="1"><li><strong>Description:</strong> If set to 1 or ON log also warnings
+<ul start="1"><li><strong>Description:</strong> If set, log warnings in addition to errors. 
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--sql-error-log-warnings={0,1}</code>
 </li><li><strong>Scope:</strong> Global
 </li><li><strong>Dynamic:</strong> Yes
 </li><li><strong>Data Type:</strong> <code>boolean</code>
 </li><li><strong>Default Value:</strong> <code>OFF</code>
-</li><li><strong>Added in version:</strong>10.11.6
----
-</li></ul>
-<h3 class="anchored_heading" id="sql_error_log"><code>sql_error_log</code></h3>
-<ul start="1"><li><strong>Description:</strong> Controls how the server should treat the plugin when the server starts up.
-<ul start="1"><li>Valid values are:
-<ul start="1"><li><code>OFF</code> - Disables the plugin without removing it from the <a href="/kb/en/mysqlplugin-table/">mysql.plugins</a> table.
-</li><li><code>ON</code> - Enables the plugin. If the plugin cannot be initialized, then the server will still continue starting up, but the plugin will be disabled.
-</li><li><code>FORCE</code> - Enables the plugin. If the plugin cannot be initialized, then the server will fail to start with an error.
-</li><li><code>FORCE_PLUS_PERMANENT</code> - Enables the plugin. If the plugin cannot be initialized, then the server will fail to start with an error. In addition, the plugin cannot be uninstalled with <a href="/kb/en/uninstall-soname/">UNINSTALL SONAME</a> or <a href="/kb/en/uninstall-plugin/">UNINSTALL PLUGIN</a> while the server is running.
-</li></ul>
-</li><li>See <a href="/kb/en/plugin-overview/#configuring-plugin-activation-at-server-startup">Plugin Overview: Configuring Plugin Activation at Server Startup</a> for more information.
-</li></ul>
-</li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--sql-error-log=value</code>
-</li><li><strong>Data Type:</strong> <code>enumerated</code>
-</li><li><strong>Default Value:</strong> <code>ON</code>
-</li><li><strong>Valid Values:</strong> <code>OFF</code>, <code>ON</code>, <code>FORCE</code>, <code>FORCE_PLUS_PERMANENT</code>
+</li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-10-11-6-release-notes/">MariaDB 10.11.6</a>
 </li></ul>
 <hr>
 

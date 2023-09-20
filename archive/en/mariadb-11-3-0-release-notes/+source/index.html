@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-11-3-0-release-notes/+r/130058/">130058</a></dd>
+            <dd><a href="/kb/en/mariadb-11-3-0-release-notes/+r/130372/">130372</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-09-05 18:54">2023-09-05 18:54</span></dd>
+<span class="datetime" title="2023-09-20 15:58">2023-09-20 15:58</span></dd>
         </dl>
     </div>
     
@@ -311,13 +311,13 @@
 &lt;&lt;button target=&#34;what-is-mariadb-11-2&#34; class=&#34;btn-info&#34;&gt;&gt;Overview of 11.2&lt;&lt;/button&gt;&gt;
 &lt;&lt;/style&gt;&gt;
 
-**Release date:** Unreleased
+**Release date:** 20 September 2023
 
 &lt;&lt;include slug=&#34;alpha&#34;&gt;&gt;
 
-MariaDB 11.3 is an upcoming short-term development series of MariaDB, and will be maintained for one year after its Generally Available release. It is an evolution of MariaDB 11.2 with several entirely new features.
+MariaDB 11.3 is a current short-term development series of MariaDB, and will be maintained for one year after its Generally Available release. It is an evolution of MariaDB 11.2 with several entirely new features.
 
-MariaDB 11.3.0 will be a single preview release. Features are to be considered preview, and none are guaranteed to make it into MariaDB 11.3.
+MariaDB 11.3.0 is a single preview release. Features are to be considered preview, and none are guaranteed to make it into MariaDB 11.3.
 
 &lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 The preview is available as a container **quay.io/mariadb-foundation/mariadb-devel:11.3-preview**.
@@ -330,49 +330,47 @@ The preview is available as a container **quay.io/mariadb-foundation/mariadb-dev
 
 Thanks, and enjoy MariaDB!
 
-==RocksDB
-Update RocksDB to 8.1.1 (MDEV-30610)
+==Connection Redirection
+* Added a [[connection-redirection-mechanism-in-the-mariadb-clientserver-protocol|redirect mechanism]] using the [[server-system-variables/#redirect_url|redirect_url]] system variable (MDEV-15935)
 
-The default value of the following system variables are changed:
-* rocksdb_stats_level: 1 (kExceptHistogramOrTimers)
-* rocksdb_wal_recovery_mode: 2 (kPointInTimeRecovery)
+== InnoDB
+* Shrink [[innodb-temporary-tablespaces|temporary tablespaces]] without restart by setting the [[innodb-system-variables/#innodb_truncate_temporary_tablespace_now|innodb_truncate_temporary_tablespace_now]] system variable. (MDEV-28699)
 
-The following system variables are added:
-* rocksdb_cancel_manual_compactions
-* rocksdb_enable_iterate_bounds
-* rocksdb_enable_pipelined_write
-* rocksdb_enable_remove_orphaned_dropped_cfs
-* rocksdb_manual_compaction_bottommost_level
-* rocksdb_max_background_compactions
-* rocksdb_max_background_flushes
-* rocksdb_max_bottom_pri_background_compactions
-* rocksdb_skip_locks_if_skip_unique_check
-* rocksdb_track_and_verify_wals_in_manifest
-* rocksdb_write_batch_flush_threshold
+== Processlist
+* Added a ##SENT_ROWS## column to the [[information-schema-processlist-table|Information Schema PROCESSLIST]] table, as well as extended the display size for the columns in processlist to ensure
+that most results will fit in display (MDEV-3953)
 
-The following system variables are deprecated:
-* rocksdb_hash_index_allow_collision
-* rocksdb_new_table_reader_for_compaction_inputs
+==Date and Time
+* Add timezone information to [[date_format|DATE_FORMAT]] (MDEV-31684)
 
-The following dynamic metadata table is added:
-* NFORMATION_SCHEMA.ROCKSDB_LIVE_FILES_METADATA
+==SSL/TLS
+* Validate ssl certificates using client password (MDEV-31855)
+* Use ephemeral ssl certificates (MDEV-31856)
+* Enable --ssl-verify-server-cert by default (MDEV-31857)
 
-The following status variables are added:
-* rocksdb_manual_compactions_cancelled
-* rocksdb_manual_compactions_pending
-
-The following status variables are removed:
-* rocksdb_block_cache_filter_bytes_evict
-* rocksdb_block_cache_index_bytes_evict
-* rocksdb_block_cachecompressed_hit
-* rocksdb_block_cachecompressed_miss
-* rocksdb_no_file_closes
-* rocksdb_num_iterators
-* rocksdb_number_deletes_filtered
-* rocksdb_write_timedout
+== OLD_MODE
+* Setting a non-default [[old_mode]] value will now always issue a deprecation warning (MDEV-31811)
 
 == Mariabackup
 * [[mariabackup-options/#-innobackupex|mariabackup --innobackupex]] mode has been deprecated (MDEV-31505) 
+
+== General
+* Add views for periods in information_schema (MDEV-22597)
+* Add keywords &#34;SQL_BEFORE_GTIDS&#34; and &#34;SQL_AFTER_GTIDS&#34; for START SLAVE UNTIL (MDEV-27247)
+* Spider: Implement more engine-defined options (MDEV-28856)
+* New db-level SHOW CREATE ROUTINE privilege (MDEV-29167)
+* [[kdf|KDF]] function (MDEV-31474)
+* Make optimizer handle UCASE(varchar_col)=... (MDEV-31496)
+* [[inet4|INET4]] data types can now be cast into [[inet6|INET6]] types (MDEV-31626)
+
+The following deprecated features and system variables have been removed (MDEV-32104):
+
+* [[server-system-variables/#debug|debug]] (deprecated since MariaDB 5.5.37)
+* sr_YU [[server-locale|locale]] (deprecated since MariaDB 10.0.11)
+* &#34;engine_condition_pushdown&#34; in [[optimizer-switch|optimizer_switch]] (deprecated since MariaDB 10.1.1)
+* [[server-system-variables/#date_format|date_format]], [[server-system-variables/#datetime_format|datetime_format]], [[server-system-variables/#time_format|time_format]], [[server-system-variables/#max_tmp_tables|max_tmp_tables]] (deprecated since MariaDB 10.1.2)
+* [[galera-cluster-system-variables/#wsrep_causal_reads|wsrep_causal_reads]] (deprecated since MariaDB 10.1.3)
+* &#34;parser&#34; in [[mroonga]] table comment (deprecated since MariaDB 10.2.11)
 
 &lt;&lt;include slug=&#34;release-notification&#34;&gt;&gt;</textarea>
     
