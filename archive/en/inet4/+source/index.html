@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/inet4/+r/125153/">125153</a></dd>
+            <dd><a href="/kb/en/inet4/+r/130374/">130374</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-04-03 21:44">2023-04-03 21:44</span></dd>
+<span class="datetime" title="2023-09-20 16:15">2023-09-20 16:15</span></dd>
         </dl>
     </div>
     
@@ -321,6 +321,8 @@ INET4
 == Description
 ##INET4## is a data type to store IPv4 addresses, as 4-byte binary strings.
 
+From MariaDB 11.3.0, casting from [[inet4|INET4]] data types to INET6 is permitted, allowing for example comparisons between the two data types, and for INET 4 values to be inserted into INET6 columns.
+
 == Examples
 &lt;&lt;sql&gt;&gt;
 CREATE OR REPLACE TABLE t1 (a INET4);
@@ -342,6 +344,37 @@ SELECT HEX(a), a FROM t1 ORDER BY a;
 | FF0A0000 | 255.10.0.0      |
 | FFFFFFFF | 255.255.255.255 |
 +----------+-----------------+
+&lt;&lt;/sql&gt;&gt;
+
+Casting from INET4 to [[inet6|INET6]] is permitted, allowing direct inserts.
+
+Before MariaDB 11.3:
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE t1 (a INET6);
+
+INSERT INTO t1 VALUES(&#39;0.0.0.0&#39;), (&#39;255.10.0.0&#39;), (&#39;255.255.255.255&#39;);
+ERROR 1292 (22007): Incorrect inet6 value: &#39;0.0.0.0&#39; for column `test`.`t1`.`a` at row 1
+&lt;&lt;/sql&gt;&gt;
+
+From MariaDB 11.3:
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE t1 (a INET6);
+
+INSERT INTO t1 VALUES(&#39;0.0.0.0&#39;), (&#39;255.10.0.0&#39;), (&#39;255.255.255.255&#39;);
+Query OK, 3 rows affected (0.027 sec)
+&lt;&lt;/sql&gt;&gt;
+
+Comparisons are also permitted from MariaDB 11.3:
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (i4 INET4, i6 INET6); 
+INSERT INTO t1 VALUES(&#39;10.10.10.10&#39;,&#39;::ffff:192.168.0.1&#39;);
+
+SELECT LEAST(i4,i6) FROM t1;
++--------------------+
+| LEAST(i4,i6)       |
++--------------------+
+| ::ffff:10.10.10.10 |
++--------------------+
 &lt;&lt;/sql&gt;&gt;</textarea>
     
 

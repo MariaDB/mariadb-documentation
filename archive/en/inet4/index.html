@@ -247,12 +247,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2022-06-21 12:39">1 year, 2 months ago</span></dd>
+<span class="datetime" title="2022-06-21 12:39">1 year, 3 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-04-03 21:44">5 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2023-09-20 16:15">23 hours, 46 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -424,6 +424,7 @@
 </div>
 <h2 class="anchored_heading" id="description">Description</h2>
 <p><code>INET4</code> is a data type to store IPv4 addresses, as 4-byte binary strings.</p>
+<p>From <a href="/kb/en/mariadb-11-3-0-release-notes/">MariaDB 11.3.0</a>, casting from <a href="/kb/en/inet4/">INET4</a> data types to INET6 is permitted, allowing for example comparisons between the two data types, and for INET 4 values to be inserted into INET6 columns.</p>
 <h2 class="anchored_heading" id="examples">Examples</h2>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">a</span> <span class="n">INET4</span><span class="p">);</span>
 
@@ -444,6 +445,27 @@
 <span class="o">|</span> <span class="n">FF0A0000</span> <span class="o">|</span> <span class="mi">255</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span>      <span class="o">|</span>
 <span class="o">|</span> <span class="n">FFFFFFFF</span> <span class="o">|</span> <span class="mi">255</span><span class="p">.</span><span class="mi">255</span><span class="p">.</span><span class="mi">255</span><span class="p">.</span><span class="mi">255</span> <span class="o">|</span>
 <span class="o">+</span><span class="c1">----------+-----------------+</span>
+</pre><p>Casting from INET4 to <a href="/kb/en/inet6/">INET6</a> is permitted, allowing direct inserts.</p>
+<p>Before <a href="/kb/en/what-is-mariadb-113/">MariaDB 11.3</a>:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">a</span> <span class="n">INET6</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t1</span> <span class="k">VALUES</span><span class="p">(</span><span class="s1">&#39;0.0.0.0&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;255.10.0.0&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;255.255.255.255&#39;</span><span class="p">);</span>
+<span class="n">ERROR</span> <span class="mi">1292</span> <span class="p">(</span><span class="mi">22007</span><span class="p">):</span> <span class="n">Incorrect</span> <span class="n">inet6</span> <span class="n">value</span><span class="p">:</span> <span class="s1">&#39;0.0.0.0&#39;</span> <span class="k">for</span> <span class="k">column</span> <span class="o">`</span><span class="n">test</span><span class="o">`</span><span class="p">.</span><span class="o">`</span><span class="n">t1</span><span class="o">`</span><span class="p">.</span><span class="o">`</span><span class="n">a</span><span class="o">`</span> <span class="k">at</span> <span class="k">row</span> <span class="mi">1</span>
+</pre><p>From <a href="/kb/en/what-is-mariadb-113/">MariaDB 11.3</a>:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">a</span> <span class="n">INET6</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t1</span> <span class="k">VALUES</span><span class="p">(</span><span class="s1">&#39;0.0.0.0&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;255.10.0.0&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;255.255.255.255&#39;</span><span class="p">);</span>
+<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">3</span> <span class="k">rows</span> <span class="n">affected</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">027</span> <span class="n">sec</span><span class="p">)</span>
+</pre><p>Comparisons are also permitted from <a href="/kb/en/what-is-mariadb-113/">MariaDB 11.3</a>:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">i4</span> <span class="n">INET4</span><span class="p">,</span> <span class="n">i6</span> <span class="n">INET6</span><span class="p">);</span> 
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t1</span> <span class="k">VALUES</span><span class="p">(</span><span class="s1">&#39;10.10.10.10&#39;</span><span class="p">,</span><span class="s1">&#39;::ffff:192.168.0.1&#39;</span><span class="p">);</span>
+
+<span class="k">SELECT</span> <span class="n">LEAST</span><span class="p">(</span><span class="n">i4</span><span class="p">,</span><span class="n">i6</span><span class="p">)</span> <span class="k">FROM</span> <span class="n">t1</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">--------------------+</span>
+<span class="o">|</span> <span class="n">LEAST</span><span class="p">(</span><span class="n">i4</span><span class="p">,</span><span class="n">i6</span><span class="p">)</span>       <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------+</span>
+<span class="o">|</span> <span class="p">::</span><span class="n">ffff</span><span class="p">:</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span><span class="p">.</span><span class="mi">10</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------+</span>
 </pre>
     </div>
 
