@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-09-09 07:46">1 year ago</span></dd>
+<span class="datetime" title="2023-09-22 07:46">8 hours, 19 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -458,11 +458,13 @@
 
         <li class="mariadb_from_10_4"><a href="#disabling-core-file-size-restrictions-on-linux" title="Disabling Core File Size Restrictions on Linux">Disabling Core File Size Restrictions on Linux</a>        <ol class="toc">
 
-            <li class="mariadb_from_10_4"><a href="#running-mysqld-using-mysqld_safe" title="Running mysqld Using mysqld_safe">Running mysqld Using mysqld_safe</a></li>
+            <li class="mariadb_from_10_4"><a href="#running-mariadbd-using-mysqld_safe" title="Running mariadbd Using mysqld_safe">Running mariadbd Using mysqld_safe</a></li>
 
-            <li class="mariadb_from_10_4"><a href="#running-mysqld-manually" title="Running mysqld Manually">Running mysqld Manually</a></li>
+            <li class="mariadb_from_10_4"><a href="#running-mariadbd-manually" title="Running mariadbd Manually">Running mariadbd Manually</a></li>
 
-            <li class="mariadb_from_10_4"><a href="#running-mysqld-using-systemd" title="Running mysqld Using systemd">Running mysqld Using systemd</a></li>
+            <li class="mariadb_from_10_4"><a href="#running-mariadbd-using-systemd" title="Running mariadbd Using systemd">Running mariadbd Using systemd</a></li>
+
+            <li class="mariadb_from_10_4"><a href="#running-mariadb-containers" title="Running MariaDB Containers">Running MariaDB Containers</a></li>
 
             <li class="mariadb_from_10_4"><a href="#changing-the-system-wide-limit" title="Changing the System-Wide Limit">Changing the System-Wide Limit</a>        </ol>
 </li>
@@ -510,7 +512,7 @@ core_file
 <pre class="fixed">sudo cat /proc/$(pidof mysqld)/limits | grep &#34;core file&#34;
 </pre><p>If you need to change the core size limit, the method you use depends on how you start <code>mysqld</code>. See the sections below for more details.</p>
 <div class="mariadb_from_10_2_24 mariadb from_10_2_24 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/mariadb-10224-release-notes/">10.2.24</a></h5><p>In <a href="/kb/en/mariadb-10224-release-notes/">MariaDB 10.2.24</a>, <a href="/kb/en/mariadb-10315-release-notes/">MariaDB 10.3.15</a>, and <a href="/kb/en/mariadb-1045-release-notes/">MariaDB 10.4.5</a> and later, the resource limits for the <code>mysqld</code> process are printed to the <a href="/kb/en/error-log/">error log</a> when the <code>mysqld</code> process crashes. That way, users can confirm whether the process may have been allowed to dump a core file. See <a href="https://jira.mariadb.org/browse/MDEV-15051">MDEV-15051</a> for more information.</p>
-</div><h4 class="anchored_heading" id="running-mysqld-using-mysqld_safe">Running mysqld Using mysqld_safe</h4>
+</div><h4 class="anchored_heading" id="running-mariadbd-using-mysqld_safe">Running mariadbd Using mysqld_safe</h4>
 <p>If you are starting MariaDB by running <code><a href="/kb/en/mysqld_safe/">mysqld_safe</a></code>, then configuring the following in the <code>[mysqld_safe]</code> option group in an option file should allow for unlimited sized core files:</p>
 <pre class="fixed">[mysqld_safe]
 ...
@@ -518,18 +520,21 @@ core_file_size=unlimited
 </pre><p>You can check your current values by executing:</p>
 <pre class="fixed">my_print_defaults mysqld_safe
 </pre><p>See <a href="/kb/en/mysqld_safe/#configuring-the-core-file-size">mysqld_safe: Configuring the Core File Size</a> for more details.</p>
-<div class="cstm-style bluebox"><p><strong>Note:</strong> If you are using <code><a href="/kb/en/mysqld_safe/">mysqld_safe</a></code> and running <code>mysqld</code> as the <code>root</code> user, then no
-core file is created on some systems. The solution is to run <code>mysqld</code> as another user.</p>
-</div><h4 class="anchored_heading" id="running-mysqld-manually">Running mysqld Manually</h4>
-<p>If you are starting mysqld manually or in a custom script, then you can allow for unlimited sized core files by executing the following in the same shell or script in which mysqld is executed:</p>
+<div class="cstm-style bluebox"><p><strong>Note:</strong> If you are using <code><a href="/kb/en/mysqld_safe/">mysqld_safe</a></code> and running <code>mariadbd</code> as the <code>root</code> user, then no
+core file is created on some systems. The solution is to run <code>mariadbd</code> as another user.</p>
+</div><h4 class="anchored_heading" id="running-mariadbd-manually">Running mariadbd Manually</h4>
+<p>If you are starting mariadbd manually or in a custom script, then you can allow for unlimited sized core files by executing the following in the same shell or script in which mariadbd is executed:</p>
 <pre class="fixed">ulimit -c unlimited
-</pre><h4 class="anchored_heading" id="running-mysqld-using-systemd">Running mysqld Using systemd</h4>
-<p>If you are starting <code>mysqld</code> using <code><a href="/kb/en/systemd/">systemd</a></code>, then you may need to customize the MariaDB service to allow for unlimited size core files. For example, you could execute the following:</p>
+</pre><h4 class="anchored_heading" id="running-mariadbd-using-systemd">Running mariadbd Using systemd</h4>
+<p>If you are starting <code>mariadbd</code> using <code><a href="/kb/en/systemd/">systemd</a></code>, then you may need to customize the MariaDB service to allow for unlimited size core files. For example, you could execute the following:</p>
 <p>Using <code>sudo systemctl edit mariadb.service</code> add the contents:</p>
 <pre class="fixed">[Service]
 
 LimitCORE=infinity
 </pre><p>See <a href="/kb/en/systemd/#configuring-the-core-file-size">systemd: Configuring the Core File Size</a> for more details.</p>
+<h4 class="anchored_heading" id="running-mariadb-containers">Running MariaDB Containers</h4>
+<p>To get a core dumps under <code>mariadb</code> containers requires <a href="#setting-the-path-on-linux">Setting the path on linux</a> to not include a <code>sysctl kernel.core_pattern</code> beginning with a pipe to an executable that doesn't exist in the container. Setting to a straight <code>core</code> is recommended.</p>
+<p>Also see <a href="/kb/en/how-to-produce-a-full-stack-trace-for-mysqld/#containers-with-debug-symbols">Container with Debug Symbols</a>.</p>
 <h4 class="anchored_heading" id="changing-the-system-wide-limit">Changing the System-Wide Limit</h4>
 <p>If you want to change the system-wide limit to allow for unlimited size core files for for the <code>mysql</code> user account, then you can do so by adding the following lines to a file in <code><a href="https://linux.die.net/man/5/limits.conf">/etc/security/limits.d/</a></code>. For example:</p>
 <pre class="fixed">sudo tee /etc/security/limits.d/mariadb_core.conf &lt;&lt;EOF
@@ -549,16 +554,17 @@ setting is probably the following (store cores in the current directory as <code
 not in the data directory. They place to store cores can be temporarily altered using the <code><a href="https://linux.die.net/man/8/sysctl">sysctl</a></code> utility, but it is often more common to alter them via the <code><a href="https://linux.die.net/man/5/proc">/proc</a></code> file system. See the following example:</p>
 <pre class="fixed">sudo mkdir /tmp/corefiles
 sudo chmod 777 /tmp/corefiles
-sudo echo /tmp/corefiles/core &gt; /proc/sys/kernel/core_pattern
-sudo echo 1 &gt; /proc/sys/kernel/core_uses_pid
+sudo sysctl kernel.core_pattern=/tmp/corefiles/core
+sudo sysctl kerel.core_uses_pid=1
 </pre><p>The above commands will tell the system to put core files in <code>/tmp/corefiles</code>, and it also tells the system to put the process ID in the file name.</p>
 <p>If you want to make these changes permanent, then you can add the following to a file in <code><a href="https://linux.die.net/man/5/sysctl.conf">/etc/sysctl.conf.d/</a></code>. For example:</p>
 <pre class="fixed">sudo tee /etc/sysctl.d/mariadb_core.conf &lt;&lt;EOF
 kernel.core_pattern=/tmp/corefiles/core
 kernel.core_uses_pid=1
 EOF
-</pre><div class="mariadb_from_10_2_24 mariadb from_10_2_24 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/mariadb-10224-release-notes/">10.2.24</a></h5><p>In <a href="/kb/en/mariadb-10224-release-notes/">MariaDB 10.2.24</a>, <a href="/kb/en/mariadb-10315-release-notes/">MariaDB 10.3.15</a>, and <a href="/kb/en/mariadb-1045-release-notes/">MariaDB 10.4.5</a> and later, the value of <code>kernel.core_pattern</code> is printed to the <a href="/kb/en/error-log/">error log</a> when the <code>mysqld</code> process crashes. That way, users can determine where the process may have dumped a core file. See <a href="https://jira.mariadb.org/browse/MDEV-15051">MDEV-15051</a> for more information.</p>
-</div><div class="mariadb_to_10_2_23 mariadb to_10_2_23 product"><h5 class="product_title">MariaDB until <a href="/kb/en/mariadb-10223-release-notes/">10.2.23</a></h5><p>In <a href="/kb/en/mariadb-10223-release-notes/">MariaDB 10.2.23</a>, <a href="/kb/en/mariadb-10314-release-notes/">MariaDB 10.3.14</a>, and <a href="/kb/en/mariadb-1044-release-notes/">MariaDB 10.4.4</a> and before, the <a href="/kb/en/error-log/">error log</a> contains a message indicating that a core file would be written in the <code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code> when the <code>mysqld</code> process crashes, even if this was not true because the <code>kernel.core_pattern</code> actually configured the process to write the core file in a different directory.</p>
+</pre><p>Note: if you are using containers, the pid is always going to be 1, so this may not be a useful setting. Appending an identifier like %t to the <code><a href="https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#core-pattern">kernel.core_pattern</a></code> will generate more unique files.</p>
+<div class="mariadb_from_10_2_24 mariadb from_10_2_24 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/mariadb-10224-release-notes/">10.2.24</a></h5><p>In <a href="/kb/en/mariadb-10224-release-notes/">MariaDB 10.2.24</a>, <a href="/kb/en/mariadb-10315-release-notes/">MariaDB 10.3.15</a>, and <a href="/kb/en/mariadb-1045-release-notes/">MariaDB 10.4.5</a> and later, the value of <code>kernel.core_pattern</code> is printed to the <a href="/kb/en/error-log/">error log</a> when the <code>mariadbd</code> process crashes. That way, users can determine where the process may have dumped a core file. See <a href="https://jira.mariadb.org/browse/MDEV-15051">MDEV-15051</a> for more information.</p>
+</div><div class="mariadb_to_10_2_23 mariadb to_10_2_23 product"><h5 class="product_title">MariaDB until <a href="/kb/en/mariadb-10223-release-notes/">10.2.23</a></h5><p>In <a href="/kb/en/mariadb-10223-release-notes/">MariaDB 10.2.23</a>, <a href="/kb/en/mariadb-10314-release-notes/">MariaDB 10.3.14</a>, and <a href="/kb/en/mariadb-1044-release-notes/">MariaDB 10.4.4</a> and before, the <a href="/kb/en/error-log/">error log</a> contains a message indicating that a core file would be written in the <code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code> when the <code>mariadbd</code> process crashes, even if this was not true because the <code>kernel.core_pattern</code> actually configured the process to write the core file in a different directory.</p>
 </div><div class="cstm-style bluebox"><p><strong>Note:</strong> Ensure that you have enough free disk space in the path pointed to by <code>kernel.core_pattern</code>. </p>
 </div><h4 class="anchored_heading" id="extracting-linux-core-dumps-with-systemd-coredump">Extracting Linux core dumps with systemd-coredump</h4>
 <p>Core dump management can be automated using <code><a href="systemd%5D##%2C_which_then_centrally_manages_all_core_dump_files_and_provides_information_about_detected_core_dumps_and_access_to_collected_core_files_using_the_##%5B%5Bhttps%3A//www.freedesktop.org/software/systemd/man/coredumpctl.html">coredumpctl</a></code> utility.</p>

@@ -174,11 +174,11 @@ Note: This..." />
 
 
     
-    » <a class="crumb" href="/kb/en/mariadb-maxscale-23-08-beta/">MariaDB MaxScale 23.08 Beta</a>
+    » <a class="crumb" href="/kb/en/mariadb-maxscale-23-08/">MariaDB MaxScale 23.08</a>
     
 
     
-    » <a class="crumb" href="/kb/en/mariadb-maxscale-2308-beta-filters/">Filters</a>
+    » <a class="crumb" href="/kb/en/mariadb-maxscale-23-08-filters/">Filters</a>
     
 
 
@@ -247,12 +247,12 @@ Note: This..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-09-05 20:21">1 week, 5 days ago</span></dd>
+<span class="datetime" title="2023-09-05 20:21">2 weeks, 2 days ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-05 20:21">1 week, 5 days ago</span></dd>
+<span class="datetime" title="2023-09-05 20:21">2 weeks, 2 days ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -269,7 +269,7 @@ Note: This..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.08.0/Documentation/Filters/Luafilter.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.08.1/Documentation/Filters/Luafilter.md">GitHub</a></dd>
         
     </dl>
 
@@ -408,6 +408,7 @@ information on how to write Lua scripts.</p>
 </ul>
 </li>
 <li><a href="#example-configuration-and-script">Example Configuration and Script</a></li>
+<li><a href="#limitations">Limitations</a></li>
 </ul>
 </li>
 </ul>
@@ -453,7 +454,7 @@ unique Lua environment. Use this script to do session specific tasks.</p>
 </ul>
 </li>
 <li>
-<p><code>(nil | bool | string) routeQuery(string)</code> - query is being routed</p>
+<p><code>(nil | bool | string) routeQuery()</code> - query is being routed</p>
 <ul>
 <li>The Luafilter calls the <code>routeQuery</code> functions of both the session and the
   global script.  The query is passed as a string parameter to the
@@ -466,7 +467,7 @@ unique Lua environment. Use this script to do session specific tasks.</p>
 </ul>
 </li>
 <li>
-<p><code>nil clientReply(string)</code> - reply to a query is being routed</p>
+<p><code>nil clientReply()</code> - reply to a query is being routed</p>
 <ul>
 <li>This function is called with the name of the server that returned the response.</li>
 </ul>
@@ -498,11 +499,11 @@ function closeSession()
 
 end
 
-function routeQuery(query)
+function routeQuery()
 
 end
 
-function clientReply(server)
+function clientReply()
 
 end
 
@@ -514,10 +515,20 @@ end
 
 <h3 id="functions-exposed-by-the-luafilter">Functions Exposed by the Luafilter</h3>
 <p>The luafilter exposes the following functions that can be called inside the Lua
-script API endpoints.</p>
+script API endpoints. The callback function in which they can be called is
+documented after the function signature. If the functions are called outside of
+the correct callback function, they raise a Lua error.</p>
 <ul>
 <li>
-<p><code>string mxs_get_type_mask()</code></p>
+<p><code>string mxs_get_sql()</code> (use: <code>routeQuery</code>)</p>
+</li>
+<li>
+<p>Returns the SQL of the query being executed. This returns an empty string
+    for any query that is not a text protocol query (COM_QUERY). Support for
+    prepared statements is not yet implemented.</p>
+</li>
+<li>
+<p><code>string mxs_get_type_mask()</code> (use: <code>routeQuery</code>)</p>
 </li>
 <li>
 <p>Returns the type of the current query being executed as a string. The values
@@ -526,7 +537,7 @@ script API endpoints.</p>
 <p>This function can only be called from the <code>routeQuery</code> entry point.</p>
 </li>
 <li>
-<p><code>string mxs_get_operation()</code></p>
+<p><code>string mxs_get_operation()</code> (use: <code>routeQuery</code>)</p>
 </li>
 <li>
 <p>Returns the current operation type as a string. The values are defined in
@@ -534,14 +545,14 @@ script API endpoints.</p>
 <p>This function can only be called from the <code>routeQuery</code> entry point.</p>
 </li>
 <li>
-<p><code>string mxs_get_canonical()</code></p>
+<p><code>string mxs_get_canonical()</code> (use: <code>routeQuery</code>)</p>
 </li>
 <li>
 <p>Returns the canonical version of a query by replacing all user-defined constant values with question marks.</p>
 <p>This function can only be called from the <code>routeQuery</code> entry point.</p>
 </li>
 <li>
-<p><code>number mxs_get_session_id()</code></p>
+<p><code>number mxs_get_session_id()</code> (use: <code>newSession</code>, <code>routeQuery</code>, <code>clientReply</code>, <code>closeSession</code>)</p>
 </li>
 <li>
 <p>This function returns the session ID of the current session. Inside the
@@ -549,22 +560,28 @@ script API endpoints.</p>
     the value 0.</p>
 </li>
 <li>
-<p><code>string mxs_get_db()</code></p>
+<p><code>string mxs_get_db()</code> (use: <code>newSession</code>, <code>routeQuery</code>, <code>clientReply</code>, <code>closeSession</code>)</p>
 </li>
 <li>
 <p>Returns the current default database used by the connection.</p>
 </li>
 <li>
-<p><code>string mxs_get_user()</code></p>
+<p><code>string mxs_get_user()</code> (use: <code>newSession</code>, <code>routeQuery</code>, <code>clientReply</code>, <code>closeSession</code>)</p>
 </li>
 <li>
 <p>Returns the username of the client connection.</p>
 </li>
 <li>
-<p><code>string mxs_get_host()</code></p>
+<p><code>string mxs_get_host()</code> (use: <code>newSession</code>, <code>routeQuery</code>, <code>clientReply</code>, <code>closeSession</code>)</p>
 </li>
 <li>
 <p>Returns the address of the client connection.</p>
+</li>
+<li>
+<p><code>string mxs_get_replier()</code> (use: <code>clientReply</code>)</p>
+</li>
+<li>
+<p>Returns the target that returned the result to the latest query.</p>
 </li>
 </ul>
 <h2 id="example-configuration-and-script">Example Configuration and Script</h2>
@@ -591,12 +608,12 @@ function closeSession()
     f:write("closeSession\n")
 end
 
-function routeQuery(query)
-    f:write("routeQuery: " .. query .. " -- type: " .. mxs_qc_get_type_mask() .. " operation: " .. mxs_qc_get_operation() .. "\n")
+function routeQuery()
+    f:write("routeQuery: " .. mxs_get_sql() .. " -- type: " .. mxs_qc_get_type_mask() .. " operation: " .. mxs_qc_get_operation() .. "\n")
 end
 
-function clientReply(server)
-    f:write("clientReply: " .. server .. "\n")
+function clientReply()
+    f:write("clientReply: " .. mxs_get_replier() .. "\n")
 end
 
 function diagnostic()
@@ -604,6 +621,20 @@ function diagnostic()
     return "Hello from Lua!"
 end
 </pre></div>
+
+
+<h2 id="limitations">Limitations</h2>
+<ul>
+<li>
+<p><code>mxs_get_sql()</code> and <code>mxs_get_canonical()</code> do not work with queries done with
+  the binary protocol.</p>
+</li>
+<li>
+<p>The Lua code is not restricted in any way which means excessively slow
+  execution of it can cause the MaxScale process to become slower or to be
+  aborted due to a SystemD watchdog timeout.</p>
+</li>
+</ul>
     </div>
 
 
@@ -626,7 +657,7 @@ end
                     </li>
                 
                 
-                    <li><a href="/kb/en/mariadb-maxscale-23-08-beta-filters/">
+                    <li><a href="/kb/en/mariadb-maxscale-23-08-filters/">
                         ↑ Filters ↑
                     </a>
                     </li>
@@ -672,7 +703,7 @@ end
         
         <ul class="section_navigation well well-small hidden-xs hidden-sm">
             
-                <li class="parent"><a href="/kb/en/mariadb-maxscale-23-08-beta-filters/">
+                <li class="parent"><a href="/kb/en/mariadb-maxscale-23-08-filters/">
                     ↑ Filters ↑
                 </a>
                 </li>
@@ -816,6 +847,15 @@ end
                         <a href="/kb/en/mariadb-maxscale-2308-transaction-performance-monitoring-filter/">
                             
                              Transaction Performance Monitoring Filter
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-maxscale-2308-maxscale-2308-ldi-filter/">
+                            
+                            MaxScale 23.08  LDI Filter
                         </a>
                     </li>
                 

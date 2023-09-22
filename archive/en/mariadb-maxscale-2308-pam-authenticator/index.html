@@ -190,11 +190,11 @@ Implementation details an..." />
 
 
     
-    » <a class="crumb" href="/kb/en/mariadb-maxscale-23-08-beta/">MariaDB MaxScale 23.08 Beta</a>
+    » <a class="crumb" href="/kb/en/mariadb-maxscale-23-08/">MariaDB MaxScale 23.08</a>
     
 
     
-    » <a class="crumb" href="/kb/en/mariadb-maxscale-2308-beta-authenticators/">Authenticators</a>
+    » <a class="crumb" href="/kb/en/mariadb-maxscale-23-08-authenticators/">Authenticators</a>
     
 
 
@@ -263,12 +263,12 @@ Implementation details an..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-09-05 20:20">1 week, 6 days ago</span></dd>
+<span class="datetime" title="2023-09-05 20:20">2 weeks, 2 days ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-05 20:20">1 week, 6 days ago</span></dd>
+<span class="datetime" title="2023-09-05 20:20">2 weeks, 2 days ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -285,7 +285,7 @@ Implementation details an..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.08.0/Documentation/Authenticators/PAM-Authenticator.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.08.1/Documentation/Authenticators/PAM-Authenticator.md">GitHub</a></dd>
         
     </dl>
 
@@ -474,14 +474,18 @@ Server setting.</p>
 
 
 <h3 id="pam_mode"><code>pam_mode</code></h3>
-<p>This setting defines the authentication mode used. Two values are supported:
-- <code>password</code> (default) Normal password-based authentication
-- <code>password_2FA</code> Password + 2FA-code based authentication</p>
+<p>This setting defines the authentication mode used. The following values are
+supported:</p>
+<ul>
+<li><code>password</code> (default) Normal password-based authentication</li>
+<li><code>password_2FA</code> Password + 2FA-code based authentication</li>
+<li><code>suid</code> Authenticate using suid sandbox subprocess</li>
+</ul>
 <div><pre><span></span>authenticator_options=pam_mode=password_2FA
 </pre></div>
 
 
-<p>If set to "password_2FA", any users authenticating via PAM will be asked two
+<p>If set to <em>password_2FA</em>, any users authenticating via PAM will be asked two
 passwords ("Password" and "Verification code") during login. MaxScale uses the
 normal password when either the local PAM api or a backend asks for "Password".
 MaxScale answers any other password prompt (e.g. "Verification code") with the
@@ -489,11 +493,25 @@ second password. See
 <a href="#implementation-details-and-limitations">the limitations section</a>
 for more details. Two-factor mode is incompatible with
 <em>pam_use_cleartext_plugin</em>.</p>
+<p>If set to <em>suid</em>, MaxScale will launch a separate subprocess for every client to
+handle pam authentication. This subprocess runs the binary
+<code>maxscale_pam_auth_tool</code> (installed in the binary directory), which calls the
+system pam libraries. The binary is installed with the SUID bit set, which means
+that it runs with root-privileges regardless of the user launching it. This
+should bypass any file grant issues (e.g. reading <code>etc/shadow</code>) that may arise
+with the <em>password</em> or <em>password_2FA</em> options. The <em>suid</em>-option may also
+perform faster if many clients authenticate with pam simultaneously due
+to better separation of clients.  It may also resist buggy pam plugins crashing,
+as the crash would be limited to the subprocess only. The MariaDB Server uses
+a similar pam authentication scheme. <em>suid</em>-mode supports two-factor
+authentication.</p>
 <h3 id="pam_backend_mapping"><code>pam_backend_mapping</code></h3>
 <p>Defines backend authentication mapping, i.e. switch of authentication method
-between client-to-MaxScale and MaxScale-to-backend. Supported values:
-- <code>none</code> (default) No mapping
-- <code>mariadb</code> Map users to normal MariaDB accounts</p>
+between client-to-MaxScale and MaxScale-to-backend. Supported values:</p>
+<ul>
+<li><code>none</code> (default) No mapping</li>
+<li><code>mariadb</code> Map users to normal MariaDB accounts</li>
+</ul>
 <div><pre><span></span>authenticator_options=pam_backend_mapping=mariadb
 </pre></div>
 
@@ -667,7 +685,7 @@ for diagnosing PAM login issues.</p>
                     </li>
                 
                 
-                    <li><a href="/kb/en/mariadb-maxscale-23-08-beta-authenticators/">
+                    <li><a href="/kb/en/mariadb-maxscale-2308-authenticators/">
                         ↑ Authenticators ↑
                     </a>
                     </li>
@@ -708,7 +726,7 @@ for diagnosing PAM login issues.</p>
         
         <ul class="section_navigation well well-small hidden-xs hidden-sm">
             
-                <li class="parent"><a href="/kb/en/mariadb-maxscale-23-08-beta-authenticators/">
+                <li class="parent"><a href="/kb/en/mariadb-maxscale-2308-authenticators/">
                     ↑ Authenticators ↑
                 </a>
                 </li>

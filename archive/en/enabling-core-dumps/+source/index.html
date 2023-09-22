@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/enabling-core-dumps/+r/118999/">118999</a></dd>
+            <dd><a href="/kb/en/enabling-core-dumps/+r/130631/">130631</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3487">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-09-09 07:46">2022-09-09 07:46</span></dd>
+<span class="datetime" title="2023-09-22 07:46">2023-09-22 07:46</span></dd>
         </dl>
     </div>
     
@@ -361,7 +361,7 @@ If you need to change the core size limit, the method you use depends on how you
 In MariaDB 10.2.24, MariaDB 10.3.15, and MariaDB 10.4.5 and later, the resource limits for the ##mysqld## process are printed to the [[error-log|error log]] when the ##mysqld## process crashes. That way, users can confirm whether the process may have been allowed to dump a core file. See MDEV-15051 for more information.
 &lt;&lt;/product&gt;&gt;
 
-==== Running mysqld Using mysqld_safe
+==== Running mariadbd Using mysqld_safe
 
 If you are starting MariaDB by running ##[[mysqld_safe]]##, then configuring the following in the ##[mysqld_safe]## option group in an option file should allow for unlimited sized core files:
 
@@ -380,21 +380,21 @@ my_print_defaults mysqld_safe
 See [[mysqld_safe/#configuring-the-core-file-size|mysqld_safe: Configuring the Core File Size]] for more details.
 
 &lt;&lt;style class=&#34;bluebox&#34;&gt;&gt;
-**Note:** If you are using ##[[mysqld_safe]]## and running ##mysqld## as the ##root## user, then no
-core file is created on some systems. The solution is to run ##mysqld## as another user.
+**Note:** If you are using ##[[mysqld_safe]]## and running ##mariadbd## as the ##root## user, then no
+core file is created on some systems. The solution is to run ##mariadbd## as another user.
 &lt;&lt;/style&gt;&gt;
 
-==== Running mysqld Manually
+==== Running mariadbd Manually
 
-If you are starting mysqld manually or in a custom script, then you can allow for unlimited sized core files by executing the following in the same shell or script in which mysqld is executed:
+If you are starting mariadbd manually or in a custom script, then you can allow for unlimited sized core files by executing the following in the same shell or script in which mariadbd is executed:
 
 &lt;&lt;code&gt;&gt;
 ulimit -c unlimited
 &lt;&lt;/code&gt;&gt;
 
-==== Running mysqld Using systemd
+==== Running mariadbd Using systemd
 
-If you are starting ##mysqld## using ##[[systemd]]##, then you may need to customize the MariaDB service to allow for unlimited size core files. For example, you could execute the following:
+If you are starting ##mariadbd## using ##[[systemd]]##, then you may need to customize the MariaDB service to allow for unlimited size core files. For example, you could execute the following:
 
 Using ##sudo systemctl edit mariadb.service## add the contents:
 &lt;&lt;code&gt;&gt;
@@ -404,6 +404,12 @@ LimitCORE=infinity
 &lt;&lt;/code&gt;&gt;
 
 See [[systemd/#configuring-the-core-file-size|systemd: Configuring the Core File Size]] for more details.
+
+==== Running MariaDB Containers
+
+To get a core dumps under ##mariadb## containers requires [[#setting-the-path-on-linux|Setting the path on linux]] to not include a ##sysctl kernel.core_pattern## beginning with a pipe to an executable that doesn&#39;t exist in the container. Setting to a straight ##core## is recommended.
+
+Also see [[how-to-produce-a-full-stack-trace-for-mysqld/#containers-with-debug-symbols|Container with Debug Symbols]].
 
 ==== Changing the System-Wide Limit
 
@@ -441,8 +447,8 @@ not in the data directory. They place to store cores can be temporarily altered 
 &lt;&lt;code&gt;&gt;
 sudo mkdir /tmp/corefiles
 sudo chmod 777 /tmp/corefiles
-sudo echo /tmp/corefiles/core &gt; /proc/sys/kernel/core_pattern
-sudo echo 1 &gt; /proc/sys/kernel/core_uses_pid
+sudo sysctl kernel.core_pattern=/tmp/corefiles/core
+sudo sysctl kerel.core_uses_pid=1
 &lt;&lt;/code&gt;&gt;
 
 The above commands will tell the system to put core files in ##/tmp/corefiles##, and it also tells the system to put the process ID in the file name.
@@ -456,12 +462,14 @@ kernel.core_uses_pid=1
 EOF
 &lt;&lt;/code&gt;&gt;
 
+Note: if you are using containers, the pid is always going to be 1, so this may not be a useful setting. Appending an identifier like %t to the ##[[https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#core-pattern|kernel.core_pattern]]## will generate more unique files.
+
 &lt;&lt;product mariadb from=&#34;10.2.24&#34;&gt;&gt;
-In MariaDB 10.2.24, MariaDB 10.3.15, and MariaDB 10.4.5 and later, the value of ##kernel.core_pattern## is printed to the [[error-log|error log]] when the ##mysqld## process crashes. That way, users can determine where the process may have dumped a core file. See MDEV-15051 for more information.
+In MariaDB 10.2.24, MariaDB 10.3.15, and MariaDB 10.4.5 and later, the value of ##kernel.core_pattern## is printed to the [[error-log|error log]] when the ##mariadbd## process crashes. That way, users can determine where the process may have dumped a core file. See MDEV-15051 for more information.
 &lt;&lt;/product&gt;&gt;
 
 &lt;&lt;product mariadb to=&#34;10.2.23&#34;&gt;&gt;
-In MariaDB 10.2.23, MariaDB 10.3.14, and MariaDB 10.4.4 and before, the [[error-log|error log]] contains a message indicating that a core file would be written in the ##[[server-system-variables/#datadir|datadir]]## when the ##mysqld## process crashes, even if this was not true because the ##kernel.core_pattern## actually configured the process to write the core file in a different directory.
+In MariaDB 10.2.23, MariaDB 10.3.14, and MariaDB 10.4.4 and before, the [[error-log|error log]] contains a message indicating that a core file would be written in the ##[[server-system-variables/#datadir|datadir]]## when the ##mariadbd## process crashes, even if this was not true because the ##kernel.core_pattern## actually configured the process to write the core file in a different directory.
 &lt;&lt;/product&gt;&gt;
 
 &lt;&lt;style class=&#34;bluebox&#34;&gt;&gt;

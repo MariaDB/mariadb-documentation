@@ -172,11 +172,11 @@ param..." />
 
 
     
-    » <a class="crumb" href="/kb/en/mariadb-maxscale-23-08-beta/">MariaDB MaxScale 23.08 Beta</a>
+    » <a class="crumb" href="/kb/en/mariadb-maxscale-23-08/">MariaDB MaxScale 23.08</a>
     
 
     
-    » <a class="crumb" href="/kb/en/mariadb-maxscale-2308-beta-routers/">Routers</a>
+    » <a class="crumb" href="/kb/en/mariadb-maxscale-23-08-routers/">Routers</a>
     
 
 
@@ -245,12 +245,12 @@ param..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-09-05 20:20">1 week, 6 days ago</span></dd>
+<span class="datetime" title="2023-09-05 20:20">2 weeks, 2 days ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-05 20:20">1 week, 6 days ago</span></dd>
+<span class="datetime" title="2023-09-05 20:20">2 weeks, 2 days ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -267,7 +267,7 @@ param..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.08.0/Documentation/Routers/ReadWriteSplit.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.08.1/Documentation/Routers/ReadWriteSplit.md">GitHub</a></dd>
         
     </dl>
 
@@ -689,13 +689,13 @@ without any risk to the consistency of the database.</p>
 <li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2308-mariadb-maxscale-configuration-guide/#enumerations">enum</a></li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
-<li><strong>Values</strong>: <code>LEAST_CURRENT_OPERATIONS</code>, <code>ADAPTIVE_ROUTING</code>, <code>LEAST_BEHIND_MASTER</code>, <code>LEAST_ROUTER_CONNECTIONS</code>, <code>LEAST_GLOBAL_CONNECTIONS</code></li>
-<li><strong>Default</strong>: <code>LEAST_CURRENT_OPERATIONS</code></li>
+<li><strong>Values</strong>: <code>least_current_operations</code>, <code>adaptive_routing</code>, <code>least_behind_master</code>, <code>least_router_connections</code>, <code>least_global_connections</code></li>
+<li><strong>Default</strong>: <code>least_current_operations</code></li>
 </ul>
 <p>This option controls how the readwritesplit router chooses the replicas it
 connects to and how the load balancing is done. The default behavior is to route
 read queries to the replica server with the lowest amount of ongoing queries i.e.
-<code>LEAST_CURRENT_OPERATIONS</code>.</p>
+<code>least_current_operations</code>.</p>
 <p>The option syntax:</p>
 <div><pre><span></span>slave_selection_criteria=&lt;criteria&gt;
 </pre></div>
@@ -703,22 +703,26 @@ read queries to the replica server with the lowest amount of ongoing queries i.e
 
 <p>Where <code>&lt;criteria&gt;</code> is one of the following values.</p>
 <ul>
-<li><code>LEAST_GLOBAL_CONNECTIONS</code>, the replica with least connections from MariaDB MaxScale</li>
-<li><code>LEAST_ROUTER_CONNECTIONS</code>, the replica with least connections from this service</li>
-<li><code>LEAST_BEHIND_MASTER</code>, the replica with smallest replication lag</li>
-<li><code>LEAST_CURRENT_OPERATIONS</code> (default), the replica with least active operations</li>
-<li><code>ADAPTIVE_ROUTING</code>, based on server average response times. See below.</li>
+<li><code>least_global_connections</code>, the replica with least connections from MariaDB MaxScale</li>
+<li><code>least_router_connections</code>, the replica with least connections from this service</li>
+<li><code>least_behind_master</code>, the replica with smallest replication lag</li>
+<li><code>least_current_operations</code> (default), the replica with least active operations</li>
+<li><code>adaptive_routing</code>, based on server average response times. See below.</li>
 </ul>
-<p>The <code>LEAST_GLOBAL_CONNECTIONS</code> and <code>LEAST_ROUTER_CONNECTIONS</code> use the
+<p>The <code>least_global_connections</code> and <code>least_router_connections</code> use the
 connections from MariaDB MaxScale to the server, not the amount of connections
 reported by the server itself.</p>
-<p><code>LEAST_BEHIND_MASTER</code> and <code>ADAPTIVE_ROUTING</code> do not take server weights into account
+<p><code>least_behind_master</code> and <code>adaptive_routing</code> do not take server weights into account
 when choosing a server.</p>
-<p><code>ADAPTIVE_ROUTING</code> Measures average server response times. The server averages
+<p><code>adaptive_routing</code> measures average server response times. The server averages
 are used as proxies of server load conditions. At selection time the averages
 are copied and modified to favor faster servers, while at the same time
 guaranteeing at lest some traffic to the slowest servers. The server selection
 is probabilistic based on roulette wheel selection.</p>
+<p>Starting with MaxScale 23.08.1, the legacy uppercase values have been
+deprecated. All runtime modifications of the parameter will now be persisted in
+lowercase. The uppercase values are still accepted but will be removed in a
+future MaxScale release.</p>
 <h4 id="interaction-between-slave_selection_criteria-and-max_slave_connections">Interaction Between <code>slave_selection_criteria</code> and <code>max_slave_connections</code></h4>
 <p>Depending on the value of <code>max_slave_connections</code>, the replica selection criteria
 behave in different ways. Here are a few example cases of how the different
@@ -1254,7 +1258,7 @@ readwritesplit, MaxScale must be restarted.</p>
 read latency at the cost of read scalability while still retaining the
 causality guarantees for reads. This functionality can also be considered an
 improved version of the functionality that the
-<a href="../Filters/CCRFilter.md">CCRFilter</a> module provides.</p>
+<a href="/kb/en/mariadb-maxscale-2308-consistent-critical-read-filter/">CCRFilter</a> module provides.</p>
 </li>
 <li>
 <p><code>fast_global</code></p>
@@ -1515,7 +1519,7 @@ rules govern how readwritesplit behaves with servers that have different ranks.<
 </ul>
 <h2 id="routing-hints">Routing hints</h2>
 <p>The readwritesplit router supports routing hints. For a detailed guide on hint
-syntax and functionality, please read <a href="../Reference/Hint-Syntax.md">this</a>
+syntax and functionality, please read <a href="/kb/en/mariadb-maxscale-2308-hint-syntax/">this</a>
 document.</p>
 <p><strong>Note</strong>: Routing hints will always have the highest priority when a routing
 decision is made. This means that it is possible to cause inconsistencies in
@@ -1817,7 +1821,7 @@ variables to the primary.</p>
                     </li>
                 
                 
-                    <li><a href="/kb/en/mariadb-maxscale-23-08-beta-routers/">
+                    <li><a href="/kb/en/mariadb-maxscale-2308-routers/">
                         ↑ Routers ↑
                     </a>
                     </li>
@@ -1863,7 +1867,7 @@ variables to the primary.</p>
         
         <ul class="section_navigation well well-small hidden-xs hidden-sm">
             
-                <li class="parent"><a href="/kb/en/mariadb-maxscale-23-08-beta-routers/">
+                <li class="parent"><a href="/kb/en/mariadb-maxscale-2308-routers/">
                     ↑ Routers ↑
                 </a>
                 </li>

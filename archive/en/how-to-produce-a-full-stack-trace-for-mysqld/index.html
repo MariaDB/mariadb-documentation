@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-12-20 07:59">9 months ago</span></dd>
+<span class="datetime" title="2023-09-22 07:37">8 hours, 29 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -448,6 +448,8 @@
 
     <li class=""><a href="#getting-backtraces-with-gdb-on-linux" title="Getting Backtraces with gdb on Linux">Getting Backtraces with gdb on Linux</a></li>
 
+    <li class=""><a href="#letting-a-container-coredump" title="Letting a Container coredump">Letting a Container coredump</a></li>
+
     <li class=""><a href="#running-a-copy-of-the-database-directory" title="Running a Copy of the Database Directory">Running a Copy of the Database Directory</a></li>
 
     <li class=""><a href="#disabling-stack-traces-in-the-error-log" title="Disabling Stack Traces in the Error Log">Disabling Stack Traces in the Error Log</a></li>
@@ -562,6 +564,26 @@ repository using <code><a href="/kb/en/yum/">yum</a></code> or <code><a href="ht
 <h4 class="anchored_heading" id="installing-debugging-symbols-with-the-zip-package-on-windows">Installing Debugging Symbols with the ZIP Package on Windows</h4>
 <p>MariaDB also provides a <a href="/kb/en/installing-mariadb-windows-zip-packages/">ZIP</a> package that contains debugging symbols on Windows.</p>
 <p>The <a href="/kb/en/installing-mariadb-windows-zip-packages/">ZIP</a> package that contains debugging symbol can be downloaded from the <a href="https://downloads.mariadb.org">MariaDB downloads page</a>.</p>
+<h3 class="anchored_heading" id="containers-with-debug-symbols">Containers with Debug Symbols</h3>
+<h4 class="anchored_heading" id="prebuilt-debug-containers">Prebuilt Debug Containers</h4>
+<p>These are currently only per major release version and are generated out of CI. They are always the latest version that corresponds to the development branch.</p>
+<p>There are available on at <a href="https://quay.io/repository/mariadb-foundation/mariadb-debug?tab=tags">https://quay.io/repository/mariadb-foundation/mariadb-debug?tab=tags</a>.</p>
+<p>Use the container name <code>quay.io/mariadb-foundation/mariadb-debug:VERSION</code>.</p>
+<p>Where <code>VERSION</code> corresponds to the major version you wish to test with.</p>
+<h4 class="anchored_heading" id="creating-a-container-with-debugging-symbols">Creating a Container with Debugging Symbols</h4>
+<p>Build using a Containerfile/Dockerfile: </p>
+<pre class="fixed">ARG VERSION
+FROM mariadb:$VERSION
+ARG VERSION
+
+RUN sed -i -e 's/main/main main\/debug/' /etc/apt/sources.list.d/mariadb.list &amp;&amp; \
+    apt-get update \
+        &amp;&amp; apt-get install -y linux-tools-common gdbserver gdb curl mariadb-server-core-dbgsym=$VERSION ; \
+        rm -rf /var/lib/apt/lists/*
+</pre><p>Note: newer version will not need to execute <code>sed</code>.</p>
+<p>Build with:</p>
+<pre class="fixed">buildah bud --tag mariadb_debug --build-arg VERSION=10.11.4 -f Containerfile .
+</pre><p>Then you will have a <code>mariadb_debug</code> container.</p>
 <h2 class="anchored_heading" id="enabling-core-dumps">Enabling Core Dumps</h2>
 <p>To enable core dumps, see <a href="/kb/en/enabling-core-dumps/">Enabling Core Dumps</a> for details.</p>
 <h2 class="anchored_heading" id="where-is-the-core-file-on-linux">Where is the Core File on Linux?</h2>
@@ -634,7 +656,36 @@ set logging off
 </pre><p>Be sure to replace <code>/usr/sbin/mariadbd</code> with the path to your <code>mariadbd</code> binary.</p>
 <p>The <a href="https://sourceware.org/gdb/current/onlinedocs/gdb/Backtrace.html#Backtrace">backtraces</a> will be output to the file <code>mariadbd_full_bt_all_threads.txt</code>.</p>
 <p>Sometimes very busy systems are too busy to batch obtain the backtrace. If this is the case, <code>gcore $(pidof mariadbd)</code> can save the core and then obtain the backtrace out of the dumped core.</p>
-<h2 class="anchored_heading" id="running-a-copy-of-the-database-directory">Running a Copy of the Database Directory</h2>
+<h3 class="anchored_heading" id="getting-a-full-backtrace-out-of-a-container">Getting a Full Backtrace out of a Container</h3>
+<p>If the crash or assertion is repeatable it could be easiest to run <code>mariadbd</code> under #gdb<code>.</code></p>
+<p>The container image name here can be a prebuilt one from <code>quay.io/mariadb-foundation/mariadb-debug</code> or an explicit version built yourself as above.</p>
+<pre class="fixed">docker run -v datavolume:/var/lib/mysql/ --rm --user mysql  quay.io/mariadb-foundation/mariadb-debug:10.11 gdb -ex r  -ex 'thread apply all bt -frame-arguments all full'  --args mariadbd
+</pre><p>In docker-compose.yml form this looks like:</p>
+<pre class="fixed">services:
+  mariadb:
+    image: quay.io/mariadb-foundation/mariadb-debug:10.11
+    volumes:
+      - mariadbdata:/var/lib/mysql
+    environment:
+      - MARIADB_ROOT_PASSWORD=bob
+    command: gdb -ex r  -ex 'thread apply all bt -frame-arguments all full'  --args mariadbd
+    user: mysql
+volumes:
+  mariadbdata: {}
+</pre><p>Note, the initialization of data is assumed. Omit <code>command</code> and <code>user</code> if it isn't.</p>
+<p>If you wish to attach to and existing process in a container, the container needs to be started with the SYS_PTRACE capability.</p>
+<pre class="fixed">$ podman run -v data:/var/lib/mysql/ --cap-add SYS_PTRACE --name mtest -d quay.io/mariadb-foundation/mariadb-debug:11.2
+$ podman exec mtest gdb -p 1 -ex c -ex  'thread apply all bt -frame-arguments all full' 
+</pre><p>Note: <code>podman</code> has the same arguments and behaviour as <code>docker</code> if you'd rather use that.</p>
+<p>or in compose:</p>
+<pre class="fixed">  cap_add:
+    - SYS_PTRACE
+</pre><p>The container process is always pid one, and here we use <code>c</code> then <code>thread apply all bt -frame-arguments all full</code> as the pre-loaded <code>gdb</code> commands. When a particular signal like assert or SEGV is triggered, the backtrace will be displayed.</p>
+<h2 class="anchored_heading" id="letting-a-container-coredump">Letting a Container coredump</h2>
+<p>First, the <code>sysctl kernel.core_pattern</code> needs to be <code>core</code>. If it starts with a pipe character it try to execute this within the container. This is a kernel wide setting and cannot be applied to a specific container. The bottom of a crash will show you want it is set to.</p>
+<p>With this set, just running a container with debug info is sufficient. The core should be dumped on the datadir volume. With the <code>core</code> dump here, analysis can occur like:</p>
+<pre class="fixed">podman run --rm --user mysql --volume data:/var/lib/mysql -i mariadb_debug gdb --batch --eval-command=&#34;set print frame-arguments all&#34; --eval-command=&#34;thread apply all bt full&#34; /usr/sbin/mariadbd /var/lib/mysql/core | tee mariadbd_full_bt_all_threads.txt
+</pre><h2 class="anchored_heading" id="running-a-copy-of-the-database-directory">Running a Copy of the Database Directory</h2>
 <p>If you are concerned with debuggers running on your production database
 you can also copy the database to another location.</p>
 <p>This is useful when you know which statement crashed the server.</p>
