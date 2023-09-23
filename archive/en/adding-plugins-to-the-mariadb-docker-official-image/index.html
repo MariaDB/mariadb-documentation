@@ -23,11 +23,9 @@
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
     <meta property="og:site_name" content="MariaDB KnowledgeBase" />
     <meta property="fb:admins" content="514852603" />
-    <meta property="og:description" content="MariaDB has many plugins, most are not enabled by default, some are in the mariadb container, others need to be installed from additional packages.
-The following methods summa..." />
+    <meta property="og:description" content="Summary of methods to install plugins in the MariaDB Docker Library Container." />
 
-    <meta name="description" content="MariaDB has many plugins, most are not enabled by default, some are in the mariadb container, others need to be installed from additional packages.
-The following methods summa..." />
+    <meta name="description" content="Summary of methods to install plugins in the MariaDB Docker Library Container." />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
@@ -257,12 +255,12 @@ The following methods summa..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-09-21 23:32">16 hours, 34 minutes ago</span></dd>
+<span class="datetime" title="2023-09-21 23:32">1 day, 16 hours ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-21 23:32">16 hours, 34 minutes ago</span></dd>
+<span class="datetime" title="2023-09-23 10:00">6 hours, 5 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -394,30 +392,30 @@ The following methods summa..." />
 
     
     <div class="answer formatted">
-        <p>MariaDB has many plugins, most are not enabled by default, some are in the <code>mariadb</code> container, others need to be installed from additional packages.</p>
-<p>The following methods summarize the <a href="https://mariadb.org/installing-plugins-in-the-mariadb-docker-library-container/">MariaDB Blog article - Installing plugins in the MariaDB Docker Library Container</a> on this topic.</p>
-<h3 class="anchored_heading" id="which-plugins-does-the-container-contain">Which plugins does the container contain?</h3>
+        <p>MariaDB has many plugins. Most are not enabled by default, some are in the <code>mariadb</code> container, while others need to be installed from additional packages.</p>
+<p>The following methods summarize <a href="https://mariadb.org/installing-plugins-in-the-mariadb-docker-library-container/">Installing plugins in the MariaDB Docker Library Container</a> (mariadb.org blog post) on this topic.</p>
+<h3 class="anchored_heading" id="which-plugins-does-the-container-contain">Which Plugins Does the Container Contain?</h3>
 <p>To see which plugins are available in the %%IMAGE%%:</p>
 <pre class="fixed">$ docker run --rm %%IMAGE%%:latest ls -C /usr/lib/mysql/plugin
-</pre><h3 class="anchored_heading" id="enabling-a-plugin-using-flags">Enabling a plugin using flags</h3>
+</pre><h3 class="anchored_heading" id="enabling-a-plugin-using-flags">Enabling a Plugin Using Flags</h3>
 <p>Using the `--plugin-load-add` flag with the plugin name (can be repeated), the plugins will be loaded and ready when the container is started:</p>
-<p>For example enable the `simple\_password\_check` plugin:</p>
+<p>For example, to enable the `simple\_password\_check` plugin:</p>
 <pre class="fixed">$ docker run --name some-%%REPO%% -e MARIADB_ROOT_PASSWORD=my-secret-pw --network=host -d %%IMAGE%%:latest --plugin-load-add=simple_password_check
-</pre><h3 class="anchored_heading" id="enabling-a-plugin-in-the-configuration-files">Enabling a plugin in the configuration files</h3>
-<p>plugin-load-add` can be used as a configuration option to load plugins. The example below load the [FederatedX Storage Engine](<a href="https://mariadb.com/kb/en/federatedx-storage-engine/">https://mariadb.com/kb/en/federatedx-storage-engine/</a>).</p>
+</pre><h3 class="anchored_heading" id="enabling-a-plugin-in-the-configuration-files">Enabling a Plugin in the Configuration Files</h3>
+<p>plugin-load-add` can be used as a configuration option to load plugins. The example below loads the <a href="/kb/en/federatedx-storage-engine/">FederatedX Storage Engine</a>.</p>
 <pre class="fixed">$ printf &#34;[mariadb]\nplugin-load-add=ha_federatedx\n&#34; &gt; /my/custom/federatedx.conf
 $ docker run --name some-%%REPO%% -v /my/custom:/etc/mysql/conf.d -e MARIADB_ROOT_PASSWORD=my-secret-pw -d %%IMAGE%%:latest
-</pre><h3 class="anchored_heading" id="install-a-plugin-using-sql-in-docker-entrypoint-initdbd">Install a plugin using SQL in /docker-entrypoint-initdb.d</h3>
+</pre><h3 class="anchored_heading" id="install-a-plugin-using-sql-in-docker-entrypoint-initdbd">Install a Plugin Using SQL in /docker-entrypoint-initdb.d</h3>
 <p><a href="/kb/en/install-soname/">INSTALL SONAME</a> can be used to install a plugin as part of the database initialization.</p>
 <p>Create the SQL file used in initialization:</p>
 <pre class="fixed">$ echo 'INSTALL SONAME &#34;disks&#34;;' &gt; my_initdb/disks.sql
-</pre><p>In this case the `my\_initdb` is a `/docker-entrypoint-initdb.d` directory per "Initializing a fresh instance" section above.</p>
-<h3 class="anchored_heading" id="identifing-additional-plugins-in-additional-packages">Identifing additional plugins in additional packages</h3>
-<p>A number of plugins are in separate packages to reduce their installation size. The package names of MariaDB created plugins can be determined using the following command:</p>
+</pre><p>In this case, the `my\_initdb` is a `/docker-entrypoint-initdb.d` directory per "Initializing a fresh instance" section above.</p>
+<h3 class="anchored_heading" id="identifying-additional-plugins-in-additional-packages">Identifying Additional Plugins in Additional Packages</h3>
+<p>A number of plugins are in separate packages to reduce their installation size. The package names of MariaDB-created plugins can be determined using the following command:</p>
 <pre class="fixed">$ docker run --rm %%IMAGE%%:latest sh -c 'apt-get update -qq &amp;&amp; apt-cache search mariadb-plugin'
-</pre><h3 class="anchored_heading" id="creating-a-image-with-plugins-from-additional-packages">Creating a image with plugins from additional packages</h3>
-<p>A new image needs to be created when using additional packages. The <code>mariadb</code> image can be used as a base however:</p>
-<p>In the following the <a href="/kb/en/connect/">CONNECT Storage Engine</a> is installed:</p>
+</pre><h3 class="anchored_heading" id="creating-an-image-with-plugins-from-additional-packages">Creating an Image With Plugins From Additional Packages</h3>
+<p>A new image needs to be created when using additional packages. The <code>mariadb</code> image can however be used as a base:</p>
+<p>In the following, the <a href="/kb/en/connect/">CONNECT Storage Engine</a> is installed:</p>
 <pre class="fixed">FROM mariadb:latest
 RUN apt-get update &amp;&amp; \
     apt-get install mariadb-plugin-connect -y &amp;&amp; \
@@ -440,8 +438,8 @@ RUN apt-get update &amp;&amp; \
         <div class="simple_section_nav">
             <ul class="nav nav-pills">
                 
-                    <li><a href="/kb/en/mariadb-containers-security-concerns/">
-                        ← Security Concerns
+                    <li><a href="/kb/en/container-security-concerns/">
+                        ← Container Security Concerns
                     </a>
                     </li>
                 
@@ -452,8 +450,8 @@ RUN apt-get update &amp;&amp; \
                     </li>
                 
                 
-                    <li class="pull-right"><a href="/kb/en/backups-and-restoration/">
-                        Backups and Restoration →
+                    <li class="pull-right"><a href="/kb/en/setting-up-a-lamp-stack-with-docker-compose/">
+                        Setting Up a LAMP Stack with Docker Compose →
                     </a>
                     </li>
                 
@@ -518,9 +516,34 @@ RUN apt-get update &amp;&amp; \
             
                 
                     <li>
-                        <a href="/kb/en/running-mariadb-columnstore-containers-on-linux-windows-and-macos/">
-                            <span class="pull-right not_primary"></span>
-                            Running MariaDB ColumnStore containers on Linux, Windows and MacOS
+                        <a href="/kb/en/container-backup-and-restoration/">
+                            
+                            Container Backup and Restoration
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/container-security-concerns/">
+                            
+                            Container Security Concerns
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Adding Plugins to the MariaDB Docker Official Image</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/setting-up-a-lamp-stack-with-docker-compose/">
+                            
+                            Setting Up a LAMP Stack with Docker Compose
                         </a>
                     </li>
                 
@@ -536,43 +559,27 @@ RUN apt-get update &amp;&amp; \
             
                 
                     <li>
-                        <a href="/kb/en/setting-up-a-lamp-stack-with-docker-compose/">
+                        <a href="/kb/en/mariadb-server-docker-official-image-environment-variables/">
                             
-                            Setting Up a LAMP Stack with Docker Compose
+                            MariaDB Server Docker Official Image Environment Variables
                         </a>
                     </li>
                 
             
                 
                     <li>
-                        <a href="/kb/en/mariadb-containers-security-concerns/">
-                            
-                            Security Concerns
-                        </a>
-                    </li>
-                
-            
-                
-                    <li class="active">
-                        <span>Adding Plugins to the MariaDB Docker Official Image</span>
-                        
-                    </li>
-                
-            
-                
-                    <li>
-                        <a href="/kb/en/backups-and-restoration/">
-                            
-                            Backups and Restoration
+                        <a href="/kb/en/running-mariadb-columnstore-containers-on-linux-windows-and-macos/">
+                            <span class="pull-right not_primary"></span>
+                            Running MariaDB ColumnStore containers on Linux, Windows and MacOS
                         </a>
                     </li>
                 
             
                 
                     <li>
-                        <a href="/kb/en/frequenty-asked-questions-of-docker-official-image/">
+                        <a href="/kb/en/docker-official-image-frequently-asked-questions/">
                             
-                            Frequenty Asked Questions of Docker Official Image
+                            Docker Official Image Frequently Asked Questions
                         </a>
                     </li>
                 
@@ -588,18 +595,9 @@ RUN apt-get update &amp;&amp; \
             
                 
                     <li>
-                        <a href="/kb/en/mariadb-server-docker-official-image-environment-variables/">
+                        <a href="/kb/en/using-healthcheck-sh/">
                             
-                            MariaDB Server Docker Official Image Environment Variables
-                        </a>
-                    </li>
-                
-            
-                
-                    <li>
-                        <a href="/kb/en/using-healthcheck-sh-script/">
-                            
-                            Using Healthcheck.sh script
+                            Using Healthcheck.sh
                         </a>
                     </li>
                 

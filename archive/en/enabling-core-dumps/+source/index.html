@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/enabling-core-dumps/+r/130631/">130631</a></dd>
+            <dd><a href="/kb/en/enabling-core-dumps/+r/130646/">130646</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3487">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-09-22 07:46">2023-09-22 07:46</span></dd>
+<span class="datetime" title="2023-09-23 10:39">2023-09-23 10:39</span></dd>
         </dl>
     </div>
     
@@ -326,16 +326,14 @@ core_file
 You can check your current value by executing:
 
 &lt;&lt;code&gt;&gt;
-my_print_defaults --mysqld
+my_print_defaults --mariadbd
 &lt;&lt;/code&gt;&gt;
 
-&lt;&lt;product mariadb from=&#34;10.1.35&#34;&gt;&gt;
-In MariaDB 10.1.35, MariaDB 10.2.17, and MariaDB 10.3.9 and later, ##[[server-system-variables/#core_file|core_file]]## has also been made into a system variable. Previously it was just an option. It&#39;s value can be checked at runtime by executing the following:
+[[server-system-variables/#core_file|core_file]] is a system variable (prior to MariaDB 10.3.9 it was just an option). Its value can be checked at runtime by executing the following:
 
 &lt;&lt;code&gt;&gt;
 SHOW GLOBAL VARIABLES LIKE &#39;core_file&#39;;
 &lt;&lt;/code&gt;&gt;
-&lt;&lt;/product&gt;&gt;
 
 == Core Files on Linux
 
@@ -349,16 +347,16 @@ On some systems there is a limit on the sizes of core files that can be dumped. 
 ulimit -c
 &lt;&lt;/code&gt;&gt;
 
-You can check the current limit of the ##mysqld## process specifically by executing the following:
+You can check the current limit of the ##mariadbd## process specifically by executing the following:
 
 &lt;&lt;code&gt;&gt;
-sudo cat /proc/$(pidof mysqld)/limits | grep &#34;core file&#34;
+sudo cat /proc/$(pidof mariadbd)/limits | grep &#34;core file&#34;
 &lt;&lt;/code&gt;&gt;
 
-If you need to change the core size limit, the method you use depends on how you start ##mysqld##. See the sections below for more details.
+If you need to change the core size limit, the method you use depends on how you start ##mariadbd##. See the sections below for more details.
 
-&lt;&lt;product mariadb from=&#34;10.2.24&#34;&gt;&gt;
-In MariaDB 10.2.24, MariaDB 10.3.15, and MariaDB 10.4.5 and later, the resource limits for the ##mysqld## process are printed to the [[error-log|error log]] when the ##mysqld## process crashes. That way, users can confirm whether the process may have been allowed to dump a core file. See MDEV-15051 for more information.
+&lt;&lt;product mariadb from=&#34;10.4.5&#34;&gt;&gt;
+From MariaDB 10.4.5, the resource limits for the ##mariadbd## process are printed to the [[error-log|error log]] when the ##mariadbd## process crashes. That way, users can confirm whether the process may have been allowed to dump a core file. See MDEV-15051 for more information.
 &lt;&lt;/product&gt;&gt;
 
 ==== Running mariadbd Using mysqld_safe
@@ -407,9 +405,9 @@ See [[systemd/#configuring-the-core-file-size|systemd: Configuring the Core File
 
 ==== Running MariaDB Containers
 
-To get a core dumps under ##mariadb## containers requires [[#setting-the-path-on-linux|Setting the path on linux]] to not include a ##sysctl kernel.core_pattern## beginning with a pipe to an executable that doesn&#39;t exist in the container. Setting to a straight ##core## is recommended.
+To get a core dump in a ##mariadb## container requires [[#setting-the-path-on-linux|setting the path on Linux]] to not include a ##sysctl kernel.core_pattern## beginning with a pipe to an executable that doesn&#39;t exist in the container. Setting to a straight ##core## is recommended.
 
-Also see [[how-to-produce-a-full-stack-trace-for-mysqld/#containers-with-debug-symbols|Container with Debug Symbols]].
+Also see [[how-to-produce-a-full-stack-trace-for-mariadbd/#containers-with-debug-symbols|Container with Debug Symbols]].
 
 ==== Changing the System-Wide Limit
 
@@ -464,12 +462,12 @@ EOF
 
 Note: if you are using containers, the pid is always going to be 1, so this may not be a useful setting. Appending an identifier like %t to the ##[[https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#core-pattern|kernel.core_pattern]]## will generate more unique files.
 
-&lt;&lt;product mariadb from=&#34;10.2.24&#34;&gt;&gt;
-In MariaDB 10.2.24, MariaDB 10.3.15, and MariaDB 10.4.5 and later, the value of ##kernel.core_pattern## is printed to the [[error-log|error log]] when the ##mariadbd## process crashes. That way, users can determine where the process may have dumped a core file. See MDEV-15051 for more information.
+&lt;&lt;product mariadb from=&#34;10.4.5&#34;&gt;&gt;
+From MariaDB 10.4.5, the value of ##kernel.core_pattern## is printed to the [[error-log|error log]] when the ##mariadbd## process crashes. That way, users can determine where the process may have dumped a core file. See MDEV-15051 for more information.
 &lt;&lt;/product&gt;&gt;
 
-&lt;&lt;product mariadb to=&#34;10.2.23&#34;&gt;&gt;
-In MariaDB 10.2.23, MariaDB 10.3.14, and MariaDB 10.4.4 and before, the [[error-log|error log]] contains a message indicating that a core file would be written in the ##[[server-system-variables/#datadir|datadir]]## when the ##mariadbd## process crashes, even if this was not true because the ##kernel.core_pattern## actually configured the process to write the core file in a different directory.
+&lt;&lt;product mariadb to=&#34;10.4.4&#34;&gt;&gt;
+Prior to MariaDB 10.4.5, the [[error-log|error log]] contains a message indicating that a core file would be written in the ##[[server-system-variables/#datadir|datadir]]## when the ##mariadbd## process crashes, even if this was not true because the ##kernel.core_pattern## actually configured the process to write the core file in a different directory.
 &lt;&lt;/product&gt;&gt;
 
 &lt;&lt;style class=&#34;bluebox&#34;&gt;&gt;
@@ -523,7 +521,7 @@ So far none of the long term support Linux distribution releases have a new enou
 
 === Core Dumps and setuid on Linux
 
-Since ##mysqld## executes ##[[https://linux.die.net/man/2/setuid|setuid]]##, you may have to set  ##fs.suid_dumpable=2## to allow core dumps on Linux. You can check the current ##fs.suid_dumpable## value by using the ##[[https://linux.die.net/man/8/sysctl|sysctl]]## utility. For example:
+Since ##mariadbd## executes ##[[https://linux.die.net/man/2/setuid|setuid]]##, you may have to set  ##fs.suid_dumpable=2## to allow core dumps on Linux. You can check the current ##fs.suid_dumpable## value by using the ##[[https://linux.die.net/man/8/sysctl|sysctl]]## utility. For example:
 
 &lt;&lt;code&gt;&gt;
 sysctl fs.suid_dumpable
@@ -550,20 +548,20 @@ EOF
 &lt;&lt;/code&gt;&gt;
 
 &lt;&lt;style class=&#34;bluebox&#34;&gt;&gt;
-**Note:** If you don&#39;t want to change ##fs.suid_dumpable##, then another solution is to start ##mysqld## directly as the ##mysql## user, so that the ##[[https://linux.die.net/man/2/setuid|setuid]]## call is not needed.
+**Note:** If you don&#39;t want to change ##fs.suid_dumpable##, then another solution is to start ##mariadbd## directly as the ##mysql## user, so that the ##[[https://linux.die.net/man/2/setuid|setuid]]## call is not needed.
 &lt;&lt;/style&gt;&gt;
 
 === Forcing a Core File on Linux
 
-To force a core file for ##mysqld## you can send the process the ##sigabrt## signal, which has the signal code ##6##. This is very useful to get the state of the unresponsive ##mysqld## process. However, this will cause ##mysqld## to crash, and crash recovery will be run on restart.
+To force a core file for ##mariadbd## you can send the process the ##sigabrt## signal, which has the signal code ##6##. This is very useful to get the state of the unresponsive ##mariadbd## process. However, this will cause ##mariadbd## to crash, and crash recovery will be run on restart.
 
 You can send the signal with the ##[[https://linux.die.net/man/1/kill|kill]]## command. For example:
 
 &lt;&lt;code&gt;&gt;
-sudo kill -6 $(pidof mysqld)
+sudo kill -6 $(pidof mariadbd)
 &lt;&lt;/code&gt;&gt;
 
-As an alternative to ##$(pidof mysqld)##, you can find the process ID either by using the ##[[https://linux.die.net/man/1/ps|ps]]## utility or by checking the file defined by the ##[[server-system-variables/#pid_file|pid_file]]## system variable.
+As an alternative to ##$(pidof mariadbd)##, you can find the process ID either by using the ##[[https://linux.die.net/man/1/ps|ps]]## utility or by checking the file defined by the ##[[server-system-variables/#pid_file|pid_file]]## system variable.
 
 == Core Files on Windows
 
@@ -583,7 +581,7 @@ For details on how to configure and read the [[https://docs.microsoft.com/en-us/
 
 == Core Files and Address Sanitizer (ASAN)
 
-If your ##mysqld## binary is built with [[how-to-compile-and-use-mariadb-with-addresssanitizer-asan|Address Sanitizer (ASAN)]] then it will not be able to generate a core file.
+If your ##mariadbd## binary is built with [[how-to-compile-and-use-mariadb-with-addresssanitizer-asan|Address Sanitizer (ASAN)]] then it will not be able to generate a core file.
 
 == What&#39;s Included in Core Files
 
@@ -598,7 +596,7 @@ The following buffers are excluded:
 * InnoDB Redo log buffer (fixed 2M)
 * [[query-cache|Query cache]]
 
-The buffers are only excluded on Linux when using kernel version 3.4 and above and when using a non-debug build of ##mysqld##. Some Linux kernel versions have a [[https://lists.launchpad.net/maria-discuss/msg05245.html|bug]] which would cause the following warning to be printed to the log:
+The buffers are only excluded on Linux when using kernel version 3.4 and above and when using a non-debug build of ##mariadbd##. Some Linux kernel versions have a [[https://lists.launchpad.net/maria-discuss/msg05245.html|bug]] which would cause the following warning to be printed to the log:
 
 &lt;&lt;code&gt;&gt;
 Sep 25 10:41:19 srv1 mysqld: 2018-09-25 10:41:19 0 [Warning] InnoDB: Failed to set memory to DODUMP: Invalid argument ptr 0x2aaac3400000 size 33554432
@@ -608,7 +606,7 @@ In those cases, the core dump may exclude some additional data. If that is not a
 
 == See Also
 
-* [[how-to-produce-a-full-stack-trace-for-mysqld|How to Produce a Full Stack Trace for mysqld]]
+* [[how-to-produce-a-full-stack-trace-for-mariadbd|How to Produce a Full Stack Trace for mariadbd]]
 * [[http://www.cyberciti.biz/tips/linux-core-dumps.html|HowTo: Debug Crashed Linux Application Core Files Like A Pro]]
 * [[https://www.percona.com/community-blog/2018/06/28/nice-feature-in-mariadb-103-no-innodb-buffer-pool-in-coredumps/|A Nice Feature in MariaDB 10.3: no InnoDB Buffer Pool in Core Dumps]]
 * [[https://www.percona.com/blog/2011/08/26/getting-mysql-core-file-on-linux/|Getting MySQL Core file on Linux]]</textarea>
