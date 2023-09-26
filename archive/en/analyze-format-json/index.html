@@ -260,7 +260,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-06-01 09:21">3 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2023-09-25 11:29">5 hours, 25 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -434,15 +434,18 @@
 <h3>Contents</h3>
  <ol class="toc">
 
-    <li class="mariadb_from_10_9"><a href="#basic-execution-data" title="Basic Execution Data">Basic Execution Data</a></li>
+    <li class=""><a href="#basic-execution-data" title="Basic Execution Data">Basic Execution Data</a></li>
 
-    <li class="mariadb_from_10_9"><a href="#advanced-execution-data" title="Advanced Execution Data">Advanced Execution Data</a></li>
+    <li class=""><a href="#advanced-execution-data" title="Advanced Execution Data">Advanced Execution Data</a>    <ol class="toc">
 
-    <li class="mariadb_from_10_9"><a href="#show-analyze-formatjson" title="SHOW ANALYZE FORMAT=JSON">SHOW ANALYZE FORMAT=JSON</a></li>
+        <li class=""><a href="#innodb-engine-statistics" title="InnoDB engine statistics">InnoDB engine statistics</a>    </ol>
+</li>
 
-    <li class="mariadb_from_10_9"><a href="#data-about-individual-query-plan-nodes" title="Data About Individual Query Plan Nodes">Data About Individual Query Plan Nodes</a></li>
+    <li class=""><a href="#show-analyze-formatjson" title="SHOW ANALYZE FORMAT=JSON">SHOW ANALYZE FORMAT=JSON</a></li>
 
-    <li class="mariadb_from_10_9"><a href="#use-cases" title="Use Cases">Use Cases</a> </ol>
+    <li class=""><a href="#data-about-individual-query-plan-nodes" title="Data About Individual Query Plan Nodes">Data About Individual Query Plan Nodes</a></li>
+
+    <li class=""><a href="#use-cases" title="Use Cases">Use Cases</a> </ol>
 </li>
 </div><p>
 <code>ANALYZE FORMAT=JSON</code> is a mix of the <a href="/kb/en/explain-formatjson/">EXPLAIN FORMAT=JSON</a> and <a href="/kb/en/analyze-statement/">ANALYZE</a> statement features. The <code>ANALYZE FORMAT=JSON $statement</code> will execute <code>$statement</code>, and then print the output of <code>EXPLAIN FORMAT=JSON</code>, amended with data from the query execution.</p>
@@ -452,10 +455,24 @@
 </li><li><strong><code>r_filtered</code></strong> is provided whenever there is a condition that is checked.  It shows the percentage of rows left after checking the condition.
 </li></ul>
 <h2 class="anchored_heading" id="advanced-execution-data">Advanced Execution Data</h2>
-<p>The most important data not available in the regular tabula <code>ANALYZE</code> statement are:</p>
+<p>The most important data not available in the regular tabular <code>ANALYZE</code> statement are:</p>
 <ul start="1"><li><strong><code>r_loops</code></strong> field.  This shows how many times the node was executed. Most query plan elements have this field.
 </li><li><strong><code>r_total_time_ms</code></strong> field. It shows how much time in total, in milliseconds, was spent executing this node. If the node has subnodes, their execution time is included.
 </li><li><strong><code>r_buffer_size</code></strong> field. Query plan nodes that make use of buffers report the size of buffer that was was used.
+</li></ul>
+<h3 class="anchored_heading" id="innodb-engine-statistics">InnoDB engine statistics</h3>
+<p>Starting from <a href="/kb/en/mariadb-10615-release-notes/">MariaDB 10.6.15</a>, <a href="/kb/en/mariadb-10-8-8-release-notes/">MariaDB 10.8.8</a>, <a href="/kb/en/mariadb-10-9-8-release-notes/">MariaDB 10.9.8</a>, <a href="/kb/en/mariadb-10-10-6-release-notes/">MariaDB 10.10.6</a>, <a href="/kb/en/mariadb-10-11-5-release-notes/">MariaDB 10.11.5</a>, <a href="/kb/en/mariadb-11-0-3-release-notes/">MariaDB 11.0.3</a>, <a href="/kb/en/mariadb-11-1-2-release-notes/">MariaDB 11.1.2</a> and <a href="/kb/en/mariadb-11-2-1-release-notes/">MariaDB 11.2.1</a> (<a href="https://jira.mariadb.org/browse/MDEV-31577">MDEV-31577</a>), the following statistics are reported for InnoDB tables:</p>
+<pre class="fixed">      &#34;r_engine_stats&#34;: {
+        &#34;pages_accessed&#34;:  integer,
+        &#34;pages_read_count&#34;: integer,
+        &#34;pages_read_time_ms&#34;: double,
+        &#34;old_rows_read&#34;: integer
+      }
+</pre><p>Only non-zero members are printed.</p>
+<ul start="1"><li><code>pages_accessed</code> is the total number of buffer pool pages accessed when reading this table
+</li><li><code>pages_read_count</code> is the number of pages that InnoDB had to read from disk for this table. (If the query touches "hot" data in the InnoDB buffer pool, this value will be 0 and not present)
+</li><li><code>pages_read_time_ms</code> is the total time spent reading the table.
+</li><li><code>old_rows_read</code> is the number of old row versions that InnoDB had to read.  Old row version is the version of the row that is not visible to this transaction.
 </li></ul>
 <h2 class="anchored_heading" id="show-analyze-formatjson">SHOW ANALYZE FORMAT=JSON</h2>
 <div class="mariadb_from_10_9 mariadb from_10_9 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-109/">10.9</a></h5><p><code>SHOW ANALYZE FORMAT=JSON for &lt;connection_id&gt;</code>

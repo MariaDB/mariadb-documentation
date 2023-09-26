@@ -279,7 +279,110 @@ Comments - mysql.global_priv Table
                 <div class="clearfix"></div>
             </div>
         </div>
+        <a name="comment_6378"></a>
+        <div class="comment approved" style="margin-left: 10px">
+            <div class="info">
+                
+
+<span class="datetime" title="2023-09-18 18:06">6 days, 23 hours ago</span>
+                
+<span class="user" id="user-14275">
+<a href="/kb/user/id/14275" title="Auto Martin">Auto Martin</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6378">Re: mysql.global_priv Table</a>
+                
+            </div><div class="comment_text">
+                <p>Agreed. Pretty annoying. Luckily I stumbled on the code driving the `mysql`.`users` view which seems to clarify most of the json fields:</p>
+<pre class="fixed">SELECT
+  Host,
+  User,
+  IF(JSON_VALUE(Priv, '$.plugin') IN ('mysql_native_password', 'mysql_old_password'), IFNULL(JSON_VALUE(Priv, '$.authentication_string'), ''), '') AS Password,
+  IF(JSON_VALUE(Priv, '$.access') &amp;         1, 'Y', 'N') AS Select_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;         2, 'Y', 'N') AS Insert_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;         4, 'Y', 'N') AS Update_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;         8, 'Y', 'N') AS Delete_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;        16, 'Y', 'N') AS Create_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;        32, 'Y', 'N') AS Drop_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;        64, 'Y', 'N') AS Reload_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;       128, 'Y', 'N') AS Shutdown_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;       256, 'Y', 'N') AS Process_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;       512, 'Y', 'N') AS File_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;      1024, 'Y', 'N') AS Grant_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;      2048, 'Y', 'N') AS References_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;      4096, 'Y', 'N') AS Index_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;      8192, 'Y', 'N') AS Alter_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;     16384, 'Y', 'N') AS Show_db_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;     32768, 'Y', 'N') AS Super_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;     65536, 'Y', 'N') AS Create_tmp_table_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;    131072, 'Y', 'N') AS Lock_tables_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;    262144, 'Y', 'N') AS Execute_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;    524288, 'Y', 'N') AS Repl_slave_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;   1048576, 'Y', 'N') AS Repl_client_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;   2097152, 'Y', 'N') AS Create_view_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;   4194304, 'Y', 'N') AS Show_view_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;   8388608, 'Y', 'N') AS Create_routine_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;  16777216, 'Y', 'N') AS Alter_routine_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;  33554432, 'Y', 'N') AS Create_user_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;  67108864, 'Y', 'N') AS Event_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp; 134217728, 'Y', 'N') AS Trigger_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp; 268435456, 'Y', 'N') AS Create_tablespace_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp; 536870912, 'Y', 'N') AS Delete_history_priv,
+  ELT(IFNULL(JSON_VALUE(Priv, '$.ssl_type'), 0) + 1, '', 'ANY','X509', 'SPECIFIED') AS ssl_type,
+  IFNULL(JSON_VALUE(Priv, '$.ssl_cipher'), '') AS ssl_cipher,
+  IFNULL(JSON_VALUE(Priv, '$.x509_issuer'), '') AS x509_issuer,
+  IFNULL(JSON_VALUE(Priv, '$.x509_subject'), '') AS x509_subject,
+  CAST(IFNULL(JSON_VALUE(Priv, '$.max_questions'), 0) AS UNSIGNED) AS max_questions,
+  CAST(IFNULL(JSON_VALUE(Priv, '$.max_updates'), 0) AS UNSIGNED) AS max_updates,
+  CAST(IFNULL(JSON_VALUE(Priv, '$.max_connections'), 0) AS UNSIGNED) AS max_connections,
+  CAST(IFNULL(JSON_VALUE(Priv, '$.max_user_connections'), 0) AS SIGNED) AS max_user_connections,
+  IFNULL(JSON_VALUE(Priv, '$.plugin'), '') AS plugin,
+  IFNULL(JSON_VALUE(Priv, '$.authentication_string'), '') AS authentication_string,
+  'N' AS password_expired,
+  ELT(IFNULL(JSON_VALUE(Priv, '$.is_role'), 0) + 1, 'N', 'Y') AS is_role,
+  IFNULL(JSON_VALUE(Priv, '$.default_role'), '') AS default_role,
+  CAST(IFNULL(JSON_VALUE(Priv, '$.max_statement_time'), 0.0) AS DECIMAL(12,6)) AS max_statement_time
+  FROM global_priv; 
+</pre><p>Full set of fields (not all are required):</p>
+<ul start="1"><li>plugin
+</li><li>authentication_string
+</li><li>access (bitflag map of permissions)
+</li><li>ssl_type
+</li><li>ssl_cipher
+</li><li>x509_issuer
+</li><li>x509_subject
+</li><li>max_questions
+</li><li>max_updates
+</li><li>max_connections
+</li><li>max_user_connections
+</li><li>is_role
+</li><li>default_role
+</li><li>max_statement_time</li></ul>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/mysqlglobal_priv-table/+comments/6378/flag"
+                       data-flag-url="/kb/en/mysqlglobal_priv-table/+comments/6378/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
         
+    
+
     
 
     

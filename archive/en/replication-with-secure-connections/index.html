@@ -260,7 +260,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-04 09:02">2 weeks ago</span></dd>
+<span class="datetime" title="2023-09-25 13:44">2 hours, 37 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -432,12 +432,12 @@
  </ol>
 </li>
 </div>
-<p>By default, MariaDB replicates data between masters and slaves without encrypting it. This is generally acceptable when the master and slave run are in networks where security is guaranteed through other means. However, in cases where the master and slave exist on separate networks or they are in a high-risk network, the lack of encryption does introduce security concerns as a malicious actor could potentially eavesdrop on the traffic as it is sent over the network between them.</p>
-<p>To mitigate this concern, MariaDB allows you to encrypt replicated data in transit between masters and slaves using the Transport Layer Security (TLS) protocol. TLS was formerly known as Secure Socket Layer (SSL), but strictly speaking the SSL protocol is a predecessor to TLS and, that version of the protocol is now considered insecure. The documentation still uses the term SSL often and for compatibility reasons TLS-related server system and status variables still use the prefix <code>ssl_</code>, but internally, MariaDB only supports its secure successors.</p>
-<p>In order to secure connections between the master and slave, you need to ensure that both servers were compiled with TLS support. See <a href="/kb/en/secure-connections-overview/">Secure Connections Overview</a> to determine how to check whether a server was compiled with TLS support.</p>
-<p>You also need an X509 certificate, a private key, and the Certificate Authority (CA) chain to verify the X509 certificate for the master. If you want to use two-way TLS, then you will also an X509 certificate, a private key, and the Certificate Authority (CA) chain to verify the X509 certificate for the slave. If you want to use self-signed certificates that are created with OpenSSL, then see <a href="/kb/en/certificate-creation-with-openssl/">Certificate Creation with OpenSSL</a> for information on how to create those.</p>
+<p>By default, MariaDB replicates data between primaries and replicas without encrypting it. This is generally acceptable when the primary and replica run are in networks where security is guaranteed through other means. However, in cases where the primary and replica exist on separate networks or they are in a high-risk network, the lack of encryption does introduce security concerns as a malicious actor could potentially eavesdrop on the traffic as it is sent over the network between them.</p>
+<p>To mitigate this concern, MariaDB allows you to encrypt replicated data in transit between primaries and replicas using the Transport Layer Security (TLS) protocol. TLS was formerly known as Secure Socket Layer (SSL), but strictly speaking the SSL protocol is a predecessor to TLS and, that version of the protocol is now considered insecure. The documentation still uses the term SSL often and for compatibility reasons TLS-related server system and status variables still use the prefix <code>ssl_</code>, but internally, MariaDB only supports its secure successors.</p>
+<p>In order to secure connections between the primary and replica, you need to ensure that both servers were compiled with TLS support. See <a href="/kb/en/secure-connections-overview/">Secure Connections Overview</a> to determine how to check whether a server was compiled with TLS support.</p>
+<p>You also need an X509 certificate, a private key, and the Certificate Authority (CA) chain to verify the X509 certificate for the primary. If you want to use two-way TLS, then you will also an X509 certificate, a private key, and the Certificate Authority (CA) chain to verify the X509 certificate for the replica. If you want to use self-signed certificates that are created with OpenSSL, then see <a href="/kb/en/certificate-creation-with-openssl/">Certificate Creation with OpenSSL</a> for information on how to create those.</p>
 <h2 class="anchored_heading" id="securing-replication-traffic">Securing Replication Traffic</h2>
-<p>In order to secure replication traffic, you will need to ensure that TLS is enabled on the master. If you want to use two-way TLS, then you will also need to ensure that TLS is enabled on the slave. See <a href="/kb/en/securing-connections-for-client-and-server/">Securing Connections for Client and Server</a> for information on how to do that.</p>
+<p>In order to secure replication traffic, you will need to ensure that TLS is enabled on the primary. If you want to use two-way TLS, then you will also need to ensure that TLS is enabled on the replica. See <a href="/kb/en/securing-connections-for-client-and-server/">Securing Connections for Client and Server</a> for information on how to do that.</p>
 <p>For example, to set the TLS system variables for each server, add them to a relevant server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> on each server:</p>
 <pre class="fixed">[mariadb]
 ...
@@ -445,60 +445,60 @@ ssl_cert = /etc/my.cnf.d/certificates/server-cert.pem
 ssl_key = /etc/my.cnf.d/certificates/server-key.pem
 ssl_ca = /etc/my.cnf.d/certificates/ca.pem
 </pre><p>And then <a href="/kb/en/starting-and-stopping-mariadb-starting-and-stopping-mariadb/">restart the server</a> to make the changes persistent.</p>
-<p>At this point, you can reconfigure the slaves to use TLS to encrypt replicated data in transit. There are two methods available to do this: </p>
-<ul start="1"><li>Executing the <code><a href="/kb/en/change-master-to/">CHANGE MASTER</a></code> statement to set the relevant TLS options.
+<p>At this point, you can reconfigure the replicas to use TLS to encrypt replicated data in transit. There are two methods available to do this: </p>
+<ul start="1"><li>Executing the <a href="/kb/en/change-master-to/">CHANGE MASTER</a> statement to set the relevant TLS options.
 </li><li>Setting TLS client options in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>.
 </li></ul>
 <h3 class="anchored_heading" id="executing-change-master">Executing CHANGE MASTER</h3>
-<p>TLS can be enabled on a replication slave by executing the <code><a href="/kb/en/change-master-to/">CHANGE MASTER</a></code> statement. In order to do so, there are a number of options that you would need to set. The specific options that you would need to set would depend on whether you want one-way TLS or two-way TLS, and whether you want to verify the server certificate.</p>
+<p>TLS can be enabled on a replication replica by executing the <a href="/kb/en/change-master-to/">CHANGE MASTER</a> statement. In order to do so, there are a number of options that you would need to set. The specific options that you would need to set would depend on whether you want one-way TLS or two-way TLS, and whether you want to verify the server certificate.</p>
 <h4 class="anchored_heading" id="enabling-two-way-tls-with-change-master">Enabling Two-Way TLS with CHANGE MASTER</h4>
-<p>Two-way TLS means that both the client and server provide a private key and an X509 certificate. It is called "two-way" TLS because both the client and server can be authenticated. In this case, the "client" is the slave. To configure two-way TLS, you would need to set the following options:</p>
-<ul start="1"><li>You need to set the path to the server's certificate by setting the <code><a href="/kb/en/change-master-to/#master_ssl_cert">MASTER_SSL_CERT</a></code> option.
-</li><li>You need to set the path to the server's private key by setting the <code><a href="/kb/en/change-master-to/#master_ssl_key">MASTER_SSL_KEY</a></code> option.
-</li><li>You need to set the path to the certificate authority (CA) chain that can verify the server's certificate by setting either the <code><a href="/kb/en/change-master-to/#master_ssl_ca">MASTER_SSL_CA</a></code> or the <code><a href="/kb/en/change-master-to/#master_ssl_capath">MASTER_SSL_CAPATH</a></code> options.
-</li><li>If you want <a href="/kb/en/secure-connections-overview/#server-certificate-verification">server certificate verification</a>, then you also need to set the <code><a href="/kb/en/change-master-to/#master_ssl_verify_server_cert">MASTER_SSL_VERIFY_SERVER_CERT</a></code> option.
-</li><li>If you want to restrict the server to certain ciphers, then you also need to set the <code><a href="/kb/en/change-master-to/#master_ssl_cipher">MASTER_SSL_CIPHER</a></code> option.
+<p>Two-way TLS means that both the client and server provide a private key and an X509 certificate. It is called "two-way" TLS because both the client and server can be authenticated. In this case, the "client" is the replica. To configure two-way TLS, you would need to set the following options:</p>
+<ul start="1"><li>You need to set the path to the server's certificate by setting the <a href="/kb/en/change-master-to/#master_ssl_cert">MASTER_SSL_CERT</a> option.
+</li><li>You need to set the path to the server's private key by setting the <a href="/kb/en/change-master-to/#master_ssl_key">MASTER_SSL_KEY</a> option.
+</li><li>You need to set the path to the certificate authority (CA) chain that can verify the server's certificate by setting either the <a href="/kb/en/change-master-to/#master_ssl_ca">MASTER_SSL_CA</a> or the <a href="/kb/en/change-master-to/#master_ssl_capath">MASTER_SSL_CAPATH</a> options.
+</li><li>If you want <a href="/kb/en/secure-connections-overview/#server-certificate-verification">server certificate verification</a>, then you also need to set the <code><a href="/kb/en/change-master-to/#master_ssl_verify_server_cert">MASTER_SSL_VERIFY_SERVER_CERT</a></code> option (enabled by default from <a href="/kb/en/what-is-mariadb-113/">MariaDB 11.3</a>).
+</li><li>If you want to restrict the server to certain ciphers, then you also need to set the <a href="/kb/en/change-master-to/#master_ssl_cipher">MASTER_SSL_CIPHER</a> option.
 </li></ul>
-<p>If the <a href="/kb/en/replication-threads/#threads-on-the-slave">slave threads</a> are currently running, you first need to stop them by executing the <code><a href="/kb/en/stop-slave/">STOP SLAVE</a></code> statement. For example:</p>
+<p>If the <a href="/kb/en/replication-threads/#threads-on-the-replica">replica threads</a> are currently running, you first need to stop them by executing the <a href="/kb/en/stop-slave/">STOP SLAVE</a> statement. For example:</p>
 <pre class="fixed"><span class="n">STOP</span> <span class="n">SLAVE</span><span class="p">;</span>
-</pre><p>Then, execute the <code><a href="/kb/en/change-master-to/">CHANGE MASTER</a></code> statement to configure the slave to use TLS. For example:</p>
+</pre><p>Then, execute the <a href="/kb/en/change-master-to/">CHANGE MASTER</a> statement to configure the replica to use TLS. For example:</p>
 <pre class="fixed"><span class="n">CHANGE</span> <span class="n">MASTER</span> <span class="k">TO</span>
    <span class="n">MASTER_SSL_CERT</span> <span class="o">=</span> <span class="s1">&#39;/path/to/client-cert.pem&#39;</span><span class="p">,</span>
    <span class="n">MASTER_SSL_KEY</span> <span class="o">=</span> <span class="s1">&#39;/path/to/client-key.pem&#39;</span><span class="p">,</span>
    <span class="n">MASTER_SSL_CA</span> <span class="o">=</span> <span class="s1">&#39;/path/to/ca/ca.pem&#39;</span><span class="p">,</span>
    <span class="n">MASTER_SSL_VERIFY_SERVER_CERT</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
-</pre><p>At this point, you can start replication by executing the <code><a href="/kb/en/start-slave/">START SLAVE</a></code> statement. For example:</p>
+</pre><p>At this point, you can start replication by executing the <a href="/kb/en/start-slave/">START SLAVE</a> statement. For example:</p>
 <pre class="fixed"><span class="k">START</span> <span class="n">SLAVE</span><span class="p">;</span>
-</pre><p>The slave now uses TLS to encrypt data in transit as it replicates it from the master. </p>
+</pre><p>The replica now uses TLS to encrypt data in transit as it replicates it from the primary. </p>
 <h4 class="anchored_heading" id="enabling-one-way-tls-with-change-master">Enabling One-Way TLS with CHANGE MASTER</h4>
 <h5 class="anchored_heading" id="enabling-one-way-tls-with-change-master-with-server-certificate-verification">Enabling One-Way TLS with CHANGE MASTER with Server Certificate Verification</h5>
-<p>One-way TLS means that only the server provides a private key and an X509 certificate. When TLS is used without a client certificate, it is called "one-way" TLS, because only the server can be authenticated, so authentication is only possible in one direction. However, encryption is still possible in both directions. <a href="/kb/en/secure-connections-overview/#server-certificate-verification">Server certificate verification</a> means that the client verifies that the certificate belongs to the server. In this case, the "client" is the slave. To configure one-way TLS, you would need to set the following options:</p>
-<ul start="1"><li>You need to set the path to the certificate authority (CA) chain that can verify the server's certificate by setting either the <code><a href="/kb/en/change-master-to/#master_ssl_ca">MASTER_SSL_CA</a></code> or the <code><a href="/kb/en/change-master-to/#master_ssl_capath">MASTER_SSL_CAPATH</a></code> options.
-</li><li>If you want <a href="/kb/en/secure-connections-overview/#server-certificate-verification">server certificate verification</a>, then you also need to set the <code><a href="/kb/en/change-master-to/#master_ssl_verify_server_cert">MASTER_SSL_VERIFY_SERVER_CERT</a></code> option.
-</li><li>If you want to restrict the server to certain ciphers, then you also need to set the <code><a href="/kb/en/change-master-to/#master_ssl_cipher">MASTER_SSL_CIPHER</a></code> option.
+<p>One-way TLS means that only the server provides a private key and an X509 certificate. When TLS is used without a client certificate, it is called "one-way" TLS, because only the server can be authenticated, so authentication is only possible in one direction. However, encryption is still possible in both directions. <a href="/kb/en/secure-connections-overview/#server-certificate-verification">Server certificate verification</a> means that the client verifies that the certificate belongs to the server. In this case, the "client" is the replica. To configure one-way TLS, you would need to set the following options:</p>
+<ul start="1"><li>You need to set the path to the certificate authority (CA) chain that can verify the server's certificate by setting either the <a href="/kb/en/change-master-to/#master_ssl_ca">MASTER_SSL_CA</a> or the <a href="/kb/en/change-master-to/#master_ssl_capath">MASTER_SSL_CAPATH</a> options.
+</li><li>If you want <a href="/kb/en/secure-connections-overview/#server-certificate-verification">server certificate verification</a>, then you also need to set the <a href="/kb/en/change-master-to/#master_ssl_verify_server_cert">MASTER_SSL_VERIFY_SERVER_CERT</a> option.
+</li><li>If you want to restrict the server to certain ciphers, then you also need to set the <a href="/kb/en/change-master-to/#master_ssl_cipher">MASTER_SSL_CIPHER</a> option (enabled by default from <a href="/kb/en/what-is-mariadb-113/">MariaDB 11.3</a>).
 </li></ul>
-<p>If the <a href="/kb/en/replication-threads/#threads-on-the-slave">slave threads</a> are currently running, you first need to stop them by executing the <code><a href="/kb/en/stop-slave/">STOP SLAVE</a></code> statement. For example:</p>
+<p>If the <a href="/kb/en/replication-threads/#threads-on-the-replica">replica threads</a> are currently running, you first need to stop them by executing the <a href="/kb/en/stop-slave/">STOP SLAVE</a> statement. For example:</p>
 <pre class="fixed"><span class="n">STOP</span> <span class="n">SLAVE</span><span class="p">;</span>
-</pre><p>Then, execute the <code><a href="/kb/en/change-master-to/">CHANGE MASTER</a></code> statement to configure the slave to use TLS. For example:</p>
+</pre><p>Then, execute the <a href="/kb/en/change-master-to/">CHANGE MASTER</a> statement to configure the replica to use TLS. For example:</p>
 <pre class="fixed"><span class="n">CHANGE</span> <span class="n">MASTER</span> <span class="k">TO</span>
    <span class="n">MASTER_SSL_CA</span> <span class="o">=</span> <span class="s1">&#39;/path/to/ca/ca.pem&#39;</span><span class="p">,</span>
    <span class="n">MASTER_SSL_VERIFY_SERVER_CERT</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
-</pre><p>At this point, you can start replication by executing the <code><a href="/kb/en/start-slave/">START SLAVE</a></code> statement. For example:</p>
+</pre><p>At this point, you can start replication by executing the <a href="/kb/en/start-slave/">START SLAVE</a> statement. For example:</p>
 <pre class="fixed"><span class="k">START</span> <span class="n">SLAVE</span><span class="p">;</span>
-</pre><p>The slave now uses TLS to encrypt data in transit as it replicates it from the master. </p>
+</pre><p>The replica now uses TLS to encrypt data in transit as it replicates it from the primary. </p>
 <h5 class="anchored_heading" id="enabling-one-way-tls-with-change-master-without-server-certificate-verification">Enabling One-Way TLS with CHANGE MASTER without Server Certificate Verification</h5>
-<p>One-way TLS means that only the server provides a private key and an X509 certificate. When TLS is used without a client certificate, it is called "one-way" TLS, because only the server can be authenticated, so authentication is only possible in one direction. However, encryption is still possible in both directions. In this case, the "client" is the slave. To configure two-way TLS without server certificate verification, you would need to set the following options:</p>
-<ul start="1"><li>You need to configure the slave to use TLS by setting the <code><a href="/kb/en/change-master-to/#master_ssl">MASTER_SSL</a></code> option.
-</li><li>If you want to restrict the server to certain ciphers, then you also need to set the <code><a href="/kb/en/change-master-to/#master_ssl_cipher">MASTER_SSL_CIPHER</a></code> option.
+<p>One-way TLS means that only the server provides a private key and an X509 certificate. When TLS is used without a client certificate, it is called "one-way" TLS, because only the server can be authenticated, so authentication is only possible in one direction. However, encryption is still possible in both directions. In this case, the "client" is the replica. To configure two-way TLS without server certificate verification, you would need to set the following options:</p>
+<ul start="1"><li>You need to configure the replica to use TLS by setting the <a href="/kb/en/change-master-to/#master_ssl">MASTER_SSL</a> option.
+</li><li>If you want to restrict the server to certain ciphers, then you also need to set the <a href="/kb/en/change-master-to/#master_ssl_cipher">MASTER_SSL_CIPHER</a> option.
 </li></ul>
-<p>If the <a href="/kb/en/replication-threads/#threads-on-the-slave">slave threads</a> are currently running, you first need to stop them by executing the <code><a href="/kb/en/stop-slave/">STOP SLAVE</a></code> statement. For example:</p>
+<p>If the <a href="/kb/en/replication-threads/#threads-on-the-replica">replica threads</a> are currently running, you first need to stop them by executing the <a href="/kb/en/stop-slave/">STOP SLAVE</a> statement. For example:</p>
 <pre class="fixed"><span class="n">STOP</span> <span class="n">SLAVE</span><span class="p">;</span>
-</pre><p>Then, execute the <code><a href="/kb/en/change-master-to/">CHANGE MASTER</a></code> statement to configure the slave to use TLS. For example:</p>
+</pre><p>Then, execute the <a href="/kb/en/change-master-to/">CHANGE MASTER</a> statement to configure the replica to use TLS. For example:</p>
 <pre class="fixed"><span class="n">CHANGE</span> <span class="n">MASTER</span> <span class="k">TO</span>
    <span class="n">MASTER_SSL</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
-</pre><p>At this point, you can start replication by executing the <code><a href="/kb/en/start-slave/">START SLAVE</a></code> statement. For example:</p>
+</pre><p>At this point, you can start replication by executing the <a href="/kb/en/start-slave/">START SLAVE</a> statement. For example:</p>
 <pre class="fixed"><span class="k">START</span> <span class="n">SLAVE</span><span class="p">;</span>
-</pre><p>The slave now uses TLS to encrypt data in transit as it replicates it from the master. </p>
+</pre><p>The replica now uses TLS to encrypt data in transit as it replicates it from the primary. </p>
 <div class="cstm-style hidden"><h3 class="anchored_heading" id="setting-tls-client-options-in-an-option-file">Setting TLS Client Options in an Option File</h3>
 <p>In cases where you don't mind restarting the server or you are setting the server up from scratch for the first time, you may find it more convenient to configure TLS options for replication through an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>. This is done the same way as it is for other clients. The specific options that you would need to set would depend on whether you want one-way TLS or two-way TLS, and whether you want to verify the server certificate. See <a href="/kb/en/securing-connections-for-client-and-server/#enabling-tls-for-mariadb-clients">Securing Connections for Client and Server: Enabling TLS for MariaDB Clients</a> for more information.</p>
 <p>For example, to enable two-way TLS with <a href="/kb/en/secure-connections-overview/#server-certificate-verification">server certificate verification</a>, then you could specify the following options in a a relevant client <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>:</p>
@@ -508,13 +508,13 @@ ssl_cert = /etc/my.cnf.d/certificates/client-cert.pem
 ssl_key = /etc/my.cnf.d/certificates/client-key.pem
 ssl_ca = /etc/my.cnf.d/certificates/ca.pem
 ssl-verify-server-cert
-</pre><p>Before you restart the server, you may also want to set the <code><a href="/kb/en/mysqld-options/#-skip-slave-start">--skip-slave-start</a></code> option in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>. This option prevents the <a href="/kb/en/replication-threads/#threads-on-the-slave">slave threads</a> from restarting automatically when the server starts. Instead, they will have to be restarted manually.</p>
+</pre><p>Before you restart the server, you may also want to set the <a href="/kb/en/mariadbd-options/#-skip-slave-start">--skip-slave-start</a> option in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>. This option prevents the <a href="/kb/en/replication-threads/#threads-on-the-replica">replica threads</a> from restarting automatically when the server starts. Instead, they will have to be restarted manually.</p>
 <p>After these changes have been made, you can <a href="/kb/en/starting-and-stopping-mariadb-starting-and-stopping-mariadb/">restart the server</a>.</p>
-<p>Once the server is back online, set the <code><a href="/kb/en/change-master-to/#master_ssl">MASTER_SSL</a></code> option by executing the <code><a href="/kb/en/change-master-to/">CHANGE MASTER</a></code> statement. This will enable TLS. For example:</p>
+<p>Once the server is back online, set the <a href="/kb/en/change-master-to/#master_ssl">MASTER_SSL</a> option by executing the <a href="/kb/en/change-master-to/">CHANGE MASTER</a> statement. This will enable TLS. For example:</p>
 <pre class="fixed"><span class="n">CHANGE</span> <span class="n">MASTER</span> <span class="k">TO</span>
    <span class="n">MASTER_SSL</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
 </pre><p>The certificate and keys will be read from the option file.</p>
-<p>At this point, you can start replication by executing the <code><a href="/kb/en/start-slave/">START SLAVE</a></code> statement.</p>
+<p>At this point, you can start replication by executing the <a href="/kb/en/start-slave/">START SLAVE</a> statement.</p>
 <pre class="fixed"><span class="k">START</span> <span class="n">SLAVE</span><span class="p">;</span>
 </pre></div>
     </div>

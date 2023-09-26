@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/analyze-format-json/+r/126704/">126704</a></dd>
+            <dd><a href="/kb/en/analyze-format-json/+r/130700/">130700</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-115">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-06-01 09:21">2023-06-01 09:21</span></dd>
+<span class="datetime" title="2023-09-25 11:29">2023-09-25 11:29</span></dd>
         </dl>
     </div>
     
@@ -325,10 +325,31 @@ You can get the following also from tabular ##ANALYZE## statement form:
 * **##r_filtered##** is provided whenever there is a condition that is checked.  It shows the percentage of rows left after checking the condition.
 
 == Advanced Execution Data
-The most important data not available in the regular tabula ##ANALYZE## statement are:
+The most important data not available in the regular tabular ##ANALYZE## statement are:
 * **##r_loops##** field.  This shows how many times the node was executed. Most query plan elements have this field.
 * **##r_total_time_ms##** field. It shows how much time in total, in milliseconds, was spent executing this node. If the node has subnodes, their execution time is included.
 * **##r_buffer_size##** field. Query plan nodes that make use of buffers report the size of buffer that was was used.
+
+=== InnoDB engine statistics
+
+Starting from MariaDB 10.6.15, MariaDB 10.8.8, MariaDB 10.9.8, MariaDB 10.10.6, MariaDB 10.11.5, MariaDB 11.0.3, MariaDB 11.1.2 and MariaDB 11.2.1 (MDEV-31577), the following statistics are reported for InnoDB tables:
+
+&lt;&lt;code&gt;&gt;
+      &#34;r_engine_stats&#34;: {
+        &#34;pages_accessed&#34;:  integer,
+        &#34;pages_read_count&#34;: integer,
+        &#34;pages_read_time_ms&#34;: double,
+        &#34;old_rows_read&#34;: integer
+      }
+&lt;&lt;/code&gt;&gt;
+
+Only non-zero members are printed.
+
+* ##pages_accessed## is the total number of buffer pool pages accessed when reading this table
+* ##pages_read_count## is the number of pages that InnoDB had to read from disk for this table. (If the query touches &#34;hot&#34; data in the InnoDB buffer pool, this value will be 0 and not present)
+* ##pages_read_time_ms## is the total time spent reading the table.
+* ##old_rows_read## is the number of old row versions that InnoDB had to read.  Old row version is the version of the row that is not visible to this transaction.
+
 
 == SHOW ANALYZE FORMAT=JSON
 &lt;&lt;product mariadb from=10.9&gt;&gt;
