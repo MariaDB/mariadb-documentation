@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/replication-with-secure-connections/+r/130721/">130721</a></dd>
+            <dd><a href="/kb/en/replication-with-secure-connections/+r/130731/">130731</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-09-25 13:44">2023-09-25 13:44</span></dd>
+<span class="datetime" title="2023-09-25 21:43">2023-09-25 21:43</span></dd>
         </dl>
     </div>
     
@@ -389,11 +389,11 @@ The replica now uses TLS to encrypt data in transit as it replicates it from the
 
 ===== Enabling One-Way TLS with CHANGE MASTER with Server Certificate Verification
 
-One-way TLS means that only the server provides a private key and an X509 certificate. When TLS is used without a client certificate, it is called &#34;one-way&#34; TLS, because only the server can be authenticated, so authentication is only possible in one direction. However, encryption is still possible in both directions. [[secure-connections-overview/#server-certificate-verification|Server certificate verification]] means that the client verifies that the certificate belongs to the server. In this case, the &#34;client&#34; is the replica. To configure one-way TLS, you would need to set the following options:
+One-way TLS means that only the server provides a private key and an X509 certificate. When TLS is used without a client certificate, it is called &#34;one-way&#34; TLS, because only the server can be authenticated, so authentication is only possible in one direction. However, encryption is still possible in both directions. [[secure-connections-overview/#server-certificate-verification|Server certificate verification]] means that the client verifies that the certificate belongs to the server. In this case, the &#34;client&#34; is the replica. This mode is enabled by default starting from  MariaDB 11.3. To configure one-way TLS in earlier versions, you would need to set the following options:
 
 * You need to set the path to the certificate authority (CA) chain that can verify the server&#39;s certificate by setting either the [[change-master-to/#master_ssl_ca|MASTER_SSL_CA]] or the [[change-master-to/#master_ssl_capath|MASTER_SSL_CAPATH]] options.
-* If you want [[secure-connections-overview/#server-certificate-verification|server certificate verification]], then you also need to set the [[change-master-to/#master_ssl_verify_server_cert|MASTER_SSL_VERIFY_SERVER_CERT]] option.
-* If you want to restrict the server to certain ciphers, then you also need to set the [[change-master-to/#master_ssl_cipher|MASTER_SSL_CIPHER]] option (enabled by default from MariaDB 11.3).
+* You need to set the [[change-master-to/#master_ssl_verify_server_cert|MASTER_SSL_VERIFY_SERVER_CERT]] option.
+* If you want to restrict the server to certain ciphers, then you also need to set the [[change-master-to/#master_ssl_cipher|MASTER_SSL_CIPHER]] option.
 
 If the [[replication-threads/#threads-on-the-replica|replica threads]] are currently running, you first need to stop them by executing the [[stop-slave|STOP SLAVE]] statement. For example:
 
@@ -423,6 +423,7 @@ One-way TLS means that only the server provides a private key and an X509 certif
 
 * You need to configure the replica to use TLS by setting the [[change-master-to/#master_ssl|MASTER_SSL]] option.
 * If you want to restrict the server to certain ciphers, then you also need to set the [[change-master-to/#master_ssl_cipher|MASTER_SSL_CIPHER]] option.
+* Starting from MariaDB 11.3 you need to disable the [[change-master-to/#master_ssl_verify_server_cert|MASTER_SSL_VERIFY_SERVER_CERT]] option.
 
 If the [[replication-threads/#threads-on-the-replica|replica threads]] are currently running, you first need to stop them by executing the [[stop-slave|STOP SLAVE]] statement. For example:
 
@@ -434,7 +435,7 @@ Then, execute the [[change-master-to|CHANGE MASTER]] statement to configure the 
 
 &lt;&lt;sql&gt;&gt;
 CHANGE MASTER TO
-   MASTER_SSL=1;
+   MASTER_SSL=1, MASTER_SSL_VERIFY_SERVER_CERT=0;
 &lt;&lt;/sql&gt;&gt;
 
 At this point, you can start replication by executing the [[start-slave|START SLAVE]] statement. For example:

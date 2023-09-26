@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/docker-official-image-frequently-asked-questions/+r/130671/">130671</a></dd>
+            <dd><a href="/kb/en/docker-official-image-frequently-asked-questions/+r/130732/">130732</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-13052">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-09-23 15:01">2023-09-23 15:01</span></dd>
+<span class="datetime" title="2023-09-26 00:00">2023-09-26 00:00</span></dd>
         </dl>
     </div>
     
@@ -346,7 +346,38 @@ Then:
 $ docker run --rm -v /my/own/datadir:/var/lib/mysql -v /my/own/passwordreset.sql:/passwordreset.sql:z %%IMAGE%%:latest --init-file=/passwordreset.sql
 &lt;&lt;/code&gt;&gt;
 
-On restarting the MariaDB container in this `/my/own/datadir`, the `root` and `myuser` passwords will be reset.</textarea>
+On restarting the MariaDB container in this `/my/own/datadir`, the `root` and `myuser` passwords will be reset.
+
+== Temp server start timeout
+
+Question, are you getting errors like the following where a tempory server start fails to succeed in 30 seconds?
+
+Example of log:
+&lt;&lt;code&gt;&gt;
+2023-01-28 12:53:42+00:00 [Note] [Entrypoint]: Starting temporary server
+2023-01-28 12:53:42+00:00 [Note] [Entrypoint]: Waiting for server startup
+2023-01-28 12:53:42 0 [Note] mariadbd (server 10.10.2-MariaDB-1:10.10.2+maria~ubu2204) starting as process 72 ...
+....
+2023-01-28 12:53:42 0 [Note] InnoDB: Setting file &#39;./ibtmp1&#39; size to 12.000MiB. Physically writing the file full; Please wait ...
+2023-01-28 12:54:13 0 [Note] mariadbd: ready for connections.
+Version: &#39;10.10.2-MariaDB-1:10.10.2+maria~ubu2204&#39;  socket: &#39;/run/mysqld/mysqld.sock&#39;  port: 0  mariadb.org binary distribution
+2023-01-28 12:54:13+00:00 [ERROR] [Entrypoint]: Unable to start server.
+&lt;&lt;/code&gt;&gt;
+
+The timeout on a temporary server start is a quite generous 30 seconds.
+
+The lack of a message like the following indicates it failed to complete writing a temporary file of 12MiB in 30 seconds. 
+&lt;&lt;code&gt;&gt;
+2023-01-28 12:53:46 0 [Note] InnoDB: File &#39;./ibtmp1&#39; size is now 12.000MiB.
+&lt;&lt;/code&gt;&gt;
+
+If the datadir where this is stored is remote storage maybe its a bit slow. Its ideal to have an InnoDB temporary path local so this can be configured using the argument or configuration setting:
+
+&lt;&lt;code&gt;&gt;
+innodb_temp_data_file_path=/dev/shm/ibtmp1:12M:autoextend
+&lt;&lt;/code&gt;&gt;
+
+Note depending on container runtime this space may be limited.</textarea>
     
 
 

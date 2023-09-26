@@ -255,12 +255,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-09-21 23:24">3 days, 16 hours ago</span></dd>
+<span class="datetime" title="2023-09-21 23:24">4 days, 16 hours ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-23 15:01">2 days, 1 hour ago</span></dd>
+<span class="datetime" title="2023-09-26 00:00">16 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -412,6 +412,23 @@ GRANT ALL ON databasename.* TO myuser@'%';
 <p>Then:</p>
 <pre class="fixed">$ docker run --rm -v /my/own/datadir:/var/lib/mysql -v /my/own/passwordreset.sql:/passwordreset.sql:z %%IMAGE%%:latest --init-file=/passwordreset.sql
 </pre><p>On restarting the MariaDB container in this `/my/own/datadir`, the `root` and `myuser` passwords will be reset.</p>
+<h2 class="anchored_heading" id="temp-server-start-timeout">Temp server start timeout</h2>
+<p>Question, are you getting errors like the following where a tempory server start fails to succeed in 30 seconds?</p>
+<p>Example of log:</p>
+<pre class="fixed">2023-01-28 12:53:42+00:00 [Note] [Entrypoint]: Starting temporary server
+2023-01-28 12:53:42+00:00 [Note] [Entrypoint]: Waiting for server startup
+2023-01-28 12:53:42 0 [Note] mariadbd (server 10.10.2-MariaDB-1:10.10.2+maria~ubu2204) starting as process 72 ...
+....
+2023-01-28 12:53:42 0 [Note] InnoDB: Setting file './ibtmp1' size to 12.000MiB. Physically writing the file full; Please wait ...
+2023-01-28 12:54:13 0 [Note] mariadbd: ready for connections.
+Version: '10.10.2-MariaDB-1:10.10.2+maria~ubu2204'  socket: '/run/mysqld/mysqld.sock'  port: 0  mariadb.org binary distribution
+2023-01-28 12:54:13+00:00 [ERROR] [Entrypoint]: Unable to start server.
+</pre><p>The timeout on a temporary server start is a quite generous 30 seconds.</p>
+<p>The lack of a message like the following indicates it failed to complete writing a temporary file of 12MiB in 30 seconds. </p>
+<pre class="fixed">2023-01-28 12:53:46 0 [Note] InnoDB: File './ibtmp1' size is now 12.000MiB.
+</pre><p>If the datadir where this is stored is remote storage maybe its a bit slow. Its ideal to have an InnoDB temporary path local so this can be configured using the argument or configuration setting:</p>
+<pre class="fixed">innodb_temp_data_file_path=/dev/shm/ibtmp1:12M:autoextend
+</pre><p>Note depending on container runtime this space may be limited.</p>
 
     </div>
 

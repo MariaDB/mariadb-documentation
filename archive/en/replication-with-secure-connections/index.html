@@ -260,7 +260,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-25 13:44">2 hours, 37 minutes ago</span></dd>
+<span class="datetime" title="2023-09-25 21:43">18 hours, 17 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -472,10 +472,10 @@ ssl_ca = /etc/my.cnf.d/certificates/ca.pem
 </pre><p>The replica now uses TLS to encrypt data in transit as it replicates it from the primary. </p>
 <h4 class="anchored_heading" id="enabling-one-way-tls-with-change-master">Enabling One-Way TLS with CHANGE MASTER</h4>
 <h5 class="anchored_heading" id="enabling-one-way-tls-with-change-master-with-server-certificate-verification">Enabling One-Way TLS with CHANGE MASTER with Server Certificate Verification</h5>
-<p>One-way TLS means that only the server provides a private key and an X509 certificate. When TLS is used without a client certificate, it is called "one-way" TLS, because only the server can be authenticated, so authentication is only possible in one direction. However, encryption is still possible in both directions. <a href="/kb/en/secure-connections-overview/#server-certificate-verification">Server certificate verification</a> means that the client verifies that the certificate belongs to the server. In this case, the "client" is the replica. To configure one-way TLS, you would need to set the following options:</p>
+<p>One-way TLS means that only the server provides a private key and an X509 certificate. When TLS is used without a client certificate, it is called "one-way" TLS, because only the server can be authenticated, so authentication is only possible in one direction. However, encryption is still possible in both directions. <a href="/kb/en/secure-connections-overview/#server-certificate-verification">Server certificate verification</a> means that the client verifies that the certificate belongs to the server. In this case, the "client" is the replica. This mode is enabled by default starting from  <a href="/kb/en/what-is-mariadb-113/">MariaDB 11.3</a>. To configure one-way TLS in earlier versions, you would need to set the following options:</p>
 <ul start="1"><li>You need to set the path to the certificate authority (CA) chain that can verify the server's certificate by setting either the <a href="/kb/en/change-master-to/#master_ssl_ca">MASTER_SSL_CA</a> or the <a href="/kb/en/change-master-to/#master_ssl_capath">MASTER_SSL_CAPATH</a> options.
-</li><li>If you want <a href="/kb/en/secure-connections-overview/#server-certificate-verification">server certificate verification</a>, then you also need to set the <a href="/kb/en/change-master-to/#master_ssl_verify_server_cert">MASTER_SSL_VERIFY_SERVER_CERT</a> option.
-</li><li>If you want to restrict the server to certain ciphers, then you also need to set the <a href="/kb/en/change-master-to/#master_ssl_cipher">MASTER_SSL_CIPHER</a> option (enabled by default from <a href="/kb/en/what-is-mariadb-113/">MariaDB 11.3</a>).
+</li><li>You need to set the <a href="/kb/en/change-master-to/#master_ssl_verify_server_cert">MASTER_SSL_VERIFY_SERVER_CERT</a> option.
+</li><li>If you want to restrict the server to certain ciphers, then you also need to set the <a href="/kb/en/change-master-to/#master_ssl_cipher">MASTER_SSL_CIPHER</a> option.
 </li></ul>
 <p>If the <a href="/kb/en/replication-threads/#threads-on-the-replica">replica threads</a> are currently running, you first need to stop them by executing the <a href="/kb/en/stop-slave/">STOP SLAVE</a> statement. For example:</p>
 <pre class="fixed"><span class="n">STOP</span> <span class="n">SLAVE</span><span class="p">;</span>
@@ -490,12 +490,13 @@ ssl_ca = /etc/my.cnf.d/certificates/ca.pem
 <p>One-way TLS means that only the server provides a private key and an X509 certificate. When TLS is used without a client certificate, it is called "one-way" TLS, because only the server can be authenticated, so authentication is only possible in one direction. However, encryption is still possible in both directions. In this case, the "client" is the replica. To configure two-way TLS without server certificate verification, you would need to set the following options:</p>
 <ul start="1"><li>You need to configure the replica to use TLS by setting the <a href="/kb/en/change-master-to/#master_ssl">MASTER_SSL</a> option.
 </li><li>If you want to restrict the server to certain ciphers, then you also need to set the <a href="/kb/en/change-master-to/#master_ssl_cipher">MASTER_SSL_CIPHER</a> option.
+</li><li>Starting from <a href="/kb/en/what-is-mariadb-113/">MariaDB 11.3</a> you need to disable the <a href="/kb/en/change-master-to/#master_ssl_verify_server_cert">MASTER_SSL_VERIFY_SERVER_CERT</a> option.
 </li></ul>
 <p>If the <a href="/kb/en/replication-threads/#threads-on-the-replica">replica threads</a> are currently running, you first need to stop them by executing the <a href="/kb/en/stop-slave/">STOP SLAVE</a> statement. For example:</p>
 <pre class="fixed"><span class="n">STOP</span> <span class="n">SLAVE</span><span class="p">;</span>
 </pre><p>Then, execute the <a href="/kb/en/change-master-to/">CHANGE MASTER</a> statement to configure the replica to use TLS. For example:</p>
 <pre class="fixed"><span class="n">CHANGE</span> <span class="n">MASTER</span> <span class="k">TO</span>
-   <span class="n">MASTER_SSL</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+   <span class="n">MASTER_SSL</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">MASTER_SSL_VERIFY_SERVER_CERT</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
 </pre><p>At this point, you can start replication by executing the <a href="/kb/en/start-slave/">START SLAVE</a> statement. For example:</p>
 <pre class="fixed"><span class="k">START</span> <span class="n">SLAVE</span><span class="p">;</span>
 </pre><p>The replica now uses TLS to encrypt data in transit as it replicates it from the primary. </p>
