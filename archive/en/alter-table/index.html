@@ -260,7 +260,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-27 20:41">4 days, 19 hours ago</span></dd>
+<span class="datetime" title="2023-10-04 08:23">7 hours, 37 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -666,7 +666,16 @@
             <li class=""><a href="#algorithminstant" title="ALGORITHM=INSTANT">ALGORITHM=INSTANT</a>        </ol>
 </li>
 
-        <li class=""><a href="#lock" title="LOCK">LOCK</a>    </ol>
+        <li class=""><a href="#lock" title="LOCK">LOCK</a>        <ol class="toc">
+
+            <li class=""><a href="#default" title="DEFAULT">DEFAULT</a></li>
+
+            <li class=""><a href="#none" title="NONE">NONE</a></li>
+
+            <li class=""><a href="#shared" title="SHARED">SHARED</a></li>
+
+            <li class=""><a href="#exclusive" title="EXCLUSIVE">EXCLUSIVE</a>        </ol>
+    </ol>
 </li>
 
     <li class=""><a href="#progress-reporting" title="Progress Reporting">Progress Reporting</a></li>
@@ -962,6 +971,7 @@ DROP CONSTRAINT constraint_name;
 <span class="k">RENAME</span> <span class="k">TABLE</span> <span class="n">tmp_tab</span> <span class="k">TO</span> <span class="n">original_tab</span><span class="p">;</span>
 </pre><p>This algorithm is very inefficient, but it is generic, so it works for all storage engines.</p>
 <p>If <code>ALGORITHM=COPY</code> is specified, then the copy algorithm will be used even if it is not necessary. This can result in a lengthy table copy. If multiple <a href="/kb/en/alter-table/">ALTER TABLE</a> operations are required that each require the table to be rebuilt, then it is best to specify all operations in a single <a href="/kb/en/alter-table/">ALTER TABLE</a> statement, so that the table is only rebuilt once.</p>
+<p>From <a href="/kb/en/what-is-mariadb-112/">MariaDB 11.2</a>, ALTER TABLE can now do most operations with ALGORITHM=COPY, LOCK=NONE. See <a href="#none">LOCK=NONE</a>.</p>
 <h4 class="anchored_heading" id="algorithminplace">ALGORITHM=INPLACE</h4>
 <p><code>ALGORITHM=COPY</code> can be incredibly slow, because the whole table has to be copied and rebuilt. <code>ALGORITHM=INPLACE</code> was introduced as a way to avoid this by performing operations in-place and avoiding the table copy and rebuild, when possible.</p>
 <p>When <code>ALGORITHM=INPLACE</code> is set, the underlying storage engine uses optimizations to perform the operation while avoiding the table copy and rebuild. However, <code>INPLACE</code> is a bit of a misnomer, since some operations may still require the table to be rebuilt for some storage engines. Regardless, several operations can be performed without a full copy of the table for some storage engines.</p>
@@ -982,11 +992,14 @@ DROP CONSTRAINT constraint_name;
 <p>See <a href="/kb/en/innodb-online-ddl-operations-with-algorithminstant/">InnoDB Online DDL Operations with ALGORITHM=INSTANT</a> for more.</p>
 <h3 class="anchored_heading" id="lock">LOCK</h3>
 <p>The <code>ALTER TABLE</code> statement supports the <code>LOCK</code> clause. This clause is one of the clauses that is used to implement online DDL. <code>ALTER TABLE</code> supports several different locking strategies. A locking strategy can be explicitly chosen for an <code>ALTER TABLE</code> operation by setting the <code>LOCK</code> clause. The supported values are:</p>
-<ul start="1"><li><code>DEFAULT</code>: Acquire the least restrictive lock on the table that is supported for the specific operation. Permit the maximum amount of concurrency that is supported for the specific operation.
-</li><li><code>NONE</code>: Acquire no lock on the table. Permit <strong>all</strong> concurrent DML. If this locking strategy is not permitted for an operation, then an error is raised. From <a href="/kb/en/what-is-mariadb-112/">MariaDB 11.2</a>, <code>ALTER TABLE</code> can do most operations with <code>ALGORITHM=COPY, LOCK=NONE</code>, that is, in most cases, unless the algorithm and lock level are explicitly specified, <code>ALTER TABLE</code> will be performed using the <code>COPY</code> algorithm while simultaneously allowing concurrent DML statements on the altered table.
-</li><li><code>SHARED</code>: Acquire a read lock on the table. Permit <strong>read-only</strong> concurrent DML. If this locking strategy is not permitted for an operation, then an error is raised.
-</li><li><code>EXCLUSIVE</code>: Acquire a write lock on the table. Do <strong>not</strong> permit concurrent DML.
-</li></ul>
+<h4 class="anchored_heading" id="default">DEFAULT</h4>
+<p>Acquire the least restrictive lock on the table that is supported for the specific operation. Permit the maximum amount of concurrency that is supported for the specific operation.</p>
+<h4 class="anchored_heading" id="none">NONE</h4>
+<p>Acquire no lock on the table. Permit <strong>all</strong> concurrent DML. If this locking strategy is not permitted for an operation, then an error is raised. From <a href="/kb/en/what-is-mariadb-112/">MariaDB 11.2</a>, <code>ALTER TABLE</code> can do most operations with <code>ALGORITHM=COPY, LOCK=NONE</code>, that is, in most cases, unless the algorithm and lock level are explicitly specified, <code>ALTER TABLE</code> will be performed using the <code>COPY</code> algorithm while simultaneously allowing concurrent DML statements on the altered table. If this is not desired, one can explicitly specify a different lock level or set old_mode to <a href="/kb/en/old-mode/#lock_alter_table_copy">LOCK_ALTER_TABLE_COPY</a> that will make <code>ALGORITHM=COPY</code> use  <code>LOCK=SHARED</code> by default (but still allowing <code>LOCK=NONE</code> to be specified explicitly).</p>
+<h4 class="anchored_heading" id="shared">SHARED</h4>
+<p>Acquire a read lock on the table. Permit <strong>read-only</strong> concurrent DML. If this locking strategy is not permitted for an operation, then an error is raised.</p>
+<h4 class="anchored_heading" id="exclusive">EXCLUSIVE</h4>
+<p>Acquire a write lock on the table. Do <strong>not</strong> permit concurrent DML.</p>
 <p>Different storage engines support different locking strategies for different operations. If a specific locking strategy is chosen for an <code>ALTER TABLE</code> operation, and that table's storage engine does not support that locking strategy for that specific operation, then an error will be raised.</p>
 <p>If the <code>LOCK</code> clause is not explicitly set, then the operation uses <code>LOCK=DEFAULT</code>.</p>
 <p><a href="alter-online-table">ALTER ONLINE TABLE</a> is equivalent to <code>LOCK=NONE</code>. Therefore, the <a href="alter-online-table">ALTER ONLINE TABLE</a> statement can be used to ensure that your <code>ALTER TABLE</code> operation allows all concurrent DML.</p>

@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/alter-table/+r/130763/">130763</a></dd>
+            <dd><a href="/kb/en/alter-table/+r/130815/">130815</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-09-27 20:41">2023-09-27 20:41</span></dd>
+<span class="datetime" title="2023-10-04 08:23">2023-10-04 08:23</span></dd>
         </dl>
     </div>
     
@@ -915,6 +915,8 @@ This algorithm is very inefficient, but it is generic, so it works for all stora
 
 If ##ALGORITHM=COPY## is specified, then the copy algorithm will be used even if it is not necessary. This can result in a lengthy table copy. If multiple [[alter-table|ALTER TABLE]] operations are required that each require the table to be rebuilt, then it is best to specify all operations in a single [[alter-table|ALTER TABLE]] statement, so that the table is only rebuilt once.
 
+From MariaDB 11.2, ALTER TABLE can now do most operations with ALGORITHM=COPY, LOCK=NONE. See [[#none|LOCK=NONE]].
+
 ==== ALGORITHM=INPLACE
 
 ##ALGORITHM=COPY## can be incredibly slow, because the whole table has to be copied and rebuilt. ##ALGORITHM=INPLACE## was introduced as a way to avoid this by performing operations in-place and avoiding the table copy and rebuild, when possible.
@@ -955,10 +957,17 @@ See [[innodb-online-ddl-operations-with-algorithminstant|InnoDB Online DDL Opera
 
 The ##ALTER TABLE## statement supports the ##LOCK## clause. This clause is one of the clauses that is used to implement online DDL. ##ALTER TABLE## supports several different locking strategies. A locking strategy can be explicitly chosen for an ##ALTER TABLE## operation by setting the ##LOCK## clause. The supported values are:
 
-* ##DEFAULT##: Acquire the least restrictive lock on the table that is supported for the specific operation. Permit the maximum amount of concurrency that is supported for the specific operation.
-* ##NONE##: Acquire no lock on the table. Permit **all** concurrent DML. If this locking strategy is not permitted for an operation, then an error is raised. From MariaDB 11.2, ##ALTER TABLE## can do most operations with ##ALGORITHM=COPY, LOCK=NONE##, that is, in most cases, unless the algorithm and lock level are explicitly specified, ##ALTER TABLE## will be performed using the ##COPY## algorithm while simultaneously allowing concurrent DML statements on the altered table.
-* ##SHARED##: Acquire a read lock on the table. Permit **read-only** concurrent DML. If this locking strategy is not permitted for an operation, then an error is raised.
-* ##EXCLUSIVE##: Acquire a write lock on the table. Do **not** permit concurrent DML.
+====DEFAULT
+Acquire the least restrictive lock on the table that is supported for the specific operation. Permit the maximum amount of concurrency that is supported for the specific operation.
+
+====NONE
+Acquire no lock on the table. Permit **all** concurrent DML. If this locking strategy is not permitted for an operation, then an error is raised. From MariaDB 11.2, ##ALTER TABLE## can do most operations with ##ALGORITHM=COPY, LOCK=NONE##, that is, in most cases, unless the algorithm and lock level are explicitly specified, ##ALTER TABLE## will be performed using the ##COPY## algorithm while simultaneously allowing concurrent DML statements on the altered table. If this is not desired, one can explicitly specify a different lock level or set old_mode to [[old-mode/#lock_alter_table_copy|LOCK_ALTER_TABLE_COPY]] that will make ##ALGORITHM=COPY## use  ##LOCK=SHARED## by default (but still allowing ##LOCK=NONE## to be specified explicitly).
+
+====SHARED
+Acquire a read lock on the table. Permit **read-only** concurrent DML. If this locking strategy is not permitted for an operation, then an error is raised.
+
+====EXCLUSIVE
+Acquire a write lock on the table. Do **not** permit concurrent DML.
 
 Different storage engines support different locking strategies for different operations. If a specific locking strategy is chosen for an ##ALTER TABLE## operation, and that table&#39;s storage engine does not support that locking strategy for that specific operation, then an error will be raised.
 
