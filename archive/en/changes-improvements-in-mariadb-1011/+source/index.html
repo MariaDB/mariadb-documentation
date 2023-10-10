@@ -280,7 +280,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/changes-improvements-in-mariadb-1011/+r/130207/">130207</a></dd>
+            <dd><a href="/kb/en/changes-improvements-in-mariadb-1011/+r/130857/">130857</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -289,7 +289,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-09-10 15:36">2023-09-10 15:36</span></dd>
+<span class="datetime" title="2023-10-07 15:22">2023-10-07 15:22</span></dd>
         </dl>
     </div>
     
@@ -308,16 +308,56 @@ MariaDB 10.11 is the current long-term maintenance release series, [[https://mar
 == Upgrading
 * See [[upgrading-between-major-mariadb-versions|Upgrading Between Major MariaDB Versions]] and [[upgrading-from-mariadb-10-6-to-mariadb-10-11|Upgrading from MariaDB 10.6 to MariaDB 10.11]].
 
-
 == New Features &amp; Improvements
+
+This list includes features from the short-term releases MariaDB 10.7, MariaDB 10.8, MariaDB 10.9 and MariaDB 10.10.
 
 === Authentication
 * [[grant/#to-public|GRANT to PUBLIC]] (MDEV-5215) ([[https://mariadb.org/grant-to-public-in-mariadb/|blog post]])
 * Separate [[grant/#super|SUPER]] and [[grant/#read_only-admin|READ ONLY ADMIN]] privileges (MDEV-29596)
 * [[server-system-variables/#bind_address|bind_address]] now accepts a comma-separated list of addresses to bind to (MDEV-24377)
+* password_reuse_check plugin is a new password validation plugin that prevents the new password from being the same as the one being used during the configurable retention period. (MDEV-9245, MariaDB 10.7)
 
 === Optimizer
 * Make [[analyze-format-json|ANALYZE FORMAT=JSON]] show time spent in the query optimizer (MDEV-28926)
+* Improve optimization of joins with many tables, including eq_ref tables (MDEV-28852, MariaDB 10.10)
+* Table elimination does not work across derived tables (MDEV-26278, MariaDB 10.10)
+* Histograms in the statistics tables are more precise and stored as JSON, not binary (MDEV-21130, MDEV-26519, [[https://mariadb.org/10-7-preview-feature-json-histograms/|blog post]], MariaDB 10.8).
+* Improve simple multibyte collation performance on the ASCII range (MDEV-26572, MariaDB 10.7).
+
+==== Descending Indexes
+* Individual columns in the [[optimization-and-indexes|index]] can now be explicitly sorted in the ascending or descending order. This can be useful for optimizing certain [[order-by|ORDER BY]] cases (MDEV-13756, MDEV-26938, MDEV-26939,  MDEV-26996, MariaDB 10.8).
+
+===Replication
+* Change defaults for CHANGE MASTER TO so that GTID-based replication is used by default if master supports it (MDEV-19801, MariaDB 10.10)
+* Added [[replication-and-binary-log-system-variables/#slave_max_statement_time|global.slave_max_statement_time]] system variable for SQL thread to limit maximum execution time per query replicated (MDEV-27161, MariaDB 10.10)
+* Deprecate [[change-master-to/#master_use_gtid|MASTER_USE_GTID=Current_Pos]] to favor new [[change-master-to/#master_demote_to_slave|MASTER_DEMOTE_TO_SLAVE]] option (MDEV-20122, MariaDB 10.10)
+* Implement the --do-domain-ids, --ignore-domain-ids, and --ignore-server-ids options for [[mysqlbinlog|mariadb-binlog]] (MDEV-20119, MariaDB 10.9)
+* Semisync-slave server recovery is extended to work on new server_id server (MDEV-27342, MariaDB 10.9)
+* [[mariadb-binlog-options|mariadb-binlog --stop-never --raw]] now flushes the result file to disk after each processed event so the file can be listed with the actual bytes (MDEV-14608, MariaDB 10.9)
+* Normally, [[alter-table|ALTER TABLE]] gets fully executed on the primary first and only then it is [[standard-replication|replicated]] and starts executing on replicas. With this feature ##ALTER TABLE## gets replicated and starts executing on replicas when it //starts// executing on the primary, not when it //finishes//. This way the replication lag caused by a heavy ##ALTER TABLE## can be completely eliminated (MDEV-11675, MariaDB 10.8).
+* Multi-source replication supports MySQL-style CHANNEL syntax (MDEV-26307, MariaDB 10.7)
+
+==== mysqlbinlog GTID support
+* [[mariadb-binlog]] (or ##mysqlbinlog## as it was called back when the task was created) now supports both filtering events by GTID ranges through ##--start-position## and ##--stop-position,## and validating a binary log&#39;s ordering of GTIDs through ##--gtid-strict-mode## (MDEV-4989, MariaDB 10.8). 
+
+===Galera
+* Implement a method to add IPs to allowlist for Galera Cluster node addresses that can make SST/IST requests (MDEV-27246, MariaDB 10.10)
+* JSON file interface to wsrep node state / SST progress logging (MDEV-26971, MariaDB 10.9)
+
+===JSON
+* [[json_overlaps|JSON_OVERLAPS]] function (MDEV-27677, MariaDB 10.9)
+* Implement range notation for [[JSONPath Expressions|JSONPath]] (MDEV-27911, MariaDB 10.9)
+* Support [[JSONPath Expressions|JSONPath]] negative index (MDEV-22224, MariaDB 10.9)
+* [[json_equals|JSON_EQUALS]] function to check for equality between JSON objects (MDEV-23143, MariaDB 10.7).
+* [[json_normalize|JSON_NORMALIZE]] function, which recursively sorts keys and removes spaces (MDEV-16375, MariaDB 10.7)
+
+=== UUID
+* New [[uuid-data-type/|UUID data type]] (MDEV-4958, MariaDB 10.7)
+
+===SHOW ANALYZE FORMAT=JSON
+* Extend [[show-explain|SHOW EXPLAIN]] to support SHOW ANALYZE [FORMAT=JSON] (MDEV-27021, MariaDB 10.9)
+* Add EXPLAIN FOR CONNECTION syntax support to [[show-explain|SHOW EXPLAIN]] (MDEV-10000, MariaDB 10.9)
 
 === Information Schema
 * Performance Issues reading the [[information-schema-parameters-table|Information Schema Parameters table]] (MDEV-29104)
@@ -326,25 +366,81 @@ MariaDB 10.11 is the current long-term maintenance release series, [[https://mar
 === System versioning
 * [[system-versioned-tables|System versioning]] setting, [[system-versioned-tables/#system_versioning_insert_history|system_versioning_insert_history]], to allow history modification (MDEV-16546)
 * [[mariadb-dumpmysqldump|mariadb-dump]]: dump and restore historical data (MDEV-16029)
+* Add option to [[mariadb-ldump|dump]] [[system-versioned-tables|system versioned table]] as of specified timestamp (MDEV-16355, MariaDB 10.7).
 
 === InnoDB
-* [[innodb-system-variables/#innodb_write_io_threads|innodb_write_io_threads]] and [[innodb-system-variables/#innodb_read_io_threads|innodb_read_io_threads]] are now dynamic, and their values can be changed without restarting the server (MDEV-11026) 
+* InnoDB performance improvements (MDEV-27557, MDEV-28185, MDEV-27767, MDEV-28313, MDEV-28137, MDEV-28465, MDEV-26789, MariaDB 10.9)
+* In bulk insert, pre-sort and build indexes one page at a time (MDEV-24621, MariaDB 10.7)
+
+==== InnoDB Redo Log Improvements
+* autosize [[innodb-system-variables/#innodb_buffer_pool_chunk_size|innodb_buffer_pool_chunk_size]] (MDEV-25342).
+* Improve the [[innodb-redo-log|redo log]] for concurrency (MDEV-14425).
+*Remove FIL_PAGE_FILE_FLUSH_LSN (MDEV-27199).
+
+===UCA14 Collation
+* Add UCA-14.0.0 [[character-sets|collations]] (MDEV-27009, MariaDB 10.10)
+* Improve contraction performance in UCA collations (MDEV-27265, MariaDB 10.10)
+* Improve UCA collation performance for utf8mb3 and utf8mb4 (MDEV-27266, MariaDB 10.10)
 
 === Windows
 * [[authentication-plugin-gssapi/|Passwordless login]] for mariadb root user, for OS admin users (MDEV-26715)
+* On newer versions of Windows (Windows 10 1903 or later), the ##mariadb## client defaults to the utf8mb4 character set. Several problems with Unicode input and output in client were fixed. Command line utilities now accept all Unicode characters in user names, database names, file names etc (in the past, characters were restricted to the current ANSI codepage) (MariaDB 10.8). 
 
-=== General
+=== Spider Storage Engine
+* This was mostly internal refactoring work. As a result one can now declare [[spider|Spider]] connections using the ##REMOTE_SERVER##, ##REMOTE_DATABASE##, and ##REMOTE_TABLE## attributes and not abuse the ##COMMENT## field for that. This works both for the whole table and per partition (MDEV-5271, MDEV-27106, MariaDB 10.8).
+
+=== Convert Partitions
+* ALTER TABLE ... CONVERT PARTITION .. TO TABLE  (MDEV-22166, MariaDB 10.7), and
+* ALTER TABLE ... CONVERT TABLE ... TO PARTITION ...  (MDEV-22165) as an easy way to convert tables to partitions and back in one command, instead of a sequence of CREATE/EXCHANGE/DROP (MariaDB 10.7)
+
+=== Miscellaneous
+* Add [[random_bytes|RANDOM_BYTES]] function (MDEV-25704, MariaDB 10.10)
+* The [[inet4|INET4]] data type (MDEV-23287, MariaDB 10.10)
+* Re-design the upper level of handling UPDATE and DELETE statements (MDEV-28883, MariaDB 10.10)
+* Deprecate the [[des_encrypt|DES_ENCRYPT]]/[[des_decrypt|DECRYPT]] functions (MDEV-27104, MariaDB 10.10)
+* [[hashicorp-key-management-plugin|Hashicorp Key Management Plugin]] for implementing [[encryption]] using keys stored in the Hashicorp Vault KMS (MDEV-19281, MariaDB 10.9)
+* Stored procedures already have support for the [[create-procedure/#inoutinout|IN, OUT and INOUT]] parameter qualifiers. Added as well for [[create-function/#in-out-inout-in-out|stored functions]] and (IN only) [[declare-cursor/#in|cursors]] (MDEV-10654). This was a [[https://github.com/MariaDB/server/pull/1931|contribution]] by [[https://github.com/ManoharKB|ManoharKB]] (MariaDB 10.8).
+* Add an optional argument to the [[crc32|CRC32()]] function, as well as the [[crc32c|CRC32C()]] function, which uses the Castagnoli polynomial. (MDEV-27208). **Note:** The order of the 2-ary arguments was swapped after the preview release: ##crc32(&#39;MariaDB&#39;)=crc32(crc32(&#39;Maria&#39;),&#39;DB&#39;)## (MariaDB 10.8)
+* [[my_print_defaults]] now handles ##--default-*## options in exactly the same way as other MariaDB tools (MDEV-26238, MariaDB 10.8).
+* UCA [[character-sets|collations]] are now notably faster (MDEV-27266, MDEV-27265, MariaDB 10.8).
+* [[natural_sort_key|NATURAL_SORT_KEY]] function (MDEV-4742, MariaDB 10.7).
+* Five **provider plugins** (bzip2, lzma, lz4, lzo, snappy) provide [[compression-plugins|compression capabilities]] to the server and storage engines (MDEV-12933, [[https://mariadb.org/10-7-preview-feature-provider-plugins|blog post]], MariaDB 10.7).
+* [[sformat|SFORMAT]] function for arbitrary text formatting (MDEV-25015, MariaDB 10.7)
+* [[get-diagnostics|GET DIAGNOSTICS]] supports a new condition property name ##ROW_NUMBER##. In multi-row inserts it allows one to retrieve a number of a row that has caused the error (MDEV-10075, MDEV-26611, MariaDB 10.7)
+
+=== Variables
+* For a list of all new variables, see [[system-variables-added-in-mariadb-1011|System Variables Added in MariaDB 10.11]].
 *  Rename [[slow-query-log|slow queries]] variables (MDEV-7567)
 **[[server-system-variables/#log_slow_min_examined_row_limit|log_slow_min_examined_row_limit]] (min_examined_row_limit)
 **[[server-system-variables/#log_slow_query|log_slow_query]] (slow_query_log)
 **[[server-system-variables/#log_slow_query_file|log_slow_query_file]] (slow_query_log_file). This was named [[server-system-variables/#log_slow_query_file|log_slow_query_file_name]] in the [[mdb-10-11-0-rn|MariaDB 10.11.0]] preview release.
 **[[server-system-variables/#log_slow_query_time|log_slow_query_time]]       (long_query_time)
-
 *  [[replication-and-binary-log-system-variables/#replicate_rewrite_db|replicate_rewrite_db]] is now a system variable, no longer just an option (MDEV-15530)
+* Change default of [[server-system-variables/#explicit_defaults_for_timestamp|explicit_defaults_for_timestamp]] to ON (MDEV-28632, MariaDB 10.10)
+* --ssl option set as default for mariadb CLI (MDEV-27105, MariaDB 10.10) 
+* Merge (and deprecate) [[server-system-variables/#old|old]] to [[server-system-variables/#old_mode|old_mode]] sql variable (MDEV-24920, MariaDB 10.9) 
+* Deprecate the [[server-system-variables/#keep_files_on_create|keep_files_on_create]] variable (MDEV-23570, MariaDB 10.8).
+* Deprecate [[galera-cluster-system-variables/#wsrep_replicate_myisam|wsrep_replicate_myisam]] (MDEV-24947, MariaDB 10.7)
+* Deprecate [[galera-cluster-system-variables/#wsrep_strict_ddl|wsrep_strict_ddl]] (MDEV-24843, MariaDB 10.7)
 
-=== Variables
-* For a list of all new variables, see [[system-variables-added-in-mariadb-1011|System Variables Added in MariaDB 10.11]].
+==== InnoDB Variables
+* [[innodb-system-variables/#innodb_write_io_threads|innodb_write_io_threads]] and [[innodb-system-variables/#innodb_read_io_threads|innodb_read_io_threads]] are now dynamic, and their values can be changed without restarting the server (MDEV-11026) 
+* Removed [[innodb-system-variables/#innodb_version|innodb_version]] (MDEV-28554, MariaDB 10.10)
+* Deprecated [[innodb-system-variables/#innodb_prefix_index_cluster_optimization|innodb_prefix_index_cluster_optimization]] (MariaDB 10.10)
+* Deprecated [[innodb-system-variables/#innodb_change_buffering|innodb_change_buffering]] (MariaDB 10.9)
+* [[innodb-system-variables/#innodb_disallow_writes|innodb_disallow_writes]] removed (MDEV-25975, MariaDB 10.9)
+* [[innodb-system-variables/#innodb_log_file_size|innodb_log_file_size]] is now dynamic (MDEV-27812, MariaDB 10.9)
 
+==== Spider Variables
+The following deprecated variables have been removed (MariaDB 10.10):
+* [[spider-server-system-variables/#spider_udf_ct_bulk_insert_interval|spider_udf_ct_bulk_insert_interval]]
+* [[spider-server-system-variables/#spider_udf_ct_bulk_insert_rows|spider_udf_ct_bulk_insert_rows]]
+* [[spider-server-system-variables/#spider_udf_ds_bulk_insert_rows|spider_udf_ds_bulk_insert_rows]]
+* [[spider-server-system-variables/#spider_udf_ds_table_loop_mode|spider_udf_ds_table_loop_mode]]
+* [[spider-server-system-variables/#spider_udf_ds_use_real_table|spider_udf_ds_use_real_table]]
+* [[spider-server-system-variables/#spider_udf_table_lock_mutex_count|spider_use_handle]]
+* [[spider-server-system-variables/#spider_udf_table_mon_mutex_count|spider_udf_table_mon_mutex_count]]
+* [[spider-server-system-variables/#spider_use_handler|spider_use_handler]]
 
 == Security Vulnerabilities Fixed in MariaDB 10.11
 &lt;&lt;style class=&#34;graybox&#34;&gt;&gt;
