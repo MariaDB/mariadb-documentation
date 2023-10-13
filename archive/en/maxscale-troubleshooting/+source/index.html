@@ -276,7 +276,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/maxscale-troubleshooting/+r/130412/">130412</a></dd>
+            <dd><a href="/kb/en/maxscale-troubleshooting/+r/130979/">130979</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3062">
@@ -285,7 +285,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-09-21 12:41">2023-09-21 12:41</span></dd>
+<span class="datetime" title="2023-10-13 07:56">2023-10-13 07:56</span></dd>
         </dl>
     </div>
     
@@ -326,6 +326,28 @@ If a problem in memory usage is identified and it appears to be due to a bug in 
 The easiest option is to install the MaxScale debug binaries which are built with [[https://github.com/google/sanitizers/wiki/AddressSanitizer|AddressSanitizer]] and [[https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer|LeakSanitizer]] enabled. These are low-impact instrumentation tools that detect memory access errors as well as memory leaks.
 
 Once installed, make sure that the {{{maxlog}}} parameter is not disabled and then start MaxScale. Let it run until the memory usage grows beyond normal limits and then shut MaxScale down with {{{systemctl stop maxscale.service}}}. The MaxScale log should contain a verbose explanation of where memory leaks occurred, if any were found.
+
+=== BPF Compiler Collection (bcc)
+
+The bcc toolkit comes with the {{{memleak}}} program that traces outstanding memory allocations. This is a very convenient way of debugging high memory usage as it&#39;ll immediately show where the memory is allocated at.
+
+The tool will print output once every five seconds with the stacktraces that have the most open allocations. To help analyze excessive memory usage, collect the output of the {{{memleak}}} program for at least 60 seconds. Use {{{Ctrl+C}}} to interrupt the collection of the traces.
+
+==== RHEL, CentOS, Rocky Linux and Fedora
+
+On RHEL based systems, the package is named {{{bcc-tools}}}. After installing it, use the following command to profile the memory usage:
+
+&lt;&lt;code&gt;&gt;
+sudo /usr/share/bcc/tools/memleak -p $(pidof maxscale) | tee memleak.log
+&lt;&lt;/code&gt;&gt;
+
+==== Ubuntu and Debian
+
+On Ubuntu/Debian the package is named {{{bpfcc-tools}}}. After installing it, use the following command to profile the memory usage:
+
+&lt;&lt;code&gt;&gt;
+sudo memleak-bpfcc -p $(pidof maxscale) | tee memleak.log
+&lt;&lt;/code&gt;&gt;
 
 === Jemalloc Heap Profiling
 

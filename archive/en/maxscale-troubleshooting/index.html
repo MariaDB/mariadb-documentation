@@ -240,7 +240,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-21 12:41">2 weeks, 4 days ago</span></dd>
+<span class="datetime" title="2023-10-13 07:56">8 hours, 4 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -428,6 +428,13 @@
 
         <li class="maxscale_from_22_08_4"><a href="#debug-binaries" title="Debug Binaries">Debug Binaries</a></li>
 
+        <li class="maxscale_from_22_08_4"><a href="#bpf-compiler-collection-bcc" title="BPF Compiler Collection (bcc)">BPF Compiler Collection (bcc)</a>        <ol class="toc">
+
+            <li class="maxscale_from_22_08_4"><a href="#rhel-centos-rocky-linux-and-fedora" title="RHEL, CentOS, Rocky Linux and Fedora">RHEL, CentOS, Rocky Linux and Fedora</a></li>
+
+            <li class="maxscale_from_22_08_4"><a href="#ubuntu-and-debian" title="Ubuntu and Debian">Ubuntu and Debian</a>        </ol>
+</li>
+
         <li class="maxscale_from_22_08_4"><a href="#jemalloc-heap-profiling" title="Jemalloc Heap Profiling">Jemalloc Heap Profiling</a>        <ol class="toc">
 
             <li class="maxscale_from_22_08_4"><a href="#ubuntu-and-debian" title="Ubuntu and Debian">Ubuntu and Debian</a></li>
@@ -521,7 +528,16 @@
 <h3 class="anchored_heading" id="debug-binaries">Debug Binaries</h3>
 <p>The easiest option is to install the MaxScale debug binaries which are built with <a href="https://github.com/google/sanitizers/wiki/AddressSanitizer">AddressSanitizer</a> and <a href="https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer">LeakSanitizer</a> enabled. These are low-impact instrumentation tools that detect memory access errors as well as memory leaks.</p>
 <p>Once installed, make sure that the <code>maxlog</code> parameter is not disabled and then start MaxScale. Let it run until the memory usage grows beyond normal limits and then shut MaxScale down with <code>systemctl stop maxscale.service</code>. The MaxScale log should contain a verbose explanation of where memory leaks occurred, if any were found.</p>
-<h3 class="anchored_heading" id="jemalloc-heap-profiling">Jemalloc Heap Profiling</h3>
+<h3 class="anchored_heading" id="bpf-compiler-collection-bcc">BPF Compiler Collection (bcc)</h3>
+<p>The bcc toolkit comes with the <code>memleak</code> program that traces outstanding memory allocations. This is a very convenient way of debugging high memory usage as it'll immediately show where the memory is allocated at.</p>
+<p>The tool will print output once every five seconds with the stacktraces that have the most open allocations. To help analyze excessive memory usage, collect the output of the <code>memleak</code> program for at least 60 seconds. Use <code>Ctrl+C</code> to interrupt the collection of the traces.</p>
+<h4 class="anchored_heading" id="rhel-centos-rocky-linux-and-fedora">RHEL, CentOS, Rocky Linux and Fedora</h4>
+<p>On RHEL based systems, the package is named <code>bcc-tools</code>. After installing it, use the following command to profile the memory usage:</p>
+<pre class="fixed">sudo /usr/share/bcc/tools/memleak -p $(pidof maxscale) | tee memleak.log
+</pre><h4 class="anchored_heading" id="ubuntu-and-debian">Ubuntu and Debian</h4>
+<p>On Ubuntu/Debian the package is named <code>bpfcc-tools</code>. After installing it, use the following command to profile the memory usage:</p>
+<pre class="fixed">sudo memleak-bpfcc -p $(pidof maxscale) | tee memleak.log
+</pre><h3 class="anchored_heading" id="jemalloc-heap-profiling">Jemalloc Heap Profiling</h3>
 <p>Jemalloc is an alternative to the default glibc memory allocator. It is capable of analyzing the heap memory usage of a process which allows it to be used to detect all sorts of memory usage problems with a lower overhead compared to tools like Valgrind. Unlike the ASAN and LSAN sanitizers, it is capable of detecting cases where memory doesn't actually leak but keeps growing with no upper limit (e.g. items get appended to a list but are never removed).</p>
 <h4 class="anchored_heading" id="ubuntu-and-debian">Ubuntu and Debian</h4>
 <p>To enable jemalloc, the packages for it must be first installed from the system repositories. Ubuntu 20.04 requires the following packages to be installed for jemalloc profiling:</p>
