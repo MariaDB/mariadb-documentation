@@ -221,9 +221,433 @@ Comments - Migrating from &#39;innodb&#39; checksum to &#39;crc32&#39; checksum
                 </label>
             </div>
         </div>
+        <a name="comment_6415"></a>
+        <div class="comment approved" style="margin-left: 0px">
+            <div class="info">
+                
+
+<span class="datetime" title="2023-10-11 06:31">5 days, 15 hours ago</span>
+                
+<span class="user" id="user-4920">
+<a href="/kb/user/id/4920" title="Marko Mäkelä">Marko Mäkelä</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6415">Re: Migrating from &#39;innodb&#39; checksum to &#39;crc32&#39; checksum</a>
+                
+            </div><div class="comment_text">
+                <p>As you can read in <a href="https://jira.mariadb.org/browse/MDEV-25105">MDEV-25105</a>, no action is needed when you are migrating to the <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> default <code class="fixed" style="white-space:pre-wrap">innodb_checksum_algorithm=crc32</code> or the <a href="/kb/en/what-is-mariadb-105/">MariaDB 10.5</a> default (<a href="https://jira.mariadb.org/browse/MDEV-19534">MDEV-19534</a>) <code class="fixed" style="white-space:pre-wrap">innodb_checksum_algorithm=full_crc32</code> that was introduced in <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a>.</p>
+<p>The <code class="fixed" style="white-space:pre-wrap">full_crc32</code> checksum was introduced, because the old approach to checksums was insecure. In the old design, any page of a data file can use any of the previously supported checksum algorithms. The older checksums were extremely slow to compute and insecure; as a work-around someone got the idea to make it possible to disable page checksums. The <code class="fixed" style="white-space:pre-wrap">crc32</code> checksum is a little better if you ignore <a href="https://jira.mariadb.org/browse/MDEV-17958">MDEV-17958</a>, but it does not cover the entire data page and it is being computed as an insecure way (an exclusive OR of several CRC-32C checksums).</p>
+<p>Before <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a>, the most secure option was to set <code class="fixed" style="white-space:pre-wrap">innodb_checksum_algorithm=strict_crc32</code> so that only the <code class="fixed" style="white-space:pre-wrap">crc32</code> checksum is allowed on any data pages. A corrupted page could accidentally carry a checksum that is valid when using one of the other algorithms.</p>
+<p>The <code class="fixed" style="white-space:pre-wrap">full_crc32</code> checksum format is identified by a flag in the first page of the data file. If a file was created in this format, all its data pages must always use the same checksum, no matter what <code class="fixed" style="white-space:pre-wrap">innodb_checksum_algorithm</code> was later set to. Another guarantee is that all unused parts of data pages will be filled with NUL bytes.</p>
+<p>Data files that were created before MySQL 5.1.48 or <a href="/kb/en/mariadb-5148-release-notes/">MariaDB 5.1.48</a> could contain arbitrary garbage in unused parts of data pages. Even though we try to keep this in mind, sometimes bugs like <a href="https://jira.mariadb.org/browse/MDEV-27800">MDEV-27800</a> happen. The only way to convert files to the secure <code class="fixed" style="white-space:pre-wrap">innodb_checksum_algorithm=full_crc32</code> format is to rebuild the tables. I believe that the system tablespace can only be converted by dumping and reloading the entire database.</p>
+<p>It is not feasible to implement logic in a tool like <code class="fixed" style="white-space:pre-wrap">innochecksum</code> to try to determine which parts of each page might be unused and would need to be zeroed out, because this cannot always be determined by looking at an individual data page in isolation from others.</p>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6415/flag"
+                       data-flag-url="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6415/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <a name="comment_6422"></a>
+        <div class="comment approved" style="margin-left: 10px">
+            <div class="info">
+                
+
+<span class="datetime" title="2023-10-11 19:07">5 days, 3 hours ago</span>
+                
+<span class="user" id="user-14384">
+<a href="/kb/user/id/14384" title="Keshan Nageswaran">Keshan Nageswaran</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6422">Re: Migrating from &#39;innodb&#39; checksum to &#39;crc32&#39; checksum</a>
+                
+            </div><div class="comment_text">
+                <p>Thank you for the detailed explanation. </p>
+<p>The issue that I am facing right now. I am trying to upgrade MariaDB from 10.4.10 to 10.11.4. The checksum algorithm used in 10.4.10 is <strong>innodb</strong>. The checksum we are trying to use in 10.11.4 is <strong>full_crc32</strong>. We take physical backups in 10.4.10. The restore process includes <a href="https://mariadb.com/kb/en/innochecksum/">innochecksum utility</a> to compare checksums generated with stored checksums to identify any damages to data pages. </p>
+<p>When I try restore of the backup taken in 10.4.10 with <strong>innodb</strong> checksum to <a href="/kb/en/mariadb-10-11-4-release-notes/">MariaDB 10.11.4</a> with <strong>full_crc32</strong> checksum. Checksum comparison fails for each innodb tables in my database at the first page complaining as following; </p>
+<pre>{
+Fail: page::0 invalid
+Exceeded the maximum allowed checksum mismatch count::1 current::0
+Error: Page 0 checksum mismatch, can't continue.
+}</pre>
+<p>As mentioned previously we use innochecksum utility to make this comparison. The initial understanding is that innochecksum utility has removed deprecated checksum algorithms from use (<strong>innnodb</strong>, <strong>none</strong>). Hence, it will not be supported. <a href="https://jira.mariadb.org/browse/MDEV-25105">MDEV-25105</a></p>
+<p>Then we decided to migrate the checksum algorithm to a algorithm(crc32) supported in innochecksum utility and <a href="/kb/en/mariadb-10410-release-notes/">MariaDB 10.4.10</a> (full_crc32 was not considered as it was not introduced in 10.4.10 version), then, take physical backups. Hence, the physical backups taken would be compatible with <a href="/kb/en/mariadb-10-11-4-release-notes/">MariaDB 10.11.4</a> if we use <strong>crc32/full_crc32</strong> algorithm.</p>
+<h4 class="anchored_heading" id="my-followup-questions">My followup questions:</h4>
+<ul><li>how can I rebuild all innodb tables during migration of <strong>innodb_checksum_algorithm</strong> configuration to have all blocks updated and not wait until it gets updated over time?
+</li><li>Ideal scenario that I would like to achieve is to use 10.4.10 backups in 10.11.4 with the migrated checksum algorithm (innodb-&gt;full_crc32). How can I achieve it?
+</li><li>I had the same understanding as you mentioned that no change required. What could be the reason for the failure during checksum validation at first page?  
+</li></ul>
+<div style="margin-left:2em"><ul><li>Is it because mismatch of checksum algorithms used (backup has <strong>innodb</strong> and validating server has <strong>crc32/full_crc32</strong> assigned in configuration) ?   
+</li><li>In that case, what is recommended? How we can check for integrity of data during restore?
+</li><li>can <strong>write</strong> option specified in <a href="https://mariadb.com/kb/en/innochecksum/">innochecksum utility</a> be used to rewrite the new checksum algorithm for all .ibd tables if there is no way to rebuild all blocks at once?</li></ul>
+</div>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6422/flag"
+                       data-flag-url="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6422/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <a name="comment_6423"></a>
+        <div class="comment approved" style="margin-left: 20px">
+            <div class="info">
+                
+
+<span class="datetime" title="2023-10-12 11:46">4 days, 10 hours ago</span>
+                
+<span class="user" id="user-4920">
+<a href="/kb/user/id/4920" title="Marko Mäkelä">Marko Mäkelä</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6423">Re: Migrating from &#39;innodb&#39; checksum to &#39;crc32&#39; checksum</a>
+                
+            </div><div class="comment_text">
+                <p>I realize that it might be helpful to add back the <code class="fixed" style="white-space:pre-wrap">innodb</code> and <code class="fixed" style="white-space:pre-wrap">none</code> checksum algorithms to the <code class="fixed" style="white-space:pre-wrap">innochecksum</code> utility. This would require some code refactoring, duplicating some InnoDB source code instead of compiling that code with special options for inclusion in <code class="unknown_macro">&lt;&lt;<span class="macro_name">code</span><span class="macro_arg_string">&gt;innochecksum&lt;&lt;/code</span>&gt;&gt;</code>.</p>
+<p>On the other hand, you could use the <code class="fixed" style="white-space:pre-wrap">innochecksum</code> utility from an older release to verify that the page checksums are valid and to convert them to the <code class="fixed" style="white-space:pre-wrap">crc32</code> checksum. If you do not care about the verification step, then you should be able to blindly rewrite the page checksums to the <code class="fixed" style="white-space:pre-wrap">crc32</code> format.</p>
+<p>Still, I think that the best solution would be to rebuild all InnoDB tables, simply by <code class="fixed" style="white-space:pre-wrap">OPTIMIZE TABLE</code>. To see which tables are not in the full_crc32 format yet, try the following trick from <a href="https://jira.mariadb.org/browse/MDEV-32230">MDEV-32230</a>:
+<code class="fixed" style="white-space:pre-wrap">SELECT name FROM INFORMATION_SCHEMA.INNODB_SYS_TABLESPACES WHERE row_format IS NULL;</code></p>
+<p>I am afraid that the only way to convert the InnoDB system tablespace to the <code class="fixed" style="white-space:pre-wrap">full_crc32</code> format would be to rebuild the entire database from a logical dump. The next best thing that you could do is to use <code class="fixed" style="white-space:pre-wrap">innochecksum</code> to convert each page to the <code class="fixed" style="white-space:pre-wrap">crc32</code> checksum, and then start the server with <code class="fixed" style="white-space:pre-wrap">innodb_checksum_algorithm=strict_full_crc32</code> so that new files will be created in the <code class="fixed" style="white-space:pre-wrap">full_crc32</code> format, and for any old-format files only the <code class="fixed" style="white-space:pre-wrap">crc32</code> page checksums will be allowed.</p>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6423/flag"
+                       data-flag-url="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6423/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <a name="comment_6425"></a>
+        <div class="comment approved" style="margin-left: 30px">
+            <div class="info">
+                
+
+<span class="datetime" title="2023-10-12 16:48">4 days, 5 hours ago</span>
+                
+<span class="user" id="user-14384">
+<a href="/kb/user/id/14384" title="Keshan Nageswaran">Keshan Nageswaran</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6425">Re: Migrating from &#39;innodb&#39; checksum to &#39;crc32&#39; checksum</a>
+                
+            </div><div class="comment_text">
+                <p>Thank you for this Marko. The solutions provided are of real help for us. One last question, does the <code>innodchecksum</code> utility support <code>full_crc32</code> validation?</p>
+<p><em>"and then start the server with <code>innodb_checksum_algorithm=strict_full_crc32</code> so that new files will be created in the full_crc32 format, and for any old-format files only the crc32 page checksums will be allowed."</em></p>
+<p>In my understanding from the above statement, I believe we would end up having mix of crc32(old pages) and full_crc32(new pages), will this cause any issues during checksum validation with <code>innodchecksum</code> utility?</p>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6425/flag"
+                       data-flag-url="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6425/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <a name="comment_6426"></a>
+        <div class="comment approved" style="margin-left: 40px">
+            <div class="info">
+                
+
+<span class="datetime" title="2023-10-12 19:22">4 days, 2 hours ago</span>
+                
+<span class="user" id="user-1368">
+<a href="/kb/user/id/1368" title="Ian Gilfillan">Ian Gilfillan</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6426">Re: Migrating from &#39;innodb&#39; checksum to &#39;crc32&#39; checksum</a>
+                
+            </div><div class="comment_text">
+                <p>No, <code>innochecksum</code> does not fully support <code>full_crc32</code> - see <a href="https://jira.mariadb.org/browse/MDEV-26907">MDEV-26907</a>. If <code>innochecksum</code> is a required part of your workflow, you could stick with <code>crc32</code>.</p>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6426/flag"
+                       data-flag-url="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6426/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <a name="comment_6427"></a>
+        <div class="comment approved" style="margin-left: 50px">
+            <div class="info">
+                
+
+<span class="datetime" title="2023-10-12 21:32">4 days ago</span>
+                
+<span class="user" id="user-14384">
+<a href="/kb/user/id/14384" title="Keshan Nageswaran">Keshan Nageswaran</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6427">Re: Migrating from &#39;innodb&#39; checksum to &#39;crc32&#39; checksum</a>
+                
+            </div><div class="comment_text">
+                <p>Noted and Thank you Ian!</p>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6427/flag"
+                       data-flag-url="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6427/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
         
-            <div class="no_comments" style="clear: left">No comments</div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <a name="comment_6408"></a>
+        <div class="comment approved" style="margin-left: 0px">
+            <div class="info">
+                
+
+<span class="datetime" title="2023-10-09 23:03">6 days, 23 hours ago</span>
+                
+<span class="user" id="user-1368">
+<a href="/kb/user/id/1368" title="Ian Gilfillan">Ian Gilfillan</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6408">Re: Migrating from &#39;innodb&#39; checksum to &#39;crc32&#39; checksum</a>
+                
+            </div><div class="comment_text">
+                <p>There should be no steps necessary. After changing <a href="/kb/en/innodb-system-variables/#innodb_checksum_algorithm">innodb_checksum_algorithm</a>, blocks are updated gradually as data is modified.</p>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6408/flag"
+                       data-flag-url="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6408/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <a name="comment_6409"></a>
+        <div class="comment approved" style="margin-left: 10px">
+            <div class="info">
+                
+
+<span class="datetime" title="2023-10-10 16:17">6 days, 5 hours ago</span>
+                
+<span class="user" id="user-14384">
+<a href="/kb/user/id/14384" title="Keshan Nageswaran">Keshan Nageswaran</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6409">Re: Migrating from &#39;innodb&#39; checksum to &#39;crc32&#39; checksum</a>
+                
+            </div><div class="comment_text">
+                <p>This applies for existing data that was supported by 'innodb' checksum? Or I should be rewriting the <em>.ibd</em> tables with crc32 checksum using <a href="https://mariadb.com/kb/en/innochecksum/">innodbchecksum</a> utility? </p>
+<p>One more question, how would I validate that there wasn't any damage to pages after the change?</p>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6409/flag"
+                       data-flag-url="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6409/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <a name="comment_6410"></a>
+        <div class="comment approved" style="margin-left: 20px">
+            <div class="info">
+                
+
+<span class="datetime" title="2023-10-10 18:17">6 days, 3 hours ago</span>
+                
+<span class="user" id="user-1368">
+<a href="/kb/user/id/1368" title="Ian Gilfillan">Ian Gilfillan</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6410">Re: Migrating from &#39;innodb&#39; checksum to &#39;crc32&#39; checksum</a>
+                
+            </div><div class="comment_text">
+                <p>Yes, the table can be created and populated with the <code>innodb</code> checksum, and then the algorithm changed at a later stage, and everything should work smoothly. The only thing to take note of is that blocks using the crc32 checksum will be incompatible with earlier versions, so there's no going back. There is no need to use <code>innodbchecksum</code>, and no specific point at which the change happens, as the new checksum is only used as blocks are modified over time.</p>
+<p>If you want to put yourself at ease, you can use <a href="/kb/en/check-table/">CHECK TABLE</a>.</p>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6410/flag"
+                       data-flag-url="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6410/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <a name="comment_6411"></a>
+        <div class="comment approved" style="margin-left: 30px">
+            <div class="info">
+                
+
+<span class="datetime" title="2023-10-10 19:07">6 days, 3 hours ago</span>
+                
+<span class="user" id="user-14384">
+<a href="/kb/user/id/14384" title="Keshan Nageswaran">Keshan Nageswaran</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6411">Re: Migrating from &#39;innodb&#39; checksum to &#39;crc32&#39; checksum</a>
+                
+            </div><div class="comment_text">
+                <p>Thank you for the explanation!</p>
+<p>I agree, checksum is only used as blocks are modified.</p>
+<p>I have noticed is if any block in .ibd tables that were not modified over time after checksum change(innodb -&gt; crc32), and when these .ibd tables used for restoring, checksum check fails against crc32. 
+During the above scenario what is recommended? rewrite the blocks that were not updated with new checksum algorithm? so it would pass the checksum check during restore process?</p>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6411/flag"
+                       data-flag-url="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+comments/6411/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
         
+    
+
+    
+
+    
+
+    
+
     
 
 </div>

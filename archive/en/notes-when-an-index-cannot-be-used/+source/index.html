@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
     <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
 
-    <title>Notes when an index cannot be used - Source - MariaDB Knowledge Base</title>
+    <title>Notes When an Index Cannot Be Used - Source - MariaDB Knowledge Base</title>
 
     <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
 
@@ -19,7 +19,7 @@
     
 
     <!-- FB Open Graph tags -->
-    <meta property="og:title" content="Notes when an index cannot be used - Source" />
+    <meta property="og:title" content="Notes When an Index Cannot Be Used - Source" />
     <meta property="og:type" content="article" />
     <meta property="og:url" content="https://mariadb.com/kb/en/notes-when-an-index-cannot-be-used/+source/" />
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
@@ -188,7 +188,7 @@
     
 
 
-    » <a class="node_link crumb" href="/kb/en/notes-when-an-index-cannot-be-used/">Notes when an index cannot be used</a>
+    » <a class="node_link crumb" href="/kb/en/notes-when-an-index-cannot-be-used/">Notes When an Index Cannot Be Used</a>
 
 
                 </div>
@@ -276,7 +276,7 @@
             
             <section id="content" class="limited_width col-md-10 clearfix">
                 
-                    <h1>Notes when an index cannot be used - Source</h1>
+                    <h1>Notes When an Index Cannot Be Used - Source</h1>
                 
 
                 
@@ -292,7 +292,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/notes-when-an-index-cannot-be-used/+r/130859/">130859</a></dd>
+            <dd><a href="/kb/en/notes-when-an-index-cannot-be-used/+r/131014/">131014</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-7">
@@ -301,7 +301,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-10-08 11:41">2023-10-08 11:41</span></dd>
+<span class="datetime" title="2023-10-16 10:54">2023-10-16 10:54</span></dd>
         </dl>
     </div>
     
@@ -312,31 +312,33 @@
     
         
         <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;product mariadb from=10.6.16&gt;&gt;
-This is a new note added in 10.6.16
+This is a new note added in 10.6.16.
 &lt;&lt;/product&gt;&gt;
 
-== Warning about incompatible index comparison
-A frequent mistake database developers do is to compare an indexed column with another column that is not compatible with the indexed column. For example comparing string columns with number columns or using incompatible character sets or collations.
+== Warning About Incompatible Index Comparison
+A frequent mistake database developers make is to compare an indexed column with another column that is not compatible with the indexed column. For example, comparing string columns with number columns, or using incompatible character sets or collations.
 
 Because of this we have introduced notes (low severity warnings) when an indexed column cannot use the index to lookup rows.
 
-The warnings are of type different types:
+The warnings are of different types:
 
-If one compares an indexed columnc with a value of a different type one will get a warning like the following:
+If one compares an indexed column with a value of a different type one, will get a warning like the following:
 &lt;&lt;code&gt;&gt;
-Note   1105    Cannot use key `PRIMARY` part[0] for lookup: `test`.`t1`.`id` of type `char` = &#34;1&#34; of type `bigint`
+Note   1105    Cannot use key `PRIMARY` part[0] for lookup: `test`.`t1`.`id` of 
+  type `char` = &#34;1&#34; of type `bigint`
 &lt;&lt;/code&gt;&gt;
 
-If one compares indexed character columns with a value of a a not compatible collation one will get a warning like the following:
+If one compares indexed character columns with a value of an incompatible collation, one will get a warning like the following:
 &lt;&lt;code&gt;&gt;
-Note   1105    Cannot use key `s2` part[0] for lookup: `test`.`t1`.`s2` of collation `latin1_swedish_ci` = &#34;&#39;a&#39; collate latin1_german1_ci&#34; of collation `latin1_german1_ci`
+Note   1105    Cannot use key `s2` part[0] for lookup: `test`.`t1`.`s2` of 
+  collation `latin1_swedish_ci` = &#34;&#39;a&#39; collate latin1_german1_ci&#34; of collation `latin1_german1_ci`
 &lt;&lt;/code&gt;&gt;
 
-Note that in MariadB 10.6 -&gt; 11.3 we will use the error 1105 (Unknown error) as we cannot add an new error code in a GA version. In 11.4 we will change this to be an unique error code.
+Note that in MariaDB 10.6 to MariaDB 11.3 we will use the error 1105 (Unknown error), as we cannot add an new error code in a GA version. In MariaDB 11.4 we will change this to be a unique error code.
 
-== Enabling the note
-By default, the warning is only shown when on executes [[explain|EXPLAIN]] on a query.
-If one wants to enable it for all queries, one can do with the option/server variable:
+== Enabling the Note
+By default, the warning is only shown when executing [[explain|EXPLAIN]] on a query.
+To enable for all queries, use the option/server variable:
 
 &lt;&lt;code&gt;&gt;
 In config file:
@@ -345,7 +347,8 @@ In config file:
 As a server variable:
 @@note_verbosity=&#34;all&#34;;
 &lt;&lt;/code&gt;&gt;
-##note_verbosity## is a set variable that describes with note categories one want to get notes for.
+[[server-system-variables/#note_verbosity|note_verbosity]] describes with note categories one want to get notes for. Be aware that if the old sql_notes## variable is 0, one will not get any notes.
+
 It can have one or many of the following options:
 
 &lt;&lt;style class=&#34;darkheader-nospace-borders&#34;&gt;&gt;
@@ -356,7 +359,7 @@ It can have one or many of the following options:
 &lt;&lt;/style&gt;&gt;
 One can also set ##note_verbosity## to the value of ##all## to set all options.
 
-== Enabling warnings and notes for the slow query log
+== Enabling Warnings and Notes for the Slow Query Log
 One can get the note about incompatible keys also in the slow query log by adding the option ##warnings## in the ##log_slow_verbosity## option/variable.  It will automatically be enabled if one uses ##log_slow_verbosity=all##.
 
 &lt;&lt;code&gt;&gt;
