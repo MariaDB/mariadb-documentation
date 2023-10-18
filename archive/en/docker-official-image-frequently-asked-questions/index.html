@@ -210,8 +210,6 @@
                             <li><a href="/kb/en/">Home</a></li>
                             
                                 
-                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
-                                
                                 <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
                                 <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
                                 <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
@@ -255,12 +253,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-09-21 23:24">3 weeks, 3 days ago</span></dd>
+<span class="datetime" title="2023-09-21 23:24">3 weeks, 5 days ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-27 20:30">2 weeks, 4 days ago</span></dd>
+<span class="datetime" title="2023-10-18 03:27">12 hours, 34 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -398,7 +396,9 @@
 
     <li class=""><a href="#how-to-reset-passwords" title="How to Reset Passwords">How to Reset Passwords</a></li>
 
-    <li class=""><a href="#temp-server-start-timeout" title="Temp Server Start Timeout">Temp Server Start Timeout</a> </ol>
+    <li class=""><a href="#temp-server-start-timeout" title="Temp Server Start Timeout">Temp Server Start Timeout</a></li>
+
+    <li class=""><a href="#creating-a-replication-pair" title="Creating a replication pair">Creating a replication pair</a> </ol>
 </li>
 </div><p>
 Frequently asked questions about the Docker Official Image</p>
@@ -435,10 +435,47 @@ Version: '10.10.2-MariaDB-1:10.10.2+maria~ubu2204'  socket: '/run/mysqld/mysqld.
 </pre><p>The timeout on a temporary server start is a quite generous 30 seconds.</p>
 <p>The lack of a message like the following indicates it failed to complete writing a temporary file of 12MiB in 30 seconds. </p>
 <pre class="fixed">2023-01-28 12:53:46 0 [Note] InnoDB: File './ibtmp1' size is now 12.000MiB.
-</pre><p>If the datadir where this is stored is remote storage maybe it's a bit slow. It's ideal to have an InnoDB temporary path local so this can be configured using the argument or configuration setting:</p>
+</pre><p>If the datadir where this is stored is remote storage maybe it's a bit slow. It's ideal to have an InnoDB temporary path local so this can be configured using the command or configuration setting:</p>
 <pre class="fixed">innodb_temp_data_file_path=/dev/shm/ibtmp1:12M:autoextend
 </pre><p>Note: depending on container runtime this space may be limited.</p>
-
+<h2 class="anchored_heading" id="creating-a-replication-pair">Creating a replication pair</h2>
+<p>`MARIADB_REPLICATION_USER` / `MARIADB_REPLICATION_PASSWORD` specify the authentication for the connection. The `MARIADB_MASTER_HOST` is the indicator that it is a replica and specifies the container aka hostname, of the master.</p>
+<p>A `docker-compose.yml` example:</p>
+<pre class="fixed">version: &#34;3&#34;
+services:
+  master:
+    image: mariadb:latest
+    command: --log-bin --log-basename=mariadb
+    environment:
+      - MARIADB_ROOT_PASSWORD=password
+      - MARIADB_USER=testuser
+      - MARIADB_PASSWORD=password
+      - MARIADB_DATABASE=testdb
+      - MARIADB_REPLICATION_USER=repl
+      - MARIADB_REPLICATION_PASSWORD=replicationpass
+    healthcheck:
+      test: [&#34;CMD&#34;, &#34;healthcheck.sh&#34;, &#34;--connect&#34;, &#34;--innodb_initialized&#34;]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  replica:
+    image: mariadb:latest
+    command: --server-id=2 --log-basename=mariadb
+    environment:
+      - MARIADB_ROOT_PASSWORD=password
+      - MARIADB_MASTER_HOST=master
+      - MARIADB_REPLICATION_USER=repl
+      - MARIADB_REPLICATION_PASSWORD=replicationpass
+      - MARIADB_HEALTHCHECK_GRANTS=REPLICA MONITOR
+    healthcheck:
+      test: [&#34;CMD&#34;, &#34;healthcheck.sh&#34;, &#34;--connect&#34;, &#34;--replication_io&#34;, &#34;--replication_sql&#34;, &#34;--replication_seconds_behind_master=1&#34;, &#34;--replication&#34;]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      master:
+        condition: service_healthy
+</pre>
     </div>
 
 
