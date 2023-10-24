@@ -300,7 +300,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-encryption-overview/+r/115656/">115656</a></dd>
+            <dd><a href="/kb/en/innodb-encryption-overview/+r/131098/">131098</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5454">
@@ -309,7 +309,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-04-27 18:24">2022-04-27 18:24</span></dd>
+<span class="datetime" title="2023-10-23 08:24">2023-10-23 08:24</span></dd>
         </dl>
     </div>
     
@@ -330,7 +330,7 @@ For encrypting data with the Aria storage engine, see [[encrypting-data-for-aria
 Using data-at-rest encryption requires that you first configure an [[encryption-key-management|Encryption Key Management]] plugin, such as the ##[[file-key-management-encryption-plugin|file_key_management]]## or ##[[aws-key-management-encryption-plugin|aws_key_management]]## plugins.  
 MariaDB uses this plugin to store, retrieve and manage the various keys it uses when encrypting data to and decrypting data from the file system.
 
-Once you have the plugin configured, you need to set a few additional system variables to enable encryption on InnoDB and XtraDB tables, including ##[[innodb-system-variables#innodb_encrypt_tables|innodb_encrypt_tables]]##, ##[[innodb-system-variables#innodb_encrypt_logs|innodb_encrypt_logs]]##, ##[[innodb-system-variables#innodb_encryption_threads|innodb_encryption_threads]]##, and ##[[innodb-system-variables#innodb_encryption_rotate_key_age|innodb_encryption_rotate_key_age]]##.
+Once you have the plugin configured, you need to set a few additional system variables to enable encryption on InnoDB tables, including ##[[innodb-system-variables#innodb_encrypt_tables|innodb_encrypt_tables]]##, ##[[innodb-system-variables#innodb_encrypt_logs|innodb_encrypt_logs]]##, ##[[innodb-system-variables#innodb_encryption_threads|innodb_encryption_threads]]##, and ##[[innodb-system-variables#innodb_encryption_rotate_key_age|innodb_encryption_rotate_key_age]]##.
 
 &lt;&lt;code&gt;&gt;
 [mariadb]
@@ -342,7 +342,7 @@ file_key_management_filename = /etc/mysql/encryption/keyfile.enc
 file_key_management_filekey = FILE:/etc/mysql/encryption/keyfile.key
 file_key_management_encryption_algorithm = AES_CTR
 
-# InnoDB/XtraDB Encryption
+# InnoDB Encryption
 innodb_encrypt_tables = ON
 innodb_encrypt_temporary_tables = ON
 innodb_encrypt_log = ON
@@ -353,9 +353,18 @@ innodb_encryption_rotate_key_age = 1
 For more information on system variables for encryption and other features, see the InnoDB [[innodb-system-variables|system variables]] page.
 
 
+== Creating Encrypted Tables
+
+To create encrypted tables, specify the table options ##ENCRYPTED=YES## and ##ENCRYPTION_KEY_ID=## with a corresponding key id;
+
+&lt;&lt;code&gt;&gt;
+CREATE TABLE t (i int primary key) ENGINE=InnoDB ENCRYPTED=YES ENCRYPTION_KEY_ID=2;
+&lt;&lt;/code&gt;&gt;
+
+
 == Finding Encrypted Tables
 
-When using data-at-rest encryption with the InnoDB or XtraDB storage engines, it is not necessary that you encrypt every table in your database.  You can check which tables are encrypted and which are not by querying the ##[[information-schema-innodb_tablespaces_encryption-table|INNODB_TABLESPACES_ENCRYPTION]]## table in the [[information-schema|Information Schema]]. This table provides information on which tablespaces are encrypted, which encryption key each tablespace is encrypted with, and whether the background encryption threads are currently working on the tablespace. Since the [[innodb-system-tablespaces|system tablespace]] can also contain tables, it can be helpful to join the ##[[information-schema-innodb_tablespaces_encryption-table|INNODB_TABLESPACES_ENCRYPTION]]## table with the ##[[information-schema-innodb_sys_tables-table|INNODB_SYS_TABLES]]## table to find out the encryption status of each specific table, rather than each tablespace. For example:
+When using data-at-rest encryption with the InnoDB storage engine, it is not necessary that you encrypt every table in your database.  You can check which tables are encrypted and which are not by querying the ##[[information-schema-innodb_tablespaces_encryption-table|INNODB_TABLESPACES_ENCRYPTION]]## table in the [[information-schema|Information Schema]]. This table provides information on which tablespaces are encrypted, which encryption key each tablespace is encrypted with, and whether the background encryption threads are currently working on the tablespace. Since the [[innodb-system-tablespaces|system tablespace]] can also contain tables, it can be helpful to join the ##[[information-schema-innodb_tablespaces_encryption-table|INNODB_TABLESPACES_ENCRYPTION]]## table with the ##[[information-schema-innodb_sys_tables-table|INNODB_SYS_TABLES]]## table to find out the encryption status of each specific table, rather than each tablespace. For example:
 
 &lt;&lt;code&gt;&gt;
 SELECT st.SPACE, st.NAME, te.ENCRYPTION_SCHEME, te.ROTATING_OR_FLUSHING
