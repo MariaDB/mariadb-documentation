@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/auto_increment/+r/130971/">130971</a></dd>
+            <dd><a href="/kb/en/auto_increment/+r/131154/">131154</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-10-12 22:10">2023-10-12 22:10</span></dd>
+<span class="datetime" title="2023-10-25 15:16">2023-10-25 15:16</span></dd>
         </dl>
     </div>
     
@@ -397,9 +397,8 @@ SELECT * FROM animals;
 &lt;&lt;/sql&gt;&gt;
 
 == InnoDB
-Until MariaDB 10.2.3, InnoDB used an auto-increment counter that is stored in memory. When the server restarts, the counter is re-initialized to the highest value used in the table, which cancels the effects of any AUTO_INCREMENT = N option in the table statements.
 
-From MariaDB 10.2.4, this restriction has been lifted and AUTO_INCREMENT is persistent.
+AUTO_INCREMENT is persistent in InnoDB. Prior to MariaDB 10.2.3, InnoDB used an auto-increment counter that was stored in memory. When the server restarted, the counter was re-initialized to the highest value used in the table, which canceled the effects of any AUTO_INCREMENT = N option in the table statements).
 
 See also [[auto_increment-handling-in-innodb|AUTO_INCREMENT Handling in InnoDB]].
 
@@ -456,6 +455,98 @@ Thus AUTO_INCREMENT values can be used to sort results in a chronological order,
 
 To make master-master or Galera safe to use ##AUTO_INCREMENT## one should use the system variables 
  [[replication-and-binary-log-server-system-variables/#auto_increment_increment|auto_increment_increment]] and [[replication-and-binary-log-server-system-variables/#auto_increment_offset|auto_increment_offset]] to generate unique values for each server.
+
+&lt;&lt;sql&gt;&gt;
+SET @@auto_increment_increment=3;
+
+SHOW VARIABLES LIKE &#39;auto_inc%&#39;;
++--------------------------+-------+
+| Variable_name            | Value |
++--------------------------+-------+
+| auto_increment_increment | 3     |
+| auto_increment_offset    | 1     |
++--------------------------+-------+
+
+CREATE TABLE t (c INT NOT NULL AUTO_INCREMENT PRIMARY KEY);
+
+INSERT INTO t VALUES (NULL), (NULL), (NULL);
+
+SELECT * FROM t;
++---+
+| c |
++---+
+| 1 |
+| 4 |
+| 7 |
++---+
+
+CREATE TABLE t2 (c INT NOT NULL AUTO_INCREMENT PRIMARY KEY);
+
+SET @@auto_increment_offset=2;
+
+SHOW VARIABLES LIKE &#39;auto_inc%&#39;;
++--------------------------+-------+
+| Variable_name            | Value |
++--------------------------+-------+
+| auto_increment_increment | 3     |
+| auto_increment_offset    | 2     |
++--------------------------+-------+
+
+INSERT INTO t2 VALUES (NULL), (NULL), (NULL);
+
+SELECT * FROM t2;
++---+
+| c |
++---+
+| 2 |
+| 5 |
+| 8 |
++---+
+&lt;&lt;/sql&gt;&gt;
+
+If ##auto_increment_offset## is larger than ##auto_increment_increment##, the value of ##auto_increment_offset## is ignored, and the offset reverts to the default of 1 instead:
+&lt;&lt;sql&gt;&gt;
+SET @@auto_increment_offset=5;
+
+SHOW VARIABLES LIKE &#39;auto_inc%&#39;;
++--------------------------+-------+
+| Variable_name            | Value |
++--------------------------+-------+
+| auto_increment_increment | 3     |
+| auto_increment_offset    | 5     |
++--------------------------+-------+
+
+CREATE TABLE t3 (c INT NOT NULL AUTO_INCREMENT PRIMARY KEY);
+
+INSERT INTO t3 VALUES (NULL), (NULL), (NULL);
+
+SELECT * FROM t3;
++---+
+| c |
++---+
+| 1 |
+| 4 |
+| 5 |
++---+
+
++--------------------------+-------+
+| Variable_name            | Value |
++--------------------------+-------+
+| auto_increment_increment | 3     |
+| auto_increment_offset    | 3     |
++--------------------------+-------+
+
+INSERT INTO t4 VALUES (NULL), (NULL), (NULL);
+
+SELECT * FROM t4;
++---+
+| c |
++---+
+| 3 |
+| 6 |
+| 9 |
++---+
+&lt;&lt;/sql&gt;&gt;
 
 == CHECK Constraints, DEFAULT Values and Virtual Columns
 auto_increment columns are not permitted in [[constraint|CHECK constraints]], [[create-table/#default|DEFAULT value expressions]] and [[virtual-computed-columns|virtual columns]]. They were permitted until MariaDB 10.2.6, but did not work correctly. See MDEV-11117.

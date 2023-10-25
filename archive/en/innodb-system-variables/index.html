@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-10-20 12:55">3 days, 8 hours ago</span></dd>
+<span class="datetime" title="2023-10-25 12:29">3 hours, 30 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -3024,34 +3024,36 @@ add/drop/reorder of columns.
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="innodb_purge_batch_size"><code>innodb_purge_batch_size</code></h4>
-<ul start="1"><li><strong>Description:</strong> Units of <a href="/kb/en/xtradbinnodb-redo-log/">InnoDB redo log</a> records that will trigger a purge operation. Together with <a href="#innodb_purge_threads">innodb_purge_threads</a> has a small effect on tuning.
+<ul start="1"><li><strong>Description:</strong> Number of  <a href="/kb/en/innodb-undo-log/">InnoDB undo log</a> pages to purge in one batch from the history list. Together with <a href="#innodb_purge_threads">innodb_purge_threads</a> has a small effect on tuning.
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--innodb-purge-batch-size=#</code>
 </li><li><strong>Scope:</strong> Global
 </li><li><strong>Dynamic:</strong> No
 </li><li><strong>Data Type:</strong> <code>numeric</code>
-</li><li><strong>Default Value:</strong> <code>20</code>
+</li><li><strong>Default Value:</strong> 
+<ul><li><code>1000</code> (&gt;= <a href="/kb/en/mariadb-10616-release-notes/">MariaDB 10.6.16</a>, <a href="/kb/en/mariadb-10-10-7-release-notes/">MariaDB 10.10.7</a>, <a href="/kb/en/mariadb-10-11-6-release-notes/">MariaDB 10.11.6</a>, <a href="/kb/en/mariadb-11-0-4-release-notes/">MariaDB 11.0.4</a>, <a href="/kb/en/mariadb-11-1-3-release-notes/">MariaDB 11.1.3</a> <a href="/kb/en/mariadb-11-2-2-release-notes/">MariaDB 11.2.2</a>) 
+</li><li><code>300</code> (&lt;= <a href="/kb/en/mariadb-10615-release-notes/">MariaDB 10.6.15</a>, <a href="/kb/en/mariadb-10-10-6-release-notes/">MariaDB 10.10.6</a>, <a href="/kb/en/mariadb-10-11-5-release-notes/">MariaDB 10.11.5</a>, <a href="/kb/en/mariadb-11-0-3-release-notes/">MariaDB 11.0.3</a>, <a href="/kb/en/mariadb-11-1-2-release-notes/">MariaDB 11.1.2</a> <a href="/kb/en/mariadb-11-2-1-release-notes/">MariaDB 11.2.1</a>) 
+</li></ul>
 </li><li><strong>Range:</strong> <code>1</code> to <code>5000</code>
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="innodb_purge_rseg_truncate_frequency"><code>innodb_purge_rseg_truncate_frequency</code></h4>
-<ul start="1"><li><strong>Description:</strong> Frequency with which undo records are purged. Set by default to every 128 times, reducing this increases the frequency at which rollback segments are freed. See also <a href="#innodb_undo_log_truncate">innodb_undo_log_truncate</a>.
+<ul start="1"><li><strong>Description:</strong> Frequency with which undo records are purged. Set by default to every 128 times, reducing this increases the frequency at which rollback segments are freed. See also <a href="#innodb_undo_log_truncate">innodb_undo_log_truncate</a>. The motivation for introducing this in MySQL seems to have been to avoid stalls due to freeing undo log pages or truncating undo log tablespaces. In MariaDB, <a href="#innodb_undo_log_truncate">innodb_undo_log_truncate=ON</a> should be a much lighter operation because it will not involve any log checkpoint, hence this is deprecated and ignored from <a href="/kb/en/mariadb-10616-release-notes/">MariaDB 10.6.16</a>, <a href="/kb/en/mariadb-10-10-7-release-notes/">MariaDB 10.10.7</a>, <a href="/kb/en/mariadb-10-11-6-release-notes/">MariaDB 10.11.6</a>, <a href="/kb/en/mariadb-11-0-4-release-notes/">MariaDB 11.0.4</a>, <a href="/kb/en/mariadb-11-1-3-release-notes/">MariaDB 11.1.3</a> and <a href="/kb/en/mariadb-11-2-2-release-notes/">MariaDB 11.2.2</a>.  (<a href="https://jira.mariadb.org/browse/MDEV-32050">MDEV-32050</a>)
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">-- innodb-purge-rseg-truncate-frequency=#</code>
 </li><li><strong>Scope:</strong> Global
 </li><li><strong>Dynamic:</strong> Yes
 </li><li><strong>Data Type:</strong> <code>numeric</code>
 </li><li><strong>Default Value:</strong> <code>128</code>
 </li><li><strong>Range:</strong> <code>1</code> to <code>128</code>
+</li><li><strong>Deprecated:</strong> <a href="/kb/en/mariadb-10616-release-notes/">MariaDB 10.6.16</a>, <a href="/kb/en/mariadb-10-10-7-release-notes/">MariaDB 10.10.7</a>, <a href="/kb/en/mariadb-10-11-6-release-notes/">MariaDB 10.11.6</a>, <a href="/kb/en/mariadb-11-0-4-release-notes/">MariaDB 11.0.4</a>, <a href="/kb/en/mariadb-11-1-3-release-notes/">MariaDB 11.1.3</a>, <a href="/kb/en/mariadb-11-2-2-release-notes/">MariaDB 11.2.2</a> 
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="innodb_purge_threads"><code>innodb_purge_threads</code></h4>
-<ul start="1"><li><strong>Description:</strong> Number of background threads dedicated to InnoDB purge operations. The range is <code>1</code> to <code>32</code>. At least one background thread is always used from <a href="/kb/en/what-is-mariadb-100/">MariaDB 10.0</a>. The default was increased from <code>1</code> to <code>4</code> in <a href="/kb/en/mariadb-1022-release-notes/">MariaDB 10.2.2</a>. Setting to a value greater than 1 creates that many separate purge threads. This can improve efficiency in some cases, such as when performing DML operations on many tables. In <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a>, the options were <code>0</code> and <code>1</code>. If set to <code>0</code>, the default, purging is done with the primary thread. If set to <code>1</code>, purging is done on a separate thread, which could reduce contention. See also <a href="#innodb_purge_batch_size">innodb_purge_batch_size</a>.
+<ul start="1"><li><strong>Description:</strong> Number of background threads dedicated to InnoDB purge operations. The range is <code>1</code> to <code>32</code>. At least one background thread is always used. Setting to a value greater than 1 creates that many separate purge threads. This can improve efficiency in some cases, such as when performing DML operations on many tables. See also <a href="#innodb_purge_batch_size">innodb_purge_batch_size</a>.
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--innodb-purge-threads=#</code>
 </li><li><strong>Scope:</strong> Global
 </li><li><strong>Dynamic:</strong> No
 </li><li><strong>Data Type:</strong> <code>numeric</code>
-</li><li><strong>Default Value:</strong>
-<ul start="1"><li><code>4</code>
-</li></ul>
+</li><li><strong>Default Value:</strong> <code>4</code>
 </li><li><strong>Range:</strong> <code>1</code> to <code>32</code>
 </li></ul>
 <hr>

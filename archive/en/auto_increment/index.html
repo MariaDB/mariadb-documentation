@@ -248,7 +248,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-10-12 22:10">1 week, 4 days ago</span></dd>
+<span class="datetime" title="2023-10-25 15:16">44 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -490,8 +490,7 @@
 <span class="o">|</span> <span class="mi">12</span> <span class="o">|</span> <span class="n">gorilla</span>   <span class="o">|</span>
 <span class="o">+</span><span class="c1">----+-----------+</span>
 </pre><h2 class="anchored_heading" id="innodb">InnoDB</h2>
-<p>Until <a href="/kb/en/mariadb-1023-release-notes/">MariaDB 10.2.3</a>, InnoDB used an auto-increment counter that is stored in memory. When the server restarts, the counter is re-initialized to the highest value used in the table, which cancels the effects of any AUTO_INCREMENT = N option in the table statements.</p>
-<p>From <a href="/kb/en/mariadb-1024-release-notes/">MariaDB 10.2.4</a>, this restriction has been lifted and AUTO_INCREMENT is persistent.</p>
+<p>AUTO_INCREMENT is persistent in InnoDB. Prior to <a href="/kb/en/mariadb-1023-release-notes/">MariaDB 10.2.3</a>, InnoDB used an auto-increment counter that was stored in memory. When the server restarted, the counter was re-initialized to the highest value used in the table, which canceled the effects of any AUTO_INCREMENT = N option in the table statements).</p>
 <p>See also <a href="/kb/en/auto_increment-handling-in-innodb/">AUTO_INCREMENT Handling in InnoDB</a>.</p>
 <h2 class="anchored_heading" id="setting-explicit-values">Setting Explicit Values</h2>
 <p>It is possible to specify a value for an <code>AUTO_INCREMENT</code> column. If the key is primary or unique, the value must not already exist in the key.</p>
@@ -534,7 +533,93 @@
 <h2 class="anchored_heading" id="replication">Replication</h2>
 <p>To make master-master or Galera safe to use <code>AUTO_INCREMENT</code> one should use the system variables 
  <a href="/kb/en/replication-and-binary-log-server-system-variables/#auto_increment_increment">auto_increment_increment</a> and <a href="/kb/en/replication-and-binary-log-server-system-variables/#auto_increment_offset">auto_increment_offset</a> to generate unique values for each server.</p>
-<h2 class="anchored_heading" id="check-constraints-default-values-and-virtual-columns">CHECK Constraints, DEFAULT Values and Virtual Columns</h2>
+<pre class="fixed"><span class="k">SET</span> <span class="o">@@</span><span class="n">auto_increment_increment</span><span class="o">=</span><span class="mi">3</span><span class="p">;</span>
+
+<span class="k">SHOW</span> <span class="n">VARIABLES</span> <span class="k">LIKE</span> <span class="s1">&#39;auto_inc%&#39;</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">--------------------------+-------+</span>
+<span class="o">|</span> <span class="n">Variable_name</span>            <span class="o">|</span> <span class="n">Value</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------------+-------+</span>
+<span class="o">|</span> <span class="n">auto_increment_increment</span> <span class="o">|</span> <span class="mi">3</span>     <span class="o">|</span>
+<span class="o">|</span> <span class="n">auto_increment_offset</span>    <span class="o">|</span> <span class="mi">1</span>     <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------------+-------+</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">t</span> <span class="p">(</span><span class="k">c</span> <span class="nb">INT</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="n">AUTO_INCREMENT</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t</span> <span class="k">VALUES</span> <span class="p">(</span><span class="k">NULL</span><span class="p">),</span> <span class="p">(</span><span class="k">NULL</span><span class="p">),</span> <span class="p">(</span><span class="k">NULL</span><span class="p">);</span>
+
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---+</span>
+<span class="o">|</span> <span class="k">c</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---+</span>
+<span class="o">|</span> <span class="mi">1</span> <span class="o">|</span>
+<span class="o">|</span> <span class="mi">4</span> <span class="o">|</span>
+<span class="o">|</span> <span class="mi">7</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---+</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">t2</span> <span class="p">(</span><span class="k">c</span> <span class="nb">INT</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="n">AUTO_INCREMENT</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">);</span>
+
+<span class="k">SET</span> <span class="o">@@</span><span class="n">auto_increment_offset</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span>
+
+<span class="k">SHOW</span> <span class="n">VARIABLES</span> <span class="k">LIKE</span> <span class="s1">&#39;auto_inc%&#39;</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">--------------------------+-------+</span>
+<span class="o">|</span> <span class="n">Variable_name</span>            <span class="o">|</span> <span class="n">Value</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------------+-------+</span>
+<span class="o">|</span> <span class="n">auto_increment_increment</span> <span class="o">|</span> <span class="mi">3</span>     <span class="o">|</span>
+<span class="o">|</span> <span class="n">auto_increment_offset</span>    <span class="o">|</span> <span class="mi">2</span>     <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------------+-------+</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t2</span> <span class="k">VALUES</span> <span class="p">(</span><span class="k">NULL</span><span class="p">),</span> <span class="p">(</span><span class="k">NULL</span><span class="p">),</span> <span class="p">(</span><span class="k">NULL</span><span class="p">);</span>
+
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t2</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---+</span>
+<span class="o">|</span> <span class="k">c</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---+</span>
+<span class="o">|</span> <span class="mi">2</span> <span class="o">|</span>
+<span class="o">|</span> <span class="mi">5</span> <span class="o">|</span>
+<span class="o">|</span> <span class="mi">8</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---+</span>
+</pre><p>If <code>auto_increment_offset</code> is larger than <code>auto_increment_increment</code>, the value of <code>auto_increment_offset</code> is ignored, and the offset reverts to the default of 1 instead:</p>
+<pre class="fixed"><span class="k">SET</span> <span class="o">@@</span><span class="n">auto_increment_offset</span><span class="o">=</span><span class="mi">5</span><span class="p">;</span>
+
+<span class="k">SHOW</span> <span class="n">VARIABLES</span> <span class="k">LIKE</span> <span class="s1">&#39;auto_inc%&#39;</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">--------------------------+-------+</span>
+<span class="o">|</span> <span class="n">Variable_name</span>            <span class="o">|</span> <span class="n">Value</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------------+-------+</span>
+<span class="o">|</span> <span class="n">auto_increment_increment</span> <span class="o">|</span> <span class="mi">3</span>     <span class="o">|</span>
+<span class="o">|</span> <span class="n">auto_increment_offset</span>    <span class="o">|</span> <span class="mi">5</span>     <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------------+-------+</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">t3</span> <span class="p">(</span><span class="k">c</span> <span class="nb">INT</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="n">AUTO_INCREMENT</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t3</span> <span class="k">VALUES</span> <span class="p">(</span><span class="k">NULL</span><span class="p">),</span> <span class="p">(</span><span class="k">NULL</span><span class="p">),</span> <span class="p">(</span><span class="k">NULL</span><span class="p">);</span>
+
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t3</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---+</span>
+<span class="o">|</span> <span class="k">c</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---+</span>
+<span class="o">|</span> <span class="mi">1</span> <span class="o">|</span>
+<span class="o">|</span> <span class="mi">4</span> <span class="o">|</span>
+<span class="o">|</span> <span class="mi">5</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---+</span>
+
+<span class="o">+</span><span class="c1">--------------------------+-------+</span>
+<span class="o">|</span> <span class="n">Variable_name</span>            <span class="o">|</span> <span class="n">Value</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------------+-------+</span>
+<span class="o">|</span> <span class="n">auto_increment_increment</span> <span class="o">|</span> <span class="mi">3</span>     <span class="o">|</span>
+<span class="o">|</span> <span class="n">auto_increment_offset</span>    <span class="o">|</span> <span class="mi">3</span>     <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------------+-------+</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t4</span> <span class="k">VALUES</span> <span class="p">(</span><span class="k">NULL</span><span class="p">),</span> <span class="p">(</span><span class="k">NULL</span><span class="p">),</span> <span class="p">(</span><span class="k">NULL</span><span class="p">);</span>
+
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t4</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---+</span>
+<span class="o">|</span> <span class="k">c</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---+</span>
+<span class="o">|</span> <span class="mi">3</span> <span class="o">|</span>
+<span class="o">|</span> <span class="mi">6</span> <span class="o">|</span>
+<span class="o">|</span> <span class="mi">9</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---+</span>
+</pre><h2 class="anchored_heading" id="check-constraints-default-values-and-virtual-columns">CHECK Constraints, DEFAULT Values and Virtual Columns</h2>
 <p>auto_increment columns are not permitted in <a href="/kb/en/constraint/">CHECK constraints</a>, <a href="/kb/en/create-table/#default">DEFAULT value expressions</a> and <a href="/kb/en/virtual-computed-columns/">virtual columns</a>. They were permitted until <a href="/kb/en/mariadb-1026-release-notes/">MariaDB 10.2.6</a>, but did not work correctly. See <a href="https://jira.mariadb.org/browse/MDEV-11117">MDEV-11117</a>.</p>
 <h2 class="anchored_heading" id="generating-auto_increment-values-when-adding-the-attribute">Generating Auto_Increment Values When Adding the Attribute</h2>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">a</span> <span class="nb">INT</span><span class="p">);</span>
