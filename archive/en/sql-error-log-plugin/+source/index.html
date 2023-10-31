@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/sql-error-log-plugin/+r/130329/">130329</a></dd>
+            <dd><a href="/kb/en/sql-error-log-plugin/+r/131796/">131796</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-939">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-09-20 11:57">2023-09-20 11:57</span></dd>
+<span class="datetime" title="2023-10-31 14:38">2023-10-31 14:38</span></dd>
         </dl>
     </div>
     
@@ -338,7 +338,39 @@ UNINSTALL SONAME &#39;sql_errlog&#39;;
 
 If you installed the plugin by providing the [[mariadbd-options/#-plugin-load|--plugin-load]] or the [[mariadbd-options/#-plugin-load-add|--plugin-load-add]] options in a relevant server [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]], then those options should be removed to prevent the plugin from being loaded the next time the server is restarted.
 
-== Example
+
+== Things logged
+
+The current log format before 10.10 is:
+&lt;&lt;code&gt;&gt;
+Time User Error_code: Error_message : Query
+&lt;&lt;/code&gt;&gt;
+
+Starting from 10.11 the format is:
+&lt;&lt;code&gt;&gt;
+Time User Type Error_code: Error_message : Query
+&lt;&lt;/code&gt;&gt;
+
+Each separated by a space or : as above
+
+&lt;&lt;style class=&#34;darkheader-nospace-borders&#34;&gt;&gt;
+|= Option |= Description |= Version |
+|##Time## | Time (YYYY-MM-DD hh-mm-ss) | 5.5.22 |
+|##User## | privilege_user [login_user_name] @ hostname [ip] | 5.5.22 |
+|##Type## | ERROR or WARNING | 10.11.6 |
+|##Error_code##| OS error, MariaDB storage engine code (120-199) or MariaDB internal error code (1000-) | 5.5.22 |
+|##Query##| Query text | 5.5.22 |
+&lt;&lt;/style&gt;&gt;
+
+== Example of logs
+
+&lt;&lt;code&gt;&gt;
+2023-10-31 15:54:37 root[root] @ localhost [] ERROR 1146: Table &#39;test.t_doesnt_exist&#39; doesn&#39;t exist : select * from t_doesnt_exist
+2023-10-31 15:54:37 root[root] @ localhost [] ERROR 1064: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near &#39;syntax_error_query&#39; at line 1 : syntax_error_query
+2023-10-31 15:54:37 root[root] @ localhost [] ERROR 1146: Table &#39;test.temptab&#39; doesn&#39;t exist : SELECT `c` FROM `temptab`
+&lt;&lt;/code&gt;&gt;
+
+== Example usage
 
 &lt;&lt;code wrap= true&gt;&gt;
 install plugin SQL_ERROR_LOG soname &#39;sql_errlog&#39;;

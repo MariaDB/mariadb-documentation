@@ -23,9 +23,9 @@
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
     <meta property="og:site_name" content="MariaDB KnowledgeBase" />
     <meta property="fb:admins" content="514852603" />
-    <meta property="og:description" content="This process shows how to deploy MariaDB in a Docker container running on an Azure VM instance. First we&#39;ll create the Azure VM, then we&#39;ll deploy Docker to it. After that, we..." />
+    <meta property="og:description" content="This process shows how to deploy, connect to, and create MariaDB database in a Docker container running on an Azure VM instance." />
 
-    <meta name="description" content="This process shows how to deploy MariaDB in a Docker container running on an Azure VM instance. First we&#39;ll create the Azure VM, then we&#39;ll deploy Docker to it. After that, we..." />
+    <meta name="description" content="This process shows how to deploy, connect to, and create MariaDB database in a Docker container running on an Azure VM instance." />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
@@ -255,12 +255,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-10-27 23:18">2 days, 18 hours ago</span></dd>
+<span class="datetime" title="2023-10-27 23:18">3 days, 17 hours ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-10-30 17:12">50 minutes ago</span></dd>
+<span class="datetime" title="2023-10-31 05:35">11 hours, 25 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -330,6 +330,9 @@
                     </li>
                 
                     <li><a href="/kb/en/docker-and-microsoft-azure/+image/azure-firewall-rule-3306">azure-firewall-rule-3306</a>
+                    </li>
+                
+                    <li><a href="/kb/en/docker-and-microsoft-azure/+image/azure-get-ip">azure-get-ip</a>
                     </li>
                 
             </ul>
@@ -433,7 +436,10 @@
 <p><img src="/kb/en/docker-and-microsoft-azure/+image/azure-create-vm-ssh" alt="azure-create-vm-ssh" title="azure-create-vm-ssh"></p>
 <p>6. Click "Review + Create" at the very bottom of the "create virtual machine" page to create the VM.
 <img src="/kb/en/docker-and-microsoft-azure/+image/azure-deployment-create" alt="azure-deployment-create" title="azure-deployment-create"></p>
-<p>7. Download the SSH keys and them in a safe place, you will need them later.  If you’re on Linux, don’t forget to change permissions on the downloaded *.pem / *.ppk key file: $ chmod 400 your-SSH-key-name.pem
+<p>7. Download the SSH keys and them in a safe place, you will need them later. For this example, let's name the key file mrdb-docker-pk.pem. </p>
+<p>If your local machine is Linux or you are using WSL on Windows, open a terminal window and:
+$ mv /mnt/c/&lt;your-private-key&gt; /.ssh/
+$ chmod 400 /.ssh/&lt;your-private-key&gt;
 <img src="/kb/en/docker-and-microsoft-azure/+image/azure-create-vm-ssh-key" alt="azure-create-vm-ssh-key" title="azure-create-vm-ssh-key"></p>
 <p>8. Once the VM is deployed, "click to resource" to get back to the virtual machine's overview page.
 <img src="/kb/en/docker-and-microsoft-azure/+image/azure-deployment" alt="azure-deployment" title="azure-deployment"></p>
@@ -443,46 +449,48 @@
 <img src="/kb/en/docker-and-microsoft-azure/+image/azure-firewall-rule" alt="azure-firewall-rule" title="azure-firewall-rule"></p>
 <p>11. Configure the port rule to allow port TCP 3306 inbound (mySQL) so that you can make external connections from your local Maria DB command line client, to the dockerized Maria DB instance in your Azure Linux VM.
 <img src="/kb/en/docker-and-microsoft-azure/+image/azure-firewall-rule-3306" alt="azure-firewall-rule-3306" title="azure-firewall-rule-3306"></p>
+<p>12.  Navigate back to the virtual machine's overview page.  Then copy the public IP address to the clipboard.
+<img src="/kb/en/docker-and-microsoft-azure/+image/azure-get-ip" alt="azure-get-ip" title="azure-get-ip"></p>
 <p><strong>Install Docker on the Azure VM</strong></p>
 <p>For more detailed instructions, refer to <a href="https://mariadb.com/kb/en/installing-and-using-mariadb-via-docker/">Installing and Using MariaDB via Docker</a></p>
-<p>14. Back in the instance summary (EC2 &gt; Instances &gt; Instance ID), copy the public IP (e.g. ww.xx.yyy.zzz)</p>
-<p>15. Open terminal window, navigate to the directory with private key (*.pem or *.ppk) file and start a SSH remote shell session by typing:</p>
-<p>$ ssh -i mrdb-docker-pk.pem ubuntu@ww.xx.yyy.zzz</p>
-<p>(switch ww.xx.yyy.zzz for your IP address from step 14).</p>
-<p>16. Are you sure you want to continue connecting (yes/no/[fingerprint])? 
+<p>16. Open terminal window, referencing the path to the private key (*.pem or *.ppk) file, and start a SSH remote shell session by typing:</p>
+<p>$ ssh -i /.ssh/mrdb-docker-pk.pem azureuser@ww.xx.yyy.zzz</p>
+<p>(switch ww.xx.yyy.zzz for your IP address from step 12, and replace "mrdb-docker-pk.pem" with your keyfile name if you chose something different).</p>
+<p>If you forget your administrator account details, simply go to the left-hand navigation and choose settings &gt; connect, and Azure will display the public IP address, admin username, and port for you.</p>
+<p>17. Are you sure you want to continue connecting (yes/no/[fingerprint])? 
 Say yes</p>
-<p>17. Escalate to root </p>
+<p>18. Escalate to root </p>
 <p>$ sudo su</p>
-<p>18. Install Docker</p>
+<p>19. Microsoft Azure on two machines come with docker preinstalled.  For any reason you need to reinstall it , chose another machine type is not have docker preinstalled, you can install docker inside your SSH session with cURL by typing:</p>
 <p>$ curl -fsSL <a href="https://get.docker.com">https://get.docker.com</a> | sudo sh</p>
 <p><strong>Pull the MariaDB Docker image and create the container</strong></p>
-<p>19. Pull MariaDB Docker image</p>
+<p>20. Pull MariaDB Docker image</p>
 <p>$ docker pull mariadb:lts</p>
-<p>20. Start MDRB docker process</p>
+<p>21. Start MDRB docker process</p>
 <p>at your terminal / command line, type:</p>
 <p>$ docker run --detach --name mariadb-docker -v \Users\YouUID\Documents\YourDirName:/var/lib/mysql:Z -p 3306:3306 -e MARIADB_ROOT_PASSWORD=yoursecurepassword mariadb:lts</p>
 <p>The -v flag mounts a directory that you choose as /var/lib/mysql will ensure that the volume is persistent.
 Windows file paths like C:\Users\YouUID\Documents\YourDirName should be represented as above.
 Linux file paths should also be absolute vs. relative.  Obviously replace the root password with something that is a bit more secure than you see in this example for anything other than development purposes.</p>
-<p>21. Shell into container</p>
+<p>22. Shell into container</p>
 <p>$ docker exec -it mariadb-docker bash</p>
-<p>22. Login to MRDB inside container </p>
+<p>23. Login to MRDB inside container </p>
 <p>Using the root password specified in step 20, type:</p>
 <p>$ mariadb -pyoursecurepassword </p>
-<p>23. Setup admin account with permission for remote connection, configure access control</p>
+<p>24. Setup admin account with permission for remote connection, configure access control</p>
 <p>MariaDB [(none)]&gt; CREATE USER 'admin'@'%' IDENTIFIED BY 'admin';</p>
 <p>MariaDB [(none)]&gt; GRANT ALL ON *.* to 'admin'@'%' WITH GRANT OPTION;</p>
 <p>MariaDB [(none)]&gt; SHOW GRANTS FOR admin;</p>
 <p>Obviously replace these passwords with something that is a bit more secure than you see in this example for anything other than development purposes.</p>
-<p>24. Setup service account for your app with permission for remote connection, configure access control</p>
+<p>25. Setup service account for your app with permission for remote connection, configure access control</p>
 <p>MariaDB [(none)]&gt; CREATE USER 'yourappname'@'%' IDENTIFIED BY 'yoursecurepassword';</p>
 <p>MariaDB [(none)]&gt; GRANT INSERT, UPDATE, DELETE ON *.* to 'yourappname'@'%';</p>
 <p>MariaDB [(none)]&gt; SHOW GRANTS FOR yourappname;</p>
 <p>Obviously replace these passwords with something that is a bit more secure than you see in this example for anything other than development purposes.</p>
-<p>25. Load up your database from your preexisting SQL script that contains <a href="https://mariadb.com/docs/server/ref/mdb/sql-statements/CREATE_DATABASE/">CREATE DATABASE</a>; <a href="https://mariadb.com/kb/en/use-database/">USE DATABASE</a>; and <a href="https://mariadb.com/kb/en/create-table/">CREATE TABLE</a> statements.</p>
-<p>In a new local terminal window, not your SSH session, change directory to the directory containing your database creation script, say, init.sql in this example. Type: </p>
+<p>26. Load up your database from your preexisting SQL script that contains <a href="https://mariadb.com/docs/server/ref/mdb/sql-statements/CREATE_DATABASE/">CREATE DATABASE</a>; <a href="https://mariadb.com/kb/en/use-database/">USE DATABASE</a>; and <a href="https://mariadb.com/kb/en/create-table/">CREATE TABLE</a> statements.</p>
+<p>In a new local terminal window, not your SSH session, change directory to the directory containing your database creation script, say, init.sql in this example. Then type: </p>
 <p>$ mariadb --host=ww.xx.yyy.zzz --port=3306 --user=admin --password=admin -e “SOURCE init.sql”</p>
-<p>(switch ww.xx.yyy.zzz for your IP address from step 14).</p>
+<p>(switch ww.xx.yyy.zzz for your IP address from step 12).</p>
 
     </div>
 
