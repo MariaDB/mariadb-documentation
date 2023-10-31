@@ -249,12 +249,12 @@ param..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-02-27 21:22">7 months, 4 weeks ago</span></dd>
+<span class="datetime" title="2023-02-27 21:22">8 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-05-10 10:26">5 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2023-05-10 10:26">5 months, 3 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -271,7 +271,7 @@ param..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.4/Documentation/Routers/ReadWriteSplit.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.5/Documentation/Routers/ReadWriteSplit.md">GitHub</a></dd>
         
     </dl>
 
@@ -447,6 +447,10 @@ is included and use examples are provided.</p>
 <li><a href="#server-ranks">Server Ranks</a></li>
 <li><a href="#routing-hints">Routing hints</a><ul>
 <li><a href="#known-limitations-of-routing-hints">Known Limitations of Routing Hints</a></li>
+</ul>
+</li>
+<li><a href="#module-commands">Module Commands</a><ul>
+<li><a href="#reset-gtid">reset-gtid</a></li>
 </ul>
 </li>
 <li><a href="#examples">Examples</a></li>
@@ -723,6 +727,11 @@ are used as proxies of server load conditions. At selection time the averages
 are copied and modified to favor faster servers, while at the same time
 guaranteeing at lest some traffic to the slowest servers. The server selection
 is probabilistic based on roulette wheel selection.</p>
+<p>Starting with MaxScale versions 2.5.29, 6.4.11, 22.08.9, 23.02.5 and 23.08.1,
+lowercase versions of the values are also accepted. For example,
+<code>slave_selection_criteria=LEAST_CURRENT_OPERATIONS</code> and
+<code>slave_selection_criteria=least_current_operations</code> are both accepted as valid
+values.</p>
 <h4 id="interaction-between-slave_selection_criteria-and-max_slave_connections">Interaction Between <code>slave_selection_criteria</code> and <code>max_slave_connections</code></h4>
 <p>Depending on the value of <code>max_slave_connections</code>, the replica selection criteria
 behave in different ways. Here are a few example cases of how the different
@@ -1196,6 +1205,9 @@ GTID coordinates will never be reset: if replication is reset and and GTID
 coordinates go "backwards", readwritesplit will not consider these as being
 newer than the ones already stored. To reset the stored GTID coordinates in
 readwritesplit, MaxScale must be restarted.</p>
+<p>MaxScale 6.4.11 added the new <code>reset-gtid</code> module command to
+readwritesplit. This allows the global GTID state used by
+<code>causal_reads=global</code> to be reset without having to restart MaxScale.</p>
 </li>
 <li>
 <p><code>fast</code></p>
@@ -1481,6 +1493,20 @@ routing hints to override the transaction logic.</p>
   will block DDL statements on the server until either the connection is closed
   or autocommit is enabled again.</li>
 </ul>
+<h2 id="module-commands">Module Commands</h2>
+<p>The readwritesplit router implements the following module commands.</p>
+<h3 id="reset-gtid"><code>reset-gtid</code></h3>
+<p>The command resets the global GTID state in the router. It can be used with
+<code>causal_reads=global</code> to reset the state. This can be useful when the cluster is
+reverted to an earlier state and the GTIDs recorded in MaxScale are no longer
+valid.</p>
+<p>The first and only argument to the command is the router name. For example, to
+reset the GTID state of a readwritesplit named <code>My-RW-Router</code>, the following
+MaxCtrl command should be used:</p>
+<div><pre><span></span>maxctrl call command readwritesplit reset-gtid My-RW-Router
+</pre></div>
+
+
 <h2 id="examples">Examples</h2>
 <p>Examples of the readwritesplit router in use can be found in the
 <a href="../Tutorials">Tutorials</a> folder.</p>
@@ -1655,6 +1681,13 @@ open. If a connection to a backend database fails during this, it can result in
 unnecessary transaction replays which in turn can end up with checksum
 conflicts. The recommended approach is to not use any commands inside a
 transaction that would be routed to more than one node.</p>
+<p>If the connection to the server where a transaction is being executed is lost
+while a <code>ROLLBACK</code> is being executed, readwritesplit will still attempt to
+replay the transaction in the hopes that the real response can be delivered to
+the client. However, this does mean that it is possible that a rolled back
+transaction which gets replayed ends up with a conflict and is reported as a
+replay failure when in reality a rolled back transaction could be safely
+ignored.</p>
 <h3 id="legacy-configuration">Legacy Configuration</h3>
 <p>In older versions of MaxScale, routers were configured via the <em>router_options</em>
 parameter. This functionality was deprecated in 2.2 and was removed in 2.3.</p>

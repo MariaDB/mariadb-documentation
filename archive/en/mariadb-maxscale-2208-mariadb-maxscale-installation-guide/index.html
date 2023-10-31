@@ -269,7 +269,7 @@ https://mariadb.com/downloads/#mariadb_platform-mariadb..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/22.08.8/Documentation/Getting-Started/MariaDB-MaxScale-Installation-Guide.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/22.08.9/Documentation/Getting-Started/MariaDB-MaxScale-Installation-Guide.md">GitHub</a></dd>
         
     </dl>
 
@@ -420,6 +420,32 @@ MaxScale versions side by side. For instructions on how to do that, please refer
 <p>Alternatively you may download the MariaDB MaxScale source and build your own binaries.
 To do this, refer to the separate document
 <a href="/kb/en/mariadb-maxscale-2208-building-mariadb-maxscale-from-source-code/">Building MariaDB MaxScale from Source Code</a></p>
+<h2 id="assumptions">Assumptions</h2>
+<h3 id="memory-allocation-behavior">Memory allocation behavior</h3>
+<p>MaxScale assumes that memory allocations always succeed and in general does
+not check for memory allocation failures. This assumption is compatible with
+the Linux kernel parameter
+<a href="https://www.kernel.org/doc/Documentation/vm/overcommit-accounting"><code>vm.overcommit_memory</code></a>
+having the value <code>0</code>, which is also the default on most systems.</p>
+<p>With <code>vm.overcommit_memory</code> being <code>0</code>, memory <em>allocations</em> made by an
+application never fail, but instead the application may be killed by the
+so-called OOM (out-of-memory) killer if, by the time the application
+actually attempts to <em>use</em> the allocated memory, there is not available
+free memory on the system.</p>
+<p>If the value is <code>2</code>, then a memory allocation made by an application may
+fail and unless the application is prepared for that possiblity, it will
+likely crash with a SIGSEGV. As MaxScale is not prepared to handle memory
+allocation failures, it will crash in this situation.</p>
+<p>The current value of <code>vm.overcommit_memory</code> can be checked with</p>
+<div><pre><span></span>sysctl vm.overcommit_memory
+</pre></div>
+
+
+<p>or</p>
+<div><pre><span></span>cat /proc/sys/vm/overcommit_memory
+</pre></div>
+
+
 <h2 id="configuring-mariadb-maxscale">Configuring MariaDB MaxScale</h2>
 <p><a href="/kb/en/mariadb-maxscale-2208-setting-up-mariadb-maxscale/">The MaxScale Tutorial</a> covers the first
 steps in configuring your MariaDB MaxScale installation. Follow this tutorial

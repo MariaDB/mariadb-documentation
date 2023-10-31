@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/+r/129790/">129790</a></dd>
+            <dd><a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/+r/131483/">131483</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1">
@@ -1101,6 +1101,16 @@ In the example above, the logging of a particular error will be suppressed for
 The default is `10, 1000ms, 10000ms`, which means that if the same error is
 logged 10 times in one second, the logging of that error is suppressed for the
 following 10 seconds.
+
+Whenever an error message that is being throttled is logged within the
+triggering window (the second argument), the suppression window is
+extended. This continues until there is a pause in the messages that is longer
+than the triggering window.
+
+For example, with the default configuration the messages must pause for at least
+one second in order for the throttling to eventually stop. This mechanism
+prevents long-lasting error conditions from slowly filling up the log with short
+bursts of messages.
 
 To disable log throttling, add an entry with an empty value
 
@@ -3198,6 +3208,22 @@ section of the galeramon documentation for more information on how to use it.
 Starting with MaxScale 2.5.21, this parameter also accepts negative values. In
 older versions, the parameter only accepted non-negative values.
 
+### `replication_custom_options`
+
+- **Type**: string
+- **Default**: None
+- **Dynamic**: Yes
+
+Server-specific custom string added to &#34;CHANGE MASTER TO&#34;-commands sent by
+MariaDB Monitor. Overrides `replication_custom_options` setting set in
+the monitor. This setting affects the server where the command is ran at, not
+the source of the replication. That is, if monitor sends a &#34;CHANGE MASTER TO&#34;-
+command to server A telling it to replicate from server B, the setting value
+from MaxScale configuration for server A would be used.
+
+See [MariaDB Monitor documentation](node:mariadb-maxscale-2302-mariadb-monitor#replication_custom_options)
+for more information.
+
 ## Monitor
 
 Monitor sections are used to define the monitoring module that watches a set of
@@ -3664,7 +3690,7 @@ API. **Only do this if you know what you are doing.**
 
 ## Filter Modules
 
-![image alt text](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.4/Documentation/Getting-Started/images/image_10.png)
+![image alt text](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.5/Documentation/Getting-Started/images/image_10.png)
 
 Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
@@ -3803,6 +3829,14 @@ database transaction is being committed, the new configuration can be
 momentarily visible to the local MaxScale. This means the changes are not
 guaranteed to be atomic on the local MaxScale but are atomic from the cluster&#39;s
 point of view.
+
+### Synchronization of Encrypted Passwords
+
+Starting with MaxScale 6.4.9, any passwords that are transmitted by the
+configuration synchronization are encrypted if password encryption has been
+enabled in MaxScale. This means that all MaxScale nodes in the same
+configuration cluster must be configured to use password encryption and they
+need to all use the same encryption keys that were created with `maxkeys`.
 
 ### Managing Configuration Synchronization
 

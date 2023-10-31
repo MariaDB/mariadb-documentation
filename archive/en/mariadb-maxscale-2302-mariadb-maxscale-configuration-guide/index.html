@@ -279,12 +279,12 @@ Administra..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-02-27 21:22">7 months, 4 weeks ago</span></dd>
+<span class="datetime" title="2023-02-27 21:22">8 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-02-27 21:22">7 months, 4 weeks ago</span></dd>
+<span class="datetime" title="2023-02-27 21:22">8 months ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -301,7 +301,7 @@ Administra..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.4/Documentation/Getting-Started/Configuration-Guide.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.5/Documentation/Getting-Started/Configuration-Guide.md">GitHub</a></dd>
         
     </dl>
 
@@ -599,6 +599,7 @@ Administra..." />
 <li><a href="#disk_space_threshold">disk_space_threshold</a></li>
 <li><a href="#rank">rank</a></li>
 <li><a href="#priority">priority</a></li>
+<li><a href="#replication_custom_options">replication_custom_options</a></li>
 </ul>
 </li>
 <li><a href="#monitor_1">Monitor</a></li>
@@ -654,6 +655,7 @@ Administra..." />
 <li><a href="#runtime-configuration-changes">Runtime Configuration Changes</a><ul>
 <li><a href="#configuration-synchronization">Configuration Synchronization</a><ul>
 <li><a href="#error-handling-in-configuration-synchronization">Error Handling in Configuration Synchronization</a></li>
+<li><a href="#synchronization-of-encrypted-passwords">Synchronization of Encrypted Passwords</a></li>
 <li><a href="#managing-configuration-synchronization">Managing Configuration Synchronization</a></li>
 <li><a href="#limitations-in-configuration-synchronization">Limitations in Configuration Synchronization</a></li>
 </ul>
@@ -1448,6 +1450,14 @@ log_throttling=8, 2s, 15000ms
 <p>The default is <code>10, 1000ms, 10000ms</code>, which means that if the same error is
 logged 10 times in one second, the logging of that error is suppressed for the
 following 10 seconds.</p>
+<p>Whenever an error message that is being throttled is logged within the
+triggering window (the second argument), the suppression window is
+extended. This continues until there is a pause in the messages that is longer
+than the triggering window.</p>
+<p>For example, with the default configuration the messages must pause for at least
+one second in order for the throttling to eventually stop. This mechanism
+prevents long-lasting error conditions from slowly filling up the log with short
+bursts of messages.</p>
 <p>To disable log throttling, add an entry with an empty value</p>
 <div><pre><span></span>log_throttling=
 </pre></div>
@@ -3248,6 +3258,20 @@ nodes are selected as the current primary server. Refer to the
 section of the galeramon documentation for more information on how to use it.</p>
 <p>Starting with MaxScale 2.5.21, this parameter also accepts negative values. In
 older versions, the parameter only accepted non-negative values.</p>
+<h3 id="replication_custom_options"><code>replication_custom_options</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Default</strong>: None</li>
+<li><strong>Dynamic</strong>: Yes</li>
+</ul>
+<p>Server-specific custom string added to "CHANGE MASTER TO"-commands sent by
+MariaDB Monitor. Overrides <code>replication_custom_options</code> setting set in
+the monitor. This setting affects the server where the command is ran at, not
+the source of the replication. That is, if monitor sends a "CHANGE MASTER TO"-
+command to server A telling it to replicate from server B, the setting value
+from MaxScale configuration for server A would be used.</p>
+<p>See <a href="/kb/en/mariadb-maxscale-2302-mariadb-monitor/#replication_custom_options">MariaDB Monitor documentation</a>
+for more information.</p>
 <h2 id="monitor_1">Monitor</h2>
 <p>Monitor sections are used to define the monitoring module that watches a set of
 servers. Each server can only be monitored by one monitor.</p>
@@ -3622,7 +3646,7 @@ run MariaDB MaxScale without a monitor module. In this case an external
 monitoring system must the status of each server via MaxCtrl or the REST
 API. <strong>Only do this if you know what you are doing.</strong></p>
 <h2 id="filter-modules">Filter Modules</h2>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.4/Documentation/Getting-Started/images/image_10.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.5/Documentation/Getting-Started/images/image_10.png"></p>
 <p>Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
 explanation of each filter's functionality can be found in its documentation.</p>
@@ -3742,6 +3766,12 @@ database transaction is being committed, the new configuration can be
 momentarily visible to the local MaxScale. This means the changes are not
 guaranteed to be atomic on the local MaxScale but are atomic from the cluster's
 point of view.</p>
+<h3 id="synchronization-of-encrypted-passwords">Synchronization of Encrypted Passwords</h3>
+<p>Starting with MaxScale 6.4.9, any passwords that are transmitted by the
+configuration synchronization are encrypted if password encryption has been
+enabled in MaxScale. This means that all MaxScale nodes in the same
+configuration cluster must be configured to use password encryption and they
+need to all use the same encryption keys that were created with <code>maxkeys</code>.</p>
 <h3 id="managing-configuration-synchronization">Managing Configuration Synchronization</h3>
 <p>The output of <code>maxctrl show maxscale</code> contains the <code>Config Sync</code> field with
 information about the current configuration state of the local Maxscale as well

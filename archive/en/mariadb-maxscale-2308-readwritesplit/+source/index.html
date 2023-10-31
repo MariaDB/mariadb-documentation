@@ -280,7 +280,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-maxscale-2308-readwritesplit/+r/130538/">130538</a></dd>
+            <dd><a href="/kb/en/mariadb-maxscale-2308-readwritesplit/+r/131403/">131403</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5571">
@@ -1120,6 +1120,10 @@ The possible values for this parameter are:
     newer than the ones already stored. To reset the stored GTID coordinates in
     readwritesplit, MaxScale must be restarted.
 
+    MaxScale 6.4.11 added the new `reset-gtid` module command to
+    readwritesplit. This allows the global GTID state used by
+    `causal_reads=global` to be reset without having to restart MaxScale.
+
 * `fast`
 
   * This mode is similar to the `local` mode where it will only affect the
@@ -1341,6 +1345,16 @@ initial connection creation is skipped. If the client executes only read
 queries, no connection to the primary is made. If only write queries are made,
 only the primary connection is used.
 
+In MaxScale 23.08.2, if a [session command](#routing-to-every-session-backend)
+is received as the first command, the default behavior is to execute it on a
+replica. If [master_accept_reads](#master_accept_reads) is enabled, the query is
+executed on the primary server, if one is available. In practice this means that
+workloads which are mostly reads with infrequent writes should disable
+`master_accept_reads` if they also use `lazy_connect`.
+
+Older versions of MaxScale always tried to execute all session commands on the
+primary node if one was available.
+
 ### `reuse_prepared_statements`
 
 - **Type**: [boolean](node:mariadb-maxscale-2308-mariadb-maxscale-configuration-guide#booleans)
@@ -1433,6 +1447,25 @@ routing hints to override the transaction logic.
   causes some metadata locks to be acquired on the database in question which
   will block DDL statements on the server until either the connection is closed
   or autocommit is enabled again.
+
+## Module Commands
+
+The readwritesplit router implements the following module commands.
+
+### `reset-gtid`
+
+The command resets the global GTID state in the router. It can be used with
+`causal_reads=global` to reset the state. This can be useful when the cluster is
+reverted to an earlier state and the GTIDs recorded in MaxScale are no longer
+valid.
+
+The first and only argument to the command is the router name. For example, to
+reset the GTID state of a readwritesplit named `My-RW-Router`, the following
+MaxCtrl command should be used:
+
+```
+maxctrl call command readwritesplit reset-gtid My-RW-Router
+```
 
 ## Examples
 
@@ -1616,6 +1649,14 @@ replay the failing statement. Starting with MaxScale 23.08, this limitation no
 longer applies if the statement was done inside of a transaction and
 `transaction_replay` is enabled
 ([MXS-4549](https://jira.mariadb.org/browse/MXS-4549)).
+
+If the connection to the server where a transaction is being executed is lost
+while a `ROLLBACK` is being executed, readwritesplit will still attempt to
+replay the transaction in the hopes that the real response can be delivered to
+the client. However, this does mean that it is possible that a rolled back
+transaction which gets replayed ends up with a conflict and is reported as a
+replay failure when in reality a rolled back transaction could be safely
+ignored.
 
 #### Limitations in Session State Modifications
 

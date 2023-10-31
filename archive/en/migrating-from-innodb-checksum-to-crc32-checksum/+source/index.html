@@ -280,7 +280,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+r/130964/">130964</a></dd>
+            <dd><a href="/kb/en/migrating-from-innodb-checksum-to-crc32-checksum/+r/131125/">131125</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-14384">
@@ -289,7 +289,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-10-09 15:10">2023-10-09 15:10</span></dd>
+<span class="datetime" title="2023-10-25 05:00">2023-10-25 05:00</span></dd>
         </dl>
     </div>
     
@@ -301,6 +301,18 @@
 Could you please provide the migration steps to rebuild existing InnoDB tables and verify that there are no impacts on any existing InnoDB table pages after changing the checksum algorithm?</textarea>
     
 
+    
+        
+            <h2>Answer</h2>
+        
+        <textarea id="answer_source" class="creole_source autogrow">I realize that it might be helpful to add back the &lt;&lt;code&gt;&gt;innodb&lt;&lt;/code&gt;&gt; and &lt;&lt;code&gt;&gt;none&lt;&lt;/code&gt;&gt; checksum algorithms to the &lt;&lt;code&gt;&gt;innochecksum&lt;&lt;/code&gt;&gt; utility. This would require some code refactoring, duplicating some InnoDB source code instead of compiling that code with special options for inclusion in &lt;&lt;code&gt;innochecksum&lt;&lt;/code&gt;&gt;.
+
+On the other hand, you could use the &lt;&lt;code&gt;&gt;innochecksum&lt;&lt;/code&gt;&gt; utility from an older release to verify that the page checksums are valid and to convert them to the &lt;&lt;code&gt;&gt;crc32&lt;&lt;/code&gt;&gt; checksum. If you do not care about the verification step, then you should be able to blindly rewrite the page checksums to the &lt;&lt;code&gt;&gt;crc32&lt;&lt;/code&gt;&gt; format.
+
+Still, I think that the best solution would be to rebuild all InnoDB tables, simply by &lt;&lt;code&gt;&gt;OPTIMIZE TABLE&lt;&lt;/code&gt;&gt;. To see which tables are not in the full_crc32 format yet, try the following trick from MDEV-32230:
+&lt;&lt;code&gt;&gt;SELECT name FROM INFORMATION_SCHEMA.INNODB_SYS_TABLESPACES WHERE row_format IS NULL;&lt;&lt;/code&gt;&gt;
+
+I am afraid that the only way to convert the InnoDB system tablespace to the &lt;&lt;code&gt;&gt;full_crc32&lt;&lt;/code&gt;&gt; format would be to rebuild the entire database from a logical dump. The next best thing that you could do is to use &lt;&lt;code&gt;&gt;innochecksum&lt;&lt;/code&gt;&gt; to convert each page to the &lt;&lt;code&gt;&gt;crc32&lt;&lt;/code&gt;&gt; checksum, and then start the server with &lt;&lt;code&gt;&gt;innodb_checksum_algorithm=strict_full_crc32&lt;&lt;/code&gt;&gt; so that new files will be created in the &lt;&lt;code&gt;&gt;full_crc32&lt;&lt;/code&gt;&gt; format, and for any old-format files only the &lt;&lt;code&gt;&gt;crc32&lt;&lt;/code&gt;&gt; page checksums will be allowed.</textarea>
     
 
 

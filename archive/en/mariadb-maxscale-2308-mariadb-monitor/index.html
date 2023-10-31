@@ -263,12 +263,12 @@ MariaDB Monitor optional par..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-09-05 20:20">1 month, 2 weeks ago</span></dd>
+<span class="datetime" title="2023-09-05 20:20">1 month, 3 weeks ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-05 20:20">1 month, 2 weeks ago</span></dd>
+<span class="datetime" title="2023-09-05 20:20">1 month, 3 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -285,7 +285,7 @@ MariaDB Monitor optional par..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.08.1/Documentation/Monitors/MariaDB-Monitor.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.08.2/Documentation/Monitors/MariaDB-Monitor.md">GitHub</a></dd>
         
     </dl>
 
@@ -443,6 +443,7 @@ MariaDB Monitor optional par..." />
 <li><a href="#enforce_simple_topology">enforce_simple_topology</a></li>
 <li><a href="#replication_user-and-replication_password">replication_user and replication_password</a></li>
 <li><a href="#replication_master_ssl">replication_master_ssl</a></li>
+<li><a href="#replication_custom_options">replication_custom_options</a></li>
 <li><a href="#failover_timeout-and-switchover_timeout">failover_timeout and switchover_timeout</a></li>
 <li><a href="#verify_master_failure-and-master_failure_timeout">verify_master_failure and master_failure_timeout</a></li>
 <li><a href="#servers_no_promotion">servers_no_promotion</a></li>
@@ -1094,16 +1095,22 @@ the above requirements. Rejoin does not obey <code>failcount</code> and will att
 rejoin any valid servers immediately. When activating rejoin manually, the
 user-designated server must fulfill the same requirements.</p>
 <h3 id="limitations-and-requirements">Limitations and requirements</h3>
-<p>Switchover and failover only understand simple topologies. They will not work if
-the cluster has multiple primaries, relay primaries, or if the topology is
-circular.</p>
+<p>Switchover and failover are meant for simple topologies (one primary and
+several replicas). Using these commands with complicated topologies
+(multiple primaries, relays, circular replication) may give unpredictable results
+and should be tested before use on a production system.</p>
+<p>The server cluster is assumed to be well-behaving with no significant
+replication lag (within <code>failover_timeout</code>/<code>switchover_timeout</code>) and all
+commands that modify the cluster (such as "STOP SLAVE", "CHANGE MASTER",
+"START SLAVE") complete in a few seconds (faster than <code>backend_read_timeout</code>
+and <code>backend_write_timeout</code>).</p>
 <p>The backends must all use GTID-based replication, and the domain id should not
-change during a switchover or failover. Primary and replicas must have
-well-behaving GTIDs with no extra events on replica servers.</p>
+change during a switchover or failover. Replicas should not have extra
+local events so that GTIDs are compatible across the cluster.</p>
 <p>Failover cannot be performed if MaxScale was started only after the primary
 server went down. This is because MaxScale needs reliable information on the
 gtid domain of the cluster and the replication topology in general to properly
-select the new primary.</p>
+select the new primary. <code>enforce_simple_topology=1</code> relaxes this requirement.</p>
 <p>Failover may lose events. If a primary goes down before sending new events to at
 least one replica, those events are lost when a new primary is chosen. If the old
 primary comes back online, the other servers have likely moved on with a
@@ -1114,11 +1121,12 @@ In semisynchronous mode, the primary waits for a replica to receive an event bef
 returning an acknowledgement to the client. This does not yet guarantee a clean
 failover. If the primary fails after preparing a transaction but before receiving
 replica acknowledgement, it will still commit the prepared transaction as part of
-its crash recovery. Since the replicas may never have seen this transaction, the
-old primary has diverged from the replicas. See
-<a href="https://mariadb.com/kb/en/library/semisynchronous-replication/#configuring-the-master-wait-point">Configuring the Primary Wait Point</a>
-for more information. In more recent MariaDB Server versions (10.6.2), this
-situation is handled better and the old master can typically rejoin the cluster.</p>
+its crash recovery. If the replicas never saw this transaction, the
+old primary has diverged from the cluster. See
+<a href="https://mariadb.com/kb/en/library/semisynchronous-replication/#configuring-the-master-wait-point">Configuring the Master Wait Point</a>
+for more information. This situation is much less likely in MariaDB Server
+10.6.2 and later, as the improved crash recovery logic will delete such
+transactions.</p>
 <p>Even a controlled shutdown of the primary may lose events. The server does not by
 default wait for all data to be replicated to the replicas when shutting down and
 instead simply closes all connections. Before shutting down the primary with the
@@ -1133,7 +1141,7 @@ primary backend to stop any updates. <em>read_only</em> does not affect users wi
 SUPER-privilege so any such user can issue writes during a switchover. These
 writes have a high chance of breaking replication, because the write may not be
 replicated to all replicas before they switch to the new primary. To prevent this,
-any users who commonly do updates should not have the SUPER-privilege. For even
+any users who commonly do updates should NOT have the SUPER-privilege. For even
 more security, the only SUPER-user session during a switchover should be the
 MaxScale monitor user.</p>
 <p>When mixing rejoin with failover/switchover, the backends should have
@@ -1244,6 +1252,23 @@ servers are configured for ssl. This typically means setting <em>ssl_ca</em>, <e
 user should require an encrypted connection (<code>e.g. ALTER USER repl@'%' REQUIRE SSL;</code>).</p>
 <p>If the setting is left OFF, <code>MASTER_SSL</code> is not set at all, which will preserve existing
 settings when redirecting a replica connection.</p>
+<h4 id="replication_custom_options"><code>replication_custom_options</code></h4>
+<p>Type: string</p>
+<p>A custom string added to "CHANGE MASTER TO"-commands sent by the monitor
+whenever setting up replication (e.g. during switchover). Useful for defining
+ssl certificates or other specialized replication options. MaxScale does not
+check the contents of the string, so care should be taken to ensure that
+only valid options are set and that the contents do not interfere with
+the options MaxScale sets on its own (e.g. MASTER_HOST). This setting can
+also be configured for an individual server. If configured for both
+the monitor and a server, the server setting takes priority.</p>
+<div><pre><span></span>replication_custom_options=MASTER_SSL_CERT = '/tmp/certs/client-cert.pem',
+                           MASTER_SSL_KEY = '/tmp/certs/client-key.pem',
+                           MASTER_SSL_CA = '/tmp/certs/ca.pem',
+                           MASTER_SSL_VERIFY_SERVER_CERT=0
+</pre></div>
+
+
 <h4 id="failover_timeout-and-switchover_timeout"><code>failover_timeout</code> and <code>switchover_timeout</code></h4>
 <p>Time limit for failover and switchover operations. The default
 values are 90 seconds for both. <code>switchover_timeout</code> is also used as the time
@@ -1832,24 +1857,36 @@ OK
 
 <h2 id="troubleshooting">Troubleshooting</h2>
 <h3 id="failoverswitchover-fails">Failover/switchover fails</h3>
-<p>Before performing failover or switchover, the MariaDB Monitor first checks that
-prerequisites are fulfilled, printing any found errors. This should catch and
-explain most issues with failover or switchover not working. If the operations
-are attempted and still fail, then most likely one of the commands the monitor
-issued to a server failed or timed out. The log should explain which query failed.
-To print out all queries sent to the servers, start MaxScale with
-<code>--debug=enable-statement-logging</code>. This setting prints all queries sent to the
-backends by monitors and authenticators. The printed queries may include
-usernames and passwords.</p>
-<p>A typical reason for failure is that a command such as <code>STOP SLAVE</code> takes longer than the
+<p>See the <a href="#limitations_and_requirements">Limitations and requirements-section</a>.</p>
+<p>Before performing failover or switchover, the monitor checks that
+prerequisites are fulfilled, printing any errors and warnings found. This should
+catch and explain most issues with failover or switchover not working.
+If the operations are attempted and still fail, then most likely one of
+the commands the monitor issued to a server failed or timed out. The log should
+explain which query failed.</p>
+<p>A typical failure reason is that a command such as <code>STOP SLAVE</code> takes longer than the
 <code>backend_read_timeout</code> of the monitor, causing the connection to break. As of 2.3, the
 monitor will retry most such queries if the failure was caused by a timeout. The retrying
 continues until the total time for a failover or switchover has been spent. If the log
 shows warnings or errors about commands timing out, increasing the backend timeout
-settings of the monitor should help. Another settings to look at are <code>query_retries</code> and
+settings of the monitor should help. Other settings to look at are <code>query_retries</code> and
 <code>query_retry_timeout</code>. These are general MaxScale settings described in the
 <a href="/kb/en/mariadb-maxscale-2308-mariadb-maxscale-configuration-guide/">Configuration guide</a>. Setting
 <code>query_retries</code> to 2 is a reasonable first try.</p>
+<p>If switchover causes the old primary (now replica) to fail replication, then most
+likely a user or perhaps a scheduled event performed a write while monitor
+had set <code>read_only=1</code>. This is possible if the user performing the write has
+"SUPER" or "READ_ONLY ADMIN" privileges. The switchover-operation tries to kick
+out SUPER-users but this is not certain to succeed. Remove these privileges
+from any users that regularly do writes to prevent them from interfering with
+switchover.</p>
+<p>The server configuration files should have <code>log-slave-updates=1</code> to ensure that
+a newly promoted primary has binary logs of previous events. This allows the new
+primary to replicate past events to any lagging replicas.</p>
+<p>To print out all queries sent to the servers, start MaxScale with
+<code>--debug=enable-statement-logging</code>. This setting prints all queries sent to the
+backends by monitors and authenticators. The printed queries may include
+usernames and passwords.</p>
 <h3 id="replica-detection-shows-external-primaries">Replica detection shows external primaries</h3>
 <p>If a replica is shown in <em>maxctrl</em> as "Slave of External Server" instead of
 "Slave", the reason is likely that the "Master_Host"-setting of the replication connection

@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/optimizer-trace-for-developers/+r/122287/">122287</a></dd>
+            <dd><a href="/kb/en/optimizer-trace-for-developers/+r/131353/">131353</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3645">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-12-08 12:26">2022-12-08 12:26</span></dd>
+<span class="datetime" title="2023-10-30 12:52">2023-10-30 12:52</span></dd>
         </dl>
     </div>
     
@@ -319,7 +319,24 @@
 
 == Basic considerations
 
-The trace is a &#34;structured log&#34; of what was done by the optimizer.  Prefer to do tracing as soon as a rewrite/decision is made (instead of having a separate  trace_something() function).
+The trace is a &#34;structured log&#34; of what was done by the optimizer. Prefer to do tracing as soon as a rewrite/decision is made (instead of having a separate  trace_something() function).
+
+Generally, a function should expect to find the trace in a state where we&#39;re writing an array.  The rationale is that array elements are ordered, while object members are not (even if they come in a certain order in the JSON text). We&#39;re writing a log, so it&#39;s natural for different entries to form an array.
+
+Typically you&#39;ll want to start an unnamed object, then use member names to show what kind of entry you&#39;re about to write:
+
+&lt;&lt;code&gt;&gt;
+[
+  ...,  # Something before us
+  {
+    &#34;my_new_rewrite&#34;: {
+       &#34;from&#34;: &#34;foo&#34;, 
+       &#34;to&#34;: &#34;bar&#34;,
+       ...
+    }
+  }
+  ...
+&lt;&lt;/code&gt;&gt;
 
 (TODO other considerations)
 
@@ -347,11 +364,7 @@ The BuildBot instance at http://buildbot.askmonty.org/ also runs tests with this
 
 == Debugging
 
-In newer MariaDB versions, there is 
-&lt;&lt;code&gt;&gt;
-const char *dbug_print_opt_trace();
-&lt;&lt;/code&gt;&gt;
-function which one can use to print the trace produced so far.</textarea>
+See [[optimizer-debugging-with-gdb/#printing-the-optimizer-trace]] for commands to print the trace for the current statement.</textarea>
     
 
 

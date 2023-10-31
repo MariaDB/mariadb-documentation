@@ -280,7 +280,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-maxscale-2208-mariadb-maxscale-configuration-guide/+r/129883/">129883</a></dd>
+            <dd><a href="/kb/en/mariadb-maxscale-2208-mariadb-maxscale-configuration-guide/+r/131581/">131581</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5571">
@@ -1067,6 +1067,16 @@ In the example above, the logging of a particular error will be suppressed for
 The default is `10, 1000ms, 10000ms`, which means that if the same error is
 logged 10 times in one second, the logging of that error is suppressed for the
 following 10 seconds.
+
+Whenever an error message that is being throttled is logged within the
+triggering window (the second argument), the suppression window is
+extended. This continues until there is a pause in the messages that is longer
+than the triggering window.
+
+For example, with the default configuration the messages must pause for at least
+one second in order for the throttling to eventually stop. This mechanism
+prevents long-lasting error conditions from slowly filling up the log with short
+bursts of messages.
 
 To disable log throttling, add an entry with an empty value
 
@@ -3547,7 +3557,7 @@ API. **Only do this if you know what you are doing.**
 
 ## Filter Modules
 
-![image alt text](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/22.08.8/Documentation/Getting-Started/images/image_10.png)
+![image alt text](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/22.08.9/Documentation/Getting-Started/images/image_10.png)
 
 Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
@@ -3686,6 +3696,14 @@ database transaction is being committed, the new configuration can be
 momentarily visible to the local MaxScale. This means the changes are not
 guaranteed to be atomic on the local MaxScale but are atomic from the cluster&#39;s
 point of view.
+
+### Synchronization of Encrypted Passwords
+
+Starting with MaxScale 6.4.9, any passwords that are transmitted by the
+configuration synchronization are encrypted if password encryption has been
+enabled in MaxScale. This means that all MaxScale nodes in the same
+configuration cluster must be configured to use password encryption and they
+need to all use the same encryption keys that were created with `maxkeys`.
 
 ### Managing Configuration Synchronization
 

@@ -236,12 +236,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-10-09 15:10">2 weeks ago</span></dd>
+<span class="datetime" title="2023-10-09 15:10">3 weeks ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-10-09 15:10">2 weeks ago</span></dd>
+<span class="datetime" title="2023-10-25 05:00">5 days, 20 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>question</dd>
@@ -374,6 +374,22 @@
     </div>
 
 
+
+    
+        <h2>Answer
+            <span class="answer_comment">Answered by 
+<span class="user" id="user-4920">
+<a href="/kb/user/id/4920" title="Marko Mäkelä">Marko Mäkelä</a>
+</span> in <a href="#comment_6423">this comment</a>.</span></h2>
+    
+    <div class="answer formatted">
+        <p>I realize that it might be helpful to add back the <code class="fixed" style="white-space:pre-wrap">innodb</code> and <code class="fixed" style="white-space:pre-wrap">none</code> checksum algorithms to the <code class="fixed" style="white-space:pre-wrap">innochecksum</code> utility. This would require some code refactoring, duplicating some InnoDB source code instead of compiling that code with special options for inclusion in <code class="unknown_macro">&lt;&lt;<span class="macro_name">code</span><span class="macro_arg_string">&gt;innochecksum&lt;&lt;/code</span>&gt;&gt;</code>.</p>
+<p>On the other hand, you could use the <code class="fixed" style="white-space:pre-wrap">innochecksum</code> utility from an older release to verify that the page checksums are valid and to convert them to the <code class="fixed" style="white-space:pre-wrap">crc32</code> checksum. If you do not care about the verification step, then you should be able to blindly rewrite the page checksums to the <code class="fixed" style="white-space:pre-wrap">crc32</code> format.</p>
+<p>Still, I think that the best solution would be to rebuild all InnoDB tables, simply by <code class="fixed" style="white-space:pre-wrap">OPTIMIZE TABLE</code>. To see which tables are not in the full_crc32 format yet, try the following trick from <a href="https://jira.mariadb.org/browse/MDEV-32230">MDEV-32230</a>:
+<code class="fixed" style="white-space:pre-wrap">SELECT name FROM INFORMATION_SCHEMA.INNODB_SYS_TABLESPACES WHERE row_format IS NULL;</code></p>
+<p>I am afraid that the only way to convert the InnoDB system tablespace to the <code class="fixed" style="white-space:pre-wrap">full_crc32</code> format would be to rebuild the entire database from a logical dump. The next best thing that you could do is to use <code class="fixed" style="white-space:pre-wrap">innochecksum</code> to convert each page to the <code class="fixed" style="white-space:pre-wrap">crc32</code> checksum, and then start the server with <code class="fixed" style="white-space:pre-wrap">innodb_checksum_algorithm=strict_full_crc32</code> so that new files will be created in the <code class="fixed" style="white-space:pre-wrap">full_crc32</code> format, and for any old-format files only the <code class="fixed" style="white-space:pre-wrap">crc32</code> page checksums will be allowed.</p>
+
+    </div>
 
 
         

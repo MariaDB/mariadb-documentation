@@ -259,12 +259,12 @@ The trace is a &#34;structured log&#34; of what was done..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2022-12-08 11:35">10 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2022-12-08 11:35">10 months, 3 weeks ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-12-08 12:26">10 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2023-10-30 12:52">4 hours, 48 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -398,8 +398,20 @@ The trace is a &#34;structured log&#34; of what was done..." />
     <div class="answer formatted">
         <p>This article describes guidelines for what/how to write to Optimizer Trace when doing server development.</p>
 <h2 class="anchored_heading" id="basic-considerations">Basic considerations</h2>
-<p>The trace is a "structured log" of what was done by the optimizer.  Prefer to do tracing as soon as a rewrite/decision is made (instead of having a separate  trace_something() function).</p>
-<p>(TODO other considerations)</p>
+<p>The trace is a "structured log" of what was done by the optimizer. Prefer to do tracing as soon as a rewrite/decision is made (instead of having a separate  trace_something() function).</p>
+<p>Generally, a function should expect to find the trace in a state where we're writing an array.  The rationale is that array elements are ordered, while object members are not (even if they come in a certain order in the JSON text). We're writing a log, so it's natural for different entries to form an array.</p>
+<p>Typically you'll want to start an unnamed object, then use member names to show what kind of entry you're about to write:</p>
+<pre class="fixed">[
+  ...,  # Something before us
+  {
+    &#34;my_new_rewrite&#34;: {
+       &#34;from&#34;: &#34;foo&#34;, 
+       &#34;to&#34;: &#34;bar&#34;,
+       ...
+    }
+  }
+  ...
+</pre><p>(TODO other considerations)</p>
 <h2 class="anchored_heading" id="making-sure-the-trace-is-valid">Making sure the trace is valid</h2>
 <p><code>Json_writer_object</code>  and <code>Json_writer_array</code> classes use RAII idiom and ensure that JSON objects and arrays are "closed" in the reverse order they were started.</p>
 <p>However, they do not ensure these constraints:</p>
@@ -413,9 +425,7 @@ The trace is a &#34;structured log&#34; of what was done..." />
 </pre><p>This will run all tests with tracing on.  As mentioned earlier, debug build will perform checks that we are not producing invalid trace. </p>
 <p>The BuildBot instance at <a href="http://buildbot.askmonty.org/">http://buildbot.askmonty.org/</a> also runs tests with this argument, see <code>mtr_opttrace</code> pass in kvm-fulltest and kvm-fulltest2.</p>
 <h2 class="anchored_heading" id="debugging">Debugging</h2>
-<p>In newer MariaDB versions, there is </p>
-<pre class="fixed">const char *dbug_print_opt_trace();
-</pre><p>function which one can use to print the trace produced so far.</p>
+<p>See <a href="/kb/en/optimizer-debugging-with-gdb/#printing-the-optimizer-trace">optimizer-debugging-with-gdb/#printing-the-optimizer-trace</a> for commands to print the trace for the current statement.</p>
 
     </div>
 
