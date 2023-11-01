@@ -276,7 +276,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/maxscale-troubleshooting/+r/130979/">130979</a></dd>
+            <dd><a href="/kb/en/maxscale-troubleshooting/+r/131806/">131806</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3062">
@@ -285,7 +285,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-10-13 07:56">2023-10-13 07:56</span></dd>
+<span class="datetime" title="2023-11-01 12:00">2023-11-01 12:00</span></dd>
         </dl>
     </div>
     
@@ -590,6 +590,39 @@ Make sure the {{{start_index}}} parameter is set to the lowest binlog file numbe
 Create the user with {{{maxadmin call command cdc add_user &lt;service name&gt; &lt;user&gt; &lt;password&gt;}}} or {{{maxctrl call command cdc add_user &lt;service name&gt; &lt;user&gt; &lt;password&gt;}}}.
 
 = Coredumps Are Not Being Generated
+
+Check that {{{sysctl kernel.core_pattern}}} is set to forward coredupms to systemd-coredump:
+
+&lt;&lt;code&gt;&gt;
+sysctl -w kernel.core_pattern=&#39;|/usr/lib/systemd/systemd-coredump %P %u %g %s %t %c %e&#39;
+&lt;&lt;/code&gt;&gt; 
+
+Also make sure that SystemD is configured to allow coredumps. In {{/etc/systemd/coredump.conf}} suitable size limits must be set as they are set to zero by default.
+
+&lt;&lt;code&gt;&gt;
+$ cat /etc/systemd/coredump.conf
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation; either version 2.1 of the License, or
+#  (at your option) any later version.
+#
+# Entries in this file show the compile time defaults.
+# You can change settings by editing this file.
+# Defaults can be restored by simply deleting this file.
+#
+# See coredump.conf(5) for details.
+
+[Coredump]
+Storage=external
+Compress=yes
+ProcessSizeMax=1G
+ExternalSizeMax=1G
+JournalSizeMax=1G
+#MaxUse=
+#KeepFree=
+&lt;&lt;/code&gt;&gt;
 
 Read the MariaDB documentation for [[enabling-core-dumps]] and [[how-to-produce-a-full-stack-trace-for-mysqld]]. Most of the operating system level documentation applies to MaxScale as well except that MaxScale is always run as a SystemD service and it only supports Linux as the platform.</textarea>
     
