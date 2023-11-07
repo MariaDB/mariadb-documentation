@@ -255,12 +255,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-09-21 23:24">1 month, 1 week ago</span></dd>
+<span class="datetime" title="2023-09-21 23:24">1 month, 2 weeks ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-10-18 03:27">1 week, 5 days ago</span></dd>
+<span class="datetime" title="2023-11-06 02:24">14 hours, 56 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -400,7 +400,11 @@
 
     <li class=""><a href="#temp-server-start-timeout" title="Temp Server Start Timeout">Temp Server Start Timeout</a></li>
 
-    <li class=""><a href="#creating-a-replication-pair" title="Creating a replication pair">Creating a replication pair</a> </ol>
+    <li class=""><a href="#creating-a-replication-pair" title="Creating a replication pair">Creating a replication pair</a></li>
+
+    <li class=""><a href="#innodb-upgrade-after-a-crash-is-not-supported-the-redo-log-was-created-with-mariadb-xyz" title="InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB X.Y.Z">InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB X.Y.Z</a></li>
+
+    <li class=""><a href="#every-mariadb-start-is-a-crash-recovery" title="Every MariaDB start is a crash recovery">Every MariaDB start is a crash recovery</a> </ol>
 </li>
 </div><p>
 Frequently asked questions about the Docker Official Image</p>
@@ -477,7 +481,41 @@ services:
     depends_on:
       master:
         condition: service_healthy
-</pre>
+</pre><h2 class="anchored_heading" id="innodb-upgrade-after-a-crash-is-not-supported-the-redo-log-was-created-with-mariadb-xyz">InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB X.Y.Z</h2>
+<p>This will show up in the error log as:</p>
+<pre class="fixed">2022-05-23 12:29:20 0 [ERROR] InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB 10.5.4.
+2022-05-23 12:29:20 0 [ERROR] InnoDB: Plugin initialization aborted with error Generic error
+</pre><p>This is attempting to start on a higher MariaDB version when the shutdown of the previous version crashed.</p>
+<p>By crashed, it means the MariaDB was force killed or had a hard power failure. MariaDB, being a durable database, can recover from these, if started with the same version. The redo log however is a less stable format, so the recovery has to be on the same Major.Minor version, in this case 10.5. This error message is saying that you when from force killed MariaDB to a later version.</p>
+<p>So whenever you encounter this message. Start with the again with the tag set to the version in the error message, like 10.5.4, or as the redo long format is consistent in the Major.Minor version 10.5 is sufficient. After this has been started correctly, cleanly shut the service down and it will be recovered.</p>
+<p>The logs on shutdown should have a message like:</p>
+<pre class="fixed">2023-11-06 10:49:23 0 [Note] InnoDB: Shutdown completed; log sequence number 84360; transaction id 49
+2023-11-06 10:49:23 0 [Note] mariadbd: Shutdown complete
+</pre><p>After you see this, you can update your MariaDB tag to a later version.</p>
+<h2 class="anchored_heading" id="every-mariadb-start-is-a-crash-recovery">Every MariaDB start is a crash recovery</h2>
+<p>Do you get on every start:</p>
+<pre class="fixed">db-1  | 2023-02-25 19:10:02 0 [Note] Starting MariaDB 10.11.2-MariaDB-1:10.11.2+maria~ubu2204-log source revision cafba8761af55ae16cc69c9b53a341340a845b36 as process 1                                                                                                         
+db-1  | 2023-02-25 19:10:02 0 [Note] mariadbd: Aria engine: starting recovery                                                                                                                                                                                                   
+db-1  | tables to flush: 3 2 1 0                                                                                                                                                                                                                                                
+db-1  |  (0.0 seconds);                                                                                                                                                                                                                                                         
+db-1  | 2023-02-25 19:10:02 0 [Note] mariadbd: Aria engine: recovery done  
+...
+db-1  | 2023-02-26 13:03:29 0 [Note] InnoDB: Initializing buffer pool, total size = 32.000GiB, chunk size = 512.000MiB
+db-1  | 2023-02-26 13:03:29 0 [Note] InnoDB: Completed initialization of buffer pool
+db-1  | 2023-02-26 13:03:29 0 [Note] InnoDB: File system buffers for log disabled (block size=512 bytes)
+db-1  | 2023-02-26 13:03:29 0 [Note] InnoDB: Starting crash recovery from checkpoint LSN=193796878816
+</pre><p>Container runtimes are assume to start and stop very quickly. Check the the shutdown logs. They may be a log like:</p>
+<pre class="fixed">db-1  | 2023-02-26 13:03:17 0 [Note] InnoDB: Starting shutdown...                                                                                                                                                                                                               
+db-1  | 2023-02-26 13:03:17 0 [Note] InnoDB: Dumping buffer pool(s) to /var/lib/mysql/ib_buffer_pool                                                                                                                                                                            
+db-1  | 2023-02-26 13:03:17 0 [Note] InnoDB: Restricted to 519200 pages due to innodb_buf_pool_dump_pct=25                                                                                                                                                                      
+db-1  | 2023-02-26 13:03:17 0 [Note] InnoDB: Buffer pool(s) dump completed at 230226 13:03:17                                                                                                                                                                                   
+db-1 exited with code 0
+</pre><p>Note that the logs didn't include the following messages:</p>
+<pre class="fixed">db-1  | 2023-02-26 13:03:43 0 [Note] InnoDB: Shutdown completed; log sequence number 46590; transaction id 15
+db-1  | 2023-02-26 13:03:43 0 [Note] mariadbd: Shutdown complete
+</pre><p>As these messages aren't here, the container was killed off before it could just down cleanly. When this happens, the startup will be a crash recovery and you won't be able to upgrade your MariaDB instance (previous FAQ) to the next Major.Minor version.</p>
+<p>Solution is to extend the timeout in the container runtime to allow MariaDB to complete its shutdown.</p>
+
     </div>
 
 

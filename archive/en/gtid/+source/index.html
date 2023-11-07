@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/gtid/+r/130420/">130420</a></dd>
+            <dd><a href="/kb/en/gtid/+r/132047/">132047</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-09-21 14:03">2023-09-21 14:03</span></dd>
+<span class="datetime" title="2023-11-06 20:11">2023-11-06 20:11</span></dd>
         </dl>
     </div>
     
@@ -308,7 +308,7 @@
 &lt;&lt;toc&gt;&gt;
 
 &lt;&lt;style class=&#34;redbox&#34;&gt;&gt;
-Note that MariaDB and MySQL have different GTID implementations, and that these are not compatible with each other.  MariaDB can be a slave for a MySQL master but MySQL cannot be a slave for a MariaDB master.
+Note that MariaDB and MySQL have different GTID implementations, and that these are not compatible with each other.  MariaDB can be a replica for a MySQL primary but MySQL cannot be a replica for a MariaDB primary.
 &lt;&lt;/style&gt;&gt;
 
 == Overview
@@ -784,6 +784,26 @@ different primary. If the binlog order between the old and the new primary
 differs, then a single GTID position to start replication from in the new
 primary&#39;s binlog may not be sufficient.
 
+===Multiple Redundant Replication Paths
+
+Using GTID with multi-source replication, it is possible to set up multiple redundant replication paths. For example:
+
+&lt;&lt;code&gt;&gt;
+  M1 &lt;-&gt; M2
+  M1 -&gt; S1
+  M1 -&gt; S2
+  M2 -&gt; S1
+  M2 -&gt; S2
+&lt;&lt;/code&gt;&gt;
+
+Here, M1 and M2 are setup in a master-master ring. S1 and S2 both replicate from each of M1 and M2. Each event generated on M1 will now arrive twice at S1, through the paths M1-&gt;S1 and M1-&gt;M2-&gt;S1. This way, if the network connection between M1 and S1 is broken, the replication can continue uninterrupted through the alternate path through M2. Note that this is an advanced setup, and good familiarity with MariaDB replication is recommended to successfully operate such a setup.
+
+The option [[#gtid_ignore_duplicates|--gtid-ignore-duplicates]] must be enabled to use multiple redundant replication paths. This is necessary to avoid each event being applied twice on the replica as it arrives through each path. The GTID of every event will be compared against the sequence number of the current GTID replica position (within each domain), and will be skipped if less than or equal. Thus it is required that sequence numbers are strictly increasing within each domain for [[#gtid_ignore_duplicates|--gtid-ignore-duplicates]] to function correctly, and setting [[#gtid_strict_mode|--gtid-strict-mode=1]] to help enforce this is recommended.
+
+The --gtid-ignore-duplicates options also relaxes the requirement for connection to the master. In the above example, when S1 connects to M2, it may connect at a GTID position from M1 that has not yet been applied on M2.
+
+When --gtid-ignore-duplicates is enabled, the connection will be allowed, and S1 will start receiving events from M2 once the GTID has been replicated from M1 to M2. This can also be used to use replication filters in parts of a replication topology, to allow a replica to connect to a GTID position which was filtered on a master. When --gtid-ignore-duplicates is enabled, the connecting replica will start receiving events from the master at the first GTID sequence number that is larger than the connect-position.
+
 === Deleting Unused Domains
 
 ##FLUSH BINARY LOGS DELETE_DOMAIN_ID=(list-of-domains)## can be used to discard obsolete GTID domains from the server&#39;s binary log state. In order for this to be successful, no event group from the listed GTID domains can be present in existing binary log files. If some still exist, then they must be purged prior to executing this command.
@@ -791,7 +811,7 @@ primary&#39;s binlog may not be sufficient.
 If the command completes successfully, then it also rotates the binary log.
 
 The old domains will still appear in [[show-replica-status|gtid_io_pos]]. To get rid of these, you can
-stop the slave and execute on the slave:
+stop the replica and execute on the replica:
 
 &lt;&lt;sql&gt;&gt;
 SET gtid_slave_pos=&#34;&lt;position with domains removed&gt;&#34;
@@ -1108,7 +1128,8 @@ offending replica, to be able to replicate past the problem point (perhaps using
 ----
 
 ==== ##gtid_ignore_duplicates##
-* **Description:** When set, different primary connections in multi-source replication are allowed to receive and process event groups with the same GTID (when using GTID mode). Only one will be applied, any others will be ignored. Within a given replication domain, just the sequence number will be used to decide whether a given GTID has been already applied; this means it is the responsibility of the user to ensure that GTID sequence numbers are strictly increasing. With gtid_ignore_duplicates=OFF, a duplicate event based on domain id and sequence number, will be executed.
+* **Description:** When set, different primary connections in multi-source replication are allowed to receive and process event groups with the same GTID (when using GTID mode). Only one will be applied, any others will be ignored. Within a given replication domain, just the sequence number will be used to decide whether a given GTID has been already applied; this means it is the responsibility of the user to ensure that GTID sequence numbers are strictly increasing. With gtid_ignore_duplicates=OFF, a duplicate event based on domain id and sequence number, will be executed. When --gtid-ignore-duplicate is set, a replica is allowed to connect at a GTID position that does not exist on the primary. The replica will start receiving
+events once a GTID with a higher sequence number is available on the primary (within that domain). This can be used to allow a replica to connect at a GTID position that was filtered on the primary, eg. using [[replication-and-binary-log-system-variables/#replicate_ignore_table|--replicate-ignore-table]]. See also [[#multiple-redundant-replication-paths|Multiple Redundant Replication Paths]]
 * **Commandline:** &lt;&lt;code&gt;&gt;--gtid-ignore-duplicates=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
@@ -1151,7 +1172,7 @@ Removing a storage engine from the variable will have no effect once the new tab
 * **Introduced:** MariaDB 10.4.1
 ----
 
-== See also
+== See Also
 * [[flush|FLUSH]] binary logs</textarea>
     
 

@@ -243,12 +243,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2013-05-07 09:36">10 years, 5 months ago</span></dd>
+<span class="datetime" title="2013-05-07 09:36">10 years, 6 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-21 14:03">1 month, 1 week ago</span></dd>
+<span class="datetime" title="2023-11-06 22:54">1 hour, 34 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -460,6 +460,8 @@
 
     <li class=""><a href="#use-with-multi-source-replication-and-other-multi-primary-setups" title="Use With Multi-Source Replication and Other Multi-Primary Setups">Use With Multi-Source Replication and Other Multi-Primary Setups</a>    <ol class="toc">
 
+        <li class=""><a href="#multiple-redundant-replication-paths" title="Multiple Redundant Replication Paths">Multiple Redundant Replication Paths</a></li>
+
         <li class=""><a href="#deleting-unused-domains" title="Deleting Unused Domains">Deleting Unused Domains</a>    </ol>
 </li>
 
@@ -507,10 +509,10 @@
         <li class=""><a href="#gtid_cleanup_batch_size" title="gtid_cleanup_batch_size">gtid_cleanup_batch_size</a>    </ol>
 </li>
 
-    <li class=""><a href="#see-also" title="See also">See also</a> </ol>
+    <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
 </li>
 </div>
-<div class="cstm-style redbox"><p>Note that MariaDB and MySQL have different GTID implementations, and that these are not compatible with each other.  MariaDB can be a slave for a MySQL master but MySQL cannot be a slave for a MariaDB master.</p>
+<div class="cstm-style redbox"><p>Note that MariaDB and MySQL have different GTID implementations, and that these are not compatible with each other.  MariaDB can be a replica for a MySQL primary but MySQL cannot be a replica for a MariaDB primary.</p>
 </div><h2 class="anchored_heading" id="overview">Overview</h2>
 <p>MariaDB replication in general works as follows (see
 <a href="/kb/en/replication-overview/">Replication overview</a> for more information):</p>
@@ -868,11 +870,22 @@ between the servers. However, care must be taken when switching a replica to a
 different primary. If the binlog order between the old and the new primary
 differs, then a single GTID position to start replication from in the new
 primary's binlog may not be sufficient.</p>
+<h3 class="anchored_heading" id="multiple-redundant-replication-paths">Multiple Redundant Replication Paths</h3>
+<p>Using GTID with multi-source replication, it is possible to set up multiple redundant replication paths. For example:</p>
+<pre class="fixed">  M1 &lt;-&gt; M2
+  M1 -&gt; S1
+  M1 -&gt; S2
+  M2 -&gt; S1
+  M2 -&gt; S2
+</pre><p>Here, M1 and M2 are setup in a master-master ring. S1 and S2 both replicate from each of M1 and M2. Each event generated on M1 will now arrive twice at S1, through the paths M1-&gt;S1 and M1-&gt;M2-&gt;S1. This way, if the network connection between M1 and S1 is broken, the replication can continue uninterrupted through the alternate path through M2. Note that this is an advanced setup, and good familiarity with MariaDB replication is recommended to successfully operate it.</p>
+<p>The option <a href="#gtid_ignore_duplicates">--gtid-ignore-duplicates</a> must be enabled to use multiple redundant replication paths. This is necessary to avoid each event being applied twice on the replica as it arrives through each path. The GTID of every event will be compared against the sequence number of the current GTID replica position (within each domain), and will be skipped if less than or equal. Thus it is required that sequence numbers are strictly increasing within each domain for <a href="#gtid_ignore_duplicates">--gtid-ignore-duplicates</a> to function correctly, and setting <a href="#gtid_strict_mode">--gtid-strict-mode=1</a> to help enforce this is recommended.</p>
+<p>The --gtid-ignore-duplicates options also relaxes the requirement for connection to the master. In the above example, when S1 connects to M2, it may connect at a GTID position from M1 that has not yet been applied on M2.</p>
+<p>When --gtid-ignore-duplicates is enabled, the connection will be allowed, and S1 will start receiving events from M2 once the GTID has been replicated from M1 to M2. This can also be used to use replication filters in parts of a replication topology, to allow a replica to connect to a GTID position which was filtered on a master. When --gtid-ignore-duplicates is enabled, the connecting replica will start receiving events from the master at the first GTID sequence number that is larger than the connect-position.</p>
 <h3 class="anchored_heading" id="deleting-unused-domains">Deleting Unused Domains</h3>
 <p><code>FLUSH BINARY LOGS DELETE_DOMAIN_ID=(list-of-domains)</code> can be used to discard obsolete GTID domains from the server's binary log state. In order for this to be successful, no event group from the listed GTID domains can be present in existing binary log files. If some still exist, then they must be purged prior to executing this command.</p>
 <p>If the command completes successfully, then it also rotates the binary log.</p>
 <p>The old domains will still appear in <a href="/kb/en/show-replica-status/">gtid_io_pos</a>. To get rid of these, you can
-stop the slave and execute on the slave:</p>
+stop the replica and execute on the replica:</p>
 <pre class="fixed"><span class="k">SET</span> <span class="n">gtid_slave_pos</span><span class="o">=</span><span class="ss">&quot;&lt;position with domains removed&gt;&quot;</span>
 </pre><h2 class="anchored_heading" id="new-syntax-for-global-transaction-id">New Syntax For Global Transaction ID</h2>
 <h3 class="anchored_heading" id="change-master">CHANGE MASTER</h3>
@@ -1116,7 +1129,8 @@ offending replica, to be able to replicate past the problem point (perhaps using
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="gtid_ignore_duplicates"><code>gtid_ignore_duplicates</code></h4>
-<ul start="1"><li><strong>Description:</strong> When set, different primary connections in multi-source replication are allowed to receive and process event groups with the same GTID (when using GTID mode). Only one will be applied, any others will be ignored. Within a given replication domain, just the sequence number will be used to decide whether a given GTID has been already applied; this means it is the responsibility of the user to ensure that GTID sequence numbers are strictly increasing. With gtid_ignore_duplicates=OFF, a duplicate event based on domain id and sequence number, will be executed.
+<ul start="1"><li><strong>Description:</strong> When set, different primary connections in multi-source replication are allowed to receive and process event groups with the same GTID (when using GTID mode). Only one will be applied, any others will be ignored. Within a given replication domain, just the sequence number will be used to decide whether a given GTID has been already applied; this means it is the responsibility of the user to ensure that GTID sequence numbers are strictly increasing. With gtid_ignore_duplicates=OFF, a duplicate event based on domain id and sequence number, will be executed. When --gtid-ignore-duplicate is set, a replica is allowed to connect at a GTID position that does not exist on the primary. The replica will start receiving
+events once a GTID with a higher sequence number is available on the primary (within that domain). This can be used to allow a replica to connect at a GTID position that was filtered on the primary, eg. using <a href="/kb/en/replication-and-binary-log-system-variables/#replicate_ignore_table">--replicate-ignore-table</a>. See also <a href="#multiple-redundant-replication-paths">Multiple Redundant Replication Paths</a>
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--gtid-ignore-duplicates=#</code>
 </li><li><strong>Scope:</strong> Global
 </li><li><strong>Dynamic:</strong> Yes
@@ -1153,7 +1167,7 @@ possible to specify engines that are not enabled in the server. The server will 
 </li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-1041-release-notes/">MariaDB 10.4.1</a>
 </li></ul>
 <hr>
-<h2 class="anchored_heading" id="see-also">See also</h2>
+<h2 class="anchored_heading" id="see-also">See Also</h2>
 <ul start="1"><li><a href="/kb/en/flush/">FLUSH</a> binary logs</li></ul>
 
     </div>
