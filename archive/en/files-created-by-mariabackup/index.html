@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-05-02 12:13">1 year, 6 months ago</span></dd>
+<span class="datetime" title="2023-11-06 20:14">2 days, 20 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -480,16 +480,9 @@
 <pre class="fixed">mariadb-bin.000096 568 0-1-2
 </pre><p>The values in this file are only guaranteed to be consistent with the backup if the <code><a href="/kb/en/mariabackup-options/#-no-lock">--no-lock</a></code> option was <strong>not</strong> provided when the backup was taken.</p>
 <h2 class="anchored_heading" id="xtrabackup_binlog_pos_innodb"><code>xtrabackup_binlog_pos_innodb</code></h2>
-<p>Mariabackup inherited this file from Percona XtraBackup 2.3. However, this file is only safe to use with Percona Server versions that have a special lockless binary log feature.</p>
-<p>This feature is described by the <a href="https://www.percona.com/doc/percona-server/5.6/management/backup_locks.html#backup-safe-binlog-information">Percona Server documentation</a>:</p>
-<div class="cstm-style graybox"><p>Starting with Percona Server for MySQL 5.6.26-74.0 LOCK TABLES FOR BACKUP flushes the current binary log coordinates to InnoDB. Thus, under active LOCK TABLES FOR BACKUP, the binary log coordinates in InnoDB are consistent with its redo log and any non-transactional updates (as the latter are blocked by LOCK TABLES FOR BACKUP). It is planned that this change will enable Percona XtraBackup to avoid issuing the more invasive LOCK BINLOG FOR BACKUP command under some circumstances.</p>
-</div><p>And the way it's used by Percona XtraBackup 2.3 is described by the <a href="https://www.percona.com/doc/percona-xtrabackup/2.3/advanced/lockless_bin-log.html">Percona XtraBackup 2.3 documentation</a>:</p>
-<div class="cstm-style graybox"><p>Percona XtraBackup implemented support for lock-less binary log information in 2.3.2. When the Lockless binary log information feature is available [1] on the server, Percona XtraBackup can trust binary log information stored in the InnoDB system header and avoid executing LOCK BINLOG FOR BACKUP (and thus, blocking commits for the duration of finalizing the REDO log copy) under a number of circumstances:</p>
-<ul start="1"><li>when the server is not a GTID-enabled Galera cluster node
-</li><li>when the replication I/O thread information should not be stored as a part of the backup (i.e. when the xtrabackup --slave-info option is not specified)
-</li></ul>
-</div><p>Mariabackup no longer creates this file starting with <a href="/kb/en/mariadb-10139-release-notes/">MariaDB 10.1.39</a>, <a href="/kb/en/mariadb-10223-release-notes/">MariaDB 10.2.23</a>, <a href="/kb/en/mariadb-10314-release-notes/">MariaDB 10.3.14</a>, and <a href="/kb/en/mariadb-1044-release-notes/">MariaDB 10.4.4</a>.</p>
-<p>See <a href="https://jira.mariadb.org/browse/MDEV-18917">MDEV-18917</a> for more information.</p>
+<p>This file is created by mariabackup to provide the binary log file name and position when the <a href="/kb/en/mariabackup-options/#-no-lock">--no-lock</a> option is used. It can be used instead of the file "xtrabackup_binlog_info" to obtain transactionally consistent binlog coordinates from the backup of a master server with the --no-lock option to minimize the impact on a running server.</p>
+<p>Whenever a transaction is committed inside InnoDB when the binary log is enabled, the corresponding binlog coordinates are written to the InnoDB redo log along with the transaction commit. This allows one to restore the binlog coordinates corresponding to the last commit done by InnoDB along with a backup.</p>
+<p>The limitation of using "xtrabackup_binlog_pos_innodb" with the "--no-lock" option is that no DDL or modification of non-transactional tables should be done during the backup. If the last event in the binlog is a DDL/non-transactional update, the coordinates in the file "xtrabackup_binlog_pos_innodb" will be too old. But as long as only InnoDB updates are done during the backup, the coordinates will be correct.</p>
 <h2 class="anchored_heading" id="xtrabackup_checkpoints"><code>xtrabackup_checkpoints</code></h2>
 <p>The <code>xtrabackup_checkpoints</code> file contains metadata about the backup. </p>
 <p>For example:</p>

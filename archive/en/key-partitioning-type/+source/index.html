@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/key-partitioning-type/+r/120135/">120135</a></dd>
+            <dd><a href="/kb/en/key-partitioning-type/+r/132252/">132252</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-12846">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-11-02 10:15">2022-11-02 10:15</span></dd>
+<span class="datetime" title="2023-11-07 13:32">2023-11-07 13:32</span></dd>
         </dl>
     </div>
     
@@ -309,23 +309,114 @@
         
         <textarea id="answer_source" class="creole_source autogrow">=== Syntax
 &lt;&lt;code&gt;&gt;
-PARTITION BY KEY (column_value)
+PARTITION BY KEY ([column_names])
 [PARTITIONS (number_of_partitions)]
 &lt;&lt;/code&gt;&gt;
 
 === Description
-Partitioning by key is a type of partitioning that is similar to and can be used in a similar way as partitioning by hash. 
+Partitioning by key is a type of partitioning that is similar to and can be used in a similar way as [[hash-partitioning-type|partitioning by hash]]. 
 
-Just like HASH partitioning, in KEY partitioning the server takes care of the partition and ensures an even distribution among the partitions. However, the largest difference is that KEY partitioning requires a //column_value//, and cannot accept a //partitioning_expression// which is based on a //column_value//, in contrast to HASH partitioning, which can.
+KEY takes an optional list of //column_names//, and the hashing function is given by the server.
 
-It requires a //column_value//, and the hashing function is given by the server.
+Just like HASH partitioning, in KEY partitioning the server takes care of the partition and ensures an even distribution among the partitions. However, the largest difference is that KEY partitioning makes use of //column_names//, and cannot accept a //partitioning_expression// which is based on //column_names//, in contrast to HASH partitioning, which can.
+
+If no //column_names// are specified, the table&#39;s primary key is used if present, or not null unique key if no primary key is present. If neither of these keys are present, not specifying any //column_names// will result in ##ERROR 1488 (HY000): Field in list of fields for partition function not found in table##
+
+Unlike other partitioning types, columns used for partitioning by KEY are not limited to integer or NULL values. 
+
+KEY partitions do not support column index prefixes. Any columns in the partitioning key that make use of column prefixes are not used (see also MDEV-32727).
 
 === Example
 &lt;&lt;sql&gt;&gt;
 CREATE OR REPLACE TABLE t1 (v1 INT)
   PARTITION BY KEY (v1)
   PARTITIONS 2;
-&lt;&lt;/sql&gt;&gt;</textarea>
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (v1 INT, v2 INT)
+  PARTITION BY KEY (v1,v2)
+  PARTITIONS 2;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+    id INT NOT NULL PRIMARY KEY,
+    name VARCHAR(5)
+)
+PARTITION BY KEY()
+PARTITIONS 2;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+    id INT NOT NULL UNIQUE KEY,
+    name VARCHAR(5)
+)
+PARTITION BY KEY()
+PARTITIONS 2;
+&lt;&lt;/sql&gt;&gt;
+
+The unique key must be NOT NULL:
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+    id INT NULL UNIQUE KEY,
+    name VARCHAR(5)
+)
+PARTITION BY KEY()
+PARTITIONS 2;
+ERROR 1488 (HY000): Field in list of fields for partition function not found in table
+&lt;&lt;/sql&gt;&gt;
+
+KEY requires //column_values// if no primary key or not null unique key is present:
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+    id INT NULL UNIQUE KEY,
+    name VARCHAR(5)
+)
+PARTITION BY KEY()
+PARTITIONS 2;
+ERROR 1488 (HY000): Field in list of fields for partition function not found in table
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+    id INT NULL UNIQUE KEY,
+    name VARCHAR(5)
+)
+PARTITION BY KEY(name)
+PARTITIONS 2;
+&lt;&lt;/sql&gt;&gt;
+
+Primary key columns with index prefixes are silently ignored, so the following two queries are equivalent:
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+    a VARCHAR(10),
+    b VARCHAR(10),
+    c VARCHAR(10),
+    PRIMARY KEY (a(5), b, c(5))
+) PARTITION BY KEY() PARTITIONS 2;
+
+CREATE OR REPLACE TABLE t1 (
+    a VARCHAR(10),
+    b VARCHAR(10),
+    c VARCHAR(10),
+    PRIMARY KEY (b)
+) PARTITION BY KEY() PARTITIONS 2;
+&lt;&lt;/sql&gt;&gt;
+
+##a(5)## and ##c(5)## are silently ignored in the former.
+
+If all columns use index prefixes, the statement fails with a slightly misleading error:
+&lt;&lt;code&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+    a VARCHAR(10),
+    b VARCHAR(10),
+    c VARCHAR(10),
+    PRIMARY KEY (a(5), b(5), c(5))
+) PARTITION BY KEY() PARTITIONS 2;
+ERROR 1503 (HY000): A PRIMARY KEY must include all columns in the table&#39;s partitioning function
+&lt;&lt;/code&gt;&gt;</textarea>
     
 
 

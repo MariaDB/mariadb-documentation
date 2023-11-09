@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/docker-official-image-frequently-asked-questions/+r/131940/">131940</a></dd>
+            <dd><a href="/kb/en/docker-official-image-frequently-asked-questions/+r/132290/">132290</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-13052">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-11-06 02:24">2023-11-06 02:24</span></dd>
+<span class="datetime" title="2023-11-08 04:49">2023-11-08 04:49</span></dd>
         </dl>
     </div>
     
@@ -485,7 +485,27 @@ db-1  | 2023-02-26 13:03:43 0 [Note] mariadbd: Shutdown complete
 
 As these messages aren&#39;t here, the container was killed off before it could just down cleanly. When this happens, the startup will be a crash recovery and you won&#39;t be able to upgrade your MariaDB instance (previous FAQ) to the next Major.Minor version.
 
-Solution is to extend the timeout in the container runtime to allow MariaDB to complete its shutdown.</textarea>
+Solution is to extend the timeout in the container runtime to allow MariaDB to complete its shutdown.
+
+== How do I create a MariaDB-backup of the data?
+
+&lt;&lt;code&gt;&gt;
+docker volume create backup
+docker run --name mdb -v backup:/backup -v datavolume:/var/lib/mysql mariadb
+docker exec mdb mariadb-backup --backup --target-dir=/backup/d --user root --password soverysecret
+docker exec mdb mariadb-backup --prepare --target-dir=/backup/d
+docker exec mdb sh -c &#39;[ ! -f /backup/d/.my-healthcheck.cnf ] &amp;&amp; cp /var/lib/mysql/.my-healthcheck.cnf /backup/d&#39;
+docker exec --workdir /backup/d mdb tar -Jcf ../backup.tar.xz .
+docker exec mdb  rm -rf /backup/d
+&lt;&lt;/code&gt;&gt;
+
+== How do I restore from a MariaDB-backup
+
+With the backup prepared like previously:
+
+&lt;&lt;code&gt;&gt;
+docker run -v backup:/docker-entrypoint-initdb.d -v newdatavolume:/var/lib/mysql mariadb
+&lt;&lt;/code&gt;&gt;</textarea>
     
 
 

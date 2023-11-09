@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-11-02 10:15">1 year ago</span></dd>
+<span class="datetime" title="2023-11-07 13:32">2 days, 3 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -385,16 +385,79 @@
     
     <div class="answer formatted">
         <h3 class="anchored_heading" id="syntax">Syntax</h3>
-<pre class="fixed">PARTITION BY KEY (column_value)
+<pre class="fixed">PARTITION BY KEY ([column_names])
 [PARTITIONS (number_of_partitions)]
 </pre><h3 class="anchored_heading" id="description">Description</h3>
-<p>Partitioning by key is a type of partitioning that is similar to and can be used in a similar way as partitioning by hash. </p>
-<p>Just like HASH partitioning, in KEY partitioning the server takes care of the partition and ensures an even distribution among the partitions. However, the largest difference is that KEY partitioning requires a <em>column_value</em>, and cannot accept a <em>partitioning_expression</em> which is based on a <em>column_value</em>, in contrast to HASH partitioning, which can.</p>
-<p>It requires a <em>column_value</em>, and the hashing function is given by the server.</p>
+<p>Partitioning by key is a type of partitioning that is similar to and can be used in a similar way as <a href="/kb/en/hash-partitioning-type/">partitioning by hash</a>. </p>
+<p>KEY takes an optional list of <em>column_names</em>, and the hashing function is given by the server.</p>
+<p>Just like HASH partitioning, in KEY partitioning the server takes care of the partition and ensures an even distribution among the partitions. However, the largest difference is that KEY partitioning makes use of <em>column_names</em>, and cannot accept a <em>partitioning_expression</em> which is based on <em>column_names</em>, in contrast to HASH partitioning, which can.</p>
+<p>If no <em>column_names</em> are specified, the table's primary key is used if present, or not null unique key if no primary key is present. If neither of these keys are present, not specifying any <em>column_names</em> will result in <code>ERROR 1488 (HY000): Field in list of fields for partition function not found in table</code></p>
+<p>Unlike other partitioning types, columns used for partitioning by KEY are not limited to integer or NULL values. </p>
+<p>KEY partitions do not support column index prefixes. Any columns in the partitioning key that make use of column prefixes are not used (see also <a href="https://jira.mariadb.org/browse/MDEV-32727">MDEV-32727</a>).</p>
 <h3 class="anchored_heading" id="example">Example</h3>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">v1</span> <span class="nb">INT</span><span class="p">)</span>
   <span class="n">PARTITION</span> <span class="k">BY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">v1</span><span class="p">)</span>
   <span class="n">PARTITIONS</span> <span class="mi">2</span><span class="p">;</span>
+</pre><pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">v1</span> <span class="nb">INT</span><span class="p">,</span> <span class="n">v2</span> <span class="nb">INT</span><span class="p">)</span>
+  <span class="n">PARTITION</span> <span class="k">BY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">v1</span><span class="p">,</span><span class="n">v2</span><span class="p">)</span>
+  <span class="n">PARTITIONS</span> <span class="mi">2</span><span class="p">;</span>
+</pre><pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
+    <span class="n">id</span> <span class="nb">INT</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span>
+    <span class="n">name</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">PARTITION</span> <span class="k">BY</span> <span class="k">KEY</span><span class="p">()</span>
+<span class="n">PARTITIONS</span> <span class="mi">2</span><span class="p">;</span>
+</pre><pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
+    <span class="n">id</span> <span class="nb">INT</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">UNIQUE</span> <span class="k">KEY</span><span class="p">,</span>
+    <span class="n">name</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">PARTITION</span> <span class="k">BY</span> <span class="k">KEY</span><span class="p">()</span>
+<span class="n">PARTITIONS</span> <span class="mi">2</span><span class="p">;</span>
+</pre><p>The unique key must be NOT NULL:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
+    <span class="n">id</span> <span class="nb">INT</span> <span class="k">NULL</span> <span class="k">UNIQUE</span> <span class="k">KEY</span><span class="p">,</span>
+    <span class="n">name</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">PARTITION</span> <span class="k">BY</span> <span class="k">KEY</span><span class="p">()</span>
+<span class="n">PARTITIONS</span> <span class="mi">2</span><span class="p">;</span>
+<span class="n">ERROR</span> <span class="mi">1488</span> <span class="p">(</span><span class="n">HY000</span><span class="p">):</span> <span class="n">Field</span> <span class="k">in</span> <span class="n">list</span> <span class="k">of</span> <span class="n">fields</span> <span class="k">for</span> <span class="n">partition</span> <span class="k">function</span> <span class="k">not</span> <span class="k">found</span> <span class="k">in</span> <span class="k">table</span>
+</pre><p>KEY requires <em>column_values</em> if no primary key or not null unique key is present:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
+    <span class="n">id</span> <span class="nb">INT</span> <span class="k">NULL</span> <span class="k">UNIQUE</span> <span class="k">KEY</span><span class="p">,</span>
+    <span class="n">name</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">PARTITION</span> <span class="k">BY</span> <span class="k">KEY</span><span class="p">()</span>
+<span class="n">PARTITIONS</span> <span class="mi">2</span><span class="p">;</span>
+<span class="n">ERROR</span> <span class="mi">1488</span> <span class="p">(</span><span class="n">HY000</span><span class="p">):</span> <span class="n">Field</span> <span class="k">in</span> <span class="n">list</span> <span class="k">of</span> <span class="n">fields</span> <span class="k">for</span> <span class="n">partition</span> <span class="k">function</span> <span class="k">not</span> <span class="k">found</span> <span class="k">in</span> <span class="k">table</span>
+</pre><pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
+    <span class="n">id</span> <span class="nb">INT</span> <span class="k">NULL</span> <span class="k">UNIQUE</span> <span class="k">KEY</span><span class="p">,</span>
+    <span class="n">name</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">PARTITION</span> <span class="k">BY</span> <span class="k">KEY</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="n">PARTITIONS</span> <span class="mi">2</span><span class="p">;</span>
+</pre><p>Primary key columns with index prefixes are silently ignored, so the following two queries are equivalent:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
+    <span class="n">a</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+    <span class="n">b</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+    <span class="k">c</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">a</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="n">b</span><span class="p">,</span> <span class="k">c</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+<span class="p">)</span> <span class="n">PARTITION</span> <span class="k">BY</span> <span class="k">KEY</span><span class="p">()</span> <span class="n">PARTITIONS</span> <span class="mi">2</span><span class="p">;</span>
+
+<span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
+    <span class="n">a</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+    <span class="n">b</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+    <span class="k">c</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="p">)</span> <span class="n">PARTITION</span> <span class="k">BY</span> <span class="k">KEY</span><span class="p">()</span> <span class="n">PARTITIONS</span> <span class="mi">2</span><span class="p">;</span>
+</pre><p><code>a(5)</code> and <code>c(5)</code> are silently ignored in the former.</p>
+<p>If all columns use index prefixes, the statement fails with a slightly misleading error:</p>
+<pre class="fixed">CREATE OR REPLACE TABLE t1 (
+    a VARCHAR(10),
+    b VARCHAR(10),
+    c VARCHAR(10),
+    PRIMARY KEY (a(5), b(5), c(5))
+) PARTITION BY KEY() PARTITIONS 2;
+ERROR 1503 (HY000): A PRIMARY KEY must include all columns in the table's partitioning function
 </pre>
     </div>
 
@@ -424,8 +487,8 @@
                     </li>
                 
                 
-                    <li class="pull-right"><a href="/kb/en/range-columns-and-list-columns-partitioning-types/">
-                        RANGE COLUMNS and LIST COLUMNS Partitioning Types →
+                    <li class="pull-right"><a href="/kb/en/linear-hash-partitioning-type/">
+                        LINEAR HASH Partitioning Type →
                     </a>
                     </li>
                 
@@ -510,6 +573,24 @@
                     <li class="active">
                         <span>KEY Partitioning Type</span>
                         
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/linear-hash-partitioning-type/">
+                            
+                            LINEAR HASH Partitioning Type
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/linear-key-partitioning-type/">
+                            
+                            LINEAR KEY Partitioning Type
+                        </a>
                     </li>
                 
             

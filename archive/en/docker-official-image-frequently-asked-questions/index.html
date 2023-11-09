@@ -260,7 +260,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-11-06 02:24">14 hours, 56 minutes ago</span></dd>
+<span class="datetime" title="2023-11-08 04:49">1 day, 12 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -404,7 +404,11 @@
 
     <li class=""><a href="#innodb-upgrade-after-a-crash-is-not-supported-the-redo-log-was-created-with-mariadb-xyz" title="InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB X.Y.Z">InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB X.Y.Z</a></li>
 
-    <li class=""><a href="#every-mariadb-start-is-a-crash-recovery" title="Every MariaDB start is a crash recovery">Every MariaDB start is a crash recovery</a> </ol>
+    <li class=""><a href="#every-mariadb-start-is-a-crash-recovery" title="Every MariaDB start is a crash recovery">Every MariaDB start is a crash recovery</a></li>
+
+    <li class=""><a href="#how-do-i-create-a-mariadb-backup-of-the-data" title="How do I create a MariaDB-backup of the data?">How do I create a MariaDB-backup of the data?</a></li>
+
+    <li class=""><a href="#how-do-i-restore-from-a-mariadb-backup" title="How do I restore from a MariaDB-backup">How do I restore from a MariaDB-backup</a> </ol>
 </li>
 </div><p>
 Frequently asked questions about the Docker Official Image</p>
@@ -515,7 +519,18 @@ db-1 exited with code 0
 db-1  | 2023-02-26 13:03:43 0 [Note] mariadbd: Shutdown complete
 </pre><p>As these messages aren't here, the container was killed off before it could just down cleanly. When this happens, the startup will be a crash recovery and you won't be able to upgrade your MariaDB instance (previous FAQ) to the next Major.Minor version.</p>
 <p>Solution is to extend the timeout in the container runtime to allow MariaDB to complete its shutdown.</p>
-
+<h2 class="anchored_heading" id="how-do-i-create-a-mariadb-backup-of-the-data">How do I create a MariaDB-backup of the data?</h2>
+<pre class="fixed">docker volume create backup
+docker run --name mdb -v backup:/backup -v datavolume:/var/lib/mysql mariadb
+docker exec mdb mariadb-backup --backup --target-dir=/backup/d --user root --password soverysecret
+docker exec mdb mariadb-backup --prepare --target-dir=/backup/d
+docker exec mdb sh -c '[ ! -f /backup/d/.my-healthcheck.cnf ] &amp;&amp; cp /var/lib/mysql/.my-healthcheck.cnf /backup/d'
+docker exec --workdir /backup/d mdb tar -Jcf ../backup.tar.xz .
+docker exec mdb  rm -rf /backup/d
+</pre><h2 class="anchored_heading" id="how-do-i-restore-from-a-mariadb-backup">How do I restore from a MariaDB-backup</h2>
+<p>With the backup prepared like previously:</p>
+<pre class="fixed">docker run -v backup:/docker-entrypoint-initdb.d -v newdatavolume:/var/lib/mysql mariadb
+</pre>
     </div>
 
 
