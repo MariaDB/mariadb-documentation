@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-11-0-4-release-notes/+r/131146/">131146</a></dd>
+            <dd><a href="/kb/en/mariadb-11-0-4-release-notes/+r/132386/">132386</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-10-30 12:53">2023-10-30 12:53</span></dd>
+<span class="datetime" title="2023-11-13 17:13">2023-11-13 17:13</span></dd>
         </dl>
     </div>
     
@@ -327,9 +327,164 @@ Thanks, and enjoy MariaDB!
 == Notable Items
 
 === InnoDB
-* Increase the default for [[innodb-system-variables/#innodb_purge_batch_size|innodb_purge_batch_size]] from 300 to 1000 (MDEV-32050)
-* Deprecate [[innodb-system-variables/#innodb_purge_rseg_truncate_frequency|innodb_purge_rseg_truncate_frequency]]. 
-The motivation for introducing this in MySQL seems to have been to avoid stalls due to freeing undo log pages or truncating undo log tablespaces. In MariaDB, [[innodb-system-variables#innodb_undo_log_truncate|innodb_undo_log_truncate=ON]] should be a much lighter operation because it will not involve any log checkpoint. (MDEV-32050)
+* DROP INDEX followed by CREATE INDEX may corrupt data (MDEV-32132)
+* ROW_FORMAT=COMPRESSED table: InnoDB: 2048 bytes should have been read. Only 0 bytes read. (MDEV-31875)
+* Server aborts during alter operation when table doesn&#39;t have foreign index (MDEV-32527)
+* row_merge_fts_doc_tokenize() handles FTS plugin parser inconsistently (MDEV-32578)
+* InnoDB: tried to purge non-delete-marked record of an index on a virtual column prefix (MDEV-30024)
+* lock_row_lock_current_waits counter in information_schema.innodb_metrics may become negative (MDEV-30658)
+* SET GLOBAL innodb_max_purge_lag_wait=… hangs if innodb_read_only=ON (MDEV-31813)
+* Auto-increment no longer works for explicit FTS_DOC_ID (MDEV-32017)
+* Assertion `pos &lt; table-&gt;n_def&#39; failed in dict_table_get_nth_col (MDEV-32337)
+* innochecksum man pages seem to be inconsistent with the binary (10.2.25) (MDEV-20583)
+* innodb_compression_algorithm=0 (none) increments Innodb_num_pages_page_compression_error (MDEV-30825)
+* wrong table name in innodb&#39;s &#34;row too big&#34; errors (MDEV-32128)
+* Optimize is_file_on_ssd() to speedup opening tablespaces on Windows (MDEV-32228)
+* Race condition between page write completion and log checkpoint (MDEV-32511)
+* After crash recovery, Checksum mismatch + Failing assertion: !i || prev_id + 1 == space_id,  (MDEV-31851)
+* Deadlock due to log_free_check(), involving trx_purge_truncate_rseg_history() and trx_undo_assign_low() (MDEV-32049)
+* Write-ahead logging is broken for freed pages (MDEV-32552)
+* X-lock on supremum for prepared transaction for RR (MDEV-30165)
+* Assertion failures in log_sort_flush_list upon crash recovery (MDEV-32029)
+* Race condition between page write completion and log checkpoint (MDEV-32511)
+* Assertion `purge_sys.tail.trx_no &lt;= purge_sys.rseg-&gt;last_trx_no()&#39; (MDEV-30100)
+* Assertion `index-&gt;is_btree() || index-&gt;is_ibuf()&#39; failed in btr_search_guess_on_hash (MDEV-30802)
+* InnoDB hang in buf_flush_wait_LRU_batch_end() (MDEV-32134)
+* InnoDB may hang when running out of buffer pool (MDEV-32588)
+* Corrupt index(es) on busy table when using FOREIGN KEY (MDEV-30531)
+* InnoDB Recovery doesn&#39;t display encryption message when no encryption configuration passed (MDEV-31098)
+* Wrong information about innodb_checksum_algorithm in the information_schema.SYSTEM_VARIABLES (MDEV-31473)
+* InnoDB may fail to recover after being killed in fil_delete_tablespace() (MDEV-31826)
+* Create separate tpool thread for async aio (MDEV-31095)
+* UNDO logs still growing for write-intensive workloads (MDEV-32050)
+** Increase the default for [[innodb-system-variables/#innodb_purge_batch_size|innodb_purge_batch_size]] from 300 to 1000 (MDEV-32050)
+** Deprecate [[innodb-system-variables/#innodb_purge_rseg_truncate_frequency|innodb_purge_rseg_truncate_frequency]]. 
+** The motivation for introducing this in MySQL seems to have been to avoid stalls due to freeing undo log pages or truncating undo log tablespaces. In MariaDB, [[innodb-system-variables#innodb_undo_log_truncate|innodb_undo_log_truncate=ON]] should be a much lighter operation because it will not involve any log checkpoint. (MDEV-32050)
+* Slow full index scan in 10.6 vs 10.5 for the (slow) I/O-bound case (MDEV-30986)
+* LOAD DATA into InnoDB w/partitions: huge performance loss, affected 10.6+ (MDEV-31835)
+* Disable read-ahead for temporary tablespace (MDEV-32145)
+
+=== Optimizer
+* Crash when HAVING in a correlated subquery references columns in the outer query (MDEV-29731)
+* Server crashes at TABLE::add_tmp_key (MDEV-32320)
+* Server crashes inside filesort at my_decimal::to_binary (MDEV-32324)
+* Assertion `bitmap_is_set(&amp;m_part_info-&gt;read_partitions, m_part_spec.start_part)&#39; failed in ha_partition::handle_ordered_index_scan (MDEV-24283)
+* Crash when searching for the best split of derived table (MDEV-32064)
+* Test case from opt_tvc.test fails with statement memory protection (MDEV-32225)
+* Significant slowdown for query with many outer joins (MDEV-32351)
+* test_if_skip_sort_order() should catch the join types JT_EQ_REF, JT_CONST and JT_SYSTEM and skip sort order for these (MDEV-32475)
+* jointable materialization subquery optimization ignoring errors, then failing ASSERT. (MDEV-31983)
+* Server crashes in JOIN::cleanup after erroneous query with view (MDEV-32164)
+* Prepared statement return wrong result (missing row) (MDEV-9938)
+* Assertion `range-&gt;rows &gt;= s-&gt;found_records&#39; failed in best_access_path (MDEV-32682)
+
+=== Replication
+* rpl.rpl_parallel_temptable failure due to incorrect commit optimization of temptables (MDEV-10356)
+* Lock wait timeout with INSERT-SELECT, autoinc, and statement-based replication (MDEV-31482)
+* strings/ctype-ucs2.c:2336: my_vsnprintf_utf32: Assertion `(n % 4) == 0&#39; failed in my_vsnprintf_utf32 on INSERT (MDEV-32249)
+* Assertion fails in MDL_context::acquire_lock upon parallel replication of CREATE SEQUENCE (MDEV-31792)
+* SHOW SLAVE STATUS Last_SQL_Errno Race Condition on Errored Slave Restart (MDEV-31177)
+* seconds_behind_master is inaccurate for Delayed replication  (MDEV-32265)
+* detailize the semisync replication magic number error  (MDEV-32365)
+* Parallel replication deadlock victim preference code errorneously removed (MDEV-31655)
+* Parallel replication lags because innobase_kill_query() may fail to interrupt a lock wait (MDEV-32096)
+
+=== Galera
+* Assertion `state() == s_executing || state() == s_prepared || state() == s_committing || state() == s_must_abort || state() == s_replaying&#39; failed. (MDEV-24912)
+* Assertion `state() == s_executing || state() == s_preparing || state() == s_prepared || state() ==  s_must_abort || state() == s_aborting || state() == s_cert_failed || state() == s_must_replay&#39; failed (MDEV-31285)
+* wsrep_sst_mariabackup not working on FreeBSD (MDEV-31467)
+* Galera library 26.4.16 fails with every server version (MDEV-32024)
+* Galera node remains paused after interleaving FTWRLs (MDEV-32282)
+* Failed to insert streaming client (MDEV-32051)
+* When set at runtime, wsrep_sst_method accepts any value (MDEV-31470)
+* galera needs packaging script changes to successfully build (MDEV-32642)
+* replication breaks when using optimistic replication and replica is a galera node (MDEV-31833)
+* McAfee database vulnerability scan caused MariaDB crash with signal 6 (system abort) (MDEV-27004)
+* Assertion `mode_ == m_local || transaction_.is_streaming()&#39; failed in int wsrep::client_state::bf_abort(wsrep::seqno) (MDEV-30217)
+
+=== Data Definition
+* MariaDB crash on calling function (MDEV-23902)
+* ASAN errors in grn_obj_unlink / ha_mroonga::clear_indexes upon index operations (MDEV-31970)
+* vcol circular references lead to stack overflow (MDEV-31112)
+* OPTIMIZE TABLE crash (MDEV-28122)
+* Server crashes in Alter_info::add_stat_drop_index upon CREATE TABLE (MDEV-32449)
+
+=== Scripts and Clients
+* mysqlbinlog (mariadb-binlog) ##-T/--table## option (MDEV-25369)
+* mysqladmin wrong error with simple_password_check (MDEV-22418)
+* mariadb-install-db shows warning on missing directory $pamtooldir/auth_pam_tool_dir (MDEV-32142)
+* main.mysql_client_test, main.mysql_client_test_comp failed on ASAN build with error: 5888, status: 23, errno: 2 (MDEV-19369)
+* mysql_install_db doesn&#39;t properly grant proxy privileges to all default root user accounts (MDEV-21194)
+
+=== Tests
+* main.events_stress or events.events_stress fails with view-protocol (MDEV-31455)
+* main.delete_use_source fails (hangs) with view-protocol (MDEV-31457)
+* main.sum_distinct-big and main.merge-big fail with timeout with view-protocol (MDEV-31465)
+* main.secure_file_priv_win fails with 2nd execution PS protocol (MDEV-32023)
+* Windows : mtr output on is messed up with large MTR_PARALLEL (MDEV-32387)
+* main.mysql_client_test_comp failed in buildbot, error on exec (MDEV-16641)
+* main.order_by_pack_big fails with view-protocol (MDEV-31460)
+* mysql_install_db_win.test fails on second execution (MDEV-32232)
+
+=== MariaBackup
+* MariaBackup full backup failed with InnoDB: Failing assertion: success in storage/innobase/fil/fil0fil.cc line 657 (MDEV-18200)
+* mbstream breaks page compression on XFS (MDEV-25734)
+
+=== Character Sets, Data Types, Collations
+* Prefix keys for CHAR work differently for MyISAM vs InnoDB (MDEV-30048)
+* Inconsistent results of DISTINCT with NOPAD (MDEV-30050)
+* Assertion `(length % 4) == 0&#39; failed in my_lengthsp_utf32 on INSERT (MDEV-28835)
+* Compressed varchar values lost on joins when sorting on columns from joined table(s) (MDEV-31724)
+* UBSAN shift exponent X is too large for 64-bit type &#39;long long int&#39; in sql/field.cc (MDEV-32226)
+* Wrong bit encoding using COALESCE (MDEV-32244)
+
+=== Spider
+* Spider UBSAN runtime error: applying non-zero offset x to null pointer in st_spider_param_string_parse::restore_delims (MDEV-31117)
+* Segfault when setting spider_delete_all_rows to 0 and delete all rows of a spider table, ASAN heap-use-after-free in spider_db_delete_all_rows (MDEV-31996)
+* ASAN errors in spider_fields::free_conn_holder or spider_create_group_by_handler (MDEV-28998)
+* ASAN: heap-buffer-overflow &amp; stack-buffer-overflow in ##spider_db_mbase_row::append_to_str## | SIGSEGV&#39;s in ##__memmove_avx_unaligned_erms## from memcpy in ##Binary_string::q_append##, in ##Static_binary_string::q_append## and ##my_strntoull10rnd_8bit## | Unknown error 12801 (MDEV-29502)
+
+=== General
+* binlog_do_db option breaks importing sql dumps (MDEV-29989)
+* Crashes in MDL_key::mdl_key_init with lower-case-table-names=2 (MDEV-32025)
+* getting error &#39;Illegal parameter data types row and bigint for operation &#39;+&#39; &#39; when using ITERATE in a FOR..DO (MDEV-32275)
+* Assertion `arena_for_set_stmt== 0&#39; failed in LEX::set_arena_for_set_stmt upon SET STATEMENT (MDEV-17711)
+* main.mysqlcheck fails on ARM with ASAN use-after-poison in my_mb_wc_filename (MDEV-26494)
+* main.delayed fails with wrong error code or timeout when executed after main.deadlock_ftwrl (MDEV-27523)
+* Assertion failed: !pfs-&gt;m_idle || (state == PSI_SOCKET_STATE_ACTIVE) (MDEV-28561)
+* MyISAM wrong server status flags (MDEV-28820)
+* Server crashes in check_sequence_fields upon CREATE TABLE .. SEQUENCE=1 AS SELECT .. (MDEV-29771)
+* slow log Rows_examined out of range (MDEV-30820)
+* &#34;##rpm --setugids##&#34; breaks PAM authentication (MDEV-30904)
+* incorrect examined rows in case of stored function usage (MDEV-31742)
+* Compilation failing on MacOS (unknown warning option -Wno-unused-but-set-variable) (MDEV-31890)
+* Server crash upon inserting into Mroonga table with compressed column (MDEV-31966)
+* hash unique corrupts index on virtual blobs (MDEV-32012)
+* insert into an empty table fails with hash unique (MDEV-32015)
+* Valgrind/MSAN warnings in dynamic_column_update_move_left (MDEV-32140)
+* Memory leak showed in MDEV-6146 test suite (MDEV-32223)
+* Test from subselect.test fails with statement memory protection (MDEV-32245)
+* Memory leak when executing PS for query with IN subquery (MDEV-32369)
+* Allow the setting of Auto_increment on FK referenced columns (MDEV-32018)
+* mariadb-upgrade fails with sql_safe_updates = on (MDEV-29914)
+* Assertion `!(thd-&gt;server_status &amp; (1U | 8192U))&#39; failed in MDL_context::release_transactional_locks (MDEV-32541)
+* Information schema leaks table names and structure to unauthorized users (MDEV-32500)
+* Missing CHACHA20-POLY1305 support in WolfSSL (MDEV-31653)
+* incorrect error about cyclic reference about JSON type virtual column (MDEV-32586)
+* Disable TLS v1.0 and 1.1 for MariaDB (MDEV-31369)
+* Better indication of refusing to start because of ProtectHome (MDEV-25177)
+* Database upgrade fails: slow_log table (MDEV-27757)
+* myrocks_hotbackup.1 and test suite files installed when engine is disabled (MDEV-29993)
+* client_ed25519.dll isn&#39;t inluded for HeidiSQL. (MDEV-31315)
+* Assertion `!m_null_value&#39; failed in int FixedBinTypeBundle&lt;FbtImpl&gt;::cmp_item_fbt::compare or in cmp_item_inet6::compare (MDEV-27207)
+* type_test.type_test_double fails with &#39;NUMERIC_SCALE  NULL&#39; (MDEV-22243)
+* LeakSanitizer errors in get_quick_select or Assertion `status_var.local_memory_used == 0 || !debug_assert_on_not_freed_memory&#39; failed (MDEV-32476)
+* Update signal hander user info more compassion and correct url (MDEV-32535)
+* maria-install-db fails on MacOS (MDEV-31871)
+* MSAN / Valgrind errors in Item_func_like::get_mm_leaf upon query from partitioned table (MDEV-32388)
+* MSAN / Valgrind errors in Item_func_like::get_mm_leaf with temporal field (MDEV-32531)
+* ASAN errors in base_list_iterator::next / setup_table_map upon 2nd execution of PS (MDEV-32656)
+* safe_mutex: Found wrong usage of mutex &#39;LOCK_thd_data&#39; and &#39;wait_mutex&#39; (MDEV-32728)
 
 === Variables
 * Added the [[server-system-variables/#note_verbosity|note_verbosity]] system variable to manage [[notes-when-an-index-cannot-be-used|notes when an index cannot be used]].
@@ -340,11 +495,9 @@ The motivation for introducing this in MySQL seems to have been to avoid stalls 
 ** CVE-####-####
 &lt;&lt;/style&gt;&gt;
 
-&lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 == Changelog
 For a complete list of changes made in MariaDB 11.0.4, with links to detailed
 information on each push, see the [[mariadb-11-0-4-changelog|changelog]].
-&lt;&lt;/style&gt;&gt;
 
 &lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 == Contributors

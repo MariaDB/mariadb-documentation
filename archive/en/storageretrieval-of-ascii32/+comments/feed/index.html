@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: storage/retrieval of  ASCII(32)</title><link>https://mariadb.com/kb/en/storageretrieval-of-ascii32/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/storageretrieval-of-ascii32/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Mon, 13 Nov 2023 23:36:46 +0000</lastBuildDate><item><title>Re: storage/retrieval of  ASCII(32)</title><link>https://mariadb.com/kb/en/storageretrieval-of-ascii32/+comments/6468</link><description>&lt;p&gt;You can also use VARCHAR(1) as a type instead of char(1), it doesn't strip trailing spaces and thus does not require setting the SQL_MODE.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Kristian Nielsen</dc:creator><guid>https://mariadb.com/kb/en/storageretrieval-of-ascii32/+comments/6468</guid></item><item><title>Re: storage/retrieval of  ASCII(32)</title><link>https://mariadb.com/kb/en/storageretrieval-of-ascii32/+comments/6467</link><description>&lt;p&gt;It is because char(n) columns strip trailing spaces when selected. So chr(32), a single space, gets interpreted as the empty string. See here:&lt;/p&gt;
+&lt;p&gt;    &lt;a href="https://mariadb.com/kb/en/char/"&gt;https://mariadb.com/kb/en/char/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;    " Trailing spaces are removed when CHAR values are retrieved"&lt;/p&gt;
+&lt;p&gt;You can set the SQL_MODE to include PAD_CHAR_TO_FULL_LENGTH to disable this behaviour and be able to select the chr(32):&lt;/p&gt;
+&lt;pre&gt;
+MariaDB&amp;gt; set sql_mode = concat(@@sql_mode, ',PAD_CHAR_TO_FULL_LENGTH');
+MariaDB&amp;gt; create table t5 (a char(1));
+MariaDB&amp;gt; insert into t5 values ('a'), (' ');
+MariaDB&amp;gt; select a, length(a), ascii(a) from t5;
++------+-----------+----------+
+| a    | length(a) | ascii(a) |
++------+-----------+----------+
+| a    |         1 |       97 |
+|      |         1 |       32 |
++------+-----------+----------+
+&lt;/pre&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Kristian Nielsen</dc:creator><guid>https://mariadb.com/kb/en/storageretrieval-of-ascii32/+comments/6467</guid></item></channel></rss>
