@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-11-07 20:41">5 days, 20 hours ago</span></dd>
+<span class="datetime" title="2023-11-15 12:26">4 hours, 36 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -384,20 +384,44 @@
 
     
     <div class="answer formatted">
-        <h3 class="anchored_heading" id="syntax">Syntax</h3>
+        <h2 class="anchored_heading" id="syntax">Syntax</h2>
 <pre class="fixed">PARTITION BY HASH (partitioning_expression)
 [PARTITIONS(number_of_partitions)]
-</pre><h3 class="anchored_heading" id="description">Description</h3>
+</pre><h2 class="anchored_heading" id="description">Description</h2>
 <p>HASH partitioning is a form of <a href="/kb/en/partitioning-tables/">partitioning</a> in which the server takes care of the partition in which to place the data, ensuring an even distribution among the partitions.</p>
 <p>It requires a column value, or an expression based on a column value, which is hashed, as well as the number of partitions into which to divide the table.</p>
-<p><em>partitioning_expression</em> needs to return a non-constant, deterministic integer. It is evaluated for each insert and update, so overly complex expressions can lead to performance issues.</p>
+<p><em>partitioning_expression</em> needs to return a non-constant, deterministic integer. It is evaluated for each insert and update, so overly complex expressions can lead to performance issues. A hashing function operating on a single column, and where the value changes consistently with the column value, allows for easy pruning on ranges of partitions, and is usually a better choice. For this reason, using multiple columns in a hashing expression is not usually recommended.</p>
 <p><em>number_of_partitions</em> is a positive integer specifying the number of partitions into which to divide the table. If the <code>PARTITIONS</code> clause is omitted, the default number of partitions is one.</p>
-<p>The <a href="/kb/en/linear-hash-partitioning-type/">LINEAR HASH partitioning type</a> is similar, with HASH partitioning making use of the modulus of the hashing function's value, while LINEAR HASH partitioning uses a powers-of-two algorithm. Data is more likely to be evenly distributed over the partitions than with the LINEAR HASH partitioning type, however, adding, dropping, merging and splitting partitions is much slower.</p>
-<h3 class="anchored_heading" id="examples">Examples</h3>
+<h3 class="anchored_heading" id="determining-the-partition">Determining the Partition</h3>
+<p>To determine which partition to use, the following calculation is performed:
+MOD(partitioning_expression, number_of_partitions)</p>
+<p>For example, if the expression is TO_DAYS(datetime_column) and the number of partitions is 5, inserting a datetime value of '2023-11-15' would determine the partition as follows:</p>
+<ul start="1"><li>TO_DAYS('2023-11-15') gives a value of 739204
+</li><li>MOD(739204,5) returns 4
+so the 4th partition is used.
+</li></ul>
+<p>HASH partitioning making use of the modulus of the hashing function's value.  The <a href="/kb/en/linear-hash-partitioning-type/">LINEAR HASH partitioning type</a> is similar, using a powers-of-two algorithm. Data is more likely to be evenly distributed over the partitions than with the LINEAR HASH partitioning type, however, adding, dropping, merging and splitting partitions is much slower.</p>
+<h2 class="anchored_heading" id="examples">Examples</h2>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">c1</span> <span class="nb">INT</span><span class="p">,</span> <span class="n">c2</span> <span class="n">DATETIME</span><span class="p">)</span> 
   <span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">HASH</span><span class="p">(</span><span class="n">TO_DAYS</span><span class="p">(</span><span class="n">c2</span><span class="p">))</span> 
   <span class="n">PARTITIONS</span> <span class="mi">5</span><span class="p">;</span>
-</pre>
+</pre><p>Using the <a href="/kb/en/information-schema-partitions-table/">Information Schema PARTITIONS Table</a> for more information:</p>
+<pre class="fixed"><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t1</span> <span class="k">VALUES</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="s1">&#39;2023-11-15&#39;</span><span class="p">);</span>
+
+<span class="k">SELECT</span> <span class="n">PARTITION_NAME</span><span class="p">,</span><span class="n">TABLE_ROWS</span> <span class="k">FROM</span> <span class="n">INFORMATION_SCHEMA</span><span class="p">.</span><span class="n">PARTITIONS</span> 
+  <span class="k">WHERE</span> <span class="n">TABLE_SCHEMA</span><span class="o">=</span><span class="s1">&#39;test&#39;</span> <span class="k">AND</span> <span class="k">TABLE_NAME</span><span class="o">=</span><span class="s1">&#39;t1&#39;</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">----------------+------------+</span>
+<span class="o">|</span> <span class="n">PARTITION_NAME</span> <span class="o">|</span> <span class="n">TABLE_ROWS</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----------------+------------+</span>
+<span class="o">|</span> <span class="n">p0</span>             <span class="o">|</span>          <span class="mi">0</span> <span class="o">|</span>
+<span class="o">|</span> <span class="n">p1</span>             <span class="o">|</span>          <span class="mi">0</span> <span class="o">|</span>
+<span class="o">|</span> <span class="n">p2</span>             <span class="o">|</span>          <span class="mi">0</span> <span class="o">|</span>
+<span class="o">|</span> <span class="n">p3</span>             <span class="o">|</span>          <span class="mi">0</span> <span class="o">|</span>
+<span class="o">|</span> <span class="n">p4</span>             <span class="o">|</span>          <span class="mi">1</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----------------+------------+</span>
+</pre><h2 class="anchored_heading" id="see-also">See Also</h2>
+<ul start="1"><li><a href="/kb/en/partition-maintenance/">Partition Maintenance</a> for suggestions on using partitions</li></ul>
+
     </div>
 
 
