@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/partitioning-overview/+r/132541/">132541</a></dd>
+            <dd><a href="/kb/en/partitioning-overview/+r/132591/">132591</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-982">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-11-15 12:28">2023-11-15 12:28</span></dd>
+<span class="datetime" title="2023-11-21 14:03">2023-11-21 14:03</span></dd>
         </dl>
     </div>
     
@@ -340,7 +340,7 @@ With some partitioning types, a partitioning expression is also required. A part
 
 See [[partitioning-types|Partioning Types]] for a detailed description.
 
-== How to Use Partitioning
+== Enabling Partitioning
 
 By default, MariaDB permits partitioning. You can determine this by using the [[show-plugins|SHOW PLUGINS]] statement, for example:
 
@@ -365,6 +365,7 @@ MariaDB has either been built without partitioning support, or has been started 
 &lt;&lt;/code&gt;&gt;
 and you will not be able to create partitions.
 
+== Using Partitions
 It is possible to create a new partitioned table using [[create-table|CREATE TABLE]].
 
 [[alter-table|ALTER TABLE]] allows one to:
@@ -374,7 +375,115 @@ It is possible to create a new partitioned table using [[create-table|CREATE TAB
 * Exchange a partition with a table;
 * Perform administrative operations on some or all partitions (analyze, optimize, check, repair).
 
+=== Adding Partitions
+&lt;&lt;code&gt;&gt;
+ADD PARTITION [IF NOT EXISTS] (partition_definition)
+&lt;&lt;/code&gt;&gt;
 
+##ALTER TABLE ... ADD PARTITION## can be used to add partitions to an existing table:
+
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+  timestamp DATETIME NOT NULL
+)
+  ENGINE = InnoDB
+  PARTITION BY RANGE (YEAR(timestamp))
+  (
+  PARTITION p0 VALUES LESS THAN (2013),
+  PARTITION p1 VALUES LESS THAN (2014),
+  PARTITION p2 VALUES LESS THAN (2015),
+  PARTITION p3 VALUES LESS THAN (2016)
+);
+
+ALTER TABLE t1 ADD PARTITION (
+  PARTITION p4 VALUES LESS THAN (2017), 
+  p5 VALUES LESS THAN (2018)
+);
+&lt;&lt;/sql&gt;&gt;
+
+=== Dropping Partitions
+&lt;&lt;code&gt;&gt;
+DROP PARTITION [IF EXISTS] partition_names
+&lt;&lt;/code&gt;&gt;
+
+##ALTER TABLE ... DROP PARTITION## can be used to drop specific partitions (and discard all data within the specified partitions) for [[range-partitioning-type|RANGE]] and [[list-partitioning/|LIST]] partitions. It cannot be used on [[hash-partitioning-type|HASH]] or [[key-partitioning-type|KEY]] partitions. To rather remove all partitioning, while leaving the data unaffected, see [[#removing-partitioning|Removing Partitioning]].
+
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+  timestamp DATETIME NOT NULL
+)
+  ENGINE = InnoDB
+  PARTITION BY RANGE (YEAR(timestamp))
+  (
+  PARTITION p0 VALUES LESS THAN (2013),
+  PARTITION p1 VALUES LESS THAN (2014),
+  PARTITION p2 VALUES LESS THAN (2015),
+  PARTITION p3 VALUES LESS THAN (2016)
+);
+
+INSERT INTO t1 VALUES (&#39;2012-11-15&#39;);
+SELECT * FROM t1;
++---------------------+
+| timestamp           |
++---------------------+
+| 2012-11-15 00:00:00 |
++---------------------+
+
+ALTER TABLE t1 DROP PARTITION p0;
+
+SELECT * FROM t1;
+Empty set (0.002 sec)
+&lt;&lt;/sql&gt;&gt;
+
+=== Removing Partitioning
+&lt;&lt;code&gt;&gt;
+REMOVE PARTITIONING
+&lt;&lt;/code&gt;&gt;
+##ALTER TABLE ... REMOVE PARTITIONING## will remove all partitioning from the table, while leaving the data unaffected. To rather drop a particular partition (and discard all of its data), see [[#dropping-partitions|Dropping Partitions]].
+&lt;&lt;sql&gt;&gt;
+ALTER TABLE t1 REMOVE PARTITIONING;
+&lt;&lt;/sql&gt;&gt;
+
+=== Truncating Partitions
+&lt;&lt;code&gt;&gt;
+TRUNCATE PARTITION partition_names
+&lt;&lt;/code&gt;&gt;
+##ALTER TABLE ... TRUNCATE PARTITION## will remove all data from the specified partition/s, leaving the table and partition structure unchanged. Partitions don&#39;t need to be contiguous.
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+  timestamp DATETIME NOT NULL
+)
+  ENGINE = InnoDB
+  PARTITION BY RANGE (YEAR(timestamp))
+  (
+  PARTITION p0 VALUES LESS THAN (2013),
+  PARTITION p1 VALUES LESS THAN (2014),
+  PARTITION p2 VALUES LESS THAN (2015),
+  PARTITION p3 VALUES LESS THAN (2016)
+);
+
+INSERT INTO t1 VALUES (&#39;2012-11-01&#39;),(&#39;2013-11-02&#39;),(&#39;2014-11-03&#39;),(&#39;2015-11-04&#39;);
+
+SELECT * FROM t1;
++---------------------+
+| timestamp           |
++---------------------+
+| 2012-11-01 00:00:00 |
+| 2013-11-02 00:00:00 |
+| 2014-11-03 00:00:00 |
+| 2015-11-04 00:00:00 |
++---------------------+
+
+ALTER TABLE t1 TRUNCATE PARTITION p0,p2;
+
+SELECT * FROM t1;
++---------------------+
+| timestamp           |
++---------------------+
+| 2013-11-02 00:00:00 |
+| 2015-11-04 00:00:00 |
++---------------------+
+&lt;&lt;/sql&gt;&gt;
 
 == See Also
 * [[information-schema-partitions-table/|INFORMATION_SCHEMA.PARTITIONS]] contains information about existing partitions.
