@@ -280,7 +280,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/configuring-mariadb-for-remote-client-access/+r/130205/">130205</a></dd>
+            <dd><a href="/kb/en/configuring-mariadb-for-remote-client-access/+r/132638/">132638</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -289,7 +289,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-09-10 15:32">2023-09-10 15:32</span></dd>
+<span class="datetime" title="2023-11-21 22:05">2023-11-21 22:05</span></dd>
         </dl>
     </div>
     
@@ -325,16 +325,16 @@ explain what each of them actually does:
 If [[server-system-variables/#bind_address|bind-address]] is bound to 127.0.0.1 (localhost), one can&#39;t connect to the MariaDB server from other hosts or from the same host over TCP/IP on a different interface than the loopback (127.0.0.1). This for example will not work (connecting with a hostname that points to a local IP of the host):
 
 &lt;&lt;code&gt;&gt;
-(/my/maria-10.4) ./client/mysql --host=myhost --protocol=tcp --port=3306 test
+(/my/maria-10.11) ./client/mariadb --host=myhost --protocol=tcp --port=3306 test
 ERROR 2002 (HY000): Can&#39;t connect to MySQL server on &#39;myhost&#39; (115)
-(/my/maria-10.4) telnet myhost 3306
+(/my/maria-10.11) telnet myhost 3306
 Trying 192.168.0.11...
 telnet: connect to address 192.168.0.11: Connection refused
 &lt;&lt;/code&gt;&gt;
 
 Using &#39;localhost&#39; works when binding with ##bind_address##:
 &lt;&lt;code&gt;&gt;
-(my/maria-10.4) ./client/mysql --host=localhost --protocol=tcp --port=3306 test
+(my/maria-10.11) ./client/mariadb --host=localhost --protocol=tcp --port=3306 test
 Reading table information for completion of table and column names
 You can turn off this feature to get a quicker startup with -A
 
@@ -358,16 +358,16 @@ Common locations for defaults files:
 
 You can see which defaults files are read and in which order by executing:
 &lt;&lt;code&gt;&gt;
-shell&gt; mysqld --help --verbose
-./sql/mysqld  Ver 10.4.2-MariaDB-valgrind-max-debug for Linux on x86_64 (Source distribution)
+shell&gt; mariadbd --help --verbose
+mariadbd  Ver 10.11.5-MariaDB for linux-systemd on x86_64 (MariaDB Server)
 Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
 
 Starts the MariaDB database server.
 
-Usage: ./sql/mysqld [OPTIONS]
+Usage: ./mariadbd [OPTIONS]
 
 Default options are read from the following files in the given order:
-/etc/my.cnf /etc/mysql/my.cnf ~/.my.cnf 
+/etc/my.cnf /etc/mysql/my.cnf ~/.my.cnf
 &lt;&lt;/code&gt;&gt;
 
 The last line shows which defaults files are read.
@@ -410,14 +410,14 @@ skip-networking=0
 skip-bind-address
 &lt;&lt;/code&gt;&gt;
 
-This works as one can have any number of [[mysqld]] sections.
+This works as one can have any number of [mysqld] sections.
 
-Save the file and restart the mysqld daemon or service (see [[starting-and-stopping-mariadb| Starting and Stopping MariaDB]]).
+Save the file and restart the mariadbd daemon or service (see [[starting-and-stopping-mariadb| Starting and Stopping MariaDB]]).
 
-You can check the options mysqld is using by executing:
+You can check the options mariadbd is using by executing:
 &lt;&lt;code&gt;&gt;
-shell&gt; ./sql/mysqld --print-defaults
-./sql/mysqld would have been started with the following arguments:
+shell&gt; ./sql/mariadbd --print-defaults
+./sql/mariadbd would have been started with the following arguments:
 --bind-address=127.0.0.1 --innodb_file_per_table=ON --server-id=1 --skip-bind-address ...
 &lt;&lt;/code&gt;&gt;
 
@@ -434,7 +434,7 @@ completely different permissions and/or passwords.
 
 To create a new user:
 
-* log into the [[mysql-command-line-client|mysql command line client]] (or your favorite graphical client if you wish)
+* log into the [[mariadb-command-line-client/|mariadb command line client]] (or your favorite graphical client if you wish)
 
 &lt;&lt;code indent=1&gt;&gt;
 Welcome to the MariaDB monitor.  Commands end with ; or \g.
@@ -493,9 +493,9 @@ connect from anywhere on the 192.168.100.0/24 LAN.
 
 == Port 3306 is Configured in Firewall
 
-One more point to consider whether the firwall is configured to allow incoming request from remote clients:
+One more point to consider whether the firewall is configured to allow incoming request from remote clients:
 
-On RHEL and CentOS 7, it may be necessary to configure the firewall to allow TCP access to MySQL from remote hosts. To do so, execute both of these commands:
+On RHEL and CentOS 7, it may be necessary to configure the firewall to allow TCP access to MariaDB from remote hosts. To do so, execute both of these commands:
 
 &lt;&lt;code&gt;&gt;
 firewall-cmd --add-port=3306/tcp 
@@ -507,7 +507,7 @@ firewall-cmd --permanent --add-port=3306/tcp
 * If your system is running a software firewall (or behind a hardware firewall
   or NAT) you must allow connections destined to TCP port that MariaDB runs on (by
   default and almost always 3306).
-* To undo this change and not allow remote access anymore, simply remove the ##skip-bind-address## line or uncomment the [[server-system-variables/#bind_address|bind-address]] line in your defaults file.  The end result should be that you should have in the output from &lt;&lt;code&gt;&gt;./sql/mysqld --print-defaults&lt;&lt;/code&gt;&gt; the option ##--bind-address=127.0.0.1## and no ##--skip-bind-address##.
+* To undo this change and not allow remote access anymore, simply remove the ##skip-bind-address## line or uncomment the [[server-system-variables/#bind_address|bind-address]] line in your defaults file.  The end result should be that you should have in the output from &lt;&lt;code&gt;&gt;./sql/mariadbd --print-defaults&lt;&lt;/code&gt;&gt; the option ##--bind-address=127.0.0.1## and no ##--skip-bind-address##.
 
 &lt;&lt;style class=&#34;bluebox&#34; style=&#34;font-size:0.6em;font-family:&#39;Droid Sans&#39;;&#34;&gt;&gt;
 //The initial version of this article was copied, with permission, from http://hashmysql.org/wiki/Remote_Clients_Cannot_Connect on 2012-10-30.//

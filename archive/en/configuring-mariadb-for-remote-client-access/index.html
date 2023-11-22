@@ -244,7 +244,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-10 15:32">2 months, 1 week ago</span></dd>
+<span class="datetime" title="2023-11-21 22:05">18 hours, 56 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -450,13 +450,13 @@ explain what each of them actually does:</p>
 </li></ul>
 <div class="mariadb_from_10_11 mariadb from_10_11 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-1011/">10.11</a></h5><p>  Multiple comma-separated addresses can now be given to <code>bind_address</code> to allow the server to listen on more than one specific interface while not listening on others.</p>
 </div><p>If <a href="/kb/en/server-system-variables/#bind_address">bind-address</a> is bound to 127.0.0.1 (localhost), one can't connect to the MariaDB server from other hosts or from the same host over TCP/IP on a different interface than the loopback (127.0.0.1). This for example will not work (connecting with a hostname that points to a local IP of the host):</p>
-<pre class="fixed">(/my/maria-10.4) ./client/mysql --host=myhost --protocol=tcp --port=3306 test
+<pre class="fixed">(/my/maria-10.11) ./client/mariadb --host=myhost --protocol=tcp --port=3306 test
 ERROR 2002 (HY000): Can't connect to MySQL server on 'myhost' (115)
-(/my/maria-10.4) telnet myhost 3306
+(/my/maria-10.11) telnet myhost 3306
 Trying 192.168.0.11...
 telnet: connect to address 192.168.0.11: Connection refused
 </pre><p>Using 'localhost' works when binding with <code>bind_address</code>:</p>
-<pre class="fixed">(my/maria-10.4) ./client/mysql --host=localhost --protocol=tcp --port=3306 test
+<pre class="fixed">(my/maria-10.11) ./client/mariadb --host=localhost --protocol=tcp --port=3306 test
 Reading table information for completion of table and column names
 You can turn off this feature to get a quicker startup with -A
 
@@ -471,16 +471,16 @@ file. See <a href="/kb/en/configuring-mariadb-with-mycnf/">Configuring MariaDB w
   * SYSCONFDIR/my.cnf                        (*nix/BSD)
   * DATADIR\my.ini                           (Windows)
 </pre><p>You can see which defaults files are read and in which order by executing:</p>
-<pre class="fixed">shell&gt; mysqld --help --verbose
-./sql/mysqld  Ver 10.4.2-MariaDB-valgrind-max-debug for Linux on x86_64 (Source distribution)
+<pre class="fixed">shell&gt; mariadbd --help --verbose
+mariadbd  Ver 10.11.5-MariaDB for linux-systemd on x86_64 (MariaDB Server)
 Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
 
 Starts the MariaDB database server.
 
-Usage: ./sql/mysqld [OPTIONS]
+Usage: ./mariadbd [OPTIONS]
 
 Default options are read from the following files in the given order:
-/etc/my.cnf /etc/mysql/my.cnf ~/.my.cnf 
+/etc/my.cnf /etc/mysql/my.cnf ~/.my.cnf
 </pre><p>The last line shows which defaults files are read.</p>
 <h2 class="anchored_heading" id="editing-the-defaults-file">Editing the Defaults File</h2>
 <p>Once you have located the defaults file, use a text editor to open the file and
@@ -505,11 +505,11 @@ try to find lines like this under the [mysqld] section:</p>
 <pre class="fixed">[mysqld]
 skip-networking=0
 skip-bind-address
-</pre><p>This works as one can have any number of <a href="mysqld">mysqld</a> sections.</p>
-<p>Save the file and restart the mysqld daemon or service (see <a href="/kb/en/starting-and-stopping-mariadb/">Starting and Stopping MariaDB</a>).</p>
-<p>You can check the options mysqld is using by executing:</p>
-<pre class="fixed">shell&gt; ./sql/mysqld --print-defaults
-./sql/mysqld would have been started with the following arguments:
+</pre><p>This works as one can have any number of [mysqld] sections.</p>
+<p>Save the file and restart the mariadbd daemon or service (see <a href="/kb/en/starting-and-stopping-mariadb/">Starting and Stopping MariaDB</a>).</p>
+<p>You can check the options mariadbd is using by executing:</p>
+<pre class="fixed">shell&gt; ./sql/mariadbd --print-defaults
+./sql/mariadbd would have been started with the following arguments:
 --bind-address=127.0.0.1 --innodb_file_per_table=ON --server-id=1 --skip-bind-address ...
 </pre><p>It doesn't matter if you have the original --bind-address left as the later --skip-bind-address will overwrite it.</p>
 <h2 class="anchored_heading" id="granting-user-connections-from-remote-hosts">Granting User Connections From Remote Hosts</h2>
@@ -520,7 +520,7 @@ other than 'localhost' (Users in MariaDB are defined as 'user'@'host', so
 'chadmaynard'@'server.domain.local') are different users that can have
 completely different permissions and/or passwords.</p>
 <p>To create a new user:</p>
-<ul start="1"><li>log into the <a href="/kb/en/mysql-command-line-client/">mysql command line client</a> (or your favorite graphical client if you wish)
+<ul start="1"><li>log into the <a href="/kb/en/mariadb-command-line-client/">mariadb command line client</a> (or your favorite graphical client if you wish)
 </li></ul>
 <pre class="fixed indent1">Welcome to the MariaDB monitor.  Commands end with ; or \g.
 Your MariaDB connection id is 36
@@ -564,15 +564,15 @@ page.</p>
 <p>At this point we have accomplished our goal and we have a user 'root' that can
 connect from anywhere on the 192.168.100.0/24 LAN.</p>
 <h2 class="anchored_heading" id="port-3306-is-configured-in-firewall">Port 3306 is Configured in Firewall</h2>
-<p>One more point to consider whether the firwall is configured to allow incoming request from remote clients:</p>
-<p>On RHEL and CentOS 7, it may be necessary to configure the firewall to allow TCP access to MySQL from remote hosts. To do so, execute both of these commands:</p>
+<p>One more point to consider whether the firewall is configured to allow incoming request from remote clients:</p>
+<p>On RHEL and CentOS 7, it may be necessary to configure the firewall to allow TCP access to MariaDB from remote hosts. To do so, execute both of these commands:</p>
 <pre class="fixed">firewall-cmd --add-port=3306/tcp 
 firewall-cmd --permanent --add-port=3306/tcp
 </pre><h2 class="anchored_heading" id="caveats">Caveats</h2>
 <ul start="1"><li>If your system is running a software firewall (or behind a hardware firewall
   or NAT) you must allow connections destined to TCP port that MariaDB runs on (by
   default and almost always 3306).
-</li><li>To undo this change and not allow remote access anymore, simply remove the <code>skip-bind-address</code> line or uncomment the <a href="/kb/en/server-system-variables/#bind_address">bind-address</a> line in your defaults file.  The end result should be that you should have in the output from <code class="fixed" style="white-space:pre-wrap">./sql/mysqld --print-defaults</code> the option <code>--bind-address=127.0.0.1</code> and no <code>--skip-bind-address</code>.
+</li><li>To undo this change and not allow remote access anymore, simply remove the <code>skip-bind-address</code> line or uncomment the <a href="/kb/en/server-system-variables/#bind_address">bind-address</a> line in your defaults file.  The end result should be that you should have in the output from <code class="fixed" style="white-space:pre-wrap">./sql/mariadbd --print-defaults</code> the option <code>--bind-address=127.0.0.1</code> and no <code>--skip-bind-address</code>.
 </li></ul>
 <div class="cstm-style bluebox" style="font-size:0.6em;font-family:'Droid Sans';"><p><em>The initial version of this article was copied, with permission, from <a href="http://hashmysql.org/wiki/Remote_Clients_Cannot_Connect">http://hashmysql.org/wiki/Remote_Clients_Cannot_Connect</a> on 2012-10-30.</em></p>
 </div>
