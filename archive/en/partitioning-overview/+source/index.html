@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/partitioning-overview/+r/132678/">132678</a></dd>
+            <dd><a href="/kb/en/partitioning-overview/+r/132684/">132684</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-982">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-11-27 16:41">2023-11-27 16:41</span></dd>
+<span class="datetime" title="2023-11-27 21:13">2023-11-27 21:13</span></dd>
         </dl>
     </div>
     
@@ -401,11 +401,12 @@ ALTER TABLE t1 ADD PARTITION (
 );
 &lt;&lt;/sql&gt;&gt;
 
-=== Converting Partitions to Tables
+=== Converting Partitions to/from Tables
 &lt;&lt;product mariadb from=10.7&gt;&gt;
 
 &lt;&lt;code&gt;&gt;
 CONVERT PARTITION partition_name TO TABLE tbl_name
+CONVERT TABLE normal_table TO partition_definition
 &lt;&lt;/code&gt;&gt;
 
 ##[[alter-table|ALTER TABLE]] ... CONVERT PARTITION## can, from MariaDB 10.7, be used to convert partitions in an existing table to a standalone table:
@@ -423,18 +424,18 @@ CREATE OR REPLACE TABLE t1 (
    PARTITION p3 VALUES LESS THAN (2016)
  );
 
-INSERT INTO t1 VALUES (&#39;2012-11-11&#39;),(&#39;2013-11-11&#39;),(&#39;2014-11-11&#39;);
+INSERT INTO t1 VALUES (&#39;2013-11-11&#39;),(&#39;2014-11-11&#39;),(&#39;2015-11-11&#39;);
 
 SELECT * FROM t1;
 +---------------------+
 | timestamp           |
 +---------------------+
-| 2012-11-11 00:00:00 |
 | 2013-11-11 00:00:00 |
 | 2014-11-11 00:00:00 |
+| 2015-11-11 00:00:00 |
 +---------------------+
 
-ALTER TABLE t1 CONVERT PARTITION p0 TO TABLE t2;
+ALTER TABLE t1 CONVERT PARTITION p3 TO TABLE t2;
 
 SELECT * FROM t1;
 +---------------------+
@@ -448,7 +449,7 @@ SELECT * FROM t2;
 +---------------------+
 | timestamp           |
 +---------------------+
-| 2012-11-11 00:00:00 |
+| 2015-11-11 00:00:00 |
 +---------------------+
 
 SHOW CREATE TABLE t1\G
@@ -458,9 +459,9 @@ Create Table: CREATE TABLE `t1` (
   `timestamp` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
  PARTITION BY RANGE (year(`timestamp`))
-(PARTITION `p1` VALUES LESS THAN (2014) ENGINE = InnoDB,
- PARTITION `p2` VALUES LESS THAN (2015) ENGINE = InnoDB,
- PARTITION `p3` VALUES LESS THAN (2016) ENGINE = InnoDB)
+(PARTITION `p0` VALUES LESS THAN (2013) ENGINE = InnoDB,
+ PARTITION `p1` VALUES LESS THAN (2014) ENGINE = InnoDB,
+ PARTITION `p2` VALUES LESS THAN (2015) ENGINE = InnoDB)
 
 SHOW CREATE TABLE t2\G
 *************************** 1. row ***************************
@@ -468,6 +469,36 @@ SHOW CREATE TABLE t2\G
 Create Table: CREATE TABLE `t2` (
   `timestamp` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
+&lt;&lt;/code&gt;&gt;
+
+##CONVERT TABLE## does the reverse, converting a table into a partition:
+&lt;&lt;code&gt;&gt;
+ALTER TABLE t1 CONVERT TABLE t2 to PARTITION p3 VALUES LESS THAN (2016);
+
+SELECT * FROM t1;
++---------------------+
+| timestamp           |
++---------------------+
+| 2013-11-11 00:00:00 |
+| 2014-11-11 00:00:00 |
+| 2015-11-11 00:00:00 |
++---------------------+
+3 rows in set (0.001 sec)
+
+SELECT * FROM t2;
+ERROR 1146 (42S02): Table &#39;test.t2&#39; doesn&#39;t exist
+
+SHOW CREATE TABLE t1\G
+*************************** 1. row ***************************
+       Table: t1
+Create Table: CREATE TABLE `t1` (
+  `timestamp` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
+ PARTITION BY RANGE (year(`timestamp`))
+(PARTITION `p0` VALUES LESS THAN (2013) ENGINE = InnoDB,
+ PARTITION `p1` VALUES LESS THAN (2014) ENGINE = InnoDB,
+ PARTITION `p2` VALUES LESS THAN (2015) ENGINE = InnoDB,
+ PARTITION `p3` VALUES LESS THAN (2016) ENGINE = InnoDB)
 &lt;&lt;/code&gt;&gt;
 &lt;&lt;/product&gt;&gt;
 
@@ -490,24 +521,24 @@ CREATE OR REPLACE TABLE t1 (
    PARTITION p3 VALUES LESS THAN (2016)
  );
 
-INSERT INTO t1 VALUES (&#39;2012-11-11&#39;),(&#39;2013-11-11&#39;),(&#39;2014-11-11&#39;);
+INSERT INTO t1 VALUES (&#39;2013-11-11&#39;),(&#39;2014-11-11&#39;),(&#39;2015-11-11&#39;);
 
 SELECT * FROM t1;
 +---------------------+
 | timestamp           |
 +---------------------+
-| 2012-11-11 00:00:00 |
 | 2013-11-11 00:00:00 |
 | 2014-11-11 00:00:00 |
+| 2015-11-11 00:00:00 |
 +---------------------+
 
 CREATE OR REPLACE TABLE t2 LIKE t1;
 
 ALTER TABLE t2 REMOVE PARTITIONING;
 
-ALTER TABLE t1 EXCHANGE PARTITION p0 WITH TABLE t2;
+ALTER TABLE t1 EXCHANGE PARTITION p3 WITH TABLE t2;
 
-ALTER TABLE t1 DROP PARTITION p0;
+ALTER TABLE t1 DROP PARTITION p3;
 
 SELECT * FROM t1;
 +---------------------+
@@ -521,7 +552,7 @@ SELECT * FROM t2;
 +---------------------+
 | timestamp           |
 +---------------------+
-| 2012-11-11 00:00:00 |
+| 2015-11-11 00:00:00 |
 +---------------------+
 
 SHOW CREATE TABLE t1\G
@@ -531,10 +562,9 @@ Create Table: CREATE TABLE `t1` (
   `timestamp` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
  PARTITION BY RANGE (year(`timestamp`))
-(PARTITION `p1` VALUES LESS THAN (2014) ENGINE = InnoDB,
- PARTITION `p2` VALUES LESS THAN (2015) ENGINE = InnoDB,
- PARTITION `p3` VALUES LESS THAN (2016) ENGINE = InnoDB)
-1 row in set (0.001 sec)
+(PARTITION `p0` VALUES LESS THAN (2013) ENGINE = InnoDB,
+ PARTITION `p1` VALUES LESS THAN (2014) ENGINE = InnoDB,
+ PARTITION `p2` VALUES LESS THAN (2015) ENGINE = InnoDB)
 
 SHOW CREATE TABLE t2\G
 *************************** 1. row ***************************
@@ -542,6 +572,42 @@ SHOW CREATE TABLE t2\G
 Create Table: CREATE TABLE `t2` (
   `timestamp` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
+&lt;&lt;/code&gt;&gt;
+
+Similarly, to do the reverse and convert a table into a partition ##[[alter-table|ALTER TABLE ]] ... EXCHANGE PARTITION## can also be used, with the following manual steps required:
+* create the partition
+* exchange the partition with the table
+* drop the old table:
+
+For example:
+
+&lt;&lt;code&gt;&gt;
+ALTER TABLE t1 ADD PARTITION (PARTITION p3 VALUES LESS THAN (2016));
+
+ALTER TABLE t1 EXCHANGE PARTITION p3 WITH TABLE t2;
+
+DROP TABLE t2;
+
+SELECT * FROM t1;
++---------------------+
+| timestamp           |
++---------------------+
+| 2013-11-11 00:00:00 |
+| 2014-11-11 00:00:00 |
+| 2015-11-11 00:00:00 |
++---------------------+
+
+SHOW CREATE TABLE t1\G
+*************************** 1. row ***************************
+       Table: t1
+Create Table: CREATE TABLE `t1` (
+  `timestamp` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
+ PARTITION BY RANGE (year(`timestamp`))
+(PARTITION `p0` VALUES LESS THAN (2013) ENGINE = InnoDB,
+ PARTITION `p1` VALUES LESS THAN (2014) ENGINE = InnoDB,
+ PARTITION `p2` VALUES LESS THAN (2015) ENGINE = InnoDB,
+ PARTITION `p3` VALUES LESS THAN (2016) ENGINE = InnoDB)
 &lt;&lt;/code&gt;&gt;
 
 === Dropping Partitions
