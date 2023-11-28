@@ -248,7 +248,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-11-21 14:03">1 day, 2 hours ago</span></dd>
+<span class="datetime" title="2023-11-27 16:41">45 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -303,6 +303,30 @@
 
     
     
+
+
+
+    
+    
+
+<div class="well well-small box"><div><h5>Product Versions</h5></div><div>
+
+        <ul id="product_chooser">
+            
+                <li class="mariadb_from_10_7">
+                    <label><input type="checkbox" data-product-class="mariadb_from_10_7"
+                            >MariaDB starting with 10.7</label>
+                </li>
+            
+                <li class="mariadb_from_10_7">
+                    <label><input type="checkbox" data-product-class="mariadb_from_10_7"
+                            >MariaDB starting with 10.7</label>
+                </li>
+            
+        </ul>
+    
+</div>
+</div>
 
 
 
@@ -397,6 +421,8 @@
 
         <li class=""><a href="#adding-partitions" title="Adding Partitions">Adding Partitions</a></li>
 
+        <li class=""><a href="#converting-partitions-to-tables" title="Converting Partitions to Tables">Converting Partitions to Tables</a></li>
+
         <li class=""><a href="#dropping-partitions" title="Dropping Partitions">Dropping Partitions</a></li>
 
         <li class=""><a href="#removing-partitioning" title="Removing Partitioning">Removing Partitioning</a></li>
@@ -460,7 +486,7 @@ In MariaDB, a table can be split in smaller subsets. Both data and indexes are p
 </li></ul>
 <h3 class="anchored_heading" id="adding-partitions">Adding Partitions</h3>
 <pre class="fixed">ADD PARTITION [IF NOT EXISTS] (partition_definition)
-</pre><p><code>ALTER TABLE ... ADD PARTITION</code> can be used to add partitions to an existing table:</p>
+</pre><p><code><a href="/kb/en/alter-table/">ALTER TABLE</a> ... ADD PARTITION</code> can be used to add partitions to an existing table:</p>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
   <span class="k">timestamp</span> <span class="n">DATETIME</span> <span class="k">NOT</span> <span class="k">NULL</span>
 <span class="p">)</span>
@@ -477,9 +503,139 @@ In MariaDB, a table can be split in smaller subsets. Both data and indexes are p
   <span class="n">PARTITION</span> <span class="n">p4</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2017</span><span class="p">),</span> 
   <span class="n">p5</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2018</span><span class="p">)</span>
 <span class="p">);</span>
+</pre><h3 class="anchored_heading" id="converting-partitions-to-tables">Converting Partitions to Tables</h3>
+<div class="mariadb_from_10_7 mariadb from_10_7 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-107/">10.7</a></h5><pre class="fixed">CONVERT PARTITION partition_name TO TABLE tbl_name
+</pre><p><code><a href="/kb/en/alter-table/">ALTER TABLE</a> ... CONVERT PARTITION</code> can, from <a href="/kb/en/what-is-mariadb-107/">MariaDB 10.7</a>, be used to convert partitions in an existing table to a standalone table:</p>
+<pre class="fixed">CREATE OR REPLACE TABLE t1 (
+   timestamp DATETIME NOT NULL
+ )
+   ENGINE = InnoDB
+   PARTITION BY RANGE (YEAR(timestamp))
+   (
+   PARTITION p0 VALUES LESS THAN (2013),
+   PARTITION p1 VALUES LESS THAN (2014),
+   PARTITION p2 VALUES LESS THAN (2015),
+   PARTITION p3 VALUES LESS THAN (2016)
+ );
+
+INSERT INTO t1 VALUES ('2012-11-11'),('2013-11-11'),('2014-11-11');
+
+SELECT * FROM t1;
++---------------------+
+| timestamp           |
++---------------------+
+| 2012-11-11 00:00:00 |
+| 2013-11-11 00:00:00 |
+| 2014-11-11 00:00:00 |
++---------------------+
+
+ALTER TABLE t1 CONVERT PARTITION p0 TO TABLE t2;
+
+SELECT * FROM t1;
++---------------------+
+| timestamp           |
++---------------------+
+| 2013-11-11 00:00:00 |
+| 2014-11-11 00:00:00 |
++---------------------+
+
+SELECT * FROM t2;
++---------------------+
+| timestamp           |
++---------------------+
+| 2012-11-11 00:00:00 |
++---------------------+
+
+SHOW CREATE TABLE t1\G
+*************************** 1. row ***************************
+       Table: t1
+Create Table: CREATE TABLE `t1` (
+  `timestamp` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
+ PARTITION BY RANGE (year(`timestamp`))
+(PARTITION `p1` VALUES LESS THAN (2014) ENGINE = InnoDB,
+ PARTITION `p2` VALUES LESS THAN (2015) ENGINE = InnoDB,
+ PARTITION `p3` VALUES LESS THAN (2016) ENGINE = InnoDB)
+
+SHOW CREATE TABLE t2\G
+*************************** 1. row ***************************
+       Table: t2
+Create Table: CREATE TABLE `t2` (
+  `timestamp` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
+</pre></div><p>An alternative (and the only method prior to <a href="/kb/en/what-is-mariadb-107/">MariaDB 10.7</a>) to convert partitions to tables is to use <code><a href="/kb/en/alter-table/">ALTER TABLE</a> ... EXCHANGE PARTITION</code>. This requires having to manually do the following steps:</p>
+<ul start="1"><li>create an empty table with the same structure as the partition
+</li><li>exchange the table with the partition
+</li><li>drop the empty partition
+</li></ul>
+<p>For example:</p>
+<pre class="fixed">CREATE OR REPLACE TABLE t1 (
+   timestamp DATETIME NOT NULL
+ )
+   ENGINE = InnoDB
+   PARTITION BY RANGE (YEAR(timestamp))
+   (
+   PARTITION p0 VALUES LESS THAN (2013),
+   PARTITION p1 VALUES LESS THAN (2014),
+   PARTITION p2 VALUES LESS THAN (2015),
+   PARTITION p3 VALUES LESS THAN (2016)
+ );
+
+INSERT INTO t1 VALUES ('2012-11-11'),('2013-11-11'),('2014-11-11');
+
+SELECT * FROM t1;
++---------------------+
+| timestamp           |
++---------------------+
+| 2012-11-11 00:00:00 |
+| 2013-11-11 00:00:00 |
+| 2014-11-11 00:00:00 |
++---------------------+
+
+CREATE OR REPLACE TABLE t2 LIKE t1;
+
+ALTER TABLE t2 REMOVE PARTITIONING;
+
+ALTER TABLE t1 EXCHANGE PARTITION p0 WITH TABLE t2;
+
+ALTER TABLE t1 DROP PARTITION p0;
+
+SELECT * FROM t1;
++---------------------+
+| timestamp           |
++---------------------+
+| 2013-11-11 00:00:00 |
+| 2014-11-11 00:00:00 |
++---------------------+
+
+SELECT * FROM t2;
++---------------------+
+| timestamp           |
++---------------------+
+| 2012-11-11 00:00:00 |
++---------------------+
+
+SHOW CREATE TABLE t1\G
+*************************** 1. row ***************************
+       Table: t1
+Create Table: CREATE TABLE `t1` (
+  `timestamp` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
+ PARTITION BY RANGE (year(`timestamp`))
+(PARTITION `p1` VALUES LESS THAN (2014) ENGINE = InnoDB,
+ PARTITION `p2` VALUES LESS THAN (2015) ENGINE = InnoDB,
+ PARTITION `p3` VALUES LESS THAN (2016) ENGINE = InnoDB)
+1 row in set (0.001 sec)
+
+SHOW CREATE TABLE t2\G
+*************************** 1. row ***************************
+       Table: t2
+Create Table: CREATE TABLE `t2` (
+  `timestamp` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
 </pre><h3 class="anchored_heading" id="dropping-partitions">Dropping Partitions</h3>
 <pre class="fixed">DROP PARTITION [IF EXISTS] partition_names
-</pre><p><code>ALTER TABLE ... DROP PARTITION</code> can be used to drop specific partitions (and discard all data within the specified partitions) for <a href="/kb/en/range-partitioning-type/">RANGE</a> and <a href="/kb/en/list-partitioning/">LIST</a> partitions. It cannot be used on <a href="/kb/en/hash-partitioning-type/">HASH</a> or <a href="/kb/en/key-partitioning-type/">KEY</a> partitions. To rather remove all partitioning, while leaving the data unaffected, see <a href="#removing-partitioning">Removing Partitioning</a>.</p>
+</pre><p><code><a href="/kb/en/alter-table/">ALTER TABLE</a> ... DROP PARTITION</code> can be used to drop specific partitions (and discard all data within the specified partitions) for <a href="/kb/en/range-partitioning-type/">RANGE</a> and <a href="/kb/en/list-partitioning/">LIST</a> partitions. It cannot be used on <a href="/kb/en/hash-partitioning-type/">HASH</a> or <a href="/kb/en/key-partitioning-type/">KEY</a> partitions. To rather remove all partitioning, while leaving the data unaffected, see <a href="#removing-partitioning">Removing Partitioning</a>.</p>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
   <span class="k">timestamp</span> <span class="n">DATETIME</span> <span class="k">NOT</span> <span class="k">NULL</span>
 <span class="p">)</span>
@@ -506,11 +662,11 @@ In MariaDB, a table can be split in smaller subsets. Both data and indexes are p
 <span class="n">Empty</span> <span class="k">set</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">002</span> <span class="n">sec</span><span class="p">)</span>
 </pre><h3 class="anchored_heading" id="removing-partitioning">Removing Partitioning</h3>
 <pre class="fixed">REMOVE PARTITIONING
-</pre><p><code>ALTER TABLE ... REMOVE PARTITIONING</code> will remove all partitioning from the table, while leaving the data unaffected. To rather drop a particular partition (and discard all of its data), see <a href="#dropping-partitions">Dropping Partitions</a>.</p>
+</pre><p><code><a href="/kb/en/alter-table/">ALTER TABLE</a> ... REMOVE PARTITIONING</code> will remove all partitioning from the table, while leaving the data unaffected. To rather drop a particular partition (and discard all of its data), see <a href="#dropping-partitions">Dropping Partitions</a>.</p>
 <pre class="fixed"><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="n">REMOVE</span> <span class="n">PARTITIONING</span><span class="p">;</span>
 </pre><h3 class="anchored_heading" id="truncating-partitions">Truncating Partitions</h3>
 <pre class="fixed">TRUNCATE PARTITION partition_names
-</pre><p><code>ALTER TABLE ... TRUNCATE PARTITION</code> will remove all data from the specified partition/s, leaving the table and partition structure unchanged. Partitions don't need to be contiguous.</p>
+</pre><p><code><a href="/kb/en/alter-table/">ALTER TABLE</a> ... TRUNCATE PARTITION</code> will remove all data from the specified partition/s, leaving the table and partition structure unchanged. Partitions don't need to be contiguous.</p>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
   <span class="k">timestamp</span> <span class="n">DATETIME</span> <span class="k">NOT</span> <span class="k">NULL</span>
 <span class="p">)</span>
@@ -545,7 +701,8 @@ In MariaDB, a table can be split in smaller subsets. Both data and indexes are p
 <span class="o">|</span> <span class="mi">2015</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">04</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
 <span class="o">+</span><span class="c1">---------------------+</span>
 </pre><h2 class="anchored_heading" id="see-also">See Also</h2>
-<ul start="1"><li><a href="/kb/en/information-schema-partitions-table/">INFORMATION_SCHEMA.PARTITIONS</a> contains information about existing partitions.
+<ul start="1"><li><a href="/kb/en/alter-table/">ALTER TABLE</a>
+</li><li><a href="/kb/en/information-schema-partitions-table/">INFORMATION_SCHEMA.PARTITIONS</a> contains information about existing partitions.
 </li><li><a href="/kb/en/partition-maintenance/">Partition Maintenance</a> for suggestions on using partitions</li></ul>
 
     </div>
