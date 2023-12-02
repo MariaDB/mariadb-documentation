@@ -255,12 +255,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-09-21 23:24">2 months ago</span></dd>
+<span class="datetime" title="2023-09-21 23:24">2 months, 1 week ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-11-08 04:49">2 weeks, 5 days ago</span></dd>
+<span class="datetime" title="2023-12-02 08:34">8 hours, 31 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -408,7 +408,9 @@
 
     <li class=""><a href="#how-do-i-create-a-mariadb-backup-of-the-data" title="How do I create a MariaDB-backup of the data?">How do I create a MariaDB-backup of the data?</a></li>
 
-    <li class=""><a href="#how-do-i-restore-from-a-mariadb-backup" title="How do I restore from a MariaDB-backup">How do I restore from a MariaDB-backup</a> </ol>
+    <li class=""><a href="#how-do-i-restore-from-a-mariadb-backup" title="How do I restore from a MariaDB-backup">How do I restore from a MariaDB-backup</a></li>
+
+    <li class=""><a href="#how-to-start-mariadb-with-apptainer" title="How to start MariaDB with Apptainer">How to start MariaDB with Apptainer</a> </ol>
 </li>
 </div><p>
 Frequently asked questions about the Docker Official Image</p>
@@ -530,6 +532,12 @@ docker exec mdb  rm -rf /backup/d
 </pre><h2 class="anchored_heading" id="how-do-i-restore-from-a-mariadb-backup">How do I restore from a MariaDB-backup</h2>
 <p>With the backup prepared like previously:</p>
 <pre class="fixed">docker run -v backup:/docker-entrypoint-initdb.d -v newdatavolume:/var/lib/mysql mariadb
+</pre><h2 class="anchored_heading" id="how-to-start-mariadb-with-apptainer">How to start MariaDB with Apptainer</h2>
+<p>Because Apptainer has all the filesystems readonly except or the volume, the /run/mysqld directory is used as a pidfile and socket directory. An easy way is to mark this as a scratch directory.</p>
+<pre class="fixed">mkdir mydatadir
+apptainer run --no-home --bind $PWD/mydatadir:/var/lib/mysql --env MARIADB_RANDOM_ROOT_PASSWORD=1 --net --network-args &#34;portmap=3308:3306/tcp&#34; --fakeroot --scratch=/run/mysqld  docker://mariadb:10.5
+</pre><p>Alternately:</p>
+<pre class="fixed">apptainer run --no-home --bind $PWD/mydatadir:/var/lib/mysql --env MARIADB_RANDOM_ROOT_PASSWORD=1 --net --network-args &#34;portmap=3308:3306/tcp&#34; --fakeroot   docker://mariadb:10.5 --socket=/var/lib/mysql/mariadb.sock --pid-file=/var/lib/mysql/mariadb.pid
 </pre>
     </div>
 

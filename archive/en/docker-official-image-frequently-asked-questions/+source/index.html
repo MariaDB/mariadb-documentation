@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/docker-official-image-frequently-asked-questions/+r/132290/">132290</a></dd>
+            <dd><a href="/kb/en/docker-official-image-frequently-asked-questions/+r/132963/">132963</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-13052">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-11-08 04:49">2023-11-08 04:49</span></dd>
+<span class="datetime" title="2023-12-02 08:34">2023-12-02 08:34</span></dd>
         </dl>
     </div>
     
@@ -505,6 +505,21 @@ With the backup prepared like previously:
 
 &lt;&lt;code&gt;&gt;
 docker run -v backup:/docker-entrypoint-initdb.d -v newdatavolume:/var/lib/mysql mariadb
+&lt;&lt;/code&gt;&gt;
+
+== How to start MariaDB with Apptainer
+
+Because Apptainer has all the filesystems readonly except or the volume, the /run/mysqld directory is used as a pidfile and socket directory. An easy way is to mark this as a scratch directory.
+
+&lt;&lt;code&gt;&gt;
+mkdir mydatadir
+apptainer run --no-home --bind $PWD/mydatadir:/var/lib/mysql --env MARIADB_RANDOM_ROOT_PASSWORD=1 --net --network-args &#34;portmap=3308:3306/tcp&#34; --fakeroot --scratch=/run/mysqld  docker://mariadb:10.5
+&lt;&lt;/code&gt;&gt;
+
+Alternately:
+
+&lt;&lt;code&gt;&gt;
+apptainer run --no-home --bind $PWD/mydatadir:/var/lib/mysql --env MARIADB_RANDOM_ROOT_PASSWORD=1 --net --network-args &#34;portmap=3308:3306/tcp&#34; --fakeroot   docker://mariadb:10.5 --socket=/var/lib/mysql/mariadb.sock --pid-file=/var/lib/mysql/mariadb.pid
 &lt;&lt;/code&gt;&gt;</textarea>
     
 
