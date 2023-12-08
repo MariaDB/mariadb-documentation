@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2021-10-29 05:56">2 years, 1 month ago</span></dd>
+<span class="datetime" title="2023-12-08 05:58">11 hours, 7 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -421,7 +421,7 @@
 </li><li><strong>backend2</strong> which will act as a second backend server storing data
 </li></ul>
 <p>Follow the instructions <a href="/kb/en/spider-storage-engine-overview/#installing">here</a> to enable the Spider storage engine on the spider server:</p>
-<pre class="fixed">mysql  -u root -p &lt; /usr/share/mysql/install_spider.sql
+<pre class="fixed"><span class="n">INSTALL</span> <span class="n">SONAME</span> <span class="s1">&#39;ha_spider&#39;</span><span class="p">;</span>
 </pre><h2 class="anchored_heading" id="enable-use-of-non-root-connections">Enable use of non root connections</h2>
 <p>When using the <a href="/kb/en/general-query-log/">General Query Log</a>, non-root users may encounter issues when querying Spider tables.  Explicitly setting the  <code><a href="/kb/en/spider-server-system-variables/#spider_internal_sql_log_off">spider_internal_sql_log_off</a></code> system variable causes the Spider node to execute <code>SET sql_log_off</code> statements on the data nodes to enable or disable the General Query Log.  When this is done, queries issued by users without the <code>SUPER</code> privilege raise an error.</p>
 <p>To avoid this, don't explicitly set the <code><a href="/kb/en/spider-server-system-variables/#spider_internal_sql_log_off">spider_internal_sql_log_off</a></code> system variable.</p>
@@ -436,19 +436,19 @@ grant all on test.* to spider@'172.21.21.2' identified by 'spider';
 spider&gt; mysql -u spider -p -h 172.21.21.4 test
 </pre><h2 class="anchored_heading" id="create-table-on-backend-servers">Create table on backend servers</h2>
 <p>The table definition should be created in the test database on both backend1 and backend2 servers:</p>
-<pre class="fixed">create table opportunities (
-id int,
-accountName varchar(20),
-name varchar(128),
-owner varchar(7),
-amount decimal(10,2),
-closeDate date,
-stageName varchar(11),
-primary key (id),
-key (accountName)
-) engine=InnoDB;
+<pre class="fixed"><span class="k">create</span> <span class="k">table</span> <span class="n">opportunities</span> <span class="p">(</span>
+<span class="n">id</span> <span class="nb">int</span><span class="p">,</span>
+<span class="n">accountName</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span>
+<span class="n">name</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">128</span><span class="p">),</span>
+<span class="k">owner</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">7</span><span class="p">),</span>
+<span class="n">amount</span> <span class="nb">decimal</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span>
+<span class="n">closeDate</span> <span class="nb">date</span><span class="p">,</span>
+<span class="n">stageName</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">11</span><span class="p">),</span>
+<span class="k">primary</span> <span class="k">key</span> <span class="p">(</span><span class="n">id</span><span class="p">),</span>
+<span class="k">key</span> <span class="p">(</span><span class="n">accountName</span><span class="p">)</span>
+<span class="p">)</span> <span class="n">engine</span><span class="o">=</span><span class="n">InnoDB</span><span class="p">;</span>
 </pre><h2 class="anchored_heading" id="create-server-entries-on-spider-server">Create server entries on spider server</h2>
-<p>While the connection information can also be specified inline in the comment, it is cleaner to define a server object representing each remote backend server connection:</p>
+<p>While the connection information can also be specified inline in the comment or (from <a href="/kb/en/mariadb-1081-release-notes/">MariaDB 10.8.1</a>) as table options, it is cleaner to define a server object representing each remote backend server connection:</p>
 <pre class="fixed">create server backend1 foreign data wrapper mysql options 
 (host '172.21.21.3', database 'test', user 'spider', password 'spider', port 3306);
 create server backend2 foreign data wrapper mysql options 
@@ -460,74 +460,78 @@ create server backend2 foreign data wrapper mysql options
 <pre class="fixed"><span class="n">FLUSH</span> <span class="n">TABLES</span><span class="p">;</span>
 </pre><h1 class="anchored_heading" id="use-case-1-remote-table">Use case 1: remote table</h1>
 <p>In this case, a spider table is created to allow remote access to the opportunities table hosted on backend1. This then allows for queries and remote dml into the backend1 server from the spider server:</p>
-<pre class="fixed">create table opportunities (
-id int,
-accountName varchar(20),
-name varchar(128),
-owner varchar(7),
-amount decimal(10,2),
-closeDate date,
-stageName varchar(11),
-primary key (id),
-key (accountName)
-) engine=spider comment='wrapper &#34;mysql&#34;, srv &#34;backend1&#34; , table &#34;opportunities&#34;';
+<pre class="fixed"><span class="k">create</span> <span class="k">table</span> <span class="n">opportunities</span> <span class="p">(</span>
+<span class="n">id</span> <span class="nb">int</span><span class="p">,</span>
+<span class="n">accountName</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span>
+<span class="n">name</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">128</span><span class="p">),</span>
+<span class="k">owner</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">7</span><span class="p">),</span>
+<span class="n">amount</span> <span class="nb">decimal</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span>
+<span class="n">closeDate</span> <span class="nb">date</span><span class="p">,</span>
+<span class="n">stageName</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">11</span><span class="p">),</span>
+<span class="k">primary</span> <span class="k">key</span> <span class="p">(</span><span class="n">id</span><span class="p">),</span>
+<span class="k">key</span> <span class="p">(</span><span class="n">accountName</span><span class="p">)</span>
+<span class="p">)</span> <span class="n">engine</span><span class="o">=</span><span class="n">spider</span> <span class="k">comment</span><span class="o">=</span><span class="s1">&#39;wrapper &quot;mysql&quot;, srv &quot;backend1&quot; , table &quot;opportunities&quot;&#39;</span><span class="p">;</span>
 </pre><h1 class="anchored_heading" id="use-case-2-sharding-by-hash">Use case 2: sharding by hash</h1>
+<p>See also <code><a href="/kb/en/hash-partitioning-type/">hash-partitioning-type</a></code>.</p>
 <p>In this case a spider table is created to distribute data across backend1 and backend2 by hashing the id column. Since the id column is an incrementing numeric value the hashing will ensure even distribution across the 2 nodes.</p>
-<pre class="fixed">create table opportunities (
-id int,
-accountName varchar(20),
-name varchar(128),
-owner varchar(7),
-amount decimal(10,2),
-closeDate date,
-stageName varchar(11),
-primary key (id),
-key (accountName)
-) engine=spider COMMENT='wrapper &#34;mysql&#34;, table &#34;opportunities&#34;'
- PARTITION BY HASH (id)
-(
- PARTITION pt1 COMMENT = 'srv &#34;backend1&#34;',
- PARTITION pt2 COMMENT = 'srv &#34;backend2&#34;'
-) ;
+<pre class="fixed"><span class="k">create</span> <span class="k">table</span> <span class="n">opportunities</span> <span class="p">(</span>
+<span class="n">id</span> <span class="nb">int</span><span class="p">,</span>
+<span class="n">accountName</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span>
+<span class="n">name</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">128</span><span class="p">),</span>
+<span class="k">owner</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">7</span><span class="p">),</span>
+<span class="n">amount</span> <span class="nb">decimal</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span>
+<span class="n">closeDate</span> <span class="nb">date</span><span class="p">,</span>
+<span class="n">stageName</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">11</span><span class="p">),</span>
+<span class="k">primary</span> <span class="k">key</span> <span class="p">(</span><span class="n">id</span><span class="p">),</span>
+<span class="k">key</span> <span class="p">(</span><span class="n">accountName</span><span class="p">)</span>
+<span class="p">)</span> <span class="n">engine</span><span class="o">=</span><span class="n">spider</span> <span class="k">COMMENT</span><span class="o">=</span><span class="s1">&#39;wrapper &quot;mysql&quot;, table &quot;opportunities&quot;&#39;</span>
+ <span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">HASH</span> <span class="p">(</span><span class="n">id</span><span class="p">)</span>
+<span class="p">(</span>
+ <span class="n">PARTITION</span> <span class="n">pt1</span> <span class="k">COMMENT</span> <span class="o">=</span> <span class="s1">&#39;srv &quot;backend1&quot;&#39;</span><span class="p">,</span>
+ <span class="n">PARTITION</span> <span class="n">pt2</span> <span class="k">COMMENT</span> <span class="o">=</span> <span class="s1">&#39;srv &quot;backend2&quot;&#39;</span>
+<span class="p">)</span> <span class="p">;</span>
 </pre><h1 class="anchored_heading" id="use-case-3-sharding-by-range">Use case 3: sharding by range</h1>
+<p>See also <code><a href="/kb/en/range-partitioning-type/">range-partitioning-type</a></code>.</p>
 <p>In this case a spider table is created to distribute data across backend1 and backend2 based on the first letter of the accountName field. All accountNames that start with the letter L and prior will be stored in backend1 and all other values stored in backend2. Note that the accountName column must be added to the primary key which is a requirement of MariaDB partitioning:</p>
-<pre class="fixed">create table opportunities (
-id int,
-accountName varchar(20),
-name varchar(128),
-owner varchar(7),
-amount decimal(10,2),
-closeDate date,
-stageName varchar(11),
-primary key (id, accountName),
-key(accountName)
-) engine=spider COMMENT='wrapper &#34;mysql&#34;, table &#34;opportunities&#34;'
- PARTITION BY range columns (accountName)
-(
- PARTITION pt1 values less than ('M') COMMENT = 'srv &#34;backend1&#34;',
- PARTITION pt2 values less than (maxvalue) COMMENT = 'srv &#34;backend2&#34;'
-) ;
+<pre class="fixed"><span class="k">create</span> <span class="k">table</span> <span class="n">opportunities</span> <span class="p">(</span>
+<span class="n">id</span> <span class="nb">int</span><span class="p">,</span>
+<span class="n">accountName</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span>
+<span class="n">name</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">128</span><span class="p">),</span>
+<span class="k">owner</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">7</span><span class="p">),</span>
+<span class="n">amount</span> <span class="nb">decimal</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span>
+<span class="n">closeDate</span> <span class="nb">date</span><span class="p">,</span>
+<span class="n">stageName</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">11</span><span class="p">),</span>
+<span class="k">primary</span> <span class="k">key</span> <span class="p">(</span><span class="n">id</span><span class="p">,</span> <span class="n">accountName</span><span class="p">),</span>
+<span class="k">key</span><span class="p">(</span><span class="n">accountName</span><span class="p">)</span>
+<span class="p">)</span> <span class="n">engine</span><span class="o">=</span><span class="n">spider</span> <span class="k">COMMENT</span><span class="o">=</span><span class="s1">&#39;wrapper &quot;mysql&quot;, table &quot;opportunities&quot;&#39;</span>
+ <span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">range</span> <span class="n">columns</span> <span class="p">(</span><span class="n">accountName</span><span class="p">)</span>
+<span class="p">(</span>
+ <span class="n">PARTITION</span> <span class="n">pt1</span> <span class="k">values</span> <span class="k">less</span> <span class="k">than</span> <span class="p">(</span><span class="s1">&#39;M&#39;</span><span class="p">)</span> <span class="k">COMMENT</span> <span class="o">=</span> <span class="s1">&#39;srv &quot;backend1&quot;&#39;</span><span class="p">,</span>
+ <span class="n">PARTITION</span> <span class="n">pt2</span> <span class="k">values</span> <span class="k">less</span> <span class="k">than</span> <span class="p">(</span><span class="k">maxvalue</span><span class="p">)</span> <span class="k">COMMENT</span> <span class="o">=</span> <span class="s1">&#39;srv &quot;backend2&quot;&#39;</span>
+<span class="p">)</span> <span class="p">;</span>
 </pre><h1 class="anchored_heading" id="use-case-4-sharding-by-list">Use case 4: sharding by list</h1>
+<p>See also <code><a href="/kb/en/list-partitioning-type/">list-partitioning-type</a></code>.</p>
 <p>In this case a spider table is created to distribute data across backend1 and backend2 based on specific values in the owner field. Bill, Bob, and Chris will be stored in backend1 and Maria and Olivier stored in backend2.  Note that the owner column must be added to the primary key which is a requirement of MariaDB partitioning:</p>
-<pre class="fixed">create table opportunities (
-id int,
-accountName varchar(20),
-name varchar(128),
-owner varchar(7),
-amount decimal(10,2),
-closeDate date,
-stageName varchar(11),
-primary key (id, owner),
-key(accountName)
-) engine=spider COMMENT='wrapper &#34;mysql&#34;, table &#34;opportunities&#34;'
- PARTITION BY list columns (owner)
-(
- PARTITION pt1 values in ('Bill', 'Bob', 'Chris') COMMENT = 'srv &#34;backend1&#34;',
- PARTITION pt2 values in ('Maria', 'Olivier') COMMENT = 'srv &#34;backend2&#34;'
-) ;
+<pre class="fixed"><span class="k">create</span> <span class="k">table</span> <span class="n">opportunities</span> <span class="p">(</span>
+<span class="n">id</span> <span class="nb">int</span><span class="p">,</span>
+<span class="n">accountName</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span>
+<span class="n">name</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">128</span><span class="p">),</span>
+<span class="k">owner</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">7</span><span class="p">),</span>
+<span class="n">amount</span> <span class="nb">decimal</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span>
+<span class="n">closeDate</span> <span class="nb">date</span><span class="p">,</span>
+<span class="n">stageName</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">11</span><span class="p">),</span>
+<span class="k">primary</span> <span class="k">key</span> <span class="p">(</span><span class="n">id</span><span class="p">,</span> <span class="k">owner</span><span class="p">),</span>
+<span class="k">key</span><span class="p">(</span><span class="n">accountName</span><span class="p">)</span>
+<span class="p">)</span> <span class="n">engine</span><span class="o">=</span><span class="n">spider</span> <span class="k">COMMENT</span><span class="o">=</span><span class="s1">&#39;wrapper &quot;mysql&quot;, table &quot;opportunities&quot;&#39;</span>
+ <span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">list</span> <span class="n">columns</span> <span class="p">(</span><span class="k">owner</span><span class="p">)</span>
+<span class="p">(</span>
+ <span class="n">PARTITION</span> <span class="n">pt1</span> <span class="k">values</span> <span class="k">in</span> <span class="p">(</span><span class="s1">&#39;Bill&#39;</span><span class="p">,</span> <span class="s1">&#39;Bob&#39;</span><span class="p">,</span> <span class="s1">&#39;Chris&#39;</span><span class="p">)</span> <span class="k">COMMENT</span> <span class="o">=</span> <span class="s1">&#39;srv &quot;backend1&quot;&#39;</span><span class="p">,</span>
+ <span class="n">PARTITION</span> <span class="n">pt2</span> <span class="k">values</span> <span class="k">in</span> <span class="p">(</span><span class="s1">&#39;Maria&#39;</span><span class="p">,</span> <span class="s1">&#39;Olivier&#39;</span><span class="p">)</span> <span class="k">COMMENT</span> <span class="o">=</span> <span class="s1">&#39;srv &quot;backend2&quot;&#39;</span>
+<span class="p">)</span> <span class="p">;</span>
 </pre><p>With <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> the following partition clause can be used to specify a default partition for all other values, however this must be a distinct partition / shard:</p>
-<pre class="fixed">PARTITION partition_name DEFAULT
-</pre>
+<pre class="fixed"><span class="n">PARTITION</span> <span class="n">partition_name</span> <span class="k">DEFAULT</span>
+</pre><p>For a complete list of partition types, see <code><a href="/kb/en/partitioning-types/">partitioning-types</a></code>.</p>
+
     </div>
 
 

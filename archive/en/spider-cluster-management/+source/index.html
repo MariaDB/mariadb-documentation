@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/spider-cluster-management/+r/115686/">115686</a></dd>
+            <dd><a href="/kb/en/spider-cluster-management/+r/133405/">133405</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1150">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-04-27 19:45">2022-04-27 19:45</span></dd>
+<span class="datetime" title="2023-12-08 07:00">2023-12-08 07:00</span></dd>
         </dl>
     </div>
     
@@ -360,7 +360,10 @@ CREATE TEMPORARY TABLE res
 SELECT spider_bg_direct_sql( &#39;SELECT count(*) ,min(NOW(6)),min(DATABASE())) FROM sbtest&#39;,   &#39;res&#39;,  concat(&#39;srv &#34;&#39;, server,&#39;&#34; cch &#39;,@rn:=@rn+1  ) ) a  FROM    mysql.spider_tables,(SELECT @rn:=1) t2  WHERE    db_name = &#39;bsbackend&#39; and table_name like &#39;sbtest#P#pt%&#39;;
 &lt;&lt;/code&gt;&gt;
 
-== Direct Handler Socket 
+== Direct Handler Socket
+&lt;&lt;product mariadb from=10.8.1&gt;&gt;
+The Spider Handler Socket support has been removed, see MDEV-26858.
+&lt;&lt;/product&gt;&gt;
 
 Check that [[handlersocket|Handler Socket]] is running on the backend nodes 
 &lt;&lt;code&gt;&gt;
@@ -400,7 +403,11 @@ CREATE TEMPORARY TABLE res
 SELECT spider_direct_sql(&#39;1\t=\t1\t2\t100000\t0&#39;,&#39;res&#39;, &#39;host &#34;192.168.0.202&#34;, table &#34;sbtest&#34;, database &#34;test&#34;, port &#34;20500&#34;, access_mode &#34;1&#34;&#39;);
 &lt;&lt;/code&gt;&gt;
 
-== Inter Nodes Copy Table 
+== Inter Nodes Copy Table
+&lt;&lt;product mariadb from=10.8.1&gt;&gt;
+The UDF spider_copy_tables relies on Spider&#39;s high availability feature, which has been deprecated (MDEV-28479), and will be deleted. Please use other high availability solutions like [[replication]] or [[galera-cluster]].
+&lt;&lt;/product&gt;&gt;
+
 The UDF function [[spider_copy_tables|spider_copy_tables]] is available for copying table data from the source link ID to the destination link ID list without stopping your service for copying
    
 ##spider_copy_tables(Spider table name, source link ID, destination link ID list[, parameters])##
@@ -415,8 +422,6 @@ You can check the table name and the link ID with the part name using the follow
 SELECT table_name FROM mysql.spider_tables;
 &lt;&lt;/code&gt;&gt;
 
-== Resharding 
-
 == General Log
 
 To capture all queries sent to remote backends on a ##Spider Node## :
@@ -430,20 +435,7 @@ SET GLOBAL spider_log_result_error_with_sql=3;
 
 == Compiling in Debug Mode
 
-Compile MariaDB in debug mode 
-&lt;&lt;code wrap=true&gt;&gt;
-#cmake -DBUILD_CONFIG=mysql_release -DCMAKE_BUILD_TYPE=Debug  -DWITH_FAST_MUTEXES=ON  -DWITH_VALGRIND=ON
-&lt;&lt;/code&gt;&gt;
-
-Run MariaDB the following way to have a detailed command trace file 
-&lt;&lt;code wrap=true&gt;&gt;  
-mysqld --debug=S:T:t:r:p:n:L:i:F:f:D:d,info,error,query,qcache,my,exit,general,where:O,/tmp/mysqld.trace 
-&lt;&lt;/code&gt;&gt;
-
-Or with Valgrind to get a complete stack trace on a crash.
-&lt;&lt;code wrap=true&gt;&gt;
-valgrind /usr/local/mysql/bin/mysqld --basedir=/usr/local/mysql --datadir=/data/inetbase/mysql --plugin-dir=/usr/local/mysql/lib/plugin --user=mysql --log-error=/data/inetbase/mysql/lucifer.err --open-files-limit=65000 --pid-file=/var/run/mysqld/mysqld.pid --socket=/var/run/mysqld/mysqld.sock --port=3306
-&lt;&lt;/code&gt;&gt;
+See [[compiling-mariadb-for-debugging|Compiling MariaDB for Debugging]] and [[creating-a-trace-file|Creating a Trace File]].
 
 Report the issue in [[https://jira.mariadb.org|MariaDB JIRA]] (see [[reporting-bugs|Reporting Bugs]]) or to the MariaDB Corporation support center.
 
@@ -456,11 +448,7 @@ To activate spider as a static plugin change &#34;MODULE_ONLY&#34; to &#34;MANDA
 Note that Spider UDF functions will not work with such settings. 
  
 == Status Variables 
-A number of new [[server-status-variables|status variables]] have been introduced:
-* [[spider-server-status-variables#spider_direct_aggregate|Spider_direct_aggregate]]
-* [[spider-server-status-variables#spider_direct_order_limit|Spider_direct_order_limit]]
-* [[spider-server-status-variables#spider_mon_table_cache_version|Spider_mon_table_cache_version]]
-* [[spider-server-status-variables#spider_mon_table_cache_version_req|Spider_mon_table_cache_version_req]]
+A number of new [[server-status-variables|status variables]] have been introduced, see [[spider-server-status-variables|Spider Status Variables]] for a complete list.
 == Information Schema Tables
 * A new [[information-schema|Information Schema]] table is installed - [[information-schema-spider_alloc_mem-table|SPIDER_ALLOC_MEM]].
 &lt;&lt;code&gt;&gt;
@@ -478,6 +466,7 @@ A number of new [[server-status-variables|status variables]] have been introduce
 +-------------------+---------------------+------+-----+---------+-------+
 &lt;&lt;/code&gt;&gt;
 
+From MariaDB 10.5, Spider installs another Information Schema table, [[information-schema-spider_wrapper_protocols-table|SPIDER_WRAPPER_PROTOCOLS]].
 == Performance Schema
 
 The [[performance-schema|Performance schema]] is commonly used to troubleshoot issues that consume time inside your workload. The Performance schema should not be activated for servers that are experimenting constant heavy load, but most of time it is acceptable to lose 5% to 20% additional CPU to keep track of server internals execution.  
@@ -490,19 +479,19 @@ performance_schema=on
 
 Activate the Spider probes to be monitored. 
 
-&lt;&lt;code&gt;&gt;
+&lt;&lt;sql&gt;&gt;
 UPDATE performance_schema.setup_instruments SET 
   ENABLED=&#39;YES&#39;, TIMED=&#39;yes&#39; WHERE NAME LIKE &#39;%spider%&#39;;
-&lt;&lt;/code&gt;&gt;
+&lt;&lt;/sql&gt;&gt;
 
 Run your queries ...
 
 And check the performance metrics. Remove specific Spider metrics to have a more global view.  
-&lt;&lt;code&gt;&gt;
+&lt;&lt;sql&gt;&gt;
 SELECT * FROM performance_schema.events_waits_summary_global_by_event_name 
   WHERE COUNT_STAR&lt;&gt;0 AND EVENT_NAME LIKE &#39;%spider%&#39; 
   ORDER BY SUM_TIMER_WAIT DESC LIMIT 10;
-&lt;&lt;/code&gt;&gt;</textarea>
+&lt;&lt;/sql&gt;&gt;</textarea>
     
 
 

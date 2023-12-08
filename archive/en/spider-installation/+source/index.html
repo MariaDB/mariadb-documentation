@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/spider-installation/+r/114639/">114639</a></dd>
+            <dd><a href="/kb/en/spider-installation/+r/133402/">133402</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5454">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-03-22 21:36">2022-03-22 21:36</span></dd>
+<span class="datetime" title="2023-12-08 04:28">2023-12-08 04:28</span></dd>
         </dl>
     </div>
     
@@ -454,7 +454,7 @@ With the data node or data nodes configured, you can set up the Spider node to u
 
 === Configure the Server
 
-In order to connect the Spider node to the data nodes, you need to issue a ##[[create-server|CREATE SERVER]]## statement for each data node.  You can then use the server definition in creating the Spider table.
+In order to connect the Spider node to the data nodes, you may issue a ##[[create-server|CREATE SERVER]]## statement for each data node.  You can then use the server definition in creating the Spider table.
 
 &lt;&lt;sql&gt;&gt;
 CREATE SERVER dataNode1 FOREIGN DATA WRAPPER mysql
@@ -472,10 +472,11 @@ In the event that you need to modify or replace this server after setting up the
 FLUSH TABLES;
 &lt;&lt;/sql&gt;&gt;
 
+Alternatively, you could also choose not to create a server, but specify the connection info in the spider table creation.
 
 === Create the Table
 
-With the data nodes set up and the Spider node configured for use, you can create the Spider table.  The Spider table must have the same column definitions as the InnoDB tables on the data nodes.  Spider is configured through table system variables passed to the ##COMMENT## option.
+With the data nodes set up and the Spider node configured for use, you can create the Spider table.  The Spider table must have the same column definitions as the tables on the data nodes.  Spider can be configured through table parameters passed to the ##COMMENT## or ##CONNECTION## option.
 
 &lt;&lt;sql&gt;&gt;
 CREATE TABLE test.spider_example (
@@ -485,7 +486,17 @@ CREATE TABLE test.spider_example (
 COMMENT=&#39;wrapper &#34;mysql&#34;, srv &#34;dataNode1&#34;, table &#34;spider_example&#34;&#39;;
 &lt;&lt;/sql&gt;&gt;
 
-This configures Spider to use the server ##dataNode1##, (defined above), as a remote table.  Any data you write to this table is actually stored on the MariaDB server at 192.168.1.5.</textarea>
+This configures Spider to use the server ##dataNode1##, (defined above), as a remote table.  Any data you write to this table is actually stored on the MariaDB server at 192.168.1.5.
+
+Alternatively, starting from MariaDB 10.8.1, one could specify spider table parameters using table options:
+
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE test.spider_example (
+   id INT PRIMARY KEY AUTO_INCREMENT,
+   name VARCHAR(50)
+) ENGINE=Spider
+REMOTE_SERVER=dataNode1 REMOTE_TABLE=spider_example;
+&lt;&lt;/sql&gt;&gt;</textarea>
     
 
 

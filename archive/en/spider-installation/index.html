@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-03-22 21:36">1 year, 8 months ago</span></dd>
+<span class="datetime" title="2023-12-08 04:28">12 hours, 37 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -493,7 +493,7 @@ plugin_load_add = "ha_spider"
 <h2 class="anchored_heading" id="configuring-spider-nodes">Configuring Spider Nodes</h2>
 <p>With the data node or data nodes configured, you can set up the Spider node to use them.  The Spider node is the MariaDB server that receives queries for the table, (in this case <code>test.spider_example</code>).  It then uses the Spider storage engine to connect to the tables on the data nodes to retrieve data and return the result-set.</p>
 <h3 class="anchored_heading" id="configure-the-server">Configure the Server</h3>
-<p>In order to connect the Spider node to the data nodes, you need to issue a <code><a href="/kb/en/create-server/">CREATE SERVER</a></code> statement for each data node.  You can then use the server definition in creating the Spider table.</p>
+<p>In order to connect the Spider node to the data nodes, you may issue a <code><a href="/kb/en/create-server/">CREATE SERVER</a></code> statement for each data node.  You can then use the server definition in creating the Spider table.</p>
 <pre class="fixed"><span class="k">CREATE</span> <span class="n">SERVER</span> <span class="n">dataNode1</span> <span class="k">FOREIGN</span> <span class="k">DATA</span> <span class="n">WRAPPER</span> <span class="n">mysql</span>
 <span class="k">OPTIONS</span> <span class="p">(</span>
    <span class="k">HOST</span> <span class="s1">&#39;192.168.1.5&#39;</span><span class="p">,</span>
@@ -503,15 +503,22 @@ plugin_load_add = "ha_spider"
    <span class="n">PORT</span> <span class="mi">3306</span><span class="p">);</span>
 </pre><p>In the event that you need to modify or replace this server after setting up the Spider table, remember to issue a <code><a href="/kb/en/flush/">FLUSH</a></code> statement to update the server definition. </p>
 <pre class="fixed"><span class="n">FLUSH</span> <span class="n">TABLES</span><span class="p">;</span>
-</pre><h3 class="anchored_heading" id="create-the-table">Create the Table</h3>
-<p>With the data nodes set up and the Spider node configured for use, you can create the Spider table.  The Spider table must have the same column definitions as the InnoDB tables on the data nodes.  Spider is configured through table system variables passed to the <code>COMMENT</code> option.</p>
+</pre><p>Alternatively, you could also choose not to create a server, but specify the connection info in the spider table creation.</p>
+<h3 class="anchored_heading" id="create-the-table">Create the Table</h3>
+<p>With the data nodes set up and the Spider node configured for use, you can create the Spider table.  The Spider table must have the same column definitions as the tables on the data nodes.  Spider can be configured through table parameters passed to the <code>COMMENT</code> or <code>CONNECTION</code> option.</p>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test</span><span class="p">.</span><span class="n">spider_example</span> <span class="p">(</span>
    <span class="n">id</span> <span class="nb">INT</span> <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="n">AUTO_INCREMENT</span><span class="p">,</span>
    <span class="n">name</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
 <span class="p">)</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">Spider</span>
 <span class="k">COMMENT</span><span class="o">=</span><span class="s1">&#39;wrapper &quot;mysql&quot;, srv &quot;dataNode1&quot;, table &quot;spider_example&quot;&#39;</span><span class="p">;</span>
 </pre><p>This configures Spider to use the server <code>dataNode1</code>, (defined above), as a remote table.  Any data you write to this table is actually stored on the MariaDB server at 192.168.1.5.</p>
-
+<p>Alternatively, starting from <a href="/kb/en/mariadb-1081-release-notes/">MariaDB 10.8.1</a>, one could specify spider table parameters using table options:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test</span><span class="p">.</span><span class="n">spider_example</span> <span class="p">(</span>
+   <span class="n">id</span> <span class="nb">INT</span> <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="n">AUTO_INCREMENT</span><span class="p">,</span>
+   <span class="n">name</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="p">)</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">Spider</span>
+<span class="n">REMOTE_SERVER</span><span class="o">=</span><span class="n">dataNode1</span> <span class="n">REMOTE_TABLE</span><span class="o">=</span><span class="n">spider_example</span><span class="p">;</span>
+</pre>
     </div>
 
 

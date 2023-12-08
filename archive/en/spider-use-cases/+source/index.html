@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/spider-use-cases/+r/110998/">110998</a></dd>
+            <dd><a href="/kb/en/spider-use-cases/+r/133404/">133404</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-4552">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2021-10-29 05:56">2021-10-29 05:56</span></dd>
+<span class="datetime" title="2023-12-08 05:58">2023-12-08 05:58</span></dd>
         </dl>
     </div>
     
@@ -318,9 +318,9 @@ Have 3 or more servers available and Install MariaDB on each of these servers:
 * **backend2** which will act as a second backend server storing data
 
 Follow the instructions [[spider-storage-engine-overview/#installing|here]] to enable the Spider storage engine on the spider server:
-&lt;&lt;code&gt;&gt;
-mysql  -u root -p &lt; /usr/share/mysql/install_spider.sql
-&lt;&lt;/code&gt;&gt;
+&lt;&lt;sql&gt;&gt;
+INSTALL SONAME &#39;ha_spider&#39;;
+&lt;&lt;/sql&gt;&gt;
 
 == Enable use of non root connections
 
@@ -345,7 +345,7 @@ spider&gt; mysql -u spider -p -h 172.21.21.4 test
 
 == Create table on backend servers
 The table definition should be created in the test database on both backend1 and backend2 servers:
-&lt;&lt;code&gt;&gt;
+&lt;&lt;sql&gt;&gt;
 create table opportunities (
 id int,
 accountName varchar(20),
@@ -357,10 +357,10 @@ stageName varchar(11),
 primary key (id),
 key (accountName)
 ) engine=InnoDB;
-&lt;&lt;/code&gt;&gt;
+&lt;&lt;/sql&gt;&gt;
 
 == Create server entries on spider server
-While the connection information can also be specified inline in the comment, it is cleaner to define a server object representing each remote backend server connection:
+While the connection information can also be specified inline in the comment or (from MariaDB 10.8.1) as table options, it is cleaner to define a server object representing each remote backend server connection:
 &lt;&lt;code&gt;&gt;
 create server backend1 foreign data wrapper mysql options 
 (host &#39;172.21.21.3&#39;, database &#39;test&#39;, user &#39;spider&#39;, password &#39;spider&#39;, port 3306);
@@ -386,7 +386,7 @@ FLUSH TABLES;
 
 = Use case 1: remote table
 In this case, a spider table is created to allow remote access to the opportunities table hosted on backend1. This then allows for queries and remote dml into the backend1 server from the spider server:
-&lt;&lt;code&gt;&gt;
+&lt;&lt;sql&gt;&gt;
 create table opportunities (
 id int,
 accountName varchar(20),
@@ -398,11 +398,13 @@ stageName varchar(11),
 primary key (id),
 key (accountName)
 ) engine=spider comment=&#39;wrapper &#34;mysql&#34;, srv &#34;backend1&#34; , table &#34;opportunities&#34;&#39;;
-&lt;&lt;/code&gt;&gt;
+&lt;&lt;/sql&gt;&gt;
 
 = Use case 2: sharding by hash
+See also ##[[hash-partitioning-type]]##.
+
 In this case a spider table is created to distribute data across backend1 and backend2 by hashing the id column. Since the id column is an incrementing numeric value the hashing will ensure even distribution across the 2 nodes.
-&lt;&lt;code&gt;&gt;
+&lt;&lt;sql&gt;&gt;
 create table opportunities (
 id int,
 accountName varchar(20),
@@ -419,11 +421,13 @@ key (accountName)
  PARTITION pt1 COMMENT = &#39;srv &#34;backend1&#34;&#39;,
  PARTITION pt2 COMMENT = &#39;srv &#34;backend2&#34;&#39;
 ) ;
-&lt;&lt;/code&gt;&gt;
+&lt;&lt;/sql&gt;&gt;
 
 = Use case 3: sharding by range
+See also ##[[range-partitioning-type]]##.
+
 In this case a spider table is created to distribute data across backend1 and backend2 based on the first letter of the accountName field. All accountNames that start with the letter L and prior will be stored in backend1 and all other values stored in backend2. Note that the accountName column must be added to the primary key which is a requirement of MariaDB partitioning:
-&lt;&lt;code&gt;&gt;
+&lt;&lt;sql&gt;&gt;
 create table opportunities (
 id int,
 accountName varchar(20),
@@ -440,11 +444,13 @@ key(accountName)
  PARTITION pt1 values less than (&#39;M&#39;) COMMENT = &#39;srv &#34;backend1&#34;&#39;,
  PARTITION pt2 values less than (maxvalue) COMMENT = &#39;srv &#34;backend2&#34;&#39;
 ) ;
-&lt;&lt;/code&gt;&gt;
+&lt;&lt;/sql&gt;&gt;
 
 = Use case 4: sharding by list
+See also ##[[list-partitioning-type]]##.
+
 In this case a spider table is created to distribute data across backend1 and backend2 based on specific values in the owner field. Bill, Bob, and Chris will be stored in backend1 and Maria and Olivier stored in backend2.  Note that the owner column must be added to the primary key which is a requirement of MariaDB partitioning:
-&lt;&lt;code&gt;&gt;
+&lt;&lt;sql&gt;&gt;
 create table opportunities (
 id int,
 accountName varchar(20),
@@ -461,12 +467,14 @@ key(accountName)
  PARTITION pt1 values in (&#39;Bill&#39;, &#39;Bob&#39;, &#39;Chris&#39;) COMMENT = &#39;srv &#34;backend1&#34;&#39;,
  PARTITION pt2 values in (&#39;Maria&#39;, &#39;Olivier&#39;) COMMENT = &#39;srv &#34;backend2&#34;&#39;
 ) ;
-&lt;&lt;/code&gt;&gt;
+&lt;&lt;/sql&gt;&gt;
 
 With MariaDB 10.2 the following partition clause can be used to specify a default partition for all other values, however this must be a distinct partition / shard:
-&lt;&lt;code&gt;&gt;
+&lt;&lt;sql&gt;&gt;
 PARTITION partition_name DEFAULT
-&lt;&lt;/code&gt;&gt;</textarea>
+&lt;&lt;/sql&gt;&gt;
+
+For a complete list of partition types, see ##[[partitioning-types]]##.</textarea>
     
 
 
