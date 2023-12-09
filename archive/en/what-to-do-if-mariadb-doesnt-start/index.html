@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-05-30 11:15">6 months, 1 week ago</span></dd>
+<span class="datetime" title="2023-12-08 22:09">18 hours, 50 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -461,18 +461,18 @@
 </li></ul>
 <p>It's also possible that the error log has been explicitly written to another location. This is often done by changing the <code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code> or <code><a href="/kb/en/server-system-variables/#log_error">log_error</a></code> system variables in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>. See <a href="#option-files">Option Files</a> below for more information about that.</p>
 <p>A quick way to get the values of these system variables is to execute the following commands:</p>
-<pre class="fixed">mysqld --help --verbose | grep 'log-error' | tail -1
-mysqld --help --verbose | grep 'datadir' | tail -1
+<pre class="fixed">mariadbd --help --verbose | grep 'log-error' | tail -1
+mariadbd --help --verbose | grep 'datadir' | tail -1
 </pre><h2 class="anchored_heading" id="option-files">Option Files</h2>
 <p>Another kind of file to consider when troubleshooting is <a href="/kb/en/configuring-mariadb-with-option-files/">option files</a>. The default option file is called <code>my.cnf</code>. Option files contain configuration options, such as the location of the data directory mentioned above. If you're unsure where the option file is located, see <a href="/kb/en/configuring-mariadb-with-option-files/#default-option-file-locations">Configuring MariaDB with Option Files: Default Option File Locations</a> for information on the default locations.</p>
 <p>You can check which configuration options MariaDB server will use from its option files by executing the following command:</p>
-<pre class="fixed">mysqld --print-defaults
+<pre class="fixed">mariadbd --print-defaults
 </pre><p>You can also check by executing the following command:</p>
 <pre class="fixed">my_print_defaults --mysqld
 </pre><p>See <a href="/kb/en/configuring-mariadb-with-option-files/#checking-program-options">Configuring MariaDB with Option Files: Checking Program Options</a> for more information on checking configuration options.</p>
 <h3 class="anchored_heading" id="invalid-option-or-option-value">Invalid Option or Option Value</h3>
 <p>Another potential reason for a startup failure is that an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> contains an invalid option or an invalid option value. In those cases, the <a href="/kb/en/error-log/">error log</a> should contain an error similar to this:</p>
-<pre class="fixed">140514 12:19:37 [ERROR] /usr/local/mysql/bin/mysqld: unknown variable 'option=value'
+<pre class="fixed">140514 12:19:37 [ERROR] /usr/local/mysql/bin/mariadbd: unknown variable 'option=value'
 </pre><p>This is more likely to happen when you upgrade to a new version of MariaDB. In most cases the <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> from the old version of MariaDB will work just fine with the new version. However, occasionally, options are removed in new versions of MariaDB, or the valid values for options are changed in new versions of MariaDB. Therefore, it's possible for an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> to stop working after an upgrade.</p>
 <p>Also remember that option names are case sensitive.</p>
 <p>Examine the specifics of the error. Possible fixes are usually one of the following:</p>
@@ -490,9 +490,9 @@ Fatal error: Can't open privilege tables: Table 'mysql.host' doesn't exist
 <p>If the <a href="/kb/en/system-tables/">system tables</a> really do not exist, then you may need to create them with <a href="/kb/en/mariadb-install-db/">mariadb-install-db</a>. See <a href="/kb/en/installing-system-tables-mariadb-install-db/">Installing System Tables (mariadb-install-db)</a> for more information.</p>
 <h2 class="anchored_heading" id="cant-create-test-file">Can't Create Test File</h2>
 <p>One of the first tests on startup is to check whether MariaDB can write to the data directory. When this fails, it will log an error like this:</p>
-<pre class="fixed wrap">May 13 10:24:28 mariadb3 mysqld[19221]: 2019-05-13 10:24:28 0 [Warning] Can't create test file /usr/local/data/mariadb/mariadb3.lower-test
-May 13 10:24:28 mariadb3 mysqld[19221]: 2019-05-13 10:24:28 0 [ERROR] Aborting
-</pre><p>This is usually a permission error on the directory in which this file is being written. Ensure that the entire <code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code> is owned by the user running <code>mysqld</code>, usually <code>mysql</code>. Ensure that directories have the "x" (execute) directory permissions for the owner. Ensure that all the parent directories of the <code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code> upwards have "x" (execute) permissions for all (<code>user</code>, <code>group</code>, and <code>other</code>).</p>
+<pre class="fixed wrap">May 13 10:24:28 mariadb3 mariadbd[19221]: 2019-05-13 10:24:28 0 [Warning] Can't create test file /usr/local/data/mariadb/mariadb3.lower-test
+May 13 10:24:28 mariadb3 maridbd[19221]: 2019-05-13 10:24:28 0 [ERROR] Aborting
+</pre><p>This is usually a permission error on the directory in which this file is being written. Ensure that the entire <code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code> is owned by the user running <code>mariadbd</code>, usually <code>mysql</code>. Ensure that directories have the "x" (execute) directory permissions for the owner. Ensure that all the parent directories of the <code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code> upwards have "x" (execute) permissions for all (<code>user</code>, <code>group</code>, and <code>other</code>).</p>
 <p>Once this is checked look at the <a href="#systemd">systemd</a> and <a href="#selinux">selinux</a> documentation below, or <a href="#AppArmorl">AppArmor</a>.</p>
 <h2 class="anchored_heading" id="cant-lock-aria-control-file">Can't Lock Aria Control File</h2>
 <p>On starting MariaDB, the <code>aria_log_control</code> file is locked. If a lock cannot be obtained, it will log and error like this:</p>
