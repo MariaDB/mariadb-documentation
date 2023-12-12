@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2021-04-23 00:04">2 years, 7 months ago</span></dd>
+<span class="datetime" title="2023-12-11 09:25">8 hours, 14 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -390,22 +390,22 @@
 
     <li class=""><a href="#support-in-mariadb-server" title="Support in MariaDB Server">Support in MariaDB Server</a></li>
 
-    <li class=""><a href="#client-authentication-plugins" title="Client Authentication Plugins">Client Authentication Plugins</a>    <ol class="toc">
-
-        <li class=""><a href="#sha256_password" title="sha256_password">sha256_password</a></li>
-
-        <li class=""><a href="#caching_sha256_password" title="caching_sha256_password">caching_sha256_password</a>    </ol>
-</li>
-
     <li class=""><a href="#support-in-client-libraries" title="Support in Client Libraries">Support in Client Libraries</a>    <ol class="toc">
+
+        <li class=""><a href="#client-authentication-plugins" title="Client Authentication Plugins">Client Authentication Plugins</a>        <ol class="toc">
+
+            <li class=""><a href="#sha256_password" title="sha256_password">sha256_password</a></li>
+
+            <li class=""><a href="#caching_sha256_password" title="caching_sha256_password">caching_sha256_password</a>        </ol>
+</li>
 
         <li class=""><a href="#using-the-plugin-with-mariadb-connectorc" title="Using the Plugin with MariaDB Connector/C">Using the Plugin with MariaDB Connector/C</a></li>
 
-        <li class=""><a href="#using-the-plugin-with-mariadb-connectorodbc" title="Using the Plugin with MariaDB Connector/ODBC">Using the Plugin with MariaDB Connector/ODBC</a></li>
+        <li class=""><a href="#using-plugins-with-mariadb-connectorodbc" title="Using Plugins with MariaDB Connector/ODBC">Using Plugins with MariaDB Connector/ODBC</a></li>
 
-        <li class=""><a href="#using-the-plugin-with-mariadb-connectorj" title="Using the Plugin with MariaDB Connector/J">Using the Plugin with MariaDB Connector/J</a></li>
+        <li class=""><a href="#using-plugins-with-mariadb-connectorj" title="Using Plugins with MariaDB Connector/J">Using Plugins with MariaDB Connector/J</a></li>
 
-        <li class=""><a href="#using-the-plugin-with-mariadb-connectornodejs" title="Using the Plugin with MariaDB Connector/Node.js">Using the Plugin with MariaDB Connector/Node.js</a>    </ol>
+        <li class=""><a href="#using-plugins-with-mariadb-connectornodejs" title="Using Plugins with MariaDB Connector/Node.js">Using Plugins with MariaDB Connector/Node.js</a>    </ol>
 </li>
 
     <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
@@ -414,12 +414,15 @@
 <p>MySQL 5.6 added support for the <code><a href="https://dev.mysql.com/doc/refman/5.6/en/sha256-pluggable-authentication.html">sha256_password</a></code> authentication plugin, and MySQL 8.0 also added support for the <code><a href="https://dev.mysql.com/doc/refman/8.0/en/caching-sha2-pluggable-authentication.html">caching_sha2_password</a></code> authentication plugin.</p>
 <p>The <code>caching_sha2_password</code> plugin is now the default authentication plugin in MySQL 8.0.4 and above, based on the value of the <code><a href="https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_default_authentication_plugin">default_authentication_plugin</a></code> system variable.</p>
 <h2 class="anchored_heading" id="support-in-mariadb-server">Support in MariaDB Server</h2>
-<div class="cstm-style redbox"><p>MariaDB Server does not currently support either the <code><a href="https://dev.mysql.com/doc/refman/5.6/en/sha256-pluggable-authentication.html">sha256_password</a></code> or the <code><a href="https://dev.mysql.com/doc/refman/8.0/en/caching-sha2-pluggable-authentication.html">caching_sha2_password</a></code> authentication plugins. See <a href="https://jira.mariadb.org/browse/MDEV-9804">MDEV-9804</a> for more information.</p>
+<div class="cstm-style redbox"><p>MariaDB Server does not currently support either the <code><a href="https://dev.mysql.com/doc/refman/5.6/en/sha256-pluggable-authentication.html">sha256_password</a></code> or the <code><a href="https://dev.mysql.com/doc/refman/8.0/en/caching-sha2-pluggable-authentication.html">caching_sha2_password</a></code> authentication plugins. See <a href="https://jira.mariadb.org/browse/MDEV-9804">MDEV-9804</a> for more information. The majority of this article is about how to use MariaDB clients and connectors to connect to a MySQL server!</p>
 </div><p>MariaDB Server does not support either of these authentication plugins. This is mainly because:</p>
 <ul start="1"><li>To use the protocol, one has to distribute the server's public key to all MariaDB users, which can be cumbersome and impractical. 
 </li><li>The server gets the password in clear text which can cause problems if the user is convinced to connect to a malicious server.
 </li></ul>
-<h2 class="anchored_heading" id="client-authentication-plugins">Client Authentication Plugins</h2>
+<p>If you are replacing a MySQL instance, that is using SHA-256 authentication, with MariaDB, you should start by changing SHA-256 authentication to use mysql_native_authentication. </p>
+<pre class="fixed"><span class="k">ALTER</span> <span class="k">USER</span> <span class="n">user_name</span> <span class="n">IDENTIFIED</span> <span class="k">WITH</span> <span class="n">mysql_native_password</span> <span class="k">BY</span>  <span class="s1">&#39;new_password&#39;</span>
+</pre><h2 class="anchored_heading" id="support-in-client-libraries">Support in Client Libraries</h2>
+<h3 class="anchored_heading" id="client-authentication-plugins">Client Authentication Plugins</h3>
 <p>For clients that use the <a href="/kb/en/mariadb-connector-c/">MariaDB Connector/C</a> library, MariaDB provides two client authentication plugins that are compatible with MySQL's SHA-256 authentication plugins:</p>
 <ul start="1"><li><code>sha256_password</code>
 </li><li><code>caching_sha256_password</code>
@@ -427,22 +430,21 @@
 <p>When connecting with a <a href="/kb/en/clients-utilities/">client or utility</a> to a server as a user account that authenticates with the <code>sha256_password</code> or <code>caching_sha256_password</code> authentication plugin, you may need to tell the client where to find the relevant client authentication plugin by specifying the <code>--plugin-dir</code> option. For example:</p>
 <pre class="fixed">mysql --plugin-dir=/usr/local/mysql/lib64/mysql/plugin --user=alice
 </pre><p>For clients that use MariaDB's <code>libmysqlclient</code> library instead of <a href="/kb/en/mariadb-connector-c/">MariaDB Connector/C</a>, these client authentication plugins are not supported.</p>
-<h3 class="anchored_heading" id="sha256_password"><code>sha256_password</code></h3>
+<h4 class="anchored_heading" id="sha256_password"><code>sha256_password</code></h4>
 <p>The <code>sha256_password</code> client authentication plugin is compatible with MySQL's <code><a href="https://dev.mysql.com/doc/refman/5.6/en/sha256-pluggable-authentication.html">sha256_password</a></code> authentication plugin, which was added in MySQL 5.6.</p>
-<h3 class="anchored_heading" id="caching_sha256_password"><code>caching_sha256_password</code></h3>
+<h4 class="anchored_heading" id="caching_sha256_password"><code>caching_sha256_password</code></h4>
 <p>The <code>caching_sha256_password</code> client authentication plugin is compatible with MySQL's <code><a href="https://dev.mysql.com/doc/refman/8.0/en/caching-sha2-pluggable-authentication.html">caching_sha2_password</a></code> authentication plugin, which was added in MySQL 8.0.</p>
 <p>The <code>caching_sha2_password</code> plugin is now the default authentication plugin in MySQL 8.0.4 and above, based on the value of the <code><a href="https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_default_authentication_plugin">default_authentication_plugin</a></code> system variable.</p>
-<h2 class="anchored_heading" id="support-in-client-libraries">Support in Client Libraries</h2>
 <h3 class="anchored_heading" id="using-the-plugin-with-mariadb-connectorc">Using the Plugin with MariaDB Connector/C</h3>
 <p><a href="/kb/en/mariadb-connector-c/">MariaDB Connector/C</a> supports <code>sha256_password</code> and <code>caching_sha2_password</code> authentication using the <a href="client-authentication-plugins">client authentication plugins</a> mentioned in the previous section.</p>
 <p>It has supported the <code>sha256_password</code> client authentication plugin since MariaDB Connector/C 3.0.2. See <a href="https://jira.mariadb.org/browse/CONC-229">CONC-229</a> for more information.</p>
 <p>It has supported the <code>caching_sha256_password</code> client authentication plugin since MariaDB Connector/C 3.0.8 and MariaDB Connector/C 3.1.0. See <a href="https://jira.mariadb.org/browse/CONC-312">CONC-312</a> for more information.</p>
-<h3 class="anchored_heading" id="using-the-plugin-with-mariadb-connectorodbc">Using the Plugin with MariaDB Connector/ODBC</h3>
+<h3 class="anchored_heading" id="using-plugins-with-mariadb-connectorodbc">Using Plugins with MariaDB Connector/ODBC</h3>
 <p><a href="/kb/en/about-mariadb-connector-odbc/">MariaDB Connector/ODBC</a> supports <code>sha256_password</code> and <code>caching_sha2_password</code> authentication using the <a href="client-authentication-plugins">client authentication plugins</a> mentioned in the previous section.</p>
 <p>It has supported <code>sha256_password</code> and <code>caching_sha2_password</code> authentication since MariaDB Connector/ODBC 3.1.4. See <a href="https://jira.mariadb.org/browse/ODBC-241">ODBC-241</a> for more information.</p>
-<h3 class="anchored_heading" id="using-the-plugin-with-mariadb-connectorj">Using the Plugin with MariaDB Connector/J</h3>
+<h3 class="anchored_heading" id="using-plugins-with-mariadb-connectorj">Using Plugins with MariaDB Connector/J</h3>
 <p><a href="/kb/en/about-mariadb-connector-j/">MariaDB Connector/J</a> supports <code>sha256_password</code> and <code>caching_sha2_password</code> authentication since MariaDB Connector/J 2.5.0. See <a href="https://jira.mariadb.org/browse/CONJ-327">CONJ-327</a> and <a href="https://jira.mariadb.org/browse/CONJ-663">CONJ-663</a> for more information.</p>
-<h3 class="anchored_heading" id="using-the-plugin-with-mariadb-connectornodejs">Using the Plugin with MariaDB Connector/Node.js</h3>
+<h3 class="anchored_heading" id="using-plugins-with-mariadb-connectornodejs">Using Plugins with MariaDB Connector/Node.js</h3>
 <p><a href="/kb/en/nodejs-connector/">MariaDB Connector/Node.js</a> supports <code>sha256_password</code> and <code>caching_sha2_password</code> authentication since MariaDB Connector/Node.js 2.5.0. See <a href="https://jira.mariadb.org/browse/CONJS-76">CONJS-76</a> and <a href="https://jira.mariadb.org/browse/CONJS-77">CONJS-77</a> for more information.</p>
 <h2 class="anchored_heading" id="see-also">See Also</h2>
 <ul start="1"><li><a href="https://jira.mariadb.org/browse/MDEV-9804">MDEV-9804</a> contains the plans to use if we ever decide to support these protocols.

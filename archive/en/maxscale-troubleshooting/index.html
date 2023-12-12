@@ -240,7 +240,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-11-01 12:00">1 month ago</span></dd>
+<span class="datetime" title="2023-12-11 07:54">13 hours, 21 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -428,33 +428,7 @@
 
         <li class="maxscale_from_22_08_4"><a href="#debug-binaries" title="Debug Binaries">Debug Binaries</a></li>
 
-        <li class="maxscale_from_22_08_4"><a href="#bpf-compiler-collection-bcc" title="BPF Compiler Collection (bcc)">BPF Compiler Collection (bcc)</a>        <ol class="toc">
-
-            <li class="maxscale_from_22_08_4"><a href="#rhel-centos-rocky-linux-and-fedora" title="RHEL, CentOS, Rocky Linux and Fedora">RHEL, CentOS, Rocky Linux and Fedora</a></li>
-
-            <li class="maxscale_from_22_08_4"><a href="#ubuntu-and-debian" title="Ubuntu and Debian">Ubuntu and Debian</a>        </ol>
-</li>
-
-        <li class="maxscale_from_22_08_4"><a href="#jemalloc-heap-profiling" title="Jemalloc Heap Profiling">Jemalloc Heap Profiling</a>        <ol class="toc">
-
-            <li class="maxscale_from_22_08_4"><a href="#ubuntu-and-debian" title="Ubuntu and Debian">Ubuntu and Debian</a></li>
-
-            <li class="maxscale_from_22_08_4"><a href="#configuring-maxscale-for-jemalloc-heap-profiling" title="Configuring MaxScale for Jemalloc Heap Profiling">Configuring MaxScale for Jemalloc Heap Profiling</a>        </ol>
-</li>
-
-        <li class="maxscale_from_22_08_4"><a href="#tcmalloc-heap-profiling" title="Tcmalloc Heap Profiling">Tcmalloc Heap Profiling</a>        <ol class="toc">
-
-            <li class="maxscale_from_22_08_4"><a href="#installation" title="Installation">Installation</a>            <ol class="toc">
-
-                <li class="maxscale_from_22_08_4"><a href="#rocky-linux-8" title="Rocky Linux 8">Rocky Linux 8</a></li>
-
-                <li class="maxscale_from_22_08_4"><a href="#ubuntu-2004" title="Ubuntu 20.04">Ubuntu 20.04</a>            </ol>
-</li>
-
-            <li class="maxscale_from_22_08_4"><a href="#service-file-configuration" title="Service file configuration">Service file configuration</a></li>
-
-            <li class="maxscale_from_22_08_4"><a href="#report-generation" title="Report generation">Report generation</a>        </ol>
-</li>
+        <li class="maxscale_from_22_08_4"><a href="#profiling-release-mode-binaries" title="Profiling Release Mode Binaries">Profiling Release Mode Binaries</a></li>
 
         <li class="maxscale_from_22_08_4"><a href="#valgrind" title="Valgrind">Valgrind</a>    </ol>
  </ol>
@@ -528,56 +502,20 @@
 <h3 class="anchored_heading" id="debug-binaries">Debug Binaries</h3>
 <p>The easiest option is to install the MaxScale debug binaries which are built with <a href="https://github.com/google/sanitizers/wiki/AddressSanitizer">AddressSanitizer</a> and <a href="https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer">LeakSanitizer</a> enabled. These are low-impact instrumentation tools that detect memory access errors as well as memory leaks.</p>
 <p>Once installed, make sure that the <code>maxlog</code> parameter is not disabled and then start MaxScale. Let it run until the memory usage grows beyond normal limits and then shut MaxScale down with <code>systemctl stop maxscale.service</code>. The MaxScale log should contain a verbose explanation of where memory leaks occurred, if any were found.</p>
-<h3 class="anchored_heading" id="bpf-compiler-collection-bcc">BPF Compiler Collection (bcc)</h3>
-<p>The bcc toolkit comes with the <code>memleak</code> program that traces outstanding memory allocations. This is a very convenient way of debugging high memory usage as it'll immediately show where the memory is allocated at.</p>
-<p>The tool will print output once every five seconds with the stacktraces that have the most open allocations. To help analyze excessive memory usage, collect the output of the <code>memleak</code> program for at least 60 seconds. Use <code>Ctrl+C</code> to interrupt the collection of the traces.</p>
-<h4 class="anchored_heading" id="rhel-centos-rocky-linux-and-fedora">RHEL, CentOS, Rocky Linux and Fedora</h4>
-<p>On RHEL based systems, the package is named <code>bcc-tools</code>. After installing it, use the following command to profile the memory usage:</p>
-<pre class="fixed">sudo /usr/share/bcc/tools/memleak -p $(pidof maxscale) | tee memleak.log
-</pre><h4 class="anchored_heading" id="ubuntu-and-debian">Ubuntu and Debian</h4>
-<p>On Ubuntu/Debian the package is named <code>bpfcc-tools</code>. After installing it, use the following command to profile the memory usage:</p>
-<pre class="fixed">sudo memleak-bpfcc -p $(pidof maxscale) | tee memleak.log
-</pre><h3 class="anchored_heading" id="jemalloc-heap-profiling">Jemalloc Heap Profiling</h3>
-<p>Jemalloc is an alternative to the default glibc memory allocator. It is capable of analyzing the heap memory usage of a process which allows it to be used to detect all sorts of memory usage problems with a lower overhead compared to tools like Valgrind. Unlike the ASAN and LSAN sanitizers, it is capable of detecting cases where memory doesn't actually leak but keeps growing with no upper limit (e.g. items get appended to a list but are never removed).</p>
-<h4 class="anchored_heading" id="ubuntu-and-debian">Ubuntu and Debian</h4>
-<p>To enable jemalloc, the packages for it must be first installed from the system repositories. Ubuntu 20.04 requires the following packages to be installed for jemalloc profiling:</p>
-<pre class="fixed">apt-get -y install libjemalloc2 libjemalloc-dev binutils graphviz ghostscript gv
-</pre><h4 class="anchored_heading" id="configuring-maxscale-for-jemalloc-heap-profiling">Configuring MaxScale for Jemalloc Heap Profiling</h4>
-<p>Once installed, edit <code>/lib/systemd/system/maxscale.service</code> and add the following two lines into the <code>[Service]</code> section.</p>
-<pre class="fixed">Environment=MALLOC_CONF=prof:true,prof_leak:true,prof_gdump:true,lg_prof_sample:18,prof_prefix:/var/log/maxscale/jeprof
-Environment=LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
-</pre><p>Then run <code>systemctl daemon-reload</code> and restart MaxScale with <code>systemctl restart maxscale.service</code>.</p>
-<p>The MaxScale log directory in <code>/var/log/maxscale/</code> will start to be filled by versioned files with a <code>.heap</code> suffix. Every time the virtual memory used by MaxScale reaches a new high, a file will be created. Initially, the files will be created very often but eventually the pace will slow down. Once the problematic memory usage has been identified, the latest <code>.heap</code> file can be analyzed with the <code>jeprof</code> program.</p>
-<p>The easiest way to look at the generated heap profile is with the PDF output. To generate the PDF report of the latest heap dump, run the following command:</p>
-<pre class="fixed">jeprof --pdf /usr/bin/maxscale $(ls -1 /var/log/maxscale/*.heap|sort -V|tail -n 1) &gt; heap-report.pdf
-</pre><p>The generated <code>heap-report.pdf</code> will contain a breakdown of the memory usage of MaxScale.</p>
-<p>Note that the report generation with the <code>jeprof</code> program must be done on the same system where the profiling was done. If done elsewhere, the binaries do not necessarily match and can cause the report generation to fail.</p>
-<h3 class="anchored_heading" id="tcmalloc-heap-profiling">Tcmalloc Heap Profiling</h3>
-<p>Similarly to the jemalloc memory allocator, the <a href="https://github.com/google/tcmalloc">tcmalloc</a> memory allocator comes with a leak checker and heap profiler.</p>
-<h4 class="anchored_heading" id="installation">Installation</h4>
-<h5 class="anchored_heading" id="rocky-linux-8">Rocky Linux 8</h5>
-<pre class="fixed">sudo dnf -y install gperftools
-</pre><h5 class="anchored_heading" id="ubuntu-2004">Ubuntu 20.04</h5>
-<pre class="fixed">sudo apt -y install google-perftools
-</pre><h4 class="anchored_heading" id="service-file-configuration">Service file configuration</h4>
-<p>Once tcmalloc is installed, edit <code>/lib/systemd/system/maxscale.service</code> and add the following lines into the <code>[Service]</code> section.</p>
-<p><strong>Note:</strong> Make sure to use the correct path to the tcmalloc library in <code>LD_PRELOAD</code>. The following example uses the Debian location of the library. The file is usually located in <code>/usr/lib64/libtcmalloc_and_profiler.so.4.5.3</code> on RHEL systems. The version number of the library can also change which might require other adjustments to the library path.</p>
-<pre class="fixed">Environment=LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_and_profiler.so.4.5.3
-Environment=HEAPPROFILE=/var/log/maxscale/maxscale.prof
-Environment=HEAPCHECK=normal
-Environment=HEAP_CHECK_AFTER_DESTRUCTORS=true
-</pre><p>Then run <code>systemctl daemon-reload</code> and restart MaxScale with <code>systemctl restart maxscale.service</code>.</p>
-<h4 class="anchored_heading" id="report-generation">Report generation</h4>
-<p>Depending on which OS you are using, the report generation program is named either <code>pprof</code> (RHEL) or <code>google-pprof</code> (Debian/Ubuntu).</p>
-<p>It is important to pick the latest <code>.heap</code> file to analyze. The following command generates the <code>heap-report.pdf</code> from the latest heap dump. The file will show the breakdown of the memory usage.</p>
-<pre class="fixed">pprof --pdf /usr/bin/maxscale $(ls /var/log/maxscale/*.heap|sort -V|tail -n 1) &gt; heap-report.pdf
-</pre><h3 class="anchored_heading" id="valgrind">Valgrind</h3>
-<p>Valgrind can be used to analyze memory usage problems but usually it is left as the last resort due to the heavy performance penalty that it incurs. However, the use of Valgrind is simple as it is widely available and can be used with existing MaxScale binaries.</p>
-<p>To use <code>valgrind</code> for memory leak detection, edit the <code>/lib/systemd/system/maxscale.service</code> file and replace the following values:</p>
-<ul start="1"><li><code>ExecStart=/usr/bin/maxscale</code> with <code>ExecStart=valgrind --leak-check=full /usr/bin/maxscale -d</code>
-</li><li><code>Type=forking</code> with <code>Type=simple</code>
+<h3 class="anchored_heading" id="profiling-release-mode-binaries">Profiling Release Mode Binaries</h3>
+<p>The instructions on the <a href="/kb/en/profiling-memory-usage/">profiling-memory-usage</a> page that are for the MariaDB server also apply to MaxScale. The following modifications to the commands must be done in order for them to work with MaxScale.</p>
+<ul start="1"><li>Replace <code>/usr/sbin/mariadbd</code> with <code>/usr/bin/maxscale</code>
+</li><li>Replace <code>/var/lib/mysql/</code> with <code>/var/log/maxscale/</code>
+</li><li>Replace <code>pidof mariadbd</code> with <code>pidof maxscale</code>
+</li><li>Replace <code>mariadb.service</code> with <code>maxscale.service</code>
 </li></ul>
-<p>Then reload the daemon with <code>systemctl daemon-reload</code> and restart the MaxScale process with <code>systemctl restart maxscale.service</code>. Once the memory problem is confirmed, stop the MaxScale process with <code>systemctl stop maxscale.service</code>. Valgrind will print the leak report into the system journal that can be viewed with <code>journalctl -u maxscale</code>.</p>
+<h3 class="anchored_heading" id="valgrind">Valgrind</h3>
+<p>Valgrind can be used to analyze memory usage problems but usually it is left as the last resort due to the heavy performance penalty that it incurs. However, the use of Valgrind is simple as it is widely available and can be used with existing MaxScale binaries.</p>
+<p>To use <code>valgrind</code> for memory leak detection, edit the systemd service file with <code>systemctl edit maxscale.service</code> and add the following values to it:</p>
+<pre class="fixed">[Service]
+ExecStart=valgrind --leak-check=full /usr/bin/maxscale -d
+Type=simple
+</pre><p>Then restart the MaxScale process with <code>systemctl restart maxscale.service</code>. Once the memory problem is confirmed, stop the MaxScale process with <code>systemctl stop maxscale.service</code>. Valgrind will print the leak report into the system journal that can be viewed with <code>journalctl -u maxscale</code>.</p>
 <h1 class="anchored_heading" id="authentication-errors">Authentication Errors</h1>
 <h2 class="anchored_heading" id="access-denied"><code>Access Denied</code></h2>
 <p>If you are receiving authentication errors like this:</p>
