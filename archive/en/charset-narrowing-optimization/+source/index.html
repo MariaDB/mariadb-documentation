@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
     <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
 
-    <title>Charset Narrowing optimization - Source - MariaDB Knowledge Base</title>
+    <title>Charset Narrowing Optimization - Source - MariaDB Knowledge Base</title>
 
     <link href="/kb/static/css/main.9a0d7dcebefd.css" rel="stylesheet" type="text/css" />
 
@@ -19,7 +19,7 @@
     
 
     <!-- FB Open Graph tags -->
-    <meta property="og:title" content="Charset Narrowing optimization - Source" />
+    <meta property="og:title" content="Charset Narrowing Optimization - Source" />
     <meta property="og:type" content="article" />
     <meta property="og:url" content="https://mariadb.com/kb/en/charset-narrowing-optimization/+source/" />
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
@@ -184,7 +184,7 @@
     
 
 
-    » <a class="node_link crumb" href="/kb/en/charset-narrowing-optimization/">Charset Narrowing optimization</a>
+    » <a class="node_link crumb" href="/kb/en/charset-narrowing-optimization/">Charset Narrowing Optimization</a>
 
 
                 </div>
@@ -272,7 +272,7 @@
             
             <section id="content" class="limited_width col-md-10 clearfix">
                 
-                    <h1>Charset Narrowing optimization - Source</h1>
+                    <h1>Charset Narrowing Optimization - Source</h1>
                 
 
                 
@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/charset-narrowing-optimization/+r/133190/">133190</a></dd>
+            <dd><a href="/kb/en/charset-narrowing-optimization/+r/133494/">133494</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3645">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-12-05 11:48">2023-12-05 11:48</span></dd>
+<span class="datetime" title="2023-12-13 10:53">2023-12-13 10:53</span></dd>
         </dl>
     </div>
     
@@ -307,26 +307,26 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">Charset Narrowing optimization handles equality comparisons like:
+        <textarea id="answer_source" class="creole_source autogrow">The Charset Narrowing optimization handles equality comparisons like:
 &lt;&lt;code&gt;&gt;
 utf8mb3_key_column=utf8mb4_expression
 &lt;&lt;/code&gt;&gt;
 It enables the optimizer to construct ##ref## access to ##utf8mb3_key_column## based on this equality. The optimization supports comparisons of columns that use ##utf8mb3_general_ci## to expressions that use ##utf8mb4_general_ci## .  
 
-The optimization was introduced in MariaDB 10.6.16, MariaDB 10.10.7, MariaDB 10.11.6, MariaDB 11.0.4, MariaDB 11.1.3, MariaDB 11.2.2 where it is **OFF** by  default,  and in MariaDB 11.3.1, where it is **ON** by default.
+The optimization was introduced in MariaDB 10.6.16, MariaDB 10.10.7, MariaDB 10.11.6, MariaDB 11.0.4, MariaDB 11.1.3 and MariaDB 11.2.2, where it is **OFF** by  default.
 
 == Description
 
-MariaDB supports both UTF8MB3 and UTF8MB4 character sets. It is possible to construct join queries that compare values in UTF8MB3 to UTF8MB4.
+MariaDB supports both the UTF8MB3 and UTF8MB4 [[character-sets|character sets]]. It is possible to construct join queries that compare values in UTF8MB3 to UTF8MB4.
 
-Suppose, we have table users that uses UTF8MB3:
+Suppose, we have the table //&#39;users// that uses UTF8MB3:
 &lt;&lt;sql&gt;&gt;
 create table users (
   user_name_mb4 varchar(100) collate utf8mb4_general_ci,
   ...
 );
 &lt;&lt;/sql&gt;&gt;
-and table orders that uses UTF8MB4:
+and table //orders// that uses UTF8MB4:
 &lt;&lt;sql&gt;&gt;
 create table orders (
   user_name_mb3 varchar(100) collate utf8mb3_general_ci,
@@ -335,23 +335,23 @@ create table orders (
 );
 &lt;&lt;/sql&gt;&gt;
 
-One can join users to orders on user_name:
+One can join //users// to //orders// on user_name:
 
 &lt;&lt;sql&gt;&gt;
 select * from orders, users where orders.user_name_mb3=users.user_name_mb4;
 &lt;&lt;/sql&gt;&gt;
 
-internally the optimizer will handle the equality by converting the UTF8MB3 value into UTF8MB4 and then doing the comparison. One can see the call to ##CONVERT## in EXPLAIN FORMAT=JSON output or Optimizer Trace:
+Internally the optimizer will handle the equality by converting the UTF8MB3 value into UTF8MB4 and then doing the comparison. One can see the call to ##CONVERT## in EXPLAIN FORMAT=JSON output or Optimizer Trace:
 
 &lt;&lt;sql&gt;&gt;
 convert(orders.user_name_mb3 using utf8mb4) = users.user_name_mb4
 &lt;&lt;/sql&gt;&gt;
 
-this produces the expected result but the query optimizer is not able to use the index over ##orders.user_name_mb3## to find matches for values of ##users.user_name_mb4##.
+This produces the expected result but the query optimizer is not able to use the index over ##orders.user_name_mb3## to find matches for values of ##users.user_name_mb4##.
 
 The EXPLAIN of the above query looks like this:
 &lt;&lt;code&gt;&gt;
-MariaDB &gt; explain select * from orders, users where orders.user_name_mb3=users.user_name_mb4;
+explain select * from orders, users where orders.user_name_mb3=users.user_name_mb4;
 +------+-------------+--------+------+---------------+------+---------+------+-------+-------------------------------------------------+
 | id   | select_type | table  | type | possible_keys | key  | key_len | ref  | rows  | Extra                                           |
 +------+-------------+--------+------+---------------+------+---------+------+-------+-------------------------------------------------+
@@ -360,13 +360,12 @@ MariaDB &gt; explain select * from orders, users where orders.user_name_mb3=user
 +------+-------------+--------+------+---------------+------+---------+------+-------+-------------------------------------------------+
 &lt;&lt;/code&gt;&gt;
 
-Charset Narrowing optimization enables the optimizer to perform the comparison between UTF8MB3 and UTF8MB4 values by &#34;narrowing&#34; the value in UTF8MB4 to UTF8MB3.  The ##CONVERT## call is no longer needed, and the optimizer is able to use the equality to construct ref access:
+The Charset Narrowing optimization enables the optimizer to perform the comparison between UTF8MB3 and UTF8MB4 values by &#34;narrowing&#34; the value in UTF8MB4 to UTF8MB3.  The ##CONVERT## call is no longer needed, and the optimizer is able to use the equality to construct ref access:
 
 &lt;&lt;code&gt;&gt;
-MariaDB &gt; set optimizer_switch=&#39;cset_narrowing=on&#39;;
-Query OK, 0 rows affected (0.000 sec)
+set optimizer_switch=&#39;cset_narrowing=on&#39;;
 
-MariaDB &gt; explain select * from orders, users where orders.user_name_mb3=users.user_name_mb4;
+explain select * from orders, users where orders.user_name_mb3=users.user_name_mb4;
 +------+-------------+--------+------+---------------+------+---------+---------------------+------+-----------------------+
 | id   | select_type | table  | type | possible_keys | key  | key_len | ref                 | rows | Extra                 |
 +------+-------------+--------+------+---------------+------+---------+---------------------+------+-----------------------+
@@ -375,9 +374,9 @@ MariaDB &gt; explain select * from orders, users where orders.user_name_mb3=user
 +------+-------------+--------+------+---------------+------+---------+---------------------+------+-----------------------+
 &lt;&lt;/code&gt;&gt; 
 
-== Controlling the optimization
+== Controlling the Optimization
 
-The optimization is controlled by an ##optimizer_switch## flag.  Specify
+The optimization is controlled by an [[server-system-variables/#optimizer_switch|optimizer_switch]] flag.  Specify:
 
 &lt;&lt;sql&gt;&gt;
 set optimizer_switch=&#39;cset_narrowing=on&#39;;
@@ -386,7 +385,7 @@ to enable the optimization.
 
 == References
 * MDEV-32113: utf8mb3_key_col=utf8mb4_value cannot be used for ref access
-* Blog post: [[[https://petrunia.net/2023/10/11/making-tbl-utf8mb3_key_columnutf8mb4_expr-sargable/|Making “tbl.utf8mb3_key_column=utf8mb4_expr” sargable]]</textarea>
+* Blog post: [[https://petrunia.net/2023/10/11/making-tbl-utf8mb3_key_columnutf8mb4_expr-sargable/|Making “tbl.utf8mb3_key_column=utf8mb4_expr” sargable]]</textarea>
     
 
 

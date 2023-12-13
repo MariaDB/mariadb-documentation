@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-10-17 12:01">1 year, 1 month ago</span></dd>
+<span class="datetime" title="2023-12-13 05:05">11 hours, 55 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -501,9 +501,9 @@ wsrep_sst_auth = mariabackup:mypassword
 <pre class="fixed">[mariadb]
 ...
 wsrep_sst_auth = mariabackup:
-</pre><p>The user account that performs the backup for the SST needs to have <a href="/kb/en/mariabackup-overview/#authentication-and-privileges">the same privileges as Mariabackup</a>, which are the <code>RELOAD</code> , <code>PROCESS</code>, <code>LOCK TABLES</code> and <code>REPLICATION CLIENT</code> <a href="/kb/en/grant/#global-privileges">global privileges</a>. To be safe, you should ensure that these privileges are set on each node in your cluster.  <a href="/kb/en/backup-restore-and-import-clients-mariadb-backup/">Mariabackup</a> connects locally on the donor node to perform the backup, so the following user should be sufficient:</p>
+</pre><p>The user account that performs the backup for the SST needs to have <a href="/kb/en/mariabackup-overview/#authentication-and-privileges">the same privileges as Mariabackup</a>, which are the <code>RELOAD</code> , <code>PROCESS</code>, <code>LOCK TABLES</code> and <code>BINLOG MONITOR</code> (or <code>REPLICATION CLIENT</code> for <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a> or earlier) <a href="/kb/en/grant/#global-privileges">global privileges</a>. To be safe, you should ensure that these privileges are set on each node in your cluster.  <a href="/kb/en/backup-restore-and-import-clients-mariadb-backup/">Mariabackup</a> connects locally on the donor node to perform the backup, so the following user should be sufficient:</p>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">USER</span> <span class="s1">&#39;mariabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span> <span class="n">IDENTIFIED</span> <span class="k">BY</span> <span class="s1">&#39;mypassword&#39;</span><span class="p">;</span>
-<span class="k">GRANT</span> <span class="n">RELOAD</span><span class="p">,</span> <span class="n">PROCESS</span><span class="p">,</span> <span class="k">LOCK</span> <span class="n">TABLES</span><span class="p">,</span> <span class="n">REPLICATION</span> <span class="n">CLIENT</span> <span class="k">ON</span> <span class="o">*</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;mariabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
+<span class="k">GRANT</span> <span class="n">RELOAD</span><span class="p">,</span> <span class="n">PROCESS</span><span class="p">,</span> <span class="k">LOCK</span> <span class="n">TABLES</span><span class="p">,</span> <span class="n">BINLOG</span> <span class="n">MONITOR</span> <span class="k">ON</span> <span class="o">*</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;mariabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
 </pre><h3 class="anchored_heading" id="passwordless-authentication-unix-socket">Passwordless Authentication - Unix Socket</h3>
 <p>It is possible to use the <code><a href="/kb/en/authentication-plugin-unix-socket/">unix_socket</a></code> authentication plugin for the user account that performs SSTs. This would provide the benefit of not needing to configure a plain-text password in <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_auth">wsrep_sst_auth</a></code>.</p>
 <p>The user account would have to have the same name as the operating system user account that is running the <code>mysqld</code> process. On many systems, this is the user account configured as the <code><a href="/kb/en/mysqld-options/#-user">user</a></code> option, and it tends to default to <code>mysql</code>.</p>
@@ -526,7 +526,7 @@ wsrep_sst_auth = mysql:
 </li></ul>
 <p>For example, you could execute the following to create the user account in MariaDB:</p>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">USER</span> <span class="s1">&#39;mariabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span> <span class="n">IDENTIFIED</span> <span class="n">VIA</span> <span class="n">gssapi</span><span class="p">;</span>
-<span class="k">GRANT</span> <span class="n">RELOAD</span><span class="p">,</span> <span class="n">PROCESS</span><span class="p">,</span> <span class="k">LOCK</span> <span class="n">TABLES</span><span class="p">,</span> <span class="n">REPLICATION</span> <span class="n">CLIENT</span> <span class="k">ON</span> <span class="o">*</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;mariabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
+<span class="k">GRANT</span> <span class="n">RELOAD</span><span class="p">,</span> <span class="n">PROCESS</span><span class="p">,</span> <span class="k">LOCK</span> <span class="n">TABLES</span><span class="p">,</span> <span class="n">BINLOG</span> <span class="n">MONITOR</span> <span class="k">ON</span> <span class="o">*</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;mariabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
 </pre><p>And then to configure <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_auth">wsrep_sst_auth</a></code>, you could set the following in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up a node:</p>
 <pre class="fixed">[mariadb]
 ...
