@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/partitioning-overview/+r/132684/">132684</a></dd>
+            <dd><a href="/kb/en/partitioning-overview/+r/133513/">133513</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-982">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-11-27 21:13">2023-11-27 21:13</span></dd>
+<span class="datetime" title="2023-12-13 18:19">2023-12-13 18:19</span></dd>
         </dl>
     </div>
     
@@ -338,7 +338,16 @@ A partitioning type is the method used by MariaDB to decide how rows are distrib
 
 With some partitioning types, a partitioning expression is also required. A partitioning function is an SQL expression returning an integer or temporal value, used to determine which row will contain a given row. The partitioning expression is used for all reads and writes on involving the partitioned table, thus it should be fast.
 
-See [[partitioning-types|Partioning Types]] for a detailed description.
+MariaDB supports the following partitioning types:
+
+* [[range-partitioning-type|RANGE]]
+* [[list-partitioning|LIST]]
+* [[range-columns-and-list-columns-partitioning-types|RANGE COLUMNS and LIST COLUMNS]]
+* [[hash-partitioning-type|HASH]]
+* [[linear-hash-partitioning-type|LINEAR HASH]]
+* [[key-partitioning-type|KEY]]
+* [[linear-key-partitioning-type|LINEAR KEY]]
+* [[system-versioned-tables|SYSTEM_TIME]]
 
 == Enabling Partitioning
 
@@ -400,6 +409,23 @@ ALTER TABLE t1 ADD PARTITION (
   p5 VALUES LESS THAN (2018)
 );
 &lt;&lt;/sql&gt;&gt;
+
+=== Coalescing Partitions
+&lt;&lt;code&gt;&gt;
+COALESCE PARTITION number
+&lt;&lt;/code&gt;&gt;
+
+##[[alter-table|ALTER TABLE]] ... COALESCE PARTITION## is used to reduce the number of HASH or KEY partitions by the specified number. For example, given the following table with 5 partitions:
+
+&lt;&lt;code&gt;&gt;
+CREATE OR REPLACE TABLE t1 (v1 INT)
+  PARTITION BY KEY (v1)
+  PARTITIONS 5;
+ &lt;&lt;/code&gt;&gt;
+The following statement will reduce the number of partitions by 2, leaving the table with 3 partitions:
+&lt;&lt;code&gt;&gt;
+ALTER TABLE t1 COALESCE PARTITION 2;
+&lt;&lt;/code&gt;&gt;
 
 === Converting Partitions to/from Tables
 &lt;&lt;product mariadb from=10.7&gt;&gt;

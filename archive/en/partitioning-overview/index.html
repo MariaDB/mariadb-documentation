@@ -248,7 +248,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-11-27 21:13">1 week, 6 days ago</span></dd>
+<span class="datetime" title="2023-12-13 18:19">22 hours, 42 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -421,6 +421,8 @@
 
         <li class=""><a href="#adding-partitions" title="Adding Partitions">Adding Partitions</a></li>
 
+        <li class=""><a href="#coalescing-partitions" title="Coalescing Partitions">Coalescing Partitions</a></li>
+
         <li class=""><a href="#converting-partitions-tofrom-tables" title="Converting Partitions to/from Tables">Converting Partitions to/from Tables</a></li>
 
         <li class=""><a href="#dropping-partitions" title="Dropping Partitions">Dropping Partitions</a></li>
@@ -458,7 +460,16 @@ In MariaDB, a table can be split in smaller subsets. Both data and indexes are p
 </li></ul>
 <p>A partitioning type is the method used by MariaDB to decide how rows are distributed over existing partitions. Choosing the proper partitioning type is important to distribute rows over partitions in an efficient way.</p>
 <p>With some partitioning types, a partitioning expression is also required. A partitioning function is an SQL expression returning an integer or temporal value, used to determine which row will contain a given row. The partitioning expression is used for all reads and writes on involving the partitioned table, thus it should be fast.</p>
-<p>See <a href="/kb/en/partitioning-types/">Partioning Types</a> for a detailed description.</p>
+<p>MariaDB supports the following partitioning types:</p>
+<ul start="1"><li><a href="/kb/en/range-partitioning-type/">RANGE</a>
+</li><li><a href="/kb/en/list-partitioning/">LIST</a>
+</li><li><a href="/kb/en/range-columns-and-list-columns-partitioning-types/">RANGE COLUMNS and LIST COLUMNS</a>
+</li><li><a href="/kb/en/hash-partitioning-type/">HASH</a>
+</li><li><a href="/kb/en/linear-hash-partitioning-type/">LINEAR HASH</a>
+</li><li><a href="/kb/en/key-partitioning-type/">KEY</a>
+</li><li><a href="/kb/en/linear-key-partitioning-type/">LINEAR KEY</a>
+</li><li><a href="/kb/en/system-versioned-tables/">SYSTEM_TIME</a>
+</li></ul>
 <h2 class="anchored_heading" id="enabling-partitioning">Enabling Partitioning</h2>
 <p>By default, MariaDB permits partitioning. You can determine this by using the <a href="/kb/en/show-plugins/">SHOW PLUGINS</a> statement, for example:</p>
 <pre class="fixed">SHOW PLUGINS;
@@ -503,6 +514,14 @@ In MariaDB, a table can be split in smaller subsets. Both data and indexes are p
   <span class="n">PARTITION</span> <span class="n">p4</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2017</span><span class="p">),</span> 
   <span class="n">p5</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2018</span><span class="p">)</span>
 <span class="p">);</span>
+</pre><h3 class="anchored_heading" id="coalescing-partitions">Coalescing Partitions</h3>
+<pre class="fixed">COALESCE PARTITION number
+</pre><p><code><a href="/kb/en/alter-table/">ALTER TABLE</a> ... COALESCE PARTITION</code> is used to reduce the number of HASH or KEY partitions by the specified number. For example, given the following table with 5 partitions:</p>
+<pre class="fixed">CREATE OR REPLACE TABLE t1 (v1 INT)
+  PARTITION BY KEY (v1)
+  PARTITIONS 5;
+ </pre><p>The following statement will reduce the number of partitions by 2, leaving the table with 3 partitions:</p>
+<pre class="fixed">ALTER TABLE t1 COALESCE PARTITION 2;
 </pre><h3 class="anchored_heading" id="converting-partitions-tofrom-tables">Converting Partitions to/from Tables</h3>
 <div class="mariadb_from_10_7 mariadb from_10_7 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-107/">10.7</a></h5><pre class="fixed">CONVERT PARTITION partition_name TO TABLE tbl_name
 CONVERT TABLE normal_table TO partition_definition
