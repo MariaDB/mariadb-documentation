@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/spider-use-cases/+r/133404/">133404</a></dd>
+            <dd><a href="/kb/en/spider-use-cases/+r/133529/">133529</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-4552">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-12-08 05:58">2023-12-08 05:58</span></dd>
+<span class="datetime" title="2023-12-16 13:21">2023-12-16 13:21</span></dd>
         </dl>
     </div>
     
@@ -322,11 +322,11 @@ Follow the instructions [[spider-storage-engine-overview/#installing|here]] to e
 INSTALL SONAME &#39;ha_spider&#39;;
 &lt;&lt;/sql&gt;&gt;
 
-== Enable use of non root connections
+== Setting the SUPER privilege for the Spider user on data nodes or alternatives to avoid privilege issues
 
-When using the [[general-query-log|General Query Log]], non-root users may encounter issues when querying Spider tables.  Explicitly setting the  ##[[spider-server-system-variables#spider_internal_sql_log_off|spider_internal_sql_log_off]]## system variable causes the Spider node to execute ##SET sql_log_off## statements on the data nodes to enable or disable the General Query Log.  When this is done, queries issued by users without the ##SUPER## privilege raise an error.
+When explicitly setting the [[spider-system-variables/#spider_internal_sql_log_off|spider_internal_sql_log_off]] system variable, please note that Spider will execute matching [[server-system-variables/#sql_log_off|SET SQL_LOG_OFF]] statements on each of the data nodes. It will attempt to do this on the data nodes using the [[grant#super|SUPER]] privilege, which thus requires one to grant this privilege to the Spider user on the data nodes. 
 
-To avoid this, don&#39;t explicitly set the ##[[spider-server-system-variables#spider_internal_sql_log_off|spider_internal_sql_log_off]]## system variable.
+If the Spider user on the data note is not configured with the SUPER privilege, you may encounter issues when working with Spider tables like ERROR 1227 (42000): Access denied for the missing SUPER privilege. To avoid this, don&#39;t explicitly set spider_internal_sql_log_off, or set it to -1, or grant the SUPER privilege to the Spider user on the data node.
 
 == Create accounts for spider to connect with on backend servers
 Spider needs a remote connection to the backend server to actually perform the remote query. So this should be setup on each backend server. In this case 172.21.21.2 is the ip address of the spider node limiting access to just that server.
@@ -370,13 +370,13 @@ create server backend2 foreign data wrapper mysql options
 
 === Unable to Connect Errors
 
-Bear in mind, if you ever need to remove, recreate or otherwise modify the server definition for any reason, you need to also execute a ##FLUSH TABLES## statement.  Otherwise, Spider continues to use the old server definition, which can result in queries raising the error 
+Bear in mind, if you ever need to remove, recreate or otherwise modify the server definition for any reason, you need to also execute a [[flush|FLUSH TABLES]] statement.  Otherwise, Spider continues to use the old server definition, which can result in queries raising the error 
 
 &lt;&lt;code&gt;&gt;
 Error 1429: Unable to connect to foreign data source
 &lt;&lt;/code&gt;&gt;
 
-If you encounter this error when querying Spider tables, issue a ##FLUSH TABLES## statement to update the server definitions.
+If you encounter this error when querying Spider tables, issue a [[flush|FLUSH TABLES]] statement to update the server definitions.
 
 &lt;&lt;sql&gt;&gt;
 FLUSH TABLES;
