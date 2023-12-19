@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/partitioning-overview/+r/133571/">133571</a></dd>
+            <dd><a href="/kb/en/partitioning-overview/+r/133582/">133582</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-982">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-12-18 17:25">2023-12-18 17:25</span></dd>
+<span class="datetime" title="2023-12-18 20:49">2023-12-18 20:49</span></dd>
         </dl>
     </div>
     
@@ -877,6 +877,46 @@ ALTER TABLE t1 CHECK PARTITION p1,p3;
 +---------+-------+----------+----------+
 &lt;&lt;/sql&gt;&gt;
 The ##ALL## keyword can be used in place of the list of partition names, and the check operation will be performed on all partitions.
+
+===Repairing Partitions
+&lt;&lt;code&gt;&gt;
+REPAIR PARTITION {ALL | partition [,partition2 ...]} [QUICK] [EXTENDED]
+&lt;&lt;/code&gt;&gt;
+
+Similar to [[repair-table|REPAIR TABLE]], specific partitions can be repaired, for example:
+&lt;&lt;sql&gt;&gt;
+ALTER TABLE t1 REPAIR PARTITION p0,p3;
++---------+--------+----------+----------+
+| Table   | Op     | Msg_type | Msg_text |
++---------+--------+----------+----------+
+| test.t1 | repair | status   | OK       |
++---------+--------+----------+----------+
+&lt;&lt;/sql&gt;&gt;
+
+As with [[repair-table|REPAIR TABLE]], the ##QUICK## and ##EXTENDED## options are available. However, the ##USE_FRM## option cannot be used with this statement on a partitioned table.
+
+##REPAIR PARTITION## will fail if there are duplicate key errors. ##ALTER IGNORE TABLE ... REPAIR PARTITION## can be used in this case.
+ 
+The ##ALL## keyword can be used in place of the list of partition names, and the repair operation will be performed on all partitions.
+
+===Optimizing Partitions
+&lt;&lt;code&gt;&gt;
+OPTIMIZE PARTITION {ALL | partition [,partition2 ...]}
+&lt;&lt;/code&gt;&gt;
+
+Similar to [[optimize-table|OPTIMIZE TABLE]], specific partitions can be checked for errors, for example:
+&lt;&lt;sql&gt;&gt;
+ALTER TABLE t1 OPTIMIZE PARTITION p0,p3;
++---------+----------+----------+----------+
+| Table   | Op       | Msg_type | Msg_text |
++---------+----------+----------+----------+
+| test.t1 | optimize | status   | OK       |
++---------+----------+----------+----------+
+&lt;&lt;/sql&gt;&gt;
+
+##OPTIMIZE PARTITION## does not support per-partition optimization on InnoDB tables, and will issue a warning and cause the entire table to rebuilt and analyzed. ##ALTER TABLE ... REBUILD PARTITION## and ##ALTER TABLE ... ANALYZE PARTITION## can be used instead.
+ 
+The ##ALL## keyword can be used in place of the list of partition names, and the optimize operation will be performed on all partitions.
 
 == See Also
 * [[alter-table|ALTER TABLE]]

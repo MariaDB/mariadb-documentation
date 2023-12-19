@@ -292,7 +292,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/repair-table/+r/119335/">119335</a></dd>
+            <dd><a href="/kb/en/repair-table/+r/133585/">133585</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-7">
@@ -301,7 +301,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-09-21 18:34">2022-09-21 18:34</span></dd>
+<span class="datetime" title="2023-12-18 21:09">2023-12-18 21:09</span></dd>
         </dl>
     </div>
     
@@ -318,6 +318,7 @@ REPAIR [NO_WRITE_TO_BINLOG | LOCAL] TABLE
     tbl_name [, tbl_name] ...
     [QUICK] [EXTENDED] [USE_FRM]
 &lt;&lt;/code&gt;&gt;
+&lt;&lt;toc&gt;&gt;
 
 == Description
 
@@ -341,15 +342,21 @@ By default, ##REPAIR TABLE## statements are written to the [[binary-log|binary l
 
 From MariaDB 10.3.19, ##REPAIR TABLE## statements are not logged to the binary log if [[server-system-variables/#read_only|read_only]] is set. See also [[read-only-replicas|Read-Only Replicas]].
 
-When an index is recreated, the storage engine may use a configurable buffer in the process. Incrementing the buffer speeds up the index creation. [[aria|Aria]] and [[myisam|MyISAM]] allocate a buffer whose size is defined by ##[[aria-server-system-variables#aria_sort_buffer_size|aria_sort_buffer_size]]## or ##[[myisam-server-system-variables#myisam_sort_buffer_size|myisam_sort_buffer_size]]##, also used for ##[[alter-table|ALTER TABLE]]##.
+When an index is recreated, the storage engine may use a configurable buffer in the process. Incrementing the buffer speeds up the index creation. [[aria|Aria]] and [[myisam|MyISAM]] allocate a buffer whose size is defined by [[aria-server-system-variables#aria_sort_buffer_size|aria_sort_buffer_size]] or [[myisam-server-system-variables#myisam_sort_buffer_size|myisam_sort_buffer_size]], also used for [[alter-table|ALTER TABLE]].
 
-&lt;&lt;code&gt;&gt;REPAIR TABLE&lt;&lt;/code&gt;&gt; is also supported for partitioned tables.
-However, the &lt;&lt;code&gt;&gt;USE_FRM&lt;&lt;/code&gt;&gt; option cannot be used with this statement
-on a partitioned table.
+===QUICK
+When specified, ##REPAIR TABLE## will not modify the data file, only attempting to repair the index file. The same behavior can be achieved with [[myisamchk/#repairing-tables|myisamchk --recover --quick]].
 
- &lt;&lt;fixed&gt;&gt;[[alter-table|ALTER TABLE ... REPAIR PARTITION]]&lt;&lt;/fixed&gt;&gt; can be used
-to repair one or more partitions.
+===EXTENDED
+Creates the index row by row rather than sorting and creating a single index. Similar to [[myisamchk/#repairing-tables|myisamchk --safe-recover]]. 
 
+===USE_FRM
+For use only when the index file is missing or its header corrupted. MariaDB then attempts to recreate it using the .frm file. There is no equivalent [[myisamchk]] option. 
+
+===Partitioned Tables
+##REPAIR TABLE## is also supported for [[partitioning-tables/|partitioned tables]] with the [[alter-table|ALTER TABLE ... REPAIR PARTITION]] statement. However, the &lt;&lt;code&gt;&gt;USE_FRM&lt;&lt;/code&gt;&gt; option cannot be used with this statement on a partitioned table. See [[partitioning-overview/#repairing-partitions|Repairing Partitions]] for details.
+
+===Progress Reporting
 The [[aria|Aria]] storage engine supports [[progress-reporting|progress reporting]] for this statement.</textarea>
     
 
