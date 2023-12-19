@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/partitioning-overview/+r/133513/">133513</a></dd>
+            <dd><a href="/kb/en/partitioning-overview/+r/133571/">133571</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-982">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-12-13 18:19">2023-12-13 18:19</span></dd>
+<span class="datetime" title="2023-12-18 17:25">2023-12-18 17:25</span></dd>
         </dl>
     </div>
     
@@ -409,6 +409,16 @@ ALTER TABLE t1 ADD PARTITION (
   p5 VALUES LESS THAN (2018)
 );
 &lt;&lt;/sql&gt;&gt;
+
+With [[range-partitioning-type|RANGE]] partitions, it is only possible to add a partition to the high end of the range, not the low end. For example, the following results in an error:
+&lt;&lt;sql&gt;&gt;
+ALTER TABLE t1 ADD PARTITION (
+  PARTITION p0a VALUES LESS THAN (2012)
+);
+ERROR 1493 (HY000): VALUES LESS THAN value must be strictly increasing for each partition
+&lt;&lt;/sql&gt;&gt;
+
+You can work around this by using REORGANIZE PARTITION to split the partition instead. See [[#splitting-partitions|Splitting Partitions]].
 
 === Coalescing Partitions
 &lt;&lt;code&gt;&gt;
@@ -680,6 +690,124 @@ REMOVE PARTITIONING
 ALTER TABLE t1 REMOVE PARTITIONING;
 &lt;&lt;/sql&gt;&gt;
 
+=== Reorganizing Partitions
+&lt;&lt;code&gt;&gt;
+REORGANIZE PARTITION [partition_names INTO (partition_definitions)]
+&lt;&lt;/code&gt;&gt;
+
+Reorganizing partitions allows one to adjust existing partitions, without losing data. Specifically, the statement can be used for:
+* Splitting an existing partition into multiple partitions
+* Merging a number of existing partitions into a new, single, partition
+* Changing the ranges for a subset of existing partitions defined using VALUES LESS THAN
+* Changing the value lists for a subset of partitions defined using VALUES I.
+* Renaming partitions
+
+==== Splitting Partitions
+
+An existing partition can be split into multiple partitions. This can also be used to add a new partition at the low end of a [[range-partitioning-type|RANGE]] partition (which is not possible by [[#adding-partitions|Adding Partitions]]).
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+  timestamp DATETIME NOT NULL
+)
+  ENGINE = InnoDB
+  PARTITION BY RANGE (YEAR(timestamp))
+  (
+  PARTITION p0 VALUES LESS THAN (2013),
+  PARTITION p1 VALUES LESS THAN (2014),
+  PARTITION p2 VALUES LESS THAN (2015),
+  PARTITION p3 VALUES LESS THAN (2016)
+);
+
+ALTER TABLE t1 REORGANIZE PARTITION p0 INTO (
+    PARTITION p0a VALUES LESS THAN (2012),
+    PARTITION p0b VALUES LESS THAN (2013)
+);
+&lt;&lt;/sql&gt;&gt;
+
+Similarly, if MAXVALUE binds the high end:
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+  timestamp DATETIME NOT NULL
+)
+  ENGINE = InnoDB
+  PARTITION BY RANGE (YEAR(timestamp))
+  (
+  PARTITION p0 VALUES LESS THAN (2013),
+  PARTITION p1 VALUES LESS THAN (2014),
+  PARTITION p2 VALUES LESS THAN (2015),
+  PARTITION p3 VALUES LESS THAN (2016),
+  PARTITION p4 VALUES LESS THAN MAXVALUE
+);
+
+ALTER TABLE t1 REORGANIZE PARTITION p4 INTO (
+    PARTITION p4 VALUES LESS THAN (2017),
+    PARTITION p5 VALUES LESS THAN MAXVALUE
+);
+&lt;&lt;/sql&gt;&gt;
+
+==== Merging Partitions
+
+A number of existing partitions can be merged into a new partition, for example:
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+  timestamp DATETIME NOT NULL
+)
+  ENGINE = InnoDB
+  PARTITION BY RANGE (YEAR(timestamp))
+  (
+  PARTITION p0 VALUES LESS THAN (2013),
+  PARTITION p1 VALUES LESS THAN (2014),
+  PARTITION p2 VALUES LESS THAN (2015),
+  PARTITION p3 VALUES LESS THAN (2016)
+);
+
+ALTER TABLE t1 REORGANIZE PARTITION p2,p3 INTO (
+    PARTITION p2 VALUES LESS THAN (2016)
+);
+&lt;&lt;/sql&gt;&gt;
+
+==== Changing Ranges
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+  timestamp DATETIME NOT NULL
+)
+  ENGINE = InnoDB
+  PARTITION BY RANGE (YEAR(timestamp))
+  (
+  PARTITION p0 VALUES LESS THAN (2013),
+  PARTITION p1 VALUES LESS THAN (2014),
+  PARTITION p2 VALUES LESS THAN (2015),
+  PARTITION p3 VALUES LESS THAN (2016)
+);
+
+ALTER TABLE t1 REORGANIZE PARTITION p3 INTO (
+  PARTITION p3 VALUES LESS THAN (2017)
+);
+&lt;&lt;/sql&gt;&gt;
+
+==== Renaming Partitions
+
+The REORGANIZE PARTITION statement can also be used for renaming partitions. Note that this creates a copy of the partition:
+
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+  timestamp DATETIME NOT NULL
+)
+  ENGINE = InnoDB
+  PARTITION BY RANGE (YEAR(timestamp))
+  (
+  PARTITION p0 VALUES LESS THAN (2013),
+  PARTITION p1 VALUES LESS THAN (2014),
+  PARTITION p2 VALUES LESS THAN (2015),
+  PARTITION p3 VALUES LESS THAN (2016)
+);
+
+ALTER TABLE t1 REORGANIZE PARTITION p3 INTO (
+  PARTITION p3_new VALUES LESS THAN (2016)
+);
+
+&lt;&lt;/sql&gt;&gt;
+
 === Truncating Partitions
 &lt;&lt;code&gt;&gt;
 TRUNCATE PARTITION partition_names
@@ -721,6 +849,34 @@ SELECT * FROM t1;
 | 2015-11-04 00:00:00 |
 +---------------------+
 &lt;&lt;/sql&gt;&gt;
+
+===Analyzing Partitions
+
+Similar to [[analyze-table|ANALYZE TABLE]], key distributions for specific partitions can also be analyzed and stored, for example:
+&lt;&lt;sql&gt;&gt;
+ALTER TABLE t1 ANALYZE PARTITION p0,p1,p3;
++---------+---------+----------+----------+
+| Table   | Op      | Msg_type | Msg_text |
++---------+---------+----------+----------+
+| test.t1 | analyze | status   | OK       |
++---------+---------+----------+----------+
+&lt;&lt;/sql&gt;&gt;
+
+===Checking Partitions
+&lt;&lt;code&gt;&gt;
+CHECK PARTITION {ALL | partition [,partition2 ...]}
+&lt;&lt;/code&gt;&gt;
+
+Similar to [[check-table|CHECK TABLE]], specific partitions can be checked for errors, for example:
+&lt;&lt;sql&gt;&gt;
+ALTER TABLE t1 CHECK PARTITION p1,p3;
++---------+-------+----------+----------+
+| Table   | Op    | Msg_type | Msg_text |
++---------+-------+----------+----------+
+| test.t1 | check | status   | OK       |
++---------+-------+----------+----------+
+&lt;&lt;/sql&gt;&gt;
+The ##ALL## keyword can be used in place of the list of partition names, and the check operation will be performed on all partitions.
 
 == See Also
 * [[alter-table|ALTER TABLE]]

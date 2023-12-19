@@ -248,7 +248,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-12-13 18:19">2 days, 22 hours ago</span></dd>
+<span class="datetime" title="2023-12-18 17:25">1 minute ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -429,7 +429,22 @@
 
         <li class=""><a href="#removing-partitioning" title="Removing Partitioning">Removing Partitioning</a></li>
 
-        <li class=""><a href="#truncating-partitions" title="Truncating Partitions">Truncating Partitions</a>    </ol>
+        <li class=""><a href="#reorganizing-partitions" title="Reorganizing Partitions">Reorganizing Partitions</a>        <ol class="toc">
+
+            <li class=""><a href="#splitting-partitions" title="Splitting Partitions">Splitting Partitions</a></li>
+
+            <li class=""><a href="#merging-partitions" title="Merging Partitions">Merging Partitions</a></li>
+
+            <li class=""><a href="#changing-ranges" title="Changing Ranges">Changing Ranges</a></li>
+
+            <li class=""><a href="#renaming-partitions" title="Renaming Partitions">Renaming Partitions</a>        </ol>
+</li>
+
+        <li class=""><a href="#truncating-partitions" title="Truncating Partitions">Truncating Partitions</a></li>
+
+        <li class=""><a href="#analyzing-partitions" title="Analyzing Partitions">Analyzing Partitions</a></li>
+
+        <li class=""><a href="#checking-partitions" title="Checking Partitions">Checking Partitions</a>    </ol>
 </li>
 
     <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
@@ -514,7 +529,13 @@ In MariaDB, a table can be split in smaller subsets. Both data and indexes are p
   <span class="n">PARTITION</span> <span class="n">p4</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2017</span><span class="p">),</span> 
   <span class="n">p5</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2018</span><span class="p">)</span>
 <span class="p">);</span>
-</pre><h3 class="anchored_heading" id="coalescing-partitions">Coalescing Partitions</h3>
+</pre><p>With <a href="/kb/en/range-partitioning-type/">RANGE</a> partitions, it is only possible to add a partition to the high end of the range, not the low end. For example, the following results in an error:</p>
+<pre class="fixed"><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="k">ADD</span> <span class="n">PARTITION</span> <span class="p">(</span>
+  <span class="n">PARTITION</span> <span class="n">p0a</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2012</span><span class="p">)</span>
+<span class="p">);</span>
+<span class="n">ERROR</span> <span class="mi">1493</span> <span class="p">(</span><span class="n">HY000</span><span class="p">):</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="n">value</span> <span class="n">must</span> <span class="n">be</span> <span class="n">strictly</span> <span class="n">increasing</span> <span class="k">for</span> <span class="k">each</span> <span class="n">partition</span>
+</pre><p>You can work around this by using REORGANIZE PARTITION to split the partition instead. See <a href="#splitting-partitions">Splitting Partitions</a>.</p>
+<h3 class="anchored_heading" id="coalescing-partitions">Coalescing Partitions</h3>
 <pre class="fixed">COALESCE PARTITION number
 </pre><p><code><a href="/kb/en/alter-table/">ALTER TABLE</a> ... COALESCE PARTITION</code> is used to reduce the number of HASH or KEY partitions by the specified number. For example, given the following table with 5 partitions:</p>
 <pre class="fixed">CREATE OR REPLACE TABLE t1 (v1 INT)
@@ -742,6 +763,102 @@ Create Table: CREATE TABLE `t1` (
 <pre class="fixed">REMOVE PARTITIONING
 </pre><p><code><a href="/kb/en/alter-table/">ALTER TABLE</a> ... REMOVE PARTITIONING</code> will remove all partitioning from the table, while leaving the data unaffected. To rather drop a particular partition (and discard all of its data), see <a href="#dropping-partitions">Dropping Partitions</a>.</p>
 <pre class="fixed"><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="n">REMOVE</span> <span class="n">PARTITIONING</span><span class="p">;</span>
+</pre><h3 class="anchored_heading" id="reorganizing-partitions">Reorganizing Partitions</h3>
+<pre class="fixed">REORGANIZE PARTITION [partition_names INTO (partition_definitions)]
+</pre><p>Reorganizing partitions allows one to adjust existing partitions, without losing data. Specifically, the statement can be used for:</p>
+<ul start="1"><li>Splitting an existing partition into multiple partitions
+</li><li>Merging a number of existing partitions into a new, single, partition
+</li><li>Changing the ranges for a subset of existing partitions defined using VALUES LESS THAN
+</li><li>Changing the value lists for a subset of partitions defined using VALUES I.
+</li><li>Renaming partitions
+</li></ul>
+<h4 class="anchored_heading" id="splitting-partitions">Splitting Partitions</h4>
+<p>An existing partition can be split into multiple partitions. This can also be used to add a new partition at the low end of a <a href="/kb/en/range-partitioning-type/">RANGE</a> partition (which is not possible by <a href="#adding-partitions">Adding Partitions</a>).</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
+  <span class="k">timestamp</span> <span class="n">DATETIME</span> <span class="k">NOT</span> <span class="k">NULL</span>
+<span class="p">)</span>
+  <span class="n">ENGINE</span> <span class="o">=</span> <span class="n">InnoDB</span>
+  <span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">RANGE</span> <span class="p">(</span><span class="k">YEAR</span><span class="p">(</span><span class="k">timestamp</span><span class="p">))</span>
+  <span class="p">(</span>
+  <span class="n">PARTITION</span> <span class="n">p0</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2013</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p1</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2014</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p2</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2015</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p3</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2016</span><span class="p">)</span>
+<span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="n">REORGANIZE</span> <span class="n">PARTITION</span> <span class="n">p0</span> <span class="k">INTO</span> <span class="p">(</span>
+    <span class="n">PARTITION</span> <span class="n">p0a</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2012</span><span class="p">),</span>
+    <span class="n">PARTITION</span> <span class="n">p0b</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2013</span><span class="p">)</span>
+<span class="p">);</span>
+</pre><p>Similarly, if MAXVALUE binds the high end:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
+  <span class="k">timestamp</span> <span class="n">DATETIME</span> <span class="k">NOT</span> <span class="k">NULL</span>
+<span class="p">)</span>
+  <span class="n">ENGINE</span> <span class="o">=</span> <span class="n">InnoDB</span>
+  <span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">RANGE</span> <span class="p">(</span><span class="k">YEAR</span><span class="p">(</span><span class="k">timestamp</span><span class="p">))</span>
+  <span class="p">(</span>
+  <span class="n">PARTITION</span> <span class="n">p0</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2013</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p1</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2014</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p2</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2015</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p3</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2016</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p4</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="k">MAXVALUE</span>
+<span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="n">REORGANIZE</span> <span class="n">PARTITION</span> <span class="n">p4</span> <span class="k">INTO</span> <span class="p">(</span>
+    <span class="n">PARTITION</span> <span class="n">p4</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2017</span><span class="p">),</span>
+    <span class="n">PARTITION</span> <span class="n">p5</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="k">MAXVALUE</span>
+<span class="p">);</span>
+</pre><h4 class="anchored_heading" id="merging-partitions">Merging Partitions</h4>
+<p>A number of existing partitions can be merged into a new partition, for example:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
+  <span class="k">timestamp</span> <span class="n">DATETIME</span> <span class="k">NOT</span> <span class="k">NULL</span>
+<span class="p">)</span>
+  <span class="n">ENGINE</span> <span class="o">=</span> <span class="n">InnoDB</span>
+  <span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">RANGE</span> <span class="p">(</span><span class="k">YEAR</span><span class="p">(</span><span class="k">timestamp</span><span class="p">))</span>
+  <span class="p">(</span>
+  <span class="n">PARTITION</span> <span class="n">p0</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2013</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p1</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2014</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p2</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2015</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p3</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2016</span><span class="p">)</span>
+<span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="n">REORGANIZE</span> <span class="n">PARTITION</span> <span class="n">p2</span><span class="p">,</span><span class="n">p3</span> <span class="k">INTO</span> <span class="p">(</span>
+    <span class="n">PARTITION</span> <span class="n">p2</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2016</span><span class="p">)</span>
+<span class="p">);</span>
+</pre><h4 class="anchored_heading" id="changing-ranges">Changing Ranges</h4>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
+  <span class="k">timestamp</span> <span class="n">DATETIME</span> <span class="k">NOT</span> <span class="k">NULL</span>
+<span class="p">)</span>
+  <span class="n">ENGINE</span> <span class="o">=</span> <span class="n">InnoDB</span>
+  <span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">RANGE</span> <span class="p">(</span><span class="k">YEAR</span><span class="p">(</span><span class="k">timestamp</span><span class="p">))</span>
+  <span class="p">(</span>
+  <span class="n">PARTITION</span> <span class="n">p0</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2013</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p1</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2014</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p2</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2015</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p3</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2016</span><span class="p">)</span>
+<span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="n">REORGANIZE</span> <span class="n">PARTITION</span> <span class="n">p3</span> <span class="k">INTO</span> <span class="p">(</span>
+  <span class="n">PARTITION</span> <span class="n">p3</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2017</span><span class="p">)</span>
+<span class="p">);</span>
+</pre><h4 class="anchored_heading" id="renaming-partitions">Renaming Partitions</h4>
+<p>The REORGANIZE PARTITION statement can also be used for renaming partitions. Note that this creates a copy of the partition:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
+  <span class="k">timestamp</span> <span class="n">DATETIME</span> <span class="k">NOT</span> <span class="k">NULL</span>
+<span class="p">)</span>
+  <span class="n">ENGINE</span> <span class="o">=</span> <span class="n">InnoDB</span>
+  <span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">RANGE</span> <span class="p">(</span><span class="k">YEAR</span><span class="p">(</span><span class="k">timestamp</span><span class="p">))</span>
+  <span class="p">(</span>
+  <span class="n">PARTITION</span> <span class="n">p0</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2013</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p1</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2014</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p2</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2015</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p3</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2016</span><span class="p">)</span>
+<span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="n">REORGANIZE</span> <span class="n">PARTITION</span> <span class="n">p3</span> <span class="k">INTO</span> <span class="p">(</span>
+  <span class="n">PARTITION</span> <span class="n">p3_new</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2016</span><span class="p">)</span>
+<span class="p">);</span>
+
 </pre><h3 class="anchored_heading" id="truncating-partitions">Truncating Partitions</h3>
 <pre class="fixed">TRUNCATE PARTITION partition_names
 </pre><p><code><a href="/kb/en/alter-table/">ALTER TABLE</a> ... TRUNCATE PARTITION</code> will remove all data from the specified partition/s, leaving the table and partition structure unchanged. Partitions don't need to be contiguous.</p>
@@ -778,7 +895,25 @@ Create Table: CREATE TABLE `t1` (
 <span class="o">|</span> <span class="mi">2013</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">02</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
 <span class="o">|</span> <span class="mi">2015</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">04</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
 <span class="o">+</span><span class="c1">---------------------+</span>
-</pre><h2 class="anchored_heading" id="see-also">See Also</h2>
+</pre><h3 class="anchored_heading" id="analyzing-partitions">Analyzing Partitions</h3>
+<p>Similar to <a href="/kb/en/analyze-table/">ANALYZE TABLE</a>, key distributions for specific partitions can also be analyzed and stored, for example:</p>
+<pre class="fixed"><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="k">ANALYZE</span> <span class="n">PARTITION</span> <span class="n">p0</span><span class="p">,</span><span class="n">p1</span><span class="p">,</span><span class="n">p3</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---------+---------+----------+----------+</span>
+<span class="o">|</span> <span class="k">Table</span>   <span class="o">|</span> <span class="n">Op</span>      <span class="o">|</span> <span class="n">Msg_type</span> <span class="o">|</span> <span class="n">Msg_text</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------+---------+----------+----------+</span>
+<span class="o">|</span> <span class="n">test</span><span class="p">.</span><span class="n">t1</span> <span class="o">|</span> <span class="k">analyze</span> <span class="o">|</span> <span class="n">status</span>   <span class="o">|</span> <span class="n">OK</span>       <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------+---------+----------+----------+</span>
+</pre><h3 class="anchored_heading" id="checking-partitions">Checking Partitions</h3>
+<pre class="fixed">CHECK PARTITION {ALL | partition [,partition2 ...]}
+</pre><p>Similar to <a href="/kb/en/check-table/">CHECK TABLE</a>, specific partitions can be checked for errors, for example:</p>
+<pre class="fixed"><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="k">CHECK</span> <span class="n">PARTITION</span> <span class="n">p1</span><span class="p">,</span><span class="n">p3</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---------+-------+----------+----------+</span>
+<span class="o">|</span> <span class="k">Table</span>   <span class="o">|</span> <span class="n">Op</span>    <span class="o">|</span> <span class="n">Msg_type</span> <span class="o">|</span> <span class="n">Msg_text</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------+-------+----------+----------+</span>
+<span class="o">|</span> <span class="n">test</span><span class="p">.</span><span class="n">t1</span> <span class="o">|</span> <span class="k">check</span> <span class="o">|</span> <span class="n">status</span>   <span class="o">|</span> <span class="n">OK</span>       <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------+-------+----------+----------+</span>
+</pre><p>The <code>ALL</code> keyword can be used in place of the list of partition names, and the check operation will be performed on all partitions.</p>
+<h2 class="anchored_heading" id="see-also">See Also</h2>
 <ul start="1"><li><a href="/kb/en/alter-table/">ALTER TABLE</a>
 </li><li><a href="/kb/en/information-schema-partitions-table/">INFORMATION_SCHEMA.PARTITIONS</a> contains information about existing partitions.
 </li><li><a href="/kb/en/partition-maintenance/">Partition Maintenance</a> for suggestions on using partitions</li></ul>
