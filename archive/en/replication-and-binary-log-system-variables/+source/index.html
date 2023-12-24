@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/replication-and-binary-log-system-variables/+r/132482/">132482</a></dd>
+            <dd><a href="/kb/en/replication-and-binary-log-system-variables/+r/133703/">133703</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-11-14 15:25">2023-11-14 15:25</span></dd>
+<span class="datetime" title="2023-12-24 10:22">2023-12-24 10:22</span></dd>
         </dl>
     </div>
     
@@ -508,12 +508,15 @@ With [[group-commit-for-the-binary-log|group commit for the binary log]], the se
 ** ##FULL##: All columns in the before and after image are logged. This is the default, and the only behavior in earlier versions.
 ** ##NOBLOB##: mariadbd avoids logging blob and text columns whenever possible (eg, blob column was not changed or is not part of primary key).
 ** ##MINIMAL##: A PK equivalent (PK columns or full row if there is no PK in the table) is logged in the before image, and only changed columns are logged in the after image.
+** ##FULL_NODUP##: All columns are logged in the before image, but only changed columns or all columns of inserted record are logged in the after image. This is essentially the same as ##FULL##, but takes less space. From MariaDB 11.4.
 * **Commandline:** &lt;&lt;code&gt;&gt;--binlog-row-image=value&lt;&lt;/code&gt;&gt;
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##enum##
 * **Default Value:** ##FULL##
-* **Valid Values:** ##FULL##, ##NOBLOB## or ##MINIMAL##
+* **Valid Values:** 
+** &lt;= MariaDB 11.3: ##FULL##, ##NOBLOB## or ##MINIMAL##
+** &gt;= MariaDB 11.4: ##FULL##, ##NOBLOB##, ##MINIMAL## or ##FULL_NODUP##
 ----
 
 ==== ##binlog_row_metadata##
@@ -706,7 +709,7 @@ With [[group-commit-for-the-binary-log|group commit for the binary log]], the se
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
 * **Default Value:** ##1073741824## (1GB)
-* **Range:** ##4096 to 1073741824## (4KB to 1GB)
+* **Range:** ##4096## to ##1073741824## (4KB to 1GB)
 ---- 
 
 ==== ##max_binlog_stmt_cache_size##
@@ -718,6 +721,17 @@ With [[group-commit-for-the-binary-log|group commit for the binary log]], the se
 * **Default Value:** ##18446744073709547520## (64 bit), ##4294963200## (32 bit) 
 * **Range:** ##4096## to ##18446744073709547520##
 ----
+
+====  ##max_binlog_total_size##
+* **Description:** Maximum space to use for all [[binary-log|binary logs]]. Extra logs are deleted on server start, log rotation, FLUSH LOGS or when writing to binlog. Default is 0, which means no size restrictions. See also [[#slave_connections_needed_for_purge|slave_connections_needed_for_purge]].
+* **Commandline:** &lt;&lt;code&gt;&gt;--max-binlog-size=#&lt;&lt;/code&gt;&gt;
+* **Scope:** Global
+* **Dynamic:** Yes
+* **Data Type:** ##numeric##
+* **Default Value:** ##0##
+* **Range:** ##0## to ##18446744073709551615##
+* **Introduced:** MariaDB 11.4.0
+---- 
 
 ====  ##max_relay_log_size##
 * **Description:** Replica will rotate its [[relay-log|relay log]] if it exceeds this size after a write. If set to 0, the [[#max_binlog_size|max_binlog_size]] setting is used instead. Previously global only, since the implementation of [[multi-source-replication|multi-source replication]], it can be set per session as well.
@@ -994,6 +1008,17 @@ With [[group-commit-for-the-binary-log|group commit for the binary log]], the se
 * **Data Type:** ##boolean##
 * **Default Value:** ##0##
 ----
+
+====  ##slave_connections_needed_for_purge##
+* **Description:** Minimum number of connected replicas required for automatic [[binary-log|binary log]] purge with [[#max_binlog_total_size|max_binlog_total_size]], [[#binlog_expire_logs_seconds|binlog_expire_logs_seconds]] or [[#expire_logs_days|expire_logs_days]].
+* **Commandline:** &lt;&lt;code&gt;&gt;--max-binlog-size=#&lt;&lt;/code&gt;&gt;
+* **Scope:** Global
+* **Dynamic:** Yes
+* **Data Type:** ##numeric##
+* **Default Value:** ##1##
+* **Range:** ##0## to ##18446744073709551615##
+* **Introduced:** MariaDB 11.4.0
+---- 
 
 ==== ##slave_ddl_exec_mode##
 * **Description:**  Modes for how [[replication]] of DDL events should be executed. Legal values are &lt;&lt;fixed&gt;&gt;STRICT&lt;&lt;/fixed&gt;&gt; and &lt;&lt;fixed&gt;&gt;IDEMPOTENT&lt;&lt;/fixed&gt;&gt; (default). In &lt;&lt;fixed&gt;&gt;IDEMPOTENT&lt;&lt;/fixed&gt;&gt; mode, the replica will not stop for failed DDL operations that would not cause a difference between the primary and the replica. In particular [[create-table|CREATE TABLE]] is treated as [[create-table#create-or-replace|CREATE OR REPLACE TABLE]] and [[drop-table|DROP TABLE]] is treated as &lt;&lt;fixed&gt;&gt;DROP TABLE IF EXISTS&lt;&lt;/fixed&gt;&gt;.

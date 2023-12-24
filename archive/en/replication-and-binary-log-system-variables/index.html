@@ -248,7 +248,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-11-14 15:25">1 month ago</span></dd>
+<span class="datetime" title="2023-12-24 10:22">6 hours, 38 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -506,6 +506,8 @@
 
             <li class=""><a href="#max_binlog_stmt_cache_size" title="max_binlog_stmt_cache_size">max_binlog_stmt_cache_size</a></li>
 
+            <li class=""><a href="#max_binlog_total_size" title="max_binlog_total_size">max_binlog_total_size</a></li>
+
             <li class=""><a href="#max_relay_log_size" title="max_relay_log_size">max_relay_log_size</a></li>
 
             <li class=""><a href="#read_binlog_speed_limit" title="read_binlog_speed_limit">read_binlog_speed_limit</a></li>
@@ -557,6 +559,8 @@
             <li class=""><a href="#skip_replication" title="skip_replication">skip_replication</a></li>
 
             <li class=""><a href="#slave_compressed_protocol" title="slave_compressed_protocol">slave_compressed_protocol</a></li>
+
+            <li class=""><a href="#slave_connections_needed_for_purge" title="slave_connections_needed_for_purge">slave_connections_needed_for_purge</a></li>
 
             <li class=""><a href="#slave_ddl_exec_mode" title="slave_ddl_exec_mode">slave_ddl_exec_mode</a></li>
 
@@ -814,13 +818,17 @@ With <a href="/kb/en/group-commit-for-the-binary-log/">group commit for the bina
 <ul start="1"><li><code>FULL</code>: All columns in the before and after image are logged. This is the default, and the only behavior in earlier versions.
 </li><li><code>NOBLOB</code>: mariadbd avoids logging blob and text columns whenever possible (eg, blob column was not changed or is not part of primary key).
 </li><li><code>MINIMAL</code>: A PK equivalent (PK columns or full row if there is no PK in the table) is logged in the before image, and only changed columns are logged in the after image.
+</li><li><code>FULL_NODUP</code>: All columns are logged in the before image, but only changed columns or all columns of inserted record are logged in the after image. This is essentially the same as <code>FULL</code>, but takes less space. From <a href="/kb/en/what-is-mariadb-114/">MariaDB 11.4</a>.
 </li></ul>
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--binlog-row-image=value</code>
 </li><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Dynamic:</strong> Yes
 </li><li><strong>Data Type:</strong> <code>enum</code>
 </li><li><strong>Default Value:</strong> <code>FULL</code>
-</li><li><strong>Valid Values:</strong> <code>FULL</code>, <code>NOBLOB</code> or <code>MINIMAL</code>
+</li><li><strong>Valid Values:</strong> 
+<ul start="1"><li>&lt;= <a href="/kb/en/what-is-mariadb-113/">MariaDB 11.3</a>: <code>FULL</code>, <code>NOBLOB</code> or <code>MINIMAL</code>
+</li><li>&gt;= <a href="/kb/en/what-is-mariadb-114/">MariaDB 11.4</a>: <code>FULL</code>, <code>NOBLOB</code>, <code>MINIMAL</code> or <code>FULL_NODUP</code>
+</li></ul>
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="binlog_row_metadata"><code>binlog_row_metadata</code></h4>
@@ -1009,7 +1017,7 @@ With <a href="/kb/en/group-commit-for-the-binary-log/">group commit for the bina
 </li><li><strong>Dynamic:</strong> Yes
 </li><li><strong>Data Type:</strong> <code>numeric</code>
 </li><li><strong>Default Value:</strong> <code>1073741824</code> (1GB)
-</li><li><strong>Range:</strong> <code>4096 to 1073741824</code> (4KB to 1GB)
+</li><li><strong>Range:</strong> <code>4096</code> to <code>1073741824</code> (4KB to 1GB)
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="max_binlog_stmt_cache_size"><code>max_binlog_stmt_cache_size</code></h4>
@@ -1020,6 +1028,17 @@ With <a href="/kb/en/group-commit-for-the-binary-log/">group commit for the bina
 </li><li><strong>Data Type:</strong> <code>numeric</code>
 </li><li><strong>Default Value:</strong> <code>18446744073709547520</code> (64 bit), <code>4294963200</code> (32 bit) 
 </li><li><strong>Range:</strong> <code>4096</code> to <code>18446744073709547520</code>
+</li></ul>
+<hr>
+<h4 class="anchored_heading" id="max_binlog_total_size"><code>max_binlog_total_size</code></h4>
+<ul start="1"><li><strong>Description:</strong> Maximum space to use for all <a href="/kb/en/binary-log/">binary logs</a>. Extra logs are deleted on server start, log rotation, FLUSH LOGS or when writing to binlog. Default is 0, which means no size restrictions. See also <a href="#slave_connections_needed_for_purge">slave_connections_needed_for_purge</a>.
+</li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--max-binlog-size=#</code>
+</li><li><strong>Scope:</strong> Global
+</li><li><strong>Dynamic:</strong> Yes
+</li><li><strong>Data Type:</strong> <code>numeric</code>
+</li><li><strong>Default Value:</strong> <code>0</code>
+</li><li><strong>Range:</strong> <code>0</code> to <code>18446744073709551615</code>
+</li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-11-4-0-release-notes/">MariaDB 11.4.0</a>
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="max_relay_log_size"><code>max_relay_log_size</code></h4>
@@ -1306,6 +1325,17 @@ With <a href="/kb/en/group-commit-for-the-binary-log/">group commit for the bina
 </li><li><strong>Dynamic:</strong> Yes
 </li><li><strong>Data Type:</strong> <code>boolean</code>
 </li><li><strong>Default Value:</strong> <code>0</code>
+</li></ul>
+<hr>
+<h4 class="anchored_heading" id="slave_connections_needed_for_purge"><code>slave_connections_needed_for_purge</code></h4>
+<ul start="1"><li><strong>Description:</strong> Minimum number of connected replicas required for automatic <a href="/kb/en/binary-log/">binary log</a> purge with <a href="#max_binlog_total_size">max_binlog_total_size</a>, <a href="#binlog_expire_logs_seconds">binlog_expire_logs_seconds</a> or <a href="#expire_logs_days">expire_logs_days</a>.
+</li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--max-binlog-size=#</code>
+</li><li><strong>Scope:</strong> Global
+</li><li><strong>Dynamic:</strong> Yes
+</li><li><strong>Data Type:</strong> <code>numeric</code>
+</li><li><strong>Default Value:</strong> <code>1</code>
+</li><li><strong>Range:</strong> <code>0</code> to <code>18446744073709551615</code>
+</li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-11-4-0-release-notes/">MariaDB 11.4.0</a>
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="slave_ddl_exec_mode"><code>slave_ddl_exec_mode</code></h4>
