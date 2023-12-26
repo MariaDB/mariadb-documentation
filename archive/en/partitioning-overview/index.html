@@ -248,7 +248,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-12-18 20:49">1 day, 20 hours ago</span></dd>
+<span class="datetime" title="2023-12-25 13:56">3 hours, 27 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -318,9 +318,19 @@
                             >MariaDB starting with 10.7</label>
                 </li>
             
+                <li class="mariadb_from_11_4">
+                    <label><input type="checkbox" data-product-class="mariadb_from_11_4"
+                            >MariaDB starting with 11.4</label>
+                </li>
+            
                 <li class="mariadb_from_10_7">
                     <label><input type="checkbox" data-product-class="mariadb_from_10_7"
                             >MariaDB starting with 10.7</label>
+                </li>
+            
+                <li class="mariadb_from_11_4">
+                    <label><input type="checkbox" data-product-class="mariadb_from_11_4"
+                            >MariaDB starting with 11.4</label>
                 </li>
             
         </ul>
@@ -426,6 +436,11 @@
         <li class=""><a href="#converting-partitions-tofrom-tables" title="Converting Partitions to/from Tables">Converting Partitions to/from Tables</a></li>
 
         <li class=""><a href="#dropping-partitions" title="Dropping Partitions">Dropping Partitions</a></li>
+
+        <li class=""><a href="#exchanging-partitions" title="Exchanging Partitions">Exchanging Partitions</a>        <ol class="toc">
+
+            <li class=""><a href="#with-without-validation" title="WITH / WITHOUT VALIDATION">WITH / WITHOUT VALIDATION</a>        </ol>
+</li>
 
         <li class=""><a href="#removing-partitioning" title="Removing Partitioning">Removing Partitioning</a></li>
 
@@ -763,7 +778,89 @@ Create Table: CREATE TABLE `t1` (
 
 <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t1</span><span class="p">;</span>
 <span class="n">Empty</span> <span class="k">set</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">002</span> <span class="n">sec</span><span class="p">)</span>
-</pre><h3 class="anchored_heading" id="removing-partitioning">Removing Partitioning</h3>
+</pre><h3 class="anchored_heading" id="exchanging-partitions">Exchanging Partitions</h3>
+<p>&lt;= <a href="/kb/en/what-is-mariadb-113/">MariaDB 11.3</a></p>
+<pre class="fixed">EXCHANGE PARTITION partition_name WITH TABLE tbl_name
+</pre><p> &gt;= <a href="/kb/en/what-is-mariadb-114/">MariaDB 11.4</a></p>
+<pre class="fixed">EXCHANGE PARTITION partition_name WITH TABLE tbl_name [{WITH | WITHOUT} VALIDATION]
+</pre><p><code><a href="/kb/en/alter-table/">ALTER TABLE</a> t1 EXCHANGE PARTITION p1 WITH TABLE t2</code>  permits one to exchange a partition or subpartition with another table.</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
+  <span class="k">timestamp</span> <span class="n">DATETIME</span> <span class="k">NOT</span> <span class="k">NULL</span>
+<span class="p">)</span>
+  <span class="n">ENGINE</span> <span class="o">=</span> <span class="n">InnoDB</span>
+  <span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">RANGE</span> <span class="p">(</span><span class="k">YEAR</span><span class="p">(</span><span class="k">timestamp</span><span class="p">))</span>
+  <span class="p">(</span>
+  <span class="n">PARTITION</span> <span class="n">p0</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2013</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p1</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2014</span><span class="p">)</span>
+<span class="p">);</span>
+
+<span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t2</span> <span class="p">(</span>
+  <span class="k">timestamp</span> <span class="n">DATETIME</span> <span class="k">NOT</span> <span class="k">NULL</span>
+<span class="p">)</span> <span class="n">ENGINE</span> <span class="o">=</span> <span class="n">InnoDB</span><span class="p">;</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t1</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;2012-02-02&#39;</span><span class="p">),(</span><span class="s1">&#39;2013-03-03&#39;</span><span class="p">);</span>
+
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t1</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---------------------+</span>
+<span class="o">|</span> <span class="k">timestamp</span>           <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------------+</span>
+<span class="o">|</span> <span class="mi">2012</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">02</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
+<span class="o">|</span> <span class="mi">2013</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">03</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------------+</span>
+
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t2</span><span class="p">;</span>
+<span class="n">Empty</span> <span class="k">set</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span> <span class="n">sec</span><span class="p">)</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="n">EXCHANGE</span> <span class="n">PARTITION</span> <span class="n">p1</span> <span class="k">with</span> <span class="k">TABLE</span> <span class="n">t2</span><span class="p">;</span>
+
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t1</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---------------------+</span>
+<span class="o">|</span> <span class="k">timestamp</span>           <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------------+</span>
+<span class="o">|</span> <span class="mi">2012</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">02</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------------+</span>
+
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t2</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---------------------+</span>
+<span class="o">|</span> <span class="k">timestamp</span>           <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------------+</span>
+<span class="o">|</span> <span class="mi">2013</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">03</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------------+</span>
+</pre><p>The following requirements must be met:</p>
+<ul start="1"><li>Table t1 must be partitioned, and table t2 cannot be partitioned
+</li><li>Table t2 cannot be a temporary table
+</li><li>Table t1 and t2 must otherwise be identica
+</li><li>Any existing row in t2 must match the conditions for storage in the exchanged partition p1 unless, from <a href="/kb/en/what-is-mariadb-114/">MariaDB 11.4</a>, the <code>WITHOUT VALIDATION</code> option is specified. 
+</li></ul>
+<p>MariaDB will by default perform the validation to see that each row meets the partition requirements, and the statement will fail if a row does not fit. </p>
+<p>This attempted exchange fails, as the value already in t2, <code>2015-05-05</code> is outside of the partition conditions:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span>
+  <span class="k">timestamp</span> <span class="n">DATETIME</span> <span class="k">NOT</span> <span class="k">NULL</span>
+<span class="p">)</span>
+  <span class="n">ENGINE</span> <span class="o">=</span> <span class="n">InnoDB</span>
+  <span class="n">PARTITION</span> <span class="k">BY</span> <span class="n">RANGE</span> <span class="p">(</span><span class="k">YEAR</span><span class="p">(</span><span class="k">timestamp</span><span class="p">))</span>
+  <span class="p">(</span>
+  <span class="n">PARTITION</span> <span class="n">p0</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2013</span><span class="p">),</span>
+  <span class="n">PARTITION</span> <span class="n">p1</span> <span class="k">VALUES</span> <span class="k">LESS</span> <span class="k">THAN</span> <span class="p">(</span><span class="mi">2014</span><span class="p">)</span>
+<span class="p">);</span>
+
+<span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t2</span> <span class="p">(</span>
+  <span class="k">timestamp</span> <span class="n">DATETIME</span> <span class="k">NOT</span> <span class="k">NULL</span>
+<span class="p">)</span> <span class="n">ENGINE</span> <span class="o">=</span> <span class="n">InnoDB</span><span class="p">;</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t1</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;2012-02-02&#39;</span><span class="p">),(</span><span class="s1">&#39;2013-03-03&#39;</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t2</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;2015-05-05&#39;</span><span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="n">EXCHANGE</span> <span class="n">PARTITION</span> <span class="n">p1</span> <span class="k">with</span> <span class="k">TABLE</span> <span class="n">t2</span><span class="p">;</span>
+<span class="n">ERROR</span> <span class="mi">1526</span> <span class="p">(</span><span class="n">HY000</span><span class="p">):</span> <span class="k">Table</span> <span class="n">has</span> <span class="k">no</span> <span class="n">partition</span> <span class="k">for</span> <span class="n">value</span> <span class="mi">0</span>
+</pre><h4 class="anchored_heading" id="with-without-validation">WITH / WITHOUT VALIDATION</h4>
+<div class="mariadb_from_11_4 mariadb from_11_4 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-114/">11.4</a></h5><p>This validation is performed for each row, and can be very slow in the case of larger tables. </p>
+<p>From <a href="/kb/en/what-is-mariadb-114/">MariaDB 11.4</a>, it is possible to disable this validation by specifying the <code>WITHOUT VALIDATION</code> option.</p>
+<pre class="fixed">ALTER TABLE t1 EXCHANGE PARTITION p1 with TABLE t2 WITHOUT VALIDATION;
+Query OK, 0 rows affected (0.048 sec)
+</pre><p><code>WITH VALIDATION</code> will result in the validation being performed, and is the default behaviour.</p>
+</div><h3 class="anchored_heading" id="removing-partitioning">Removing Partitioning</h3>
 <pre class="fixed">REMOVE PARTITIONING
 </pre><p><code><a href="/kb/en/alter-table/">ALTER TABLE</a> ... REMOVE PARTITIONING</code> will remove all partitioning from the table, while leaving the data unaffected. To rather drop a particular partition (and discard all of its data), see <a href="#dropping-partitions">Dropping Partitions</a>.</p>
 <pre class="fixed"><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="n">REMOVE</span> <span class="n">PARTITIONING</span><span class="p">;</span>

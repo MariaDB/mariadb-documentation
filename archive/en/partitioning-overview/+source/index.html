@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/partitioning-overview/+r/133582/">133582</a></dd>
+            <dd><a href="/kb/en/partitioning-overview/+r/133739/">133739</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-982">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-12-18 20:49">2023-12-18 20:49</span></dd>
+<span class="datetime" title="2023-12-25 13:56">2023-12-25 13:56</span></dd>
         </dl>
     </div>
     
@@ -679,6 +679,109 @@ ALTER TABLE t1 DROP PARTITION p0;
 SELECT * FROM t1;
 Empty set (0.002 sec)
 &lt;&lt;/sql&gt;&gt;
+
+=== Exchanging Partitions
+&lt;= MariaDB 11.3
+&lt;&lt;code&gt;&gt;
+EXCHANGE PARTITION partition_name WITH TABLE tbl_name
+&lt;&lt;/code&gt;&gt;
+
+ &gt;= MariaDB 11.4
+&lt;&lt;code&gt;&gt;
+EXCHANGE PARTITION partition_name WITH TABLE tbl_name [{WITH | WITHOUT} VALIDATION]
+&lt;&lt;/code&gt;&gt;
+
+##[[alter-table|ALTER TABLE]] t1 EXCHANGE PARTITION p1 WITH TABLE t2##  permits one to exchange a partition or subpartition with another table.
+
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+  timestamp DATETIME NOT NULL
+)
+  ENGINE = InnoDB
+  PARTITION BY RANGE (YEAR(timestamp))
+  (
+  PARTITION p0 VALUES LESS THAN (2013),
+  PARTITION p1 VALUES LESS THAN (2014)
+);
+
+CREATE OR REPLACE TABLE t2 (
+  timestamp DATETIME NOT NULL
+) ENGINE = InnoDB;
+
+INSERT INTO t1 VALUES (&#39;2012-02-02&#39;),(&#39;2013-03-03&#39;);
+
+SELECT * FROM t1;
++---------------------+
+| timestamp           |
++---------------------+
+| 2012-02-02 00:00:00 |
+| 2013-03-03 00:00:00 |
++---------------------+
+
+SELECT * FROM t2;
+Empty set (0.000 sec)
+
+ALTER TABLE t1 EXCHANGE PARTITION p1 with TABLE t2;
+
+SELECT * FROM t1;
++---------------------+
+| timestamp           |
++---------------------+
+| 2012-02-02 00:00:00 |
++---------------------+
+
+SELECT * FROM t2;
++---------------------+
+| timestamp           |
++---------------------+
+| 2013-03-03 00:00:00 |
++---------------------+
+&lt;&lt;/sql&gt;&gt;
+
+The following requirements must be met:
+* Table t1 must be partitioned, and table t2 cannot be partitioned
+* Table t2 cannot be a temporary table
+* Table t1 and t2 must otherwise be identica
+* Any existing row in t2 must match the conditions for storage in the exchanged partition p1 unless, from MariaDB 11.4, the ##WITHOUT VALIDATION## option is specified. 
+
+MariaDB will by default perform the validation to see that each row meets the partition requirements, and the statement will fail if a row does not fit. 
+
+This attempted exchange fails, as the value already in t2, ##2015-05-05## is outside of the partition conditions:
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (
+  timestamp DATETIME NOT NULL
+)
+  ENGINE = InnoDB
+  PARTITION BY RANGE (YEAR(timestamp))
+  (
+  PARTITION p0 VALUES LESS THAN (2013),
+  PARTITION p1 VALUES LESS THAN (2014)
+);
+
+CREATE OR REPLACE TABLE t2 (
+  timestamp DATETIME NOT NULL
+) ENGINE = InnoDB;
+
+INSERT INTO t1 VALUES (&#39;2012-02-02&#39;),(&#39;2013-03-03&#39;);
+
+INSERT INTO t2 VALUES (&#39;2015-05-05&#39;);
+
+ALTER TABLE t1 EXCHANGE PARTITION p1 with TABLE t2;
+ERROR 1526 (HY000): Table has no partition for value 0
+&lt;&lt;/sql&gt;&gt;
+
+==== WITH / WITHOUT VALIDATION
+&lt;&lt;product mariadb from=11.4&gt;&gt;
+This validation is performed for each row, and can be very slow in the case of larger tables. 
+
+From MariaDB 11.4, it is possible to disable this validation by specifying the ##WITHOUT VALIDATION## option.
+&lt;&lt;code&gt;&gt;
+ALTER TABLE t1 EXCHANGE PARTITION p1 with TABLE t2 WITHOUT VALIDATION;
+Query OK, 0 rows affected (0.048 sec)
+&lt;&lt;/code&gt;&gt;
+
+##WITH VALIDATION## will result in the validation being performed, and is the default behaviour.
+&lt;&lt;/product&gt;&gt;
 
 === Removing Partitioning
 &lt;&lt;code&gt;&gt;
