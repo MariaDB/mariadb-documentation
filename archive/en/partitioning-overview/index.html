@@ -248,7 +248,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-12-25 13:56">1 day, 3 hours ago</span></dd>
+<span class="datetime" title="2023-12-26 23:06">17 hours, 54 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -323,9 +323,19 @@
                             >MariaDB starting with 11.4</label>
                 </li>
             
+                <li class="mariadb_from_11_4">
+                    <label><input type="checkbox" data-product-class="mariadb_from_11_4"
+                            >MariaDB starting with 11.4</label>
+                </li>
+            
                 <li class="mariadb_from_10_7">
                     <label><input type="checkbox" data-product-class="mariadb_from_10_7"
                             >MariaDB starting with 10.7</label>
+                </li>
+            
+                <li class="mariadb_from_11_4">
+                    <label><input type="checkbox" data-product-class="mariadb_from_11_4"
+                            >MariaDB starting with 11.4</label>
                 </li>
             
                 <li class="mariadb_from_11_4">
@@ -433,7 +443,10 @@
 
         <li class=""><a href="#coalescing-partitions" title="Coalescing Partitions">Coalescing Partitions</a></li>
 
-        <li class=""><a href="#converting-partitions-tofrom-tables" title="Converting Partitions to/from Tables">Converting Partitions to/from Tables</a></li>
+        <li class=""><a href="#converting-partitions-tofrom-tables" title="Converting Partitions to/from Tables">Converting Partitions to/from Tables</a>        <ol class="toc">
+
+            <li class=""><a href="#convert-table-with-without-validation" title="CONVERT TABLE ... WITH / WITHOUT VALIDATION">CONVERT TABLE ... WITH / WITHOUT VALIDATION</a>        </ol>
+</li>
 
         <li class=""><a href="#dropping-partitions" title="Dropping Partitions">Dropping Partitions</a></li>
 
@@ -650,7 +663,12 @@ Create Table: CREATE TABLE `t1` (
  PARTITION `p1` VALUES LESS THAN (2014) ENGINE = InnoDB,
  PARTITION `p2` VALUES LESS THAN (2015) ENGINE = InnoDB,
  PARTITION `p3` VALUES LESS THAN (2016) ENGINE = InnoDB)
-</pre></div><p>An alternative (and the only method prior to <a href="/kb/en/what-is-mariadb-107/">MariaDB 10.7</a>) to convert partitions to tables is to use <code><a href="/kb/en/alter-table/">ALTER TABLE</a> ... EXCHANGE PARTITION</code>. This requires having to manually do the following steps:</p>
+</pre></div><h4 class="anchored_heading" id="convert-table-with-without-validation">CONVERT TABLE ... WITH / WITHOUT VALIDATION</h4>
+<div class="mariadb_from_11_4 mariadb from_11_4 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-114/">11.4</a></h5><p>When converting tables to a partition, validation is performed on each row to ensure it meets the partition requirements. This can be very slow in the case of larger tables. </p>
+<p>From <a href="/kb/en/what-is-mariadb-114/">MariaDB 11.4</a>, it is possible to disable this validation by specifying the <code>WITHOUT VALIDATION</code> option.</p>
+<pre class="fixed">CONVERT TABLE normal_table TO partition_definition [{WITH | WITHOUT} VALIDATION]
+</pre><p><code>WITH VALIDATION</code> will result in the validation being performed, and is the default behaviour.</p>
+</div><p>An alternative (and the only method prior to <a href="/kb/en/what-is-mariadb-107/">MariaDB 10.7</a>) to convert partitions to tables is to use <code><a href="/kb/en/alter-table/">ALTER TABLE</a> ... EXCHANGE PARTITION</code>. This requires having to manually do the following steps:</p>
 <ul start="1"><li>create an empty table with the same structure as the partition
 </li><li>exchange the table with the partition
 </li><li>drop the empty partition
@@ -798,18 +816,24 @@ Create Table: CREATE TABLE `t1` (
   <span class="k">timestamp</span> <span class="n">DATETIME</span> <span class="k">NOT</span> <span class="k">NULL</span>
 <span class="p">)</span> <span class="n">ENGINE</span> <span class="o">=</span> <span class="n">InnoDB</span><span class="p">;</span>
 
-<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t1</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;2012-02-02&#39;</span><span class="p">),(</span><span class="s1">&#39;2013-03-03&#39;</span><span class="p">);</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t1</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;2012-01-01&#39;</span><span class="p">),(</span><span class="s1">&#39;2013-01-01&#39;</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t2</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;2013-02-02&#39;</span><span class="p">);</span>
 
 <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t1</span><span class="p">;</span>
 <span class="o">+</span><span class="c1">---------------------+</span>
 <span class="o">|</span> <span class="k">timestamp</span>           <span class="o">|</span>
 <span class="o">+</span><span class="c1">---------------------+</span>
-<span class="o">|</span> <span class="mi">2012</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">02</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
-<span class="o">|</span> <span class="mi">2013</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">03</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
+<span class="o">|</span> <span class="mi">2012</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">01</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
+<span class="o">|</span> <span class="mi">2013</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">01</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
 <span class="o">+</span><span class="c1">---------------------+</span>
 
 <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t2</span><span class="p">;</span>
-<span class="n">Empty</span> <span class="k">set</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span> <span class="n">sec</span><span class="p">)</span>
+<span class="o">+</span><span class="c1">---------------------+</span>
+<span class="o">|</span> <span class="k">timestamp</span>           <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------------+</span>
+<span class="o">|</span> <span class="mi">2013</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">02</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------------+</span>
 
 <span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="n">EXCHANGE</span> <span class="n">PARTITION</span> <span class="n">p1</span> <span class="k">with</span> <span class="k">TABLE</span> <span class="n">t2</span><span class="p">;</span>
 
@@ -817,14 +841,15 @@ Create Table: CREATE TABLE `t1` (
 <span class="o">+</span><span class="c1">---------------------+</span>
 <span class="o">|</span> <span class="k">timestamp</span>           <span class="o">|</span>
 <span class="o">+</span><span class="c1">---------------------+</span>
-<span class="o">|</span> <span class="mi">2012</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">02</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
+<span class="o">|</span> <span class="mi">2012</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">01</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
+<span class="o">|</span> <span class="mi">2013</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">02</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
 <span class="o">+</span><span class="c1">---------------------+</span>
 
 <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t2</span><span class="p">;</span>
 <span class="o">+</span><span class="c1">---------------------+</span>
 <span class="o">|</span> <span class="k">timestamp</span>           <span class="o">|</span>
 <span class="o">+</span><span class="c1">---------------------+</span>
-<span class="o">|</span> <span class="mi">2013</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">03</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
+<span class="o">|</span> <span class="mi">2013</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">01</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="o">|</span>
 <span class="o">+</span><span class="c1">---------------------+</span>
 </pre><p>The following requirements must be met:</p>
 <ul start="1"><li>Table t1 must be partitioned, and table t2 cannot be partitioned

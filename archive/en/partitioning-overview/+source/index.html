@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/partitioning-overview/+r/133739/">133739</a></dd>
+            <dd><a href="/kb/en/partitioning-overview/+r/133742/">133742</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-982">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-12-25 13:56">2023-12-25 13:56</span></dd>
+<span class="datetime" title="2023-12-26 23:06">2023-12-26 23:06</span></dd>
         </dl>
     </div>
     
@@ -538,6 +538,19 @@ Create Table: CREATE TABLE `t1` (
 &lt;&lt;/code&gt;&gt;
 &lt;&lt;/product&gt;&gt;
 
+
+==== CONVERT TABLE ... WITH / WITHOUT VALIDATION
+&lt;&lt;product mariadb from=11.4&gt;&gt;
+When converting tables to a partition, validation is performed on each row to ensure it meets the partition requirements. This can be very slow in the case of larger tables. 
+
+From MariaDB 11.4, it is possible to disable this validation by specifying the ##WITHOUT VALIDATION## option.
+&lt;&lt;code&gt;&gt;
+CONVERT TABLE normal_table TO partition_definition [{WITH | WITHOUT} VALIDATION]
+&lt;&lt;/code&gt;&gt;
+
+##WITH VALIDATION## will result in the validation being performed, and is the default behaviour.
+&lt;&lt;/product&gt;&gt;
+
 An alternative (and the only method prior to MariaDB 10.7) to convert partitions to tables is to use ##[[alter-table|ALTER TABLE ]] ... EXCHANGE PARTITION##. This requires having to manually do the following steps:
 * create an empty table with the same structure as the partition
 * exchange the table with the partition
@@ -708,18 +721,24 @@ CREATE OR REPLACE TABLE t2 (
   timestamp DATETIME NOT NULL
 ) ENGINE = InnoDB;
 
-INSERT INTO t1 VALUES (&#39;2012-02-02&#39;),(&#39;2013-03-03&#39;);
+INSERT INTO t1 VALUES (&#39;2012-01-01&#39;),(&#39;2013-01-01&#39;);
+
+INSERT INTO t2 VALUES (&#39;2013-02-02&#39;);
 
 SELECT * FROM t1;
 +---------------------+
 | timestamp           |
 +---------------------+
-| 2012-02-02 00:00:00 |
-| 2013-03-03 00:00:00 |
+| 2012-01-01 00:00:00 |
+| 2013-01-01 00:00:00 |
 +---------------------+
 
 SELECT * FROM t2;
-Empty set (0.000 sec)
++---------------------+
+| timestamp           |
++---------------------+
+| 2013-02-02 00:00:00 |
++---------------------+
 
 ALTER TABLE t1 EXCHANGE PARTITION p1 with TABLE t2;
 
@@ -727,14 +746,15 @@ SELECT * FROM t1;
 +---------------------+
 | timestamp           |
 +---------------------+
-| 2012-02-02 00:00:00 |
+| 2012-01-01 00:00:00 |
+| 2013-02-02 00:00:00 |
 +---------------------+
 
 SELECT * FROM t2;
 +---------------------+
 | timestamp           |
 +---------------------+
-| 2013-03-03 00:00:00 |
+| 2013-01-01 00:00:00 |
 +---------------------+
 &lt;&lt;/sql&gt;&gt;
 
