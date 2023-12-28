@@ -23,9 +23,9 @@
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
     <meta property="og:site_name" content="MariaDB KnowledgeBase" />
     <meta property="fb:admins" content="514852603" />
-    <meta property="og:description" content="Create a stored package, in Oracle-mode." />
+    <meta property="og:description" content="Create a stored package." />
 
-    <meta name="description" content="Create a stored package, in Oracle-mode." />
+    <meta name="description" content="Create a stored package." />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
@@ -260,7 +260,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-12-12 20:48">1 week, 5 days ago</span></dd>
+<span class="datetime" title="2023-12-28 13:08">3 hours, 52 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -416,7 +416,9 @@
 
     
     <div class="answer formatted">
-        <h2 class="anchored_heading" id="syntax">Syntax</h2>
+        <p>The <code>CREATE PACKAGE</code> statement can be used when <a href="/kb/en/sql_modeoracle-from-mariadb-103/">Oracle SQL_MODE</a> is set, or in any mode from <a href="/kb/en/what-is-mariadb-114/">MariaDB 11.4</a>.</p>
+<p>In Oracle mode, the PL/SQL dialect is used, while in non-Oracle mode, SQL/PSM is used.</p>
+<h2 class="anchored_heading" id="syntax-oracle-mode">Syntax (Oracle mode)</h2>
 <pre class="fixed">CREATE
     [ OR REPLACE]
     [DEFINER = { user | CURRENT_USER | role | CURRENT_ROLE }]
@@ -465,11 +467,61 @@ package_routine_characteristic:
     | LANGUAGE SQL
     | { CONTAINS SQL | NO SQL | READS SQL DATA | MODIFIES SQL DATA }
     | SQL SECURITY { DEFINER | INVOKER }
+</pre><h2 class="anchored_heading" id="syntax-non-oracle-mode">Syntax (non-Oracle mode)</h2>
+<pre class="fixed">CREATE
+    [ OR REPLACE]
+    [DEFINER = { user | CURRENT_USER | role | CURRENT_ROLE }]
+    PACKAGE [ IF NOT EXISTS ]
+    [ db_name . ] package_name
+    [ package_characteristic ... ]
+    [ package_specification_element ... ]
+END [ package_name ]
+
+
+package_characteristic:
+    COMMENT 'string'
+  | SQL SECURITY { DEFINER | INVOKER }
+
+
+package_specification_element:
+    FUNCTION_SYM package_specification_function ;
+  | PROCEDURE_SYM package_specification_procedure ;
+
+
+package_specification_function:
+    func_name [ ( func_param [, func_param]... ) ]
+    RETURN func_return_type
+    [ package_routine_characteristic... ]
+
+package_specification_procedure:
+    proc_name [ ( proc_param [, proc_param]... ) ]
+    [ package_routine_characteristic... ]
+
+func_return_type:
+    type
+
+func_param:
+    param_name [ IN | OUT | INOUT | IN OUT ] type
+
+proc_param:
+    param_name [ IN | OUT | INOUT | IN OUT ] type
+
+type:
+    Any valid MariaDB explicit or anchored data type
+
+
+package_routine_characteristic:
+      COMMENT  'string'
+    | LANGUAGE SQL
+    | { CONTAINS SQL | NO SQL | READS SQL DATA | MODIFIES SQL DATA }
+    | SQL SECURITY { DEFINER | INVOKER }
 </pre><div class="table_of_contents well well-small">
 <h3>Contents</h3>
  <ol class="toc">
 
-    <li class="mariadb_from_10_8_0"><a href="#syntax" title="Syntax">Syntax</a></li>
+    <li class="mariadb_from_10_8_0"><a href="#syntax-oracle-mode" title="Syntax (Oracle mode)">Syntax (Oracle mode)</a></li>
+
+    <li class="mariadb_from_10_8_0"><a href="#syntax-non-oracle-mode" title="Syntax (non-Oracle mode)">Syntax (non-Oracle mode)</a></li>
 
     <li class="mariadb_from_10_8_0"><a href="#description" title="Description">Description</a></li>
 
@@ -481,13 +533,14 @@ package_routine_characteristic:
 </li>
 </div>
 <h2 class="anchored_heading" id="description">Description</h2>
-<p>The <code>CREATE PACKAGE</code> statement can be used when <a href="/kb/en/sql_modeoracle-from-mariadb-103/">Oracle SQL_MODE</a> is set.</p>
-<p>The <code>CREATE PACKAGE</code> creates the specification for a stored package (a collection of logically related stored objects). A stored package specification declares public routines (procedures and functions) of the package, but does not implement these routines.</p>
+<p>The <code>CREATE PACKAGE</code> statement can be used when <a href="/kb/en/sql_modeoracle-from-mariadb-103/">Oracle SQL_MODE</a> is set, or in any mode from <a href="/kb/en/what-is-mariadb-114/">MariaDB 11.4</a>.</p>
+<p><code>CREATE PACKAGE</code> creates the specification for a stored package (a collection of logically related stored objects). A stored package specification declares public routines (procedures and functions) of the package, but does not implement these routines.</p>
 <p>A package whose specification was created by the <code>CREATE PACKAGE</code> statement, should later be implemented using the <a href="/kb/en/create-package-body/">CREATE PACKAGE BODY</a> statement.</p>
 <h2 class="anchored_heading" id="function-parameter-quantifiers-in-out-inout-in-out">Function parameter quantifiers IN | OUT | INOUT | IN OUT</h2>
 <div class="mariadb_from_10_8_0 mariadb from_10_8_0 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/mariadb-1080-release-notes/">10.8.0</a></h5><p>The function parameter quantifiers for <code>IN</code>, <code>OUT</code>, <code>INOUT</code>, and <code>IN OUT</code> where added in a 10.8.0 preview release. Prior to 10.8.0 quantifiers were supported only in procedures.</p>
 </div><p><code>OUT</code>, <code>INOUT</code> and its equivalent <code>IN OUT</code>, are only valid if called from <code>SET</code> and not <code>SELECT</code>. These quantifiers are especially useful for creating functions and procedures with more than one return value. This allows functions and procedures to be more complex and nested. </p>
 <h2 class="anchored_heading" id="examples">Examples</h2>
+<p>Oracle mode:</p>
 <pre class="fixed">SET sql_mode=ORACLE;
 DELIMITER $$
 CREATE OR REPLACE PACKAGE employee_tools AS
@@ -497,6 +550,18 @@ CREATE OR REPLACE PACKAGE employee_tools AS
   PROCEDURE hire(ename TEXT, esalary DECIMAL(10,2));
 END;
 $$
+DELIMITER ;
+</pre><p>From <a href="/kb/en/what-is-mariadb-114/">MariaDB 11.4</a>, non-Oracle mode:</p>
+<pre class="fixed">SET sql_mode='';
+
+DELIMITER $$
+
+CREATE OR REPLACE PACKAGE pkg
+  PROCEDURE p1();
+  FUNCTION f1() RETURNS INT;
+END;
+$$
+
 DELIMITER ;
 </pre><h2 class="anchored_heading" id="see-also">See Also</h2>
 <ul start="1"><li><a href="/kb/en/create-package-body/">CREATE PACKAGE BODY</a>

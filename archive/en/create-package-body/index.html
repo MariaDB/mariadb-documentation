@@ -260,7 +260,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-12-12 20:58">1 week, 5 days ago</span></dd>
+<span class="datetime" title="2023-12-28 13:12">3 hours, 47 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -392,7 +392,9 @@
 
     
     <div class="answer formatted">
-        <h2 class="anchored_heading" id="syntax">Syntax</h2>
+        <p>The <code>CREATE PACKAGE BODY</code> statement can be used when <a href="/kb/en/sql_modeoracle-from-mariadb-103/">Oracle SQL_MODE</a> is set, or in any mode from <a href="/kb/en/what-is-mariadb-114/">MariaDB 11.4</a>.</p>
+<p>In Oracle mode, the PL/SQL dialect is used, while in non-Oracle mode, SQL/PSM is used.</p>
+<h2 class="anchored_heading" id="syntax-oracle-mode">Syntax (Oracle mode)</h2>
 <pre class="fixed">CREATE [ OR REPLACE ]
     [DEFINER = { user | CURRENT_USER | role | CURRENT_ROLE }]
     PACKAGE BODY
@@ -480,7 +482,7 @@ condition_value:
 <h3>Contents</h3>
  <ol class="toc">
 
-    <li class=""><a href="#syntax" title="Syntax">Syntax</a></li>
+    <li class=""><a href="#syntax-oracle-mode" title="Syntax (Oracle mode)">Syntax (Oracle mode)</a></li>
 
     <li class=""><a href="#description" title="Description">Description</a></li>
 
@@ -499,6 +501,7 @@ condition_value:
 </li><li>an executable initialization section
 </li></ul>
 <h2 class="anchored_heading" id="examples">Examples</h2>
+<p>Oracle mode:</p>
 <pre class="fixed">SET sql_mode=ORACLE;
 DELIMITER $$
 CREATE OR REPLACE PACKAGE employee_tools AS
@@ -551,6 +554,43 @@ BEGIN
   -- This code is executed when the current session
   -- accesses any of the package routines for the first time
   log(0, 'Session ' || connection_id() || ' ' || current_user || ' started');
+END;
+$$
+
+DELIMITER ;
+</pre><p>Non-Oracle mode, from <a href="/kb/en/what-is-mariadb-114/">MariaDB 11.4</a>:</p>
+<pre class="fixed">DELIMITER $$
+
+CREATE OR REPLACE PACKAGE pkg
+  PROCEDURE p1();
+  FUNCTION f1() RETURNS INT;
+END;
+
+$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE OR REPLACE PACKAGE BODY pkg
+
+  -- variable declarations
+  DECLARE a INT DEFAULT 11;
+  DECLARE b INT DEFAULT 10;
+
+  -- routine declarations
+  PROCEDURE p1()
+  BEGIN
+    SELECT CURRENT_USER;
+  END;
+
+  FUNCTION f1() RETURNS INT
+  BEGIN
+    RETURN a;
+  END;
+
+  -- package initialization section
+  SET a=a-b;
 END;
 $$
 

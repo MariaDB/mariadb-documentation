@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/create-package-body/+r/133477/">133477</a></dd>
+            <dd><a href="/kb/en/create-package-body/+r/133769/">133769</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-4905">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-12-12 20:58">2023-12-12 20:58</span></dd>
+<span class="datetime" title="2023-12-28 13:12">2023-12-28 13:12</span></dd>
         </dl>
     </div>
     
@@ -315,7 +315,11 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">== Syntax
+        <textarea id="answer_source" class="creole_source autogrow">The ##CREATE PACKAGE BODY## statement can be used when [[sql_modeoracle-from-mariadb-103|Oracle SQL_MODE]] is set, or in any mode from MariaDB 11.4.
+
+In Oracle mode, the PL/SQL dialect is used, while in non-Oracle mode, SQL/PSM is used.
+
+== Syntax (Oracle mode)
 &lt;&lt;code&gt;&gt;
 CREATE [ OR REPLACE ]
     [DEFINER = { user | CURRENT_USER | role | CURRENT_ROLE }]
@@ -416,6 +420,7 @@ A package body provides implementations of the package public routines and can o
 
 == Examples
 
+Oracle mode:
 &lt;&lt;code&gt;&gt;
 SET sql_mode=ORACLE;
 DELIMITER $$
@@ -469,6 +474,46 @@ BEGIN
   -- This code is executed when the current session
   -- accesses any of the package routines for the first time
   log(0, &#39;Session &#39; || connection_id() || &#39; &#39; || current_user || &#39; started&#39;);
+END;
+$$
+
+DELIMITER ;
+&lt;&lt;/code&gt;&gt;
+
+Non-Oracle mode, from MariaDB 11.4:
+&lt;&lt;code&gt;&gt;
+DELIMITER $$
+
+CREATE OR REPLACE PACKAGE pkg
+  PROCEDURE p1();
+  FUNCTION f1() RETURNS INT;
+END;
+
+$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE OR REPLACE PACKAGE BODY pkg
+
+  -- variable declarations
+  DECLARE a INT DEFAULT 11;
+  DECLARE b INT DEFAULT 10;
+
+  -- routine declarations
+  PROCEDURE p1()
+  BEGIN
+    SELECT CURRENT_USER;
+  END;
+
+  FUNCTION f1() RETURNS INT
+  BEGIN
+    RETURN a;
+  END;
+
+  -- package initialization section
+  SET a=a-b;
 END;
 $$
 
