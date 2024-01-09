@@ -178,11 +178,11 @@
     
 
     
-    » <a class="crumb" href="/kb/en/upgrading/">Upgrading MariaDB</a>
+    » <a class="crumb" href="/kb/en/migrating-to-mariadb/">Migrating to MariaDB</a>
     
 
     
-    » <a class="crumb" href="/kb/en/upgrading-mariadb-upgrading-from-mysql-to-mariadb/">Upgrading from MySQL to MariaDB</a>
+    » <a class="crumb" href="/kb/en/moving-from-mysql/">Migrating to MariaDB from MySQL</a>
     
 
 
@@ -256,7 +256,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-06-02 13:07">7 months ago</span></dd>
+<span class="datetime" title="2024-01-08 19:19">1 minute ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -340,22 +340,6 @@
 
 
 
-    
-
-<div class="well well-small box"><div><h5>Parents</h5></div><div>
-
-        <ul>
-            
-                <li><a href="/kb/en/upgrading-mariadb-upgrading-from-mysql-to-mariadb/">Upgrading from MySQL to MariaDB</a></li>
-            
-                <li><a href="/kb/en/moving-from-mysql/">Migrating to MariaDB from MySQL</a></li>
-            
-        </ul>
-    
-</div>
-</div>
-
-
 
 </div>
 
@@ -432,6 +416,19 @@
 <h3>Contents</h3>
  <ol class="toc">
 
+    <li class=""><a href="#upgrading-from-mysql-56-or-mysql-57" title="Upgrading from MySQL 5.6 or MySQL 5.7">Upgrading from MySQL 5.6 or MySQL 5.7</a>    <ol class="toc">
+
+        <li class=""><a href="#prerequisites" title="Prerequisites">Prerequisites</a></li>
+
+        <li class=""><a href="#mysql-sha-256-authentication" title="MySQL SHA-256 authentication">MySQL SHA-256 authentication</a></li>
+
+        <li class=""><a href="#json" title="JSON">JSON</a></li>
+
+        <li class=""><a href="#xa" title="XA">XA</a></li>
+
+        <li class=""><a href="#encryption-and-compression" title="Encryption and compression">Encryption and compression</a>    </ol>
+</li>
+
     <li class=""><a href="#upgrading-mariadb-on-windowsupgrading-on-windows" title="Upgrading on Windows">Upgrading on Windows</a></li>
 
     <li class=""><a href="#upgrading-mycnf" title="Upgrading my.cnf">Upgrading my.cnf</a></li>
@@ -452,7 +449,43 @@ For <a href="/kb/en/mariadb-vs-mysql-compatibility/">all practical purposes</a>,
   unchanged (no need to recompile). This works because MariaDB and MySQL use
   the same client protocol and the client libraries are binary compatible. You can also use your old MySQL connector packages with MariaDB if you want.
 </li></ul>
-<h2 class="anchored_heading" id="upgrading-mariadb-on-windowsupgrading-on-windows"><a href="/kb/en/upgrading-mariadb-on-windows/">Upgrading on Windows</a></h2>
+<h2 class="anchored_heading" id="upgrading-from-mysql-56-or-mysql-57">Upgrading from MySQL 5.6 or MySQL 5.7</h2>
+<h3 class="anchored_heading" id="prerequisites">Prerequisites</h3>
+<p>Check the values of the following server variables:</p>
+<ul start="1"><li><a href="/kb/en/innodb-system-variables/#innodb_file_per_table">innodb_file_per_table</a>
+</li><li><a href="/kb/en/innodb-system-variables/#innodb_fast_shutdown">innodb_fast_shutdown</a>
+</li></ul>
+<pre class="fixed">select @@Innodb_file_per_table,@@Innodb_fast_shutdown\G
+</pre><p><a href="/kb/en/innodb-system-variables/#innodb_file_per_table">innodb_file_per_table</a> should be 1. This is the default setting for MySQL and MariaDB.  If not, one should use <a href="/kb/en/mysqldump/">mysqldump</a> for migration as some of the following recommendations will not work.</p>
+<p><a href="/kb/en/innodb-system-variables/#innodb_fast_shutdown">innodb_fast_shutdown</a> should be 0 (at least on the migrated server during shutdown, to ensure that a full shutdown is done when taking server down).  This is required when upgrading between major versions of both MySQL and MariaDB as the format of the undo or redo files can change between major versions. This variable can be set just before doing the shutdown.</p>
+<p>If your distribution allows it, install the MariaDB packages or the MariaDB tar distribution on the database server. Do not start MariaDB yet! This will decrease the downtime while doing the migration.</p>
+<h3 class="anchored_heading" id="mysql-sha-256-authentication">MySQL SHA-256 authentication</h3>
+<p>MariaDB does not support the MySQL SHA-256 authentication protocol as it's cumbersome and not secure for in-house attacks. (clear text password is available inside the server)</p>
+<p><a href="https://mariadb.com/kb/en/authentication-plugin-sha-256/">https://mariadb.com/kb/en/authentication-plugin-sha-256/</a>
+<a href="https://jira.mariadb.org/browse/MDEV-9804">https://jira.mariadb.org/browse/MDEV-9804</a></p>
+<p>You can check which MySQL users are using the SHA-256 by executing:</p>
+<pre class="fixed">SELECT user, plugin FROM mysql.user where plugin like &#34;%sha%&#34;;
+</pre><p>You can change the user/s to use a protocol compatible with both MySQL and
+MariaDB with:</p>
+<pre class="fixed">ALTER USER user_name IDENTIFIED WITH mysql_native_password BY  'new_password';
+</pre><h3 class="anchored_heading" id="json">JSON</h3>
+<p>MariaDB stores JSON differently than MySQL. Normally you do not have to do anything when migrating JSON data, except if you are using replication or Galera.  If this is the case, then you should convert your JSON columns to TEXT to ensure that all data is stored identically in MySQL and MariaDB:</p>
+<p>If you are using JSON columns and want to upgrade to MariaDB, use the <a href="/kb/en/mysql_json/">mysql_json</a> plugin to automatically convert MySQL JSON to TEXT.</p>
+<p>Alternatively you need to either convert them to TEXT or use <a href="/kb/en/mysqldump/">mysqldump</a> to copy these tables to MariaDB.</p>
+<p>You can check if you are have tables that uses the MySQL JSON type with:</p>
+<pre class="fixed">select table_schema, table_name from information_schema.COLUMNS where
+data_type=&#34;JSON&#34;;
+</pre><p>You can convert the JSON column to text with:</p>
+<pre class="fixed">ALTER TABLE table_name MODIFY json_column LONGTEXT;
+</pre><h3 class="anchored_heading" id="xa">XA</h3>
+<p>When doing a backup, ensure that there are no active XA transactions in the backup, as these transactions needs to be committed/rolled back before the migration.</p>
+<h3 class="anchored_heading" id="encryption-and-compression">Encryption and compression</h3>
+<p>Encryption and compression are very different in MySQL and MariaDB.</p>
+<p>Encrypted/compressed tables need to be de-encrypted/de-compressed before starting the conversion, and then encrypted/compressed again afterwards.</p>
+<p>Detect compressed tables with the following query:</p>
+<pre class="fixed">select table_name, create_options from information_schema.TABLES where
+create_options like &#34;%comp%&#34;;
+</pre><h2 class="anchored_heading" id="upgrading-mariadb-on-windowsupgrading-on-windows"><a href="/kb/en/upgrading-mariadb-on-windows/">Upgrading on Windows</a></h2>
 <p>On Windows, you should not uninstall MySQL and install MariaDB, this would not work, the existing database will not be found.</p>
 <p>Thus On Windows, just install MariaDB and use the upgrade wizard which is part of installer package and is launched by MSI installer. Or, in case you prefer command line, use <code>mysql_upgrade_service &lt;service_name&gt;</code> on the command line.</p>
 <h2 class="anchored_heading" id="upgrading-mycnf">Upgrading my.cnf</h2>
@@ -492,15 +525,20 @@ For <a href="/kb/en/mariadb-vs-mysql-compatibility/">all practical purposes</a>,
         <div class="simple_section_nav">
             <ul class="nav nav-pills">
                 
-                
-                    <li><a href="/kb/en/upgrading-mariadb-upgrading-from-mysql-to-mariadb/">
-                        ↑ Upgrading from MySQL to MariaDB ↑
+                    <li><a href="/kb/en/mariadb-vs-mysql-compatibility/">
+                        ← MariaDB versus MySQL - Compatibility
                     </a>
                     </li>
                 
                 
-                    <li class="pull-right"><a href="/kb/en/moving-from-mysql-to-mariadb-in-debian-9/">
-                        Moving from MySQL to MariaDB in Debian 9 →
+                    <li><a href="/kb/en/moving-from-mysql/">
+                        ↑ Migrating to MariaDB from MySQL ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/incompatibilities-and-feature-differences-between-mariadb-11-3-and-mysql-8-/">
+                        Incompatibilities and Feature Differences Between MariaDB 11.3 and MySQL 8.0 →
                     </a>
                     </li>
                 
@@ -539,11 +577,29 @@ For <a href="/kb/en/mariadb-vs-mysql-compatibility/">all practical purposes</a>,
         
         <ul class="section_navigation well well-small hidden-xs hidden-sm">
             
-                <li class="parent"><a href="/kb/en/upgrading-mariadb-upgrading-from-mysql-to-mariadb/">
-                    ↑ Upgrading from MySQL to MariaDB ↑
+                <li class="parent"><a href="/kb/en/moving-from-mysql/">
+                    ↑ Migrating to MariaDB from MySQL ↑
                 </a>
                 </li>
             
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-vs-mysql-features/">
+                            <span class="pull-right not_primary"></span>
+                            MariaDB versus MySQL - Features
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-vs-mysql-compatibility/">
+                            <span class="pull-right not_primary"></span>
+                            MariaDB versus MySQL - Compatibility
+                        </a>
+                    </li>
+                
             
                 
                     <li class="active">
@@ -554,8 +610,107 @@ For <a href="/kb/en/mariadb-vs-mysql-compatibility/">all practical purposes</a>,
             
                 
                     <li>
+                        <a href="/kb/en/incompatibilities-and-feature-differences-between-mariadb-11-3-and-mysql-8-/">
+                            <span class="pull-right not_primary"></span>
+                            Incompatibilities and Feature Differences Between MariaDB 11.3 and MySQL 8.0
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/incompatibilities-and-feature-differences-between-mariadb-11-2-and-mysql-8-/">
+                            <span class="pull-right not_primary"></span>
+                            Incompatibilities and Feature Differences Between MariaDB 11.2 and MySQL 8.0
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/incompatibilities-and-feature-differences-between-mariadb-11-1-and-mysql-8-/">
+                            <span class="pull-right not_primary"></span>
+                            Incompatibilities and Feature Differences Between MariaDB 11.1 and MySQL 8.0
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/incompatibilities-and-feature-differences-between-mariadb-11-0-and-mysql-8-/">
+                            <span class="pull-right not_primary"></span>
+                            Incompatibilities and Feature Differences Between MariaDB 11.0 and MySQL 8.0
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/incompatibilities-and-feature-differences-between-mariadb-10-11-and-mysql-8/">
+                            <span class="pull-right not_primary"></span>
+                            Incompatibilities and Feature Differences Between MariaDB 10.11 and MySQL 8.0
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/incompatibilities-and-feature-differences-between-mariadb-10-6-and-mysql-8-/">
+                            <span class="pull-right not_primary"></span>
+                            Incompatibilities and Feature Differences Between MariaDB 10.6 and MySQL 8.0
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/incompatibilities-and-feature-differences-between-mariadb-10-5-and-mysql-8-/">
+                            <span class="pull-right not_primary"></span>
+                            Incompatibilities and Feature Differences Between MariaDB 10.5 and MySQL 8.0
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/incompatibilities-and-feature-differences-between-mariadb-10-4-and-mysql-8-/">
+                            <span class="pull-right not_primary"></span>
+                            Incompatibilities and Feature Differences Between MariaDB 10.4 and MySQL 8.0
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/function-differences-between-mariadb-and-mysql/">
+                            <span class="pull-right not_primary"></span>
+                            Function Differences Between MariaDB and MySQL
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/system-variable-differences-between-mariadb-and-mysql/">
+                            <span class="pull-right not_primary"></span>
+                            System Variable Differences between MariaDB and MySQL
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/installing-mariadb-alongside-mysql/">
+                            <span class="pull-right not_primary"></span>
+                            Installing MariaDB Alongside MySQL
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
                         <a href="/kb/en/moving-from-mysql-to-mariadb-in-debian-9/">
-                            
+                            <span class="pull-right not_primary"></span>
                             Moving from MySQL to MariaDB in Debian 9
                         </a>
                     </li>
@@ -563,27 +718,9 @@ For <a href="/kb/en/mariadb-vs-mysql-compatibility/">all practical purposes</a>,
             
                 
                     <li>
-                        <a href="/kb/en/screencast-for-upgrading-mysql-to-mariadb/">
+                        <a href="/kb/en/migrating-to-mariadb-from-mysql-obsolete-articles/">
                             
-                            Screencast for Upgrading MySQL to MariaDB
-                        </a>
-                    </li>
-                
-            
-                
-                    <li>
-                        <a href="/kb/en/upgrading-from-mysql-57-to-mariadb-102/">
-                            
-                            Upgrading from MySQL 5.7 to MariaDB 10.2
-                        </a>
-                    </li>
-                
-            
-                
-                    <li>
-                        <a href="/kb/en/upgrading-to-mariadb-from-mysql-50-or-older/">
-                            
-                            Upgrading to MariaDB From MySQL 5.0 or Older
+                            Migrating to MariaDB from MySQL - Obsolete Articles
                         </a>
                     </li>
                 

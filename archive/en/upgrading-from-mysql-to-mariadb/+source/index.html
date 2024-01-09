@@ -180,11 +180,11 @@
     
 
     
-    » <a class="crumb" href="/kb/en/upgrading/">Upgrading MariaDB</a>
+    » <a class="crumb" href="/kb/en/migrating-to-mariadb/">Migrating to MariaDB</a>
     
 
     
-    » <a class="crumb" href="/kb/en/upgrading-mariadb-upgrading-from-mysql-to-mariadb/">Upgrading from MySQL to MariaDB</a>
+    » <a class="crumb" href="/kb/en/moving-from-mysql/">Migrating to MariaDB from MySQL</a>
     
 
 
@@ -292,7 +292,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/upgrading-from-mysql-to-mariadb/+r/126741/">126741</a></dd>
+            <dd><a href="/kb/en/upgrading-from-mysql-to-mariadb/+r/134121/">134121</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -301,7 +301,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-06-02 13:07">2023-06-02 13:07</span></dd>
+<span class="datetime" title="2024-01-08 19:19">2024-01-08 19:19</span></dd>
         </dl>
     </div>
     
@@ -323,6 +323,79 @@ For [[mariadb-vs-mysql-compatibility|all practical purposes]], you can view Mari
 * All your old clients and connectors (PHP, Perl, Python, Java, etc.) will work
   unchanged (no need to recompile). This works because MariaDB and MySQL use
   the same client protocol and the client libraries are binary compatible. You can also use your old MySQL connector packages with MariaDB if you want.
+
+== Upgrading from MySQL 5.6 or MySQL 5.7
+
+=== Prerequisites
+
+Check the values of the following server variables:
+* [[innodb-system-variables/#innodb_file_per_table|innodb_file_per_table]]
+* [[innodb-system-variables/#innodb_fast_shutdown|innodb_fast_shutdown]]
+
+&lt;&lt;code&gt;&gt;
+select @@Innodb_file_per_table,@@Innodb_fast_shutdown\G
+&lt;&lt;/code&gt;&gt;
+
+[[innodb-system-variables/#innodb_file_per_table|innodb_file_per_table]] should be 1. This is the default setting for MySQL and MariaDB.  If not, one should use [[mysqldump]] for migration as some of the following recommendations will not work.
+
+[[innodb-system-variables/#innodb_fast_shutdown|innodb_fast_shutdown]] should be 0 (at least on the migrated server during shutdown, to ensure that a full shutdown is done when taking server down).  This is required when upgrading between major versions of both MySQL and MariaDB as the format of the undo or redo files can change between major versions. This variable can be set just before doing the shutdown.
+
+If your distribution allows it, install the MariaDB packages or the MariaDB tar distribution on the database server. Do not start MariaDB yet! This will decrease the downtime while doing the migration.
+
+=== MySQL SHA-256 authentication
+
+MariaDB does not support the MySQL SHA-256 authentication protocol as it&#39;s cumbersome and not secure for in-house attacks. (clear text password is available inside the server)
+
+https://mariadb.com/kb/en/authentication-plugin-sha-256/
+https://jira.mariadb.org/browse/MDEV-9804
+
+You can check which MySQL users are using the SHA-256 by executing:
+&lt;&lt;code&gt;&gt;
+SELECT user, plugin FROM mysql.user where plugin like &#34;%sha%&#34;;
+&lt;&lt;/code&gt;&gt;
+
+You can change the user/s to use a protocol compatible with both MySQL and
+MariaDB with:
+
+&lt;&lt;code&gt;&gt;
+ALTER USER user_name IDENTIFIED WITH mysql_native_password BY  &#39;new_password&#39;;
+&lt;&lt;/code&gt;&gt;
+
+===JSON
+
+MariaDB stores JSON differently than MySQL. Normally you do not have to do anything when migrating JSON data, except if you are using replication or Galera.  If this is the case, then you should convert your JSON columns to TEXT to ensure that all data is stored identically in MySQL and MariaDB:
+
+If you are using JSON columns and want to upgrade to MariaDB, use the [[mysql_json]] plugin to automatically convert MySQL JSON to TEXT.
+
+Alternatively you need to either convert them to TEXT or use [[mysqldump]] to copy these tables to MariaDB.
+
+You can check if you are have tables that uses the MySQL JSON type with:
+
+&lt;&lt;code&gt;&gt;
+select table_schema, table_name from information_schema.COLUMNS where
+data_type=&#34;JSON&#34;;
+&lt;&lt;/code&gt;&gt;
+
+You can convert the JSON column to text with:
+&lt;&lt;code&gt;&gt;
+ALTER TABLE table_name MODIFY json_column LONGTEXT;
+&lt;&lt;/code&gt;&gt;
+
+=== XA
+When doing a backup, ensure that there are no active XA transactions in the backup, as these transactions needs to be committed/rolled back before the migration.
+
+===Encryption and compression
+
+Encryption and compression are very different in MySQL and MariaDB.
+
+Encrypted/compressed tables need to be de-encrypted/de-compressed before starting the conversion, and then encrypted/compressed again afterwards.
+
+Detect compressed tables with the following query:
+
+&lt;&lt;code&gt;&gt;
+select table_name, create_options from information_schema.TABLES where
+create_options like &#34;%comp%&#34;;
+&lt;&lt;/code&gt;&gt;
 
 == [[upgrading-mariadb-on-windows|Upgrading on Windows]]
 

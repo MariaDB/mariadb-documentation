@@ -260,7 +260,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2020-03-23 13:26">3 years, 9 months ago</span></dd>
+<span class="datetime" title="2024-01-08 15:27">1 hour, 46 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -331,30 +331,6 @@
 </div>
 
     
-
-
-
-    
-    
-
-<div class="well well-small box"><div><h5>Product Versions</h5></div><div>
-
-        <ul id="product_chooser">
-            
-                <li class="mariadb_from_10_3_3">
-                    <label><input type="checkbox" data-product-class="mariadb_from_10_3_3"
-                            >MariaDB starting with 10.3.3</label>
-                </li>
-            
-                <li class="mariadb_from_10_3_3">
-                    <label><input type="checkbox" data-product-class="mariadb_from_10_3_3"
-                            >MariaDB starting with 10.3.3</label>
-                </li>
-            
-        </ul>
-    
-</div>
-</div>
 
 
 
@@ -451,9 +427,9 @@
 </li>
 </div>
 <h2 class="anchored_heading" id="description">Description</h2>
-<p>This function returns a string result with the concatenated non-NULL
-values from a group. It returns NULL if there are no non-NULL values.</p>
-<p>The maximum returned length in bytes is determined by the <a href="/kb/en/server-system-variables/#group_concat_max_len">group_concat_max_len</a> server system variable, which defaults to 1M (&gt;= <a href="/kb/en/mariadb-1024-release-notes/">MariaDB 10.2.4</a>) or 1K (&lt;= <a href="/kb/en/mariadb-1023-release-notes/">MariaDB 10.2.3</a>).</p>
+<p>This function returns a string result with the concatenated non-NULL values from a group. If any expr in GROUP_CONCAT evaluates to NULL, that tuple is not present in the list returned by GROUP_CONCAT. </p>
+<p>It returns NULL if all arguments are NULL, or there are no matching rows.</p>
+<p>The maximum returned length in bytes is determined by the <a href="/kb/en/server-system-variables/#group_concat_max_len">group_concat_max_len</a> server system variable, which defaults to 1M.</p>
 <p>If group_concat_max_len &lt;= 512, the return type is <a href="/kb/en/varbinary/">VARBINARY</a> or <a href="/kb/en/varchar/">VARCHAR</a>; otherwise, the return type is <a href="/kb/en/blob/">BLOB</a> or <a href="/kb/en/text/">TEXT</a>. The choice between binary or non-binary types depends from the input.</p>
 <p>The full syntax is as follows:</p>
 <pre class="fixed">GROUP_CONCAT([DISTINCT] expr [,expr ...]
@@ -465,8 +441,8 @@ values from a group. It returns NULL if there are no non-NULL values.</p>
 <p><a href="/kb/en/order-by/">ORDER BY</a> determines the order of returned values.</p>
 <p><code>SEPARATOR</code> specifies a separator between the values. The default separator is a comma (<code>,</code>). It is possible to avoid using a separator by specifying an empty string.</p>
 <h3 class="anchored_heading" id="limit">LIMIT</h3>
-<div class="mariadb_from_10_3_3 mariadb from_10_3_3 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/mariadb-1033-release-notes/">10.3.3</a></h5><p>Until <a href="/kb/en/mariadb-1032-release-notes/">MariaDB 10.3.2</a>, it was not possible to use the <a href="/kb/en/limit/">LIMIT</a> clause with <code>GROUP_CONCAT</code>. This restriction was lifted in <a href="/kb/en/mariadb-1033-release-notes/">MariaDB 10.3.3</a>.</p>
-</div><h2 class="anchored_heading" id="examples">Examples</h2>
+<p>The <a href="/kb/en/limit/">LIMIT</a> clause can be used with <code>GROUP_CONCAT</code>. This was not possible prior to <a href="/kb/en/mariadb-1033-release-notes/">MariaDB 10.3.3</a>.</p>
+<h2 class="anchored_heading" id="examples">Examples</h2>
 <pre class="fixed"><span class="k">SELECT</span> <span class="n">student_name</span><span class="p">,</span>
        <span class="n">GROUP_CONCAT</span><span class="p">(</span><span class="n">test_score</span><span class="p">)</span>
        <span class="k">FROM</span> <span class="n">student</span>
@@ -499,6 +475,17 @@ values from a group. It returns NULL if there are no non-NULL values.</p>
 <span class="o">+</span><span class="c1">-------------------------------------------------------------+</span>
 <span class="o">|</span> <span class="mi">2017</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">04</span><span class="p">:</span><span class="mi">3</span>                                                <span class="o">|</span>
 <span class="o">+</span><span class="c1">-------------------------------------------------------------+</span>
+</pre><p>NULLS:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">a</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span> <span class="nb">char</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t1</span> <span class="k">VALUES</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="k">NULL</span><span class="p">);</span>
+
+<span class="k">SELECT</span> <span class="n">GROUP_CONCAT</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">FROM</span> <span class="n">t1</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">--------------------+</span>
+<span class="o">|</span> <span class="n">GROUP_CONCAT</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------+</span>
+<span class="o">|</span> <span class="mi">1</span><span class="n">a</span>                 <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------+</span>
 </pre><h2 class="anchored_heading" id="see-also">See Also</h2>
 <ul start="1"><li><a href="/kb/en/concat/">CONCAT()</a>
 </li><li><a href="/kb/en/concat_ws/">CONCAT_WS()</a>

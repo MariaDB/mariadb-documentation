@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/group_concat/+r/94054/">94054</a></dd>
+            <dd><a href="/kb/en/group_concat/+r/134087/">134087</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2020-03-23 13:26">2020-03-23 13:26</span></dd>
+<span class="datetime" title="2024-01-08 15:27">2024-01-08 15:27</span></dd>
         </dl>
     </div>
     
@@ -324,10 +324,11 @@ GROUP_CONCAT(expr)
 
 == Description
 
-This function returns a string result with the concatenated non-NULL
-values from a group. It returns NULL if there are no non-NULL values.
+This function returns a string result with the concatenated non-NULL values from a group. If any expr in GROUP_CONCAT evaluates to NULL, that tuple is not present in the list returned by GROUP_CONCAT. 
 
-The maximum returned length in bytes is determined by the [[server-system-variables#group_concat_max_len|group_concat_max_len]] server system variable, which defaults to 1M (&gt;= MariaDB 10.2.4) or 1K (&lt;= MariaDB 10.2.3).
+It returns NULL if all arguments are NULL, or there are no matching rows.
+
+The maximum returned length in bytes is determined by the [[server-system-variables#group_concat_max_len|group_concat_max_len]] server system variable, which defaults to 1M.
 
 If group_concat_max_len &lt;= 512, the return type is [[varbinary|VARBINARY]] or [[varchar|VARCHAR]]; otherwise, the return type is [[blob|BLOB]] or [[text|TEXT]]. The choice between binary or non-binary types depends from the input.
 
@@ -348,9 +349,7 @@ GROUP_CONCAT([DISTINCT] expr [,expr ...]
 ##SEPARATOR## specifies a separator between the values. The default separator is a comma (##,##). It is possible to avoid using a separator by specifying an empty string.
 
 === LIMIT
-&lt;&lt;product mariadb from=10.3.3&gt;&gt;
-Until MariaDB 10.3.2, it was not possible to use the [[limit|LIMIT]] clause with ##GROUP_CONCAT##. This restriction was lifted in MariaDB 10.3.3.
-&lt;&lt;/product&gt;&gt;
+The [[limit|LIMIT]] clause can be used with ##GROUP_CONCAT##. This was not possible prior to MariaDB 10.3.3.
 
 == Examples
 
@@ -400,6 +399,20 @@ SELECT GROUP_CONCAT(CONCAT_WS(&#34;:&#34;,dd,cc) ORDER BY cc DESC LIMIT 1) FROM 
 +-------------------------------------------------------------+
 | 2017-01-04:3                                                |
 +-------------------------------------------------------------+
+&lt;&lt;/sql&gt;&gt;
+
+NULLS:
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (a int, b char);
+
+INSERT INTO t1 VALUES (1, &#39;a&#39;), (2, NULL);
+
+SELECT GROUP_CONCAT(a, b) FROM t1;
++--------------------+
+| GROUP_CONCAT(a, b) |
++--------------------+
+| 1a                 |
++--------------------+
 &lt;&lt;/sql&gt;&gt;
 
 ==See Also
