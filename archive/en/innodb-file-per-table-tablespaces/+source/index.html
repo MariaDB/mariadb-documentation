@@ -292,7 +292,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-file-per-table-tablespaces/+r/125990/">125990</a></dd>
+            <dd><a href="/kb/en/innodb-file-per-table-tablespaces/+r/134233/">134233</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5454">
@@ -301,7 +301,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-05-22 16:41">2023-05-22 16:41</span></dd>
+<span class="datetime" title="2024-01-12 03:24">2024-01-12 03:24</span></dd>
         </dl>
     </div>
     
@@ -365,11 +365,13 @@ FLUSH TABLES test.t1 FOR EXPORT;
 
 This forces the server to close the table and provides your connection with a read lock on the table.
 
-* Then, while your connection still holds the lock on the table, copy the tablespace file and the metadata file to a safe directory:
+* Then, while your connection still holds the lock on the table, copy the tablespace file and the metadata file to a safe directory. For MariaDB 11.2.1 and later copy the ##.frm## file also:
 
 &lt;&lt;code&gt;&gt;
 # cp /data/contacts/test/t1.ibd /data/saved-tablespaces/
 # cp /data/contacts/test/t1.cfg /data/saved-tablespaces/
+# echo Copy .frm for MariaDB 11.2.1 and later
+# cp /data/contacts/test/t1.frm /data/saved-tablespaces/
 &lt;&lt;/code&gt;&gt;
 
 * Then, once you&#39;ve copied the files, you can release the lock with [[lock-tables-and-unlock-tables|UNLOCK TABLES]]:
@@ -380,9 +382,11 @@ UNLOCK TABLES;
 
 ==== Importing Transportable Tablespaces for Non-partitioned Tables
 
-You can import a non-partitioned table by discarding the table&#39;s original tablespace, copying the table&#39;s ##.ibd## and ##.cfg## files from the backup location to the relevant [[#file-per-table-tablespace-locations|tablespace location]] for the table, and then telling the server to import the tablespace. For example, the process would go like this:
+You can import a non-partitioned table by discarding the table&#39;s original tablespace, copying the table&#39;s ##.ibd## and ##.cfg## files from the backup location to the relevant [[#file-per-table-tablespace-locations|tablespace location]] for the table, and then telling the server to import the tablespace. From MariaDB 11.2.1, an existing table on the destination server is no longer required, however you will need to copy the ##.frm## file.
 
-* First, on the destination server, you need to create a copy of the table. Use the same [[create-table|CREATE TABLE]] statement that was used to create the table on the original server:
+For example, the process would go like this:
+
+* First, on the destination server, you need to create a copy of the table. Use the same [[create-table|CREATE TABLE]] statement that was used to create the table on the original server. Skip these two steps for MariaDB 11.2.1 and later if you have a ##.frm## file:
 
 &lt;&lt;sql&gt;&gt;
 CREATE TABLE test.t1 (
@@ -397,11 +401,13 @@ CREATE TABLE test.t1 (
 ALTER TABLE test.t1 DISCARD TABLESPACE;
 &lt;&lt;/sql&gt;&gt;
 
-* Then, copy the ##.ibd## and ##.cfg## files from the original server to the relevant directory on the target MariaDB Server:
+* Then, copy the ##.ibd## and ##.cfg## files from the original server to the relevant directory on the target MariaDB Server. In MariaDB 11.2.1 and later copy the ##.frm## file too:
 
 &lt;&lt;code&gt;&gt;
 # scp /data/tablespaces/t1.ibd target-server.com:/var/lib/mysql/test/
 # scp /data/tablespaces/t1.cfg target-server.com:/var/lib/mysql/test/
+# echo for MariaDB 11.2.1 and later
+# scp /data/tablespaces/t1.frm target-server.com:/var/lib/mysql/test/
 &lt;&lt;/code&gt;&gt;
 
 &lt;&lt;style class=&#34;bluebox&#34;&gt;&gt;
