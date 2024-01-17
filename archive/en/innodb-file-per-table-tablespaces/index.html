@@ -256,7 +256,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-01-12 03:24">4 days, 13 hours ago</span></dd>
+<span class="datetime" title="2024-01-17 01:09">15 hours, 50 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -311,6 +311,30 @@
 
     
     
+
+
+
+    
+    
+
+<div class="well well-small box"><div><h5>Product Versions</h5></div><div>
+
+        <ul id="product_chooser">
+            
+                <li class="mariadb_from_11_2_1">
+                    <label><input type="checkbox" data-product-class="mariadb_from_11_2_1"
+                            >MariaDB starting with 11.2.1</label>
+                </li>
+            
+                <li class="mariadb_from_11_2_1">
+                    <label><input type="checkbox" data-product-class="mariadb_from_11_2_1"
+                            >MariaDB starting with 11.2.1</label>
+                </li>
+            
+        </ul>
+    
+</div>
+</div>
 
 
 
@@ -450,25 +474,31 @@ drwxr-xr-x 3 mysql mysql  4096 Dec 8 18:46 ..
 <p>InnoDB's file-per-table tablespaces are transportable, which means that you can copy a file-per-table tablespace from one MariaDB Server to another server.  You may find this useful in cases where you need to transport full tables between servers and don't want to use backup tools like <a href="/kb/en/mariabackup/">mariabackup</a> or <a href="/kb/en/mariadb-dump/">mariadb-dump</a>. In fact, this process can even be used with <a href="/kb/en/mariabackup/">mariabackup</a> in some cases, such as when <a href="/kb/en/partial-backup-and-restore-with-mariabackup/">restoring partial backups</a> or when <a href="/kb/en/restoring-individual-tables-and-partitions-with-mariabackup/">restoring individual tables or partitions from a backup</a>.</p>
 <h3 class="anchored_heading" id="copying-transportable-tablespaces-for-non-partitioned-tables">Copying Transportable Tablespaces for Non-partitioned Tables</h3>
 <p>You can copy the transportable tablespace of a non-partitioned table from one server to another by exporting the tablespace file from the original server, and then importing the tablespace file into the new server.</p>
-<h4 class="anchored_heading" id="exporting-transportable-tablespaces-for-non-partitioned-tables">Exporting Transportable Tablespaces for Non-partitioned Tables</h4>
+<div class="mariadb_from_11_2_1 mariadb from_11_2_1 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/mariadb-1121-release-notes/">11.2.1</a></h5><p>The workflow is simplified starting from <a href="/kb/en/mariadb-11-2-1-release-notes/">MariaDB 11.2.1</a>. On the source server, simply do:</p>
+<pre class="fixed"><span class="n">FLUSH</span> <span class="n">TABLES</span> <span class="n">t1</span> <span class="k">FOR</span> <span class="n">EXPORT</span><span class="p">;</span>
+<span class="o">#</span> <span class="n">scp</span> <span class="o">/</span><span class="k">data</span><span class="o">/</span><span class="n">contacts</span><span class="o">/</span><span class="n">test</span><span class="o">/</span><span class="n">t1</span><span class="p">.</span><span class="n">ibd</span> <span class="n">target</span><span class="o">-</span><span class="n">server</span><span class="p">.</span><span class="n">com</span><span class="p">:</span><span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">mysql</span><span class="o">/</span><span class="n">test</span><span class="o">/</span>
+<span class="o">#</span> <span class="n">scp</span> <span class="o">/</span><span class="k">data</span><span class="o">/</span><span class="n">contacts</span><span class="o">/</span><span class="n">test</span><span class="o">/</span><span class="n">t1</span><span class="p">.</span><span class="n">cfg</span> <span class="n">target</span><span class="o">-</span><span class="n">server</span><span class="p">.</span><span class="n">com</span><span class="p">:</span><span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">mysql</span><span class="o">/</span><span class="n">test</span><span class="o">/</span>
+<span class="o">#</span> <span class="n">scp</span> <span class="o">/</span><span class="k">data</span><span class="o">/</span><span class="n">contacts</span><span class="o">/</span><span class="n">test</span><span class="o">/</span><span class="n">t1</span><span class="p">.</span><span class="n">frm</span> <span class="n">target</span><span class="o">-</span><span class="n">server</span><span class="p">.</span><span class="n">com</span><span class="p">:</span><span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">mysql</span><span class="o">/</span><span class="n">test</span><span class="o">/</span>
+<span class="n">UNLOCK</span> <span class="n">TABLES</span><span class="p">;</span>
+</pre><p>On the destination server, simply do:</p>
+<pre class="fixed"><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="n">IMPORT</span> <span class="n">TABLESPACE</span><span class="p">;</span>
+</pre></div><h4 class="anchored_heading" id="exporting-transportable-tablespaces-for-non-partitioned-tables">Exporting Transportable Tablespaces for Non-partitioned Tables</h4>
 <p>You can export a non-partitioned table by locking the table and copying the table's <code>.ibd</code> and <code>.cfg</code> files from the relevant <a href="#file-per-table-tablespace-locations">tablespace location</a> for the table to a backup location. For example, the process would go like this:</p>
 <ul start="1"><li>First, use the <a href="/kb/en/flush-tables-for-export/">FLUSH TABLES ... FOR EXPORT</a> statement on the target table:
 </li></ul>
 <pre class="fixed"><span class="n">FLUSH</span> <span class="n">TABLES</span> <span class="n">test</span><span class="p">.</span><span class="n">t1</span> <span class="k">FOR</span> <span class="n">EXPORT</span><span class="p">;</span>
 </pre><p>This forces the server to close the table and provides your connection with a read lock on the table.</p>
-<ul start="1"><li>Then, while your connection still holds the lock on the table, copy the tablespace file and the metadata file to a safe directory. For <a href="/kb/en/mariadb-11-2-1-release-notes/">MariaDB 11.2.1</a> and later copy the <code>.frm</code> file also:
+<ul start="1"><li>Then, while your connection still holds the lock on the table, copy the tablespace file and the metadata file to a safe directory:
 </li></ul>
 <pre class="fixed"># cp /data/contacts/test/t1.ibd /data/saved-tablespaces/
 # cp /data/contacts/test/t1.cfg /data/saved-tablespaces/
-# echo Copy .frm for MariaDB 11.2.1 and later
-# cp /data/contacts/test/t1.frm /data/saved-tablespaces/
 </pre><ul start="1"><li>Then, once you've copied the files, you can release the lock with <a href="/kb/en/lock-tables-and-unlock-tables/">UNLOCK TABLES</a>:
 </li></ul>
 <pre class="fixed"><span class="n">UNLOCK</span> <span class="n">TABLES</span><span class="p">;</span>
 </pre><h4 class="anchored_heading" id="importing-transportable-tablespaces-for-non-partitioned-tables">Importing Transportable Tablespaces for Non-partitioned Tables</h4>
-<p>You can import a non-partitioned table by discarding the table's original tablespace, copying the table's <code>.ibd</code> and <code>.cfg</code> files from the backup location to the relevant <a href="#file-per-table-tablespace-locations">tablespace location</a> for the table, and then telling the server to import the tablespace. From <a href="/kb/en/mariadb-11-2-1-release-notes/">MariaDB 11.2.1</a>, an existing table on the destination server is no longer required, however you will need to copy the <code>.frm</code> file.</p>
+<p>You can import a non-partitioned table by discarding the table's original tablespace, copying the table's <code>.ibd</code> and <code>.cfg</code> files from the backup location to the relevant <a href="#file-per-table-tablespace-locations">tablespace location</a> for the table, and then telling the server to import the tablespace.</p>
 <p>For example, the process would go like this:</p>
-<ul start="1"><li>First, on the destination server, you need to create a copy of the table. Use the same <a href="/kb/en/create-table/">CREATE TABLE</a> statement that was used to create the table on the original server. Skip these two steps for <a href="/kb/en/mariadb-11-2-1-release-notes/">MariaDB 11.2.1</a> and later if you have a <code>.frm</code> file:
+<ul start="1"><li>First, on the destination server, you need to create a copy of the table. Use the same <a href="/kb/en/create-table/">CREATE TABLE</a> statement that was used to create the table on the original server.
 </li></ul>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test</span><span class="p">.</span><span class="n">t1</span> <span class="p">(</span>
    <span class="n">id</span> <span class="nb">INT</span> <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="n">AUTO_INCREMENT</span><span class="p">,</span>
@@ -477,12 +507,10 @@ drwxr-xr-x 3 mysql mysql  4096 Dec 8 18:46 ..
 </pre><ul start="1"><li>Then, use <a href="/kb/en/alter-table/#discard-tablespace">ALTER TABLE ... DISCARD TABLESPACE</a> to discard the new table's tablespace:
 </li></ul>
 <pre class="fixed"><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">test</span><span class="p">.</span><span class="n">t1</span> <span class="n">DISCARD</span> <span class="n">TABLESPACE</span><span class="p">;</span>
-</pre><ul start="1"><li>Then, copy the <code>.ibd</code> and <code>.cfg</code> files from the original server to the relevant directory on the target MariaDB Server. In <a href="/kb/en/mariadb-11-2-1-release-notes/">MariaDB 11.2.1</a> and later copy the <code>.frm</code> file too:
+</pre><ul start="1"><li>Then, copy the <code>.ibd</code> and <code>.cfg</code> files from the original server to the relevant directory on the target MariaDB Server.
 </li></ul>
 <pre class="fixed"># scp /data/tablespaces/t1.ibd target-server.com:/var/lib/mysql/test/
 # scp /data/tablespaces/t1.cfg target-server.com:/var/lib/mysql/test/
-# echo for MariaDB 11.2.1 and later
-# scp /data/tablespaces/t1.frm target-server.com:/var/lib/mysql/test/
 </pre><div class="cstm-style bluebox"><p>File-per-table tablespaces can be imported with just the <code>.ibd</code> file in many cases. If you do not have the tablespace's <code>.cfg</code> file for whatever reason, then it is usually worth trying to import the tablespace with just the <code>.ibd</code> file.</p>
 </div><ul start="1"><li>Then, once the files are in the proper directory on the target server, use <a href="/kb/en/alter-table/#import-tablespace">ALTER TABLE ... IMPORT TABLESPACE</a> to import the new table's tablespace:
 </li></ul>

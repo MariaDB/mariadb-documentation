@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-10-31 15:02">2 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2024-01-17 07:11">9 hours, 50 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -538,19 +538,18 @@ stack_bottom = 0x7ff4dc62ccc8 thread_stack 0x49000
 <p>Where <code>VERSION</code> corresponds to the major version you wish to test with.</p>
 <h4 class="anchored_heading" id="creating-a-container-with-debugging-symbols">Creating a Container with Debugging Symbols</h4>
 <p>Build using a Containerfile/Dockerfile: </p>
-<pre class="fixed">ARG VERSION
+<pre class="fixed">ARG VERSION=10.11
 FROM mariadb:$VERSION
-ARG VERSION
 
-RUN sed -i -e 's/main/main main\/debug/' /etc/apt/sources.list.d/mariadb.list &amp;&amp; \
-    apt-get update \
-        &amp;&amp; apt-get install -y linux-tools-common gdbserver gdb curl mariadb-server-core-dbgsym=$VERSION ; \
+RUN apt-get update \
+        &amp;&amp; apt-get install -y gdb mariadb-server-core-dbgsym=$(dpkg -s mariadb-server-core |  awk '/Version/{print $NF}') ; \
         rm -rf /var/lib/apt/lists/*
-</pre><p>Note: newer version will not need to execute <code>sed</code>.</p>
-<p>Build with:</p>
-<pre class="fixed">buildah bud --tag mariadb_debug --build-arg VERSION=10.11.4 -f Containerfile .
+</pre><p>Build with:</p>
+<pre class="fixed">buildah bud --tag mariadb_debug --build-arg VERSION=10.11.6 -f Containerfile .
 </pre><p>Then you will have a <code>mariadb_debug</code> container.</p>
-<h2 class="anchored_heading" id="enabling-core-dumps">Enabling Core Dumps</h2>
+<p>Example use:</p>
+<pre class="fixed">podman run --entrypoint gdb --user mysql --volume mariadb_data:/var/lib/mysql mariadb_debug -ex r --args /usr/sbin/mariadbd
+</pre><h2 class="anchored_heading" id="enabling-core-dumps">Enabling Core Dumps</h2>
 <p>To enable core dumps, see <a href="/kb/en/enabling-core-dumps/">Enabling Core Dumps</a> for details.</p>
 <h2 class="anchored_heading" id="where-is-the-core-file-on-linux">Where is the Core File on Linux?</h2>
 <p>At the bottom of the error log there will be some text about the core location including:</p>

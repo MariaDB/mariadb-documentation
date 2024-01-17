@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/range-partitioning-type/+r/133562/">133562</a></dd>
+            <dd><a href="/kb/en/range-partitioning-type/+r/134263/">134263</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-982">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-12-18 15:12">2023-12-18 15:12</span></dd>
+<span class="datetime" title="2024-01-16 22:17">2024-01-16 22:17</span></dd>
         </dl>
     </div>
     
@@ -349,14 +349,12 @@ In the following example, we will partition a log table by year.
 CREATE TABLE log
 (
 	id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-	timestamp DATETIME NOT NULL,
+	dt DATETIME NOT NULL,
 	user INT UNSIGNED,
-	ip BINARY(16) NOT NULL,
-	action VARCHAR(20) NOT NULL,
-	PRIMARY KEY (id, timestamp)
+	PRIMARY KEY (id, dt)
 )
 	ENGINE = InnoDB
-PARTITION BY RANGE (YEAR(timestamp))
+PARTITION BY RANGE (YEAR(dt))
 (
 	PARTITION p0 VALUES LESS THAN (2013),
 	PARTITION p1 VALUES LESS THAN (2014),
@@ -368,17 +366,15 @@ PARTITION BY RANGE (YEAR(timestamp))
 As an alternative, we can partition the table by both year and month:
 
 &lt;&lt;code&gt;&gt;
-CREATE TABLE log
+CREATE TABLE log2
 (
 	id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-	timestamp TIMESTAMP NOT NULL,
+	ts TIMESTAMP NOT NULL,
 	user INT UNSIGNED,
-	ip BINARY(16) NOT NULL,
-	action VARCHAR(20) NOT NULL,
-	PRIMARY KEY (id, timestamp)
+	PRIMARY KEY (id, ts)
 )
 	ENGINE = InnoDB
-PARTITION BY RANGE (UNIX_TIMESTAMP(timestamp))
+PARTITION BY RANGE (UNIX_TIMESTAMP(ts))
 (
 	PARTITION p0 VALUES LESS THAN (UNIX_TIMESTAMP(&#39;2014-08-01 00:00:00&#39;)),
 	PARTITION p1 VALUES LESS THAN (UNIX_TIMESTAMP(&#39;2014-11-01 00:00:00&#39;)),
@@ -401,7 +397,7 @@ We will still be able to drop a partition that does not contain the oldest data,
 
 Example of an error when inserting outside a defined partition range:
 &lt;&lt;code&gt;&gt;
-INSERT INTO log(id,timestamp) VALUES 
+INSERT INTO log(id,dt) VALUES 
   (1, &#39;2016-01-01 01:01:01&#39;), 
   (2, &#39;2015-01-01 01:01:01&#39;);
 ERROR 1526 (HY000): Table has no partition for value 2016
@@ -409,16 +405,16 @@ ERROR 1526 (HY000): Table has no partition for value 2016
 
 Unless the IGNORE keyword is used:
 &lt;&lt;code&gt;&gt;
-INSERT IGNORE INTO log(id,timestamp) VALUES 
+INSERT IGNORE INTO log(id,dt) VALUES 
   (1, &#39;2016-01-01 01:01:01&#39;), 
   (2, &#39;2015-01-01 01:01:01&#39;);
 
 SELECT * FROM log;
-+----+---------------------+------+------------------+--------+
-| id | timestamp           | user | ip               | action |
-+----+---------------------+------+------------------+--------+
-|  2 | 2015-01-01 01:01:01 | NULL |                  |        |
-+----+---------------------+------+------------------+--------+
++----+---------------------+------+
+| id | timestamp           | user |
++----+---------------------+------+
+|  2 | 2015-01-01 01:01:01 | NULL |
++----+---------------------+------+
 &lt;&lt;/code&gt;&gt;
 
 An alternative definition with MAXVALUE as a catchall:
@@ -426,14 +422,12 @@ An alternative definition with MAXVALUE as a catchall:
 CREATE TABLE log
 (
 	id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-	timestamp DATETIME NOT NULL,
+	dt DATETIME NOT NULL,
 	user INT UNSIGNED,
-	ip BINARY(16) NOT NULL,
-	action VARCHAR(20) NOT NULL,
-	PRIMARY KEY (id, timestamp)
+	PRIMARY KEY (id, dt)
 )
 	ENGINE = InnoDB
-PARTITION BY RANGE (YEAR(timestamp))
+PARTITION BY RANGE (YEAR(dt))
 (
 	PARTITION p0 VALUES LESS THAN (2013),
 	PARTITION p1 VALUES LESS THAN (2014),

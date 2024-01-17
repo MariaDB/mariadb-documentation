@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/create-table/+r/134243/">134243</a></dd>
+            <dd><a href="/kb/en/create-table/+r/134260/">134260</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-12-24 14:09">2023-12-24 14:09</span></dd>
+<span class="datetime" title="2024-01-16 21:31">2024-01-16 21:31</span></dd>
         </dl>
     </div>
     
@@ -400,8 +400,31 @@ Use the ##TEMPORARY## keyword to create a temporary table that is only available
 
 == CREATE TABLE ... LIKE
 
-Use the ##LIKE## clause instead of a full table definition to create a table with the same definition as another table, including columns, indexes, and table options. Foreign key definitions, as well as any DATA DIRECTORY or INDEX DIRECTORY table options specified on the original table, will not be created.
+Use the ##LIKE## clause instead of a full table definition to create an empty table with the same definition as another table, including columns, indexes, and table options. Foreign key definitions, as well as any DATA DIRECTORY or INDEX DIRECTORY table options specified on the original table, will not be created.
 
+
+##LIKE## does not preserve the ##TEMPORARY## status of the original table. To make the new table ##TEMPORARY## as well, use ##CREATE TEMPORARY TABLE ... LIKE##.
+
+##LIKE## does not work with [[views]], only base tables. Attempting to use it on a view will result in an error:
+&lt;&lt;sql&gt;&gt;
+CREATE VIEW v (mycol) AS SELECT &#39;abc&#39;;
+
+CREATE TABLE v2 LIKE v;
+ERROR 1347 (HY000): &#39;test.v&#39; is not of type &#39;BASE TABLE&#39;
+&lt;&lt;/sql&gt;&gt;
+
+The same version of the table storage format as found in the original table is used for the new table.
+
+##CREATE TABLE ... LIKE## performs the same checks as ##CREATE TABLE##. So a statement may fail if a change in the [[sql-mode|SQL_MODE]] renders it invalid. For example:
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE x (d DATE DEFAULT &#39;0000-00-00&#39;);
+
+SET SQL_MODE=&#39;NO_ZERO_DATE&#39;;
+
+CREATE OR REPLACE TABLE y LIKE x;
+ERROR 1067 (42000): Invalid default value for &#39;d&#39;
+&lt;&lt;/sql&gt;&gt;
+ 
 == CREATE TABLE ... SELECT
 
 You can create a table containing data from other tables using the ##CREATE ... SELECT## statement. Columns will be created in the table for each field returned by the ##SELECT## query.

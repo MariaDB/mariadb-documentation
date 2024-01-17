@@ -260,7 +260,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-12-24 14:09">3 weeks, 1 day ago</span></dd>
+<span class="datetime" title="2024-01-16 21:31">19 hours, 29 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -698,8 +698,22 @@ CREATE TABLE table_name (a int);
 <p>Use the <code>TEMPORARY</code> keyword to create a temporary table that is only available to the current session. Temporary tables are dropped when the session ends. Temporary table names are specific to the session. They will not conflict with other temporary tables from other sessions even if they share the same name. They will shadow names of non-temporary tables or views, if they are identical. A temporary table can have the same name as a non-temporary table which is located in the same database. In that case, their name will reference the temporary table when used in SQL statements. You must have the <a href="/kb/en/grant/#database-privileges">CREATE TEMPORARY TABLES</a> privilege on the database to create temporary tables. If no storage engine is specified, the <a href="/kb/en/server-system-variables/#default_tmp_storage_engine">default_tmp_storage_engine</a> setting will determine the engine.</p>
 <p><a href="/kb/en/myrocks/">ROCKSDB</a> temporary tables cannot be created by setting the <a href="/kb/en/server-system-variables/#default_tmp_storage_engine">default_tmp_storage_engine</a> system variable, or using <code>CREATE TEMPORARY TABLE LIKE</code>. Before <a href="/kb/en/what-is-mariadb-107/">MariaDB 10.7</a>, they could be specified, but would silently fail, and a MyISAM table would be created instead. From <a href="/kb/en/what-is-mariadb-107/">MariaDB 10.7</a> an error is returned. Explicitly creating a temporary table with <code>ENGINE=ROCKSDB</code> has never been permitted.</p>
 <h2 class="anchored_heading" id="create-table-like">CREATE TABLE ... LIKE</h2>
-<p>Use the <code>LIKE</code> clause instead of a full table definition to create a table with the same definition as another table, including columns, indexes, and table options. Foreign key definitions, as well as any DATA DIRECTORY or INDEX DIRECTORY table options specified on the original table, will not be created.</p>
-<h2 class="anchored_heading" id="create-table-select">CREATE TABLE ... SELECT</h2>
+<p>Use the <code>LIKE</code> clause instead of a full table definition to create an empty table with the same definition as another table, including columns, indexes, and table options. Foreign key definitions, as well as any DATA DIRECTORY or INDEX DIRECTORY table options specified on the original table, will not be created.</p>
+<p><code>LIKE</code> does not preserve the <code>TEMPORARY</code> status of the original table. To make the new table <code>TEMPORARY</code> as well, use <code>CREATE TEMPORARY TABLE ... LIKE</code>.</p>
+<p><code>LIKE</code> does not work with <a href="/kb/en/views/">views</a>, only base tables. Attempting to use it on a view will result in an error:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">VIEW</span> <span class="n">v</span> <span class="p">(</span><span class="n">mycol</span><span class="p">)</span> <span class="k">AS</span> <span class="k">SELECT</span> <span class="s1">&#39;abc&#39;</span><span class="p">;</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">v2</span> <span class="k">LIKE</span> <span class="n">v</span><span class="p">;</span>
+<span class="n">ERROR</span> <span class="mi">1347</span> <span class="p">(</span><span class="n">HY000</span><span class="p">):</span> <span class="s1">&#39;test.v&#39;</span> <span class="k">is</span> <span class="k">not</span> <span class="k">of</span> <span class="k">type</span> <span class="s1">&#39;BASE TABLE&#39;</span>
+</pre><p>The same version of the table storage format as found in the original table is used for the new table.</p>
+<p><code>CREATE TABLE ... LIKE</code> performs the same checks as <code>CREATE TABLE</code>. So a statement may fail if a change in the <a href="/kb/en/sql-mode/">SQL_MODE</a> renders it invalid. For example:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">x</span> <span class="p">(</span><span class="n">d</span> <span class="nb">DATE</span> <span class="k">DEFAULT</span> <span class="s1">&#39;0000-00-00&#39;</span><span class="p">);</span>
+
+<span class="k">SET</span> <span class="n">SQL_MODE</span><span class="o">=</span><span class="s1">&#39;NO_ZERO_DATE&#39;</span><span class="p">;</span>
+
+<span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">y</span> <span class="k">LIKE</span> <span class="n">x</span><span class="p">;</span>
+<span class="n">ERROR</span> <span class="mi">1067</span> <span class="p">(</span><span class="mi">42000</span><span class="p">):</span> <span class="n">Invalid</span> <span class="k">default</span> <span class="n">value</span> <span class="k">for</span> <span class="s1">&#39;d&#39;</span>
+</pre><h2 class="anchored_heading" id="create-table-select">CREATE TABLE ... SELECT</h2>
 <p>You can create a table containing data from other tables using the <code>CREATE ... SELECT</code> statement. Columns will be created in the table for each field returned by the <code>SELECT</code> query.</p>
 <p>You can also define some columns normally and add other columns from a <code>SELECT</code>. You can also create columns in the normal way and assign them some values using the query, this is done to force a certain type or other field characteristics. The columns that are not named in the query will be placed before the others. For example:</p>
 <pre class="fixed">CREATE TABLE test (a INT NOT NULL, b CHAR(10)) ENGINE=MyISAM

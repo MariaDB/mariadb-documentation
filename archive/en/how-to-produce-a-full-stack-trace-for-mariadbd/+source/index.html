@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/how-to-produce-a-full-stack-trace-for-mariadbd/+r/131798/">131798</a></dd>
+            <dd><a href="/kb/en/how-to-produce-a-full-stack-trace-for-mariadbd/+r/134267/">134267</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-7">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-10-31 15:02">2023-10-31 15:02</span></dd>
+<span class="datetime" title="2024-01-17 07:11">2024-01-17 07:11</span></dd>
         </dl>
     </div>
     
@@ -481,24 +481,25 @@ Where ##VERSION## corresponds to the major version you wish to test with.
 
 Build using a Containerfile/Dockerfile: 
 &lt;&lt;code&gt;&gt;
-ARG VERSION
+ARG VERSION=10.11
 FROM mariadb:$VERSION
-ARG VERSION
 
-RUN sed -i -e &#39;s/main/main main\/debug/&#39; /etc/apt/sources.list.d/mariadb.list &amp;&amp; \
-    apt-get update \
-        &amp;&amp; apt-get install -y linux-tools-common gdbserver gdb curl mariadb-server-core-dbgsym=$VERSION ; \
+RUN apt-get update \
+        &amp;&amp; apt-get install -y gdb mariadb-server-core-dbgsym=$(dpkg -s mariadb-server-core |  awk &#39;/Version/{print $NF}&#39;) ; \
         rm -rf /var/lib/apt/lists/*
 &lt;&lt;/code&gt;&gt;
 
-Note: newer version will not need to execute ##sed##.
-
 Build with:
 &lt;&lt;code&gt;&gt;
-buildah bud --tag mariadb_debug --build-arg VERSION=10.11.4 -f Containerfile .
+buildah bud --tag mariadb_debug --build-arg VERSION=10.11.6 -f Containerfile .
 &lt;&lt;/code&gt;&gt;
 
 Then you will have a ##mariadb_debug## container.
+
+Example use:
+&lt;&lt;code&gt;&gt;
+podman run --entrypoint gdb --user mysql --volume mariadb_data:/var/lib/mysql mariadb_debug -ex r --args /usr/sbin/mariadbd
+&lt;&lt;/code&gt;&gt;
 
 == Enabling Core Dumps
 
