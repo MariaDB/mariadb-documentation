@@ -292,7 +292,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/upgrading-from-mysql-to-mariadb/+r/134296/">134296</a></dd>
+            <dd><a href="/kb/en/upgrading-from-mysql-to-mariadb/+r/134312/">134312</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -301,7 +301,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-01-21 13:29">2024-01-21 13:29</span></dd>
+<span class="datetime" title="2024-01-23 07:48">2024-01-23 07:48</span></dd>
         </dl>
     </div>
     
@@ -342,14 +342,14 @@ select @@Innodb_file_per_table,@@Innodb_fast_shutdown\G
 
 If your distribution allows it, install the MariaDB packages or the MariaDB tar distribution on the database server. Do not start MariaDB yet! This will decrease the downtime while doing the migration.
 
-=== MySQL SHA-256 authentication
+=== MySQL SHA-256 Authentication
 
 MariaDB does not support the MySQL SHA-256 authentication protocol as it&#39;s cumbersome and not secure for in-house attacks. (clear text password is available inside the server)
 
-https://mariadb.com/kb/en/authentication-plugin-sha-256/
-https://jira.mariadb.org/browse/MDEV-9804
+* See [authentication-plugin-sha-256/|Authentication Plugin - SHA-256]]
+* MDEV-9804
 
-You can check which MySQL users are using the SHA-256 by executing:
+You can check which MySQL users are using SHA-256 by executing:
 &lt;&lt;code&gt;&gt;
 SELECT user, plugin FROM mysql.user where plugin like &#34;%sha%&#34;;
 &lt;&lt;/code&gt;&gt;
@@ -384,7 +384,7 @@ ALTER TABLE table_name MODIFY json_column LONGTEXT;
 === XA
 When doing a backup, ensure that there are no active XA transactions in the backup, as these transactions needs to be committed/rolled back before the migration.
 
-===Encryption and compression
+===Encryption and Compression
 
 Encryption and compression are very different in MySQL and MariaDB.
 
@@ -396,6 +396,112 @@ Detect compressed tables with the following query:
 select table_name, create_options from information_schema.TABLES where
 create_options like &#34;%comp%&#34;;
 &lt;&lt;/code&gt;&gt;
+
+=== Config Files
+* Create config files for MariaDB that match the MySQL cluster option files
+* There are some configuration options that differ. See [[system-variable-differences-between-mariadb-and-mysql/| System Variable Differences between MariaDB and MySQL]].
+* You can use ##[mariadb]## or ##[mariadb-x.y.z]## (for the specific version) in the current config files for MariaDB-specific options.
+* You can also place MySQL-specific options inside a ##[mysqld-5.7]## section.
+* With a combination of these, it&#39;s easy to create a config file that will work with both MariaDB and MySQL, no matter what options are present.
+* See also MDEV-32745 for an upcoming tool to automatically detect incompatible options.
+
+==== Audit plugin
+* MariaDB does not have the audit_log_plugin. Rather, MariaDB uses the server_audit plugin, which takes different options.
+
+=== Common Steps
+* Perform all the prerequisite steps (SHA-256) on the MySQL Server.
+* If replication is used, do these steps also on the primary.
+* Take a backup.
+* Install the MariaB packages or MariaDB tar distribution.
+* Fix the my.cnf file to work with both MariaDB and MySQL.
+* When MariaDB is installed, you can test your config files with \\##mariadbd --help --verbose &gt; /tmp/log 2&gt;&amp;1## which will display all unsupported config options.
+* Check the log for ##ERROR## and fix the config files if needed.
+
+=== Sample Steps for Single Instance MySQL Server
+In the shell:
+&lt;&lt;code&gt;&gt;
+shell&gt; mysql --user=root ...##
+&lt;&lt;/code&gt;&gt;
+In MySQL:
+&lt;&lt;sql&gt;&gt;
+set @@global.innodb_fast_shutdown=0;
+quit
+&lt;&lt;/sql&gt;&gt;
+
+* Take down the node with ##mysqladmin shutdown## or ##sudo service mysqld stop##:
+&lt;&lt;code&gt;&gt;
+shell&gt; mysqladmin --user=root shutdown
+&lt;&lt;/code&gt;&gt;
+* Drop the MySQL packages:
+&lt;&lt;code&gt;&gt;
+shell&gt; yum -y remove Percona-Server*
+&lt;&lt;/code&gt;&gt;
+or
+&lt;&lt;code&gt;&gt;
+shell&gt; rpm -q -a | grep Percona | xargs rpm -e --nodeps
+&lt;&lt;/code&gt;&gt;
+or
+&lt;&lt;code&gt;&gt;
+shell&gt; rpm -q -a | grep -i mysql | xargs rpm -e --nodeps
+&lt;&lt;/code&gt;&gt;
+* This can also be done later if one has both MySQL and MariaDB installed at the same time)
+* Remove the unsupported auditlog (Only relevant with Percona server):
+&lt;&lt;code&gt;&gt;
+shell&gt; mv /etc/my.cnf.d/auditlog.cnf /etc/my.cnf.d/auditlog.cnf-backup
+&lt;&lt;/code&gt;&gt;
+* Install MariaDB if not already installed from the [[https://mariadb.org/download/|download site]]
+* Using the repo is recommended, or
+&lt;&lt;code&gt;&gt;
+shell&gt; yum install MariaDB-server MariaDB-client
+&lt;&lt;/code&gt;&gt;
+* Start mariadbd on the node data
+&lt;&lt;code&gt;&gt;
+systemctl start mariadb.service
+&lt;&lt;/code&gt;&gt;
+* If it does not start, check the error file. Remove all unsupported options from the config files and try again.
+* run [[mariadb-upgrade]]:
+&lt;&lt;code&gt;&gt;
+mariadb-upgrade
+&lt;&lt;/code&gt;&gt;
+* If there were problems with a plugin that does not work or is not supported, you can disable it with:
+&lt;&lt;code&gt;&gt;
+mariadb mysql
+&lt;&lt;/code&gt;&gt;
+* Then, from the MariaDB client:
+&lt;&lt;code&gt;&gt;
+select * from mysql.plugin
+&lt;&lt;/code&gt;&gt;
+* and then for each unsupported plugin:
+&lt;&lt;code&gt;&gt;
+UNINSTALL PLUGIN IF EXISTS #plugin_name#;
+&lt;&lt;/code&gt;&gt;
+* Test your new server
+* As long as one does not create new tables or alter tables, it should be possible to go back to MySQL by:
+* Dropping all tables in the &#39;mysql&#39; database
+&lt;&lt;code&gt;&gt;
+set @@global.innodb_fast_shutdown=0;
+SHUTDOWN
+&lt;&lt;/code&gt;&gt;
+* Start MySQL server with --skip-grants
+* Install the backup of the &#39;mysql&#39; database with:
+&lt;&lt;code&gt;&gt;
+shell&gt; mysql mysql &lt; /tmp/mysql-dump.txt
+shell&gt; mysqladmin flush-privileges
+&lt;&lt;/code&gt;&gt;
+
+=== MySQL replication setup
+
+In case of replication you can either convert one of the existing nodes directly to MariaDB or create a new node, convert that to MariaDB and then delete the old MySQL node after testing.
+
+* Do all the &#34;Prerequisite steps&#34; on the to-be-converted node.
+* Follow the [[#sample-steps-for-single-instance-mysql-server|Single instance MySQL server]] instructions for the node.
+* Start MariaDB as a replica to MySQL.
+* Test that the new node works as expected.
+* Note that a MariaDB replica will work with replication positions, not with MySQL GTID.
+* Repeat with all other nodes.
+* Switch one of the MariaDB nodes to be the primary.
+* Convert the old primary according to the above instructions.
+* Add the old primary as a replica.
 
 == [[upgrading-mariadb-on-windows|Upgrading on Windows]]
 
@@ -410,9 +516,8 @@ All the options in your original MySQL [[mysqld-configuration-files-and-groups|#
 However as MariaDB has more features than MySQL, there are a few things that you should consider changing in your ##my.cnf## file.
 
 * MariaDB uses the [[aria-storage-engine|Aria storage engine]] by default for internal temporary files, instead of MyISAM. If you have a lot of temporary files, you should add and set ##[[aria-system-variables/#aria_pagecache_buffer_size|aria-pagecache-buffer-size]]## to the same value as you have for ##[[myisam-system-variables#key_buffer_size|key-buffer-size]]##.
-* If you don&#39;t use MyISAM tables, you can set ##[[myisam-system-variables#key_buffer_size|key-buffer-size]]## to a very low value, like 64K.
-* If using MariaDB 10.1 or earlier, and your applications often connect and disconnect to MariaDB, you should set up ##[[server-system-variables#thread_cache_size|thread-cache-size]]## to the number of concurrent queries threads you are typically running. This is important in MariaDB as we are using the [[http://www.canonware.com/jemalloc/|jemalloc]] memory allocator.  [[http://www.canonware.com/jemalloc/|jemalloc]] usually has better performance when running many threads compared to other memory allocators, except if you create and destroy a lot of threads, in which case it will spend a lot of resources trying to manage thread specific storage.  Having a thread cache will fix this problem.
-* If you have a LOT of connections (&gt; 100) that mostly run short running queries, you should consider using the [[threadpool-in-55|thread pool]]. For example using : ##[[server-system-variables#thread_handling|thread_handling=pool-of-threads]]## and ##[[server-system-variables#thread_pool_size|thread_pool_size=128]]## could give a notable performance boost in this case. Where the ##thread_pool_size## should be about ##2 * number of cores on your machine##.
+* If you don&#39;t use MyISAM tables, you can set [[myisam-system-variables#key_buffer_size|key-buffer-size]] to a very low value, like 64K.
+* If you have a LOT of connections (&gt; 100) that mostly run short running queries, you should consider using the [[threadpool-in-55|thread pool]]. For example using : [[server-system-variables#thread_handling|thread_handling=pool-of-threads]] and [[server-system-variables#thread_pool_size|thread_pool_size=128]] could give a notable performance boost in this case. Where the ##thread_pool_size## should be about ##2 * number of cores on your machine##.
 
 == Other Things to Think About
 * Views with definition ##ALGORITHM=MERGE## or ##ALGORITHM=TEMPTABLE## got accidentally swapped between MariaDB and MySQL. You have to re-create views created with either of these definitions (see MDEV-6916).

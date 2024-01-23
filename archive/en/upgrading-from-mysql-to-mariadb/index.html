@@ -256,7 +256,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-01-21 13:29">1 day, 6 hours ago</span></dd>
+<span class="datetime" title="2024-01-23 07:48">9 hours, 12 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -420,13 +420,24 @@
 
         <li class=""><a href="#prerequisites" title="Prerequisites">Prerequisites</a></li>
 
-        <li class=""><a href="#mysql-sha-256-authentication" title="MySQL SHA-256 authentication">MySQL SHA-256 authentication</a></li>
+        <li class=""><a href="#mysql-sha-256-authentication" title="MySQL SHA-256 Authentication">MySQL SHA-256 Authentication</a></li>
 
         <li class=""><a href="#json" title="JSON">JSON</a></li>
 
         <li class=""><a href="#xa" title="XA">XA</a></li>
 
-        <li class=""><a href="#encryption-and-compression" title="Encryption and compression">Encryption and compression</a>    </ol>
+        <li class=""><a href="#encryption-and-compression" title="Encryption and Compression">Encryption and Compression</a></li>
+
+        <li class=""><a href="#config-files" title="Config Files">Config Files</a>        <ol class="toc">
+
+            <li class=""><a href="#audit-plugin" title="Audit plugin">Audit plugin</a>        </ol>
+</li>
+
+        <li class=""><a href="#common-steps" title="Common Steps">Common Steps</a></li>
+
+        <li class=""><a href="#sample-steps-for-single-instance-mysql-server" title="Sample Steps for Single Instance MySQL Server">Sample Steps for Single Instance MySQL Server</a></li>
+
+        <li class=""><a href="#mysql-replication-setup" title="MySQL replication setup">MySQL replication setup</a>    </ol>
 </li>
 
     <li class=""><a href="#upgrading-mariadb-on-windowsupgrading-on-windows" title="Upgrading on Windows">Upgrading on Windows</a></li>
@@ -459,11 +470,12 @@ For <a href="/kb/en/mariadb-vs-mysql-compatibility/">all practical purposes</a>,
 </pre><p><a href="/kb/en/innodb-system-variables/#innodb_file_per_table">innodb_file_per_table</a> should be 1. This is the default setting for MySQL and MariaDB.  If not, one should use <a href="/kb/en/mysqldump/">mysqldump</a> for migration as some of the following recommendations will not work.</p>
 <p><a href="/kb/en/innodb-system-variables/#innodb_fast_shutdown">innodb_fast_shutdown</a> should be 0 (at least on the migrated server during shutdown, to ensure that a full shutdown is done when taking server down).  This is required when upgrading between major versions of both MySQL and MariaDB as the format of the undo or redo files can change between major versions. This variable can be set just before doing the shutdown.</p>
 <p>If your distribution allows it, install the MariaDB packages or the MariaDB tar distribution on the database server. Do not start MariaDB yet! This will decrease the downtime while doing the migration.</p>
-<h3 class="anchored_heading" id="mysql-sha-256-authentication">MySQL SHA-256 authentication</h3>
+<h3 class="anchored_heading" id="mysql-sha-256-authentication">MySQL SHA-256 Authentication</h3>
 <p>MariaDB does not support the MySQL SHA-256 authentication protocol as it's cumbersome and not secure for in-house attacks. (clear text password is available inside the server)</p>
-<p><a href="https://mariadb.com/kb/en/authentication-plugin-sha-256/">https://mariadb.com/kb/en/authentication-plugin-sha-256/</a>
-<a href="https://jira.mariadb.org/browse/MDEV-9804">https://jira.mariadb.org/browse/MDEV-9804</a></p>
-<p>You can check which MySQL users are using the SHA-256 by executing:</p>
+<ul start="1"><li>See [authentication-plugin-sha-256/|Authentication Plugin - SHA-256]]
+</li><li><a href="https://jira.mariadb.org/browse/MDEV-9804">MDEV-9804</a>
+</li></ul>
+<p>You can check which MySQL users are using SHA-256 by executing:</p>
 <pre class="fixed">SELECT user, plugin FROM mysql.user where plugin like &#34;%sha%&#34;;
 </pre><p>You can change the user/s to use a protocol compatible with both MySQL and
 MariaDB with:</p>
@@ -479,22 +491,104 @@ data_type=&#34;JSON&#34;;
 <pre class="fixed">ALTER TABLE table_name MODIFY json_column LONGTEXT;
 </pre><h3 class="anchored_heading" id="xa">XA</h3>
 <p>When doing a backup, ensure that there are no active XA transactions in the backup, as these transactions needs to be committed/rolled back before the migration.</p>
-<h3 class="anchored_heading" id="encryption-and-compression">Encryption and compression</h3>
+<h3 class="anchored_heading" id="encryption-and-compression">Encryption and Compression</h3>
 <p>Encryption and compression are very different in MySQL and MariaDB.</p>
 <p>Encrypted/compressed tables need to be de-encrypted/de-compressed before starting the conversion, and then encrypted/compressed again afterwards.</p>
 <p>Detect compressed tables with the following query:</p>
 <pre class="fixed">select table_name, create_options from information_schema.TABLES where
 create_options like &#34;%comp%&#34;;
-</pre><h2 class="anchored_heading" id="upgrading-mariadb-on-windowsupgrading-on-windows"><a href="/kb/en/upgrading-mariadb-on-windows/">Upgrading on Windows</a></h2>
+</pre><h3 class="anchored_heading" id="config-files">Config Files</h3>
+<ul start="1"><li>Create config files for MariaDB that match the MySQL cluster option files
+</li><li>There are some configuration options that differ. See <a href="/kb/en/system-variable-differences-between-mariadb-and-mysql/">System Variable Differences between MariaDB and MySQL</a>.
+</li><li>You can use <code>[mariadb]</code> or <code>[mariadb-x.y.z]</code> (for the specific version) in the current config files for MariaDB-specific options.
+</li><li>You can also place MySQL-specific options inside a <code>[mysqld-5.7]</code> section.
+</li><li>With a combination of these, it's easy to create a config file that will work with both MariaDB and MySQL, no matter what options are present.
+</li><li>See also <a href="https://jira.mariadb.org/browse/MDEV-32745">MDEV-32745</a> for an upcoming tool to automatically detect incompatible options.
+</li></ul>
+<h4 class="anchored_heading" id="audit-plugin">Audit plugin</h4>
+<ul start="1"><li>MariaDB does not have the audit_log_plugin. Rather, MariaDB uses the server_audit plugin, which takes different options.
+</li></ul>
+<h3 class="anchored_heading" id="common-steps">Common Steps</h3>
+<ul start="1"><li>Perform all the prerequisite steps (SHA-256) on the MySQL Server.
+</li><li>If replication is used, do these steps also on the primary.
+</li><li>Take a backup.
+</li><li>Install the MariaB packages or MariaDB tar distribution.
+</li><li>Fix the my.cnf file to work with both MariaDB and MySQL.
+</li><li>When MariaDB is installed, you can test your config files with <br><code>mariadbd --help --verbose &gt; /tmp/log 2&gt;&amp;1</code> which will display all unsupported config options.
+</li><li>Check the log for <code>ERROR</code> and fix the config files if needed.
+</li></ul>
+<h3 class="anchored_heading" id="sample-steps-for-single-instance-mysql-server">Sample Steps for Single Instance MySQL Server</h3>
+<p>In the shell:</p>
+<pre class="fixed">shell&gt; mysql --user=root ...##
+</pre><p>In MySQL:</p>
+<pre class="fixed"><span class="k">set</span> <span class="o">@@</span><span class="k">global</span><span class="p">.</span><span class="n">innodb_fast_shutdown</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+<span class="n">quit</span>
+</pre><ul start="1"><li>Take down the node with <code>mysqladmin shutdown</code> or <code>sudo service mysqld stop</code>:
+</li></ul>
+<pre class="fixed">shell&gt; mysqladmin --user=root shutdown
+</pre><ul start="1"><li>Drop the MySQL packages:
+</li></ul>
+<pre class="fixed">shell&gt; yum -y remove Percona-Server*
+</pre><p>or</p>
+<pre class="fixed">shell&gt; rpm -q -a | grep Percona | xargs rpm -e --nodeps
+</pre><p>or</p>
+<pre class="fixed">shell&gt; rpm -q -a | grep -i mysql | xargs rpm -e --nodeps
+</pre><ul start="1"><li>This can also be done later if one has both MySQL and MariaDB installed at the same time)
+</li><li>Remove the unsupported auditlog (Only relevant with Percona server):
+</li></ul>
+<pre class="fixed">shell&gt; mv /etc/my.cnf.d/auditlog.cnf /etc/my.cnf.d/auditlog.cnf-backup
+</pre><ul start="1"><li>Install MariaDB if not already installed from the <a href="https://mariadb.org/download/">download site</a>
+</li><li>Using the repo is recommended, or
+</li></ul>
+<pre class="fixed">shell&gt; yum install MariaDB-server MariaDB-client
+</pre><ul start="1"><li>Start mariadbd on the node data
+</li></ul>
+<pre class="fixed">systemctl start mariadb.service
+</pre><ul start="1"><li>If it does not start, check the error file. Remove all unsupported options from the config files and try again.
+</li><li>run <a href="/kb/en/mariadb-upgrade/">mariadb-upgrade</a>:
+</li></ul>
+<pre class="fixed">mariadb-upgrade
+</pre><ul start="1"><li>If there were problems with a plugin that does not work or is not supported, you can disable it with:
+</li></ul>
+<pre class="fixed">mariadb mysql
+</pre><ul start="1"><li>Then, from the MariaDB client:
+</li></ul>
+<pre class="fixed">select * from mysql.plugin
+</pre><ul start="1"><li>and then for each unsupported plugin:
+</li></ul>
+<pre class="fixed">UNINSTALL PLUGIN IF EXISTS #plugin_name#;
+</pre><ul start="1"><li>Test your new server
+</li><li>As long as one does not create new tables or alter tables, it should be possible to go back to MySQL by:
+</li><li>Dropping all tables in the 'mysql' database
+</li></ul>
+<pre class="fixed">set @@global.innodb_fast_shutdown=0;
+SHUTDOWN
+</pre><ul start="1"><li>Start MySQL server with --skip-grants
+</li><li>Install the backup of the 'mysql' database with:
+</li></ul>
+<pre class="fixed">shell&gt; mysql mysql &lt; /tmp/mysql-dump.txt
+shell&gt; mysqladmin flush-privileges
+</pre><h3 class="anchored_heading" id="mysql-replication-setup">MySQL replication setup</h3>
+<p>In case of replication you can either convert one of the existing nodes directly to MariaDB or create a new node, convert that to MariaDB and then delete the old MySQL node after testing.</p>
+<ul start="1"><li>Do all the "Prerequisite steps" on the to-be-converted node.
+</li><li>Follow the <a href="#sample-steps-for-single-instance-mysql-server">Single instance MySQL server</a> instructions for the node.
+</li><li>Start MariaDB as a replica to MySQL.
+</li><li>Test that the new node works as expected.
+</li><li>Note that a MariaDB replica will work with replication positions, not with MySQL GTID.
+</li><li>Repeat with all other nodes.
+</li><li>Switch one of the MariaDB nodes to be the primary.
+</li><li>Convert the old primary according to the above instructions.
+</li><li>Add the old primary as a replica.
+</li></ul>
+<h2 class="anchored_heading" id="upgrading-mariadb-on-windowsupgrading-on-windows"><a href="/kb/en/upgrading-mariadb-on-windows/">Upgrading on Windows</a></h2>
 <p>On Windows, you should not uninstall MySQL and install MariaDB, this would not work, the existing database will not be found.</p>
 <p>Thus On Windows, just install MariaDB and use the upgrade wizard which is part of installer package and is launched by MSI installer. Or, in case you prefer command line, use <code>mysql_upgrade_service &lt;service_name&gt;</code> on the command line.</p>
 <h2 class="anchored_heading" id="upgrading-mycnf">Upgrading my.cnf</h2>
 <p>All the options in your original MySQL <a href="/kb/en/mysqld-configuration-files-and-groups/"><code>my.cnf</code> file</a> should work fine for MariaDB.</p>
 <p>However as MariaDB has more features than MySQL, there are a few things that you should consider changing in your <code>my.cnf</code> file.</p>
 <ul start="1"><li>MariaDB uses the <a href="/kb/en/aria-storage-engine/">Aria storage engine</a> by default for internal temporary files, instead of MyISAM. If you have a lot of temporary files, you should add and set <code><a href="/kb/en/aria-system-variables/#aria_pagecache_buffer_size">aria-pagecache-buffer-size</a></code> to the same value as you have for <code><a href="/kb/en/myisam-system-variables/#key_buffer_size">key-buffer-size</a></code>.
-</li><li>If you don't use MyISAM tables, you can set <code><a href="/kb/en/myisam-system-variables/#key_buffer_size">key-buffer-size</a></code> to a very low value, like 64K.
-</li><li>If using <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> or earlier, and your applications often connect and disconnect to MariaDB, you should set up <code><a href="/kb/en/server-system-variables/#thread_cache_size">thread-cache-size</a></code> to the number of concurrent queries threads you are typically running. This is important in MariaDB as we are using the <a href="http://www.canonware.com/jemalloc/">jemalloc</a> memory allocator.  <a href="http://www.canonware.com/jemalloc/">jemalloc</a> usually has better performance when running many threads compared to other memory allocators, except if you create and destroy a lot of threads, in which case it will spend a lot of resources trying to manage thread specific storage.  Having a thread cache will fix this problem.
-</li><li>If you have a LOT of connections (&gt; 100) that mostly run short running queries, you should consider using the <a href="/kb/en/threadpool-in-55/">thread pool</a>. For example using : <code><a href="/kb/en/server-system-variables/#thread_handling">thread_handling=pool-of-threads</a></code> and <code><a href="/kb/en/server-system-variables/#thread_pool_size">thread_pool_size=128</a></code> could give a notable performance boost in this case. Where the <code>thread_pool_size</code> should be about <code>2 * number of cores on your machine</code>.
+</li><li>If you don't use MyISAM tables, you can set <a href="/kb/en/myisam-system-variables/#key_buffer_size">key-buffer-size</a> to a very low value, like 64K.
+</li><li>If you have a LOT of connections (&gt; 100) that mostly run short running queries, you should consider using the <a href="/kb/en/threadpool-in-55/">thread pool</a>. For example using : <a href="/kb/en/server-system-variables/#thread_handling">thread_handling=pool-of-threads</a> and <a href="/kb/en/server-system-variables/#thread_pool_size">thread_pool_size=128</a> could give a notable performance boost in this case. Where the <code>thread_pool_size</code> should be about <code>2 * number of cores on your machine</code>.
 </li></ul>
 <h2 class="anchored_heading" id="other-things-to-think-about">Other Things to Think About</h2>
 <ul start="1"><li>Views with definition <code>ALGORITHM=MERGE</code> or <code>ALGORITHM=TEMPTABLE</code> got accidentally swapped between MariaDB and MySQL. You have to re-create views created with either of these definitions (see <a href="https://jira.mariadb.org/browse/MDEV-6916">MDEV-6916</a>).
