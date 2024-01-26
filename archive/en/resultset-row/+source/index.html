@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/resultset-row/+r/132811/">132811</a></dd>
+            <dd><a href="/kb/en/resultset-row/+r/134482/">134482</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-4784">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-11-29 13:56">2023-11-29 13:56</span></dd>
+<span class="datetime" title="2024-01-26 10:10">2024-01-26 10:10</span></dd>
         </dl>
     </div>
     
@@ -323,7 +323,7 @@ The byte representation of the string according to [[1-connecting-connecting#ssl
 
 &lt;&lt;style style=&#34;padding: 16px;background-color: #f7f7f7;border-radius: 3px;&#34;&gt;&gt;
 * byte&lt;1&gt; 0x00 header
-* byte&lt;(number_of_columns + 9) / 8&gt; [[#NULL-Bitmap-values|NULL-Bitmap]]
+* byte&lt;(number_of_columns + 7) / 8&gt; [[#null-bitmap-values|NULL-Bitmap]]
 *for each column
 ** if column value is not null
 *** if MYSQL_TYPE_DOUBLE type : [[#double-binary-encoding|DOUBLE Binary encoding]]
@@ -347,7 +347,7 @@ The byte representation of the string according to [[1-connecting-connecting#ssl
 ==== NULL-Bitmap values
 
 The NULL-Bitmap indicates if a parameter for a column is null (one bit per parameter) beginning with the 3rd bit.
-NULL-bitmap size is (number_of_columns + 9) / 8.
+NULL-bitmap size is (number_of_columns + 7) / 8.
 
 \\
 
@@ -429,15 +429,17 @@ Data is encoded in 8 bytes without fractional seconds, 12 bytes with fractional 
 ==== TIME binary encoding
 Data is encoded in 9 bytes without fractional seconds, 13 bytes with fractional seconds.
 
-&lt;&lt;style class=&#34;borders&#34;&gt;&gt;
-| byte position | description |
-| 1 | data length : 0 for special &#39;00:00:00&#39; value, 8 without fractional seconds, 12 with fractional seconds|
-| 2 | is negative |
-| 3-6 | date on 4 bytes little-endian format|
-| 7 | hour of day|
-| 8 | minutes|
-| 9 | secondes|
-| 10-13 | micro-second on 4 bytes little-endian format (only if data-length is &gt; 7)|
+
+&lt;&lt;style style=&#34;padding: 16px;background-color: #f7f7f7;border-radius: 3px;&#34;&gt;&gt;
+* [[protocol-data-types/#fixed-length-integers|int&lt;1&gt;]] data length: 0 for special &#39;00:00:00&#39; value, 8 without fractional seconds, 12 with fractional seconds
+* if data length &gt; 0
+** [[protocol-data-types/#fixed-length-integers|int&lt;1&gt;]] 0 for positive time, 1 for negative time
+** [[protocol-data-types/#fixed-length-integers|int&lt;4&gt;]] days
+** [[protocol-data-types/#fixed-length-integers|int&lt;1&gt;]] hours
+** [[protocol-data-types/#fixed-length-integers|int&lt;1&gt;]] minutes
+** [[protocol-data-types/#fixed-length-integers|int&lt;1&gt;]] seconds
+** if data length &gt; 8
+***  [[protocol-data-types/#fixed-length-integers|int&lt;4&gt;]] microseconds
 &lt;&lt;/style&gt;&gt;
 
 \\</textarea>

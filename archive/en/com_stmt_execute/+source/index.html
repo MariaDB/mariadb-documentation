@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/com_stmt_execute/+r/110616/">110616</a></dd>
+            <dd><a href="/kb/en/com_stmt_execute/+r/134480/">134480</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-16">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2021-10-15 05:40">2021-10-15 05:40</span></dd>
+<span class="datetime" title="2024-01-26 08:06">2024-01-26 08:06</span></dd>
         </dl>
     </div>
     
@@ -330,7 +330,8 @@ Client to server.
 ****  byte&lt;1&gt;:  [[resultset#field-types|field type]]
 ****  byte&lt;1&gt;: [[#parameter-flag|parameter flag]]
 **for each parameter (i.e param_count times)
-***      byte&lt;n&gt;                 [[#binary-parameter-encoding|binary parameter value]]
+*** if parameter is not null
+****      byte&lt;n&gt;                 [[#binary-parameter-encoding|binary parameter value]]
 &lt;&lt;/style&gt;&gt;
 
 === Statement Id
@@ -370,22 +371,14 @@ parameter type flag byte:
 &lt;&lt;/style&gt;&gt;
 
 === NULL-Bitmap
-The NULL-Bitmap indicates if parameters are null (one bit per parameter).\\
-NULL-bitmap size is (parameter number + 7) / 8
+The NULL-Bitmap indicates if parameters are null (one bit per parameter). If the parameter is NULL, the bit is set in the bitmap and the parameter value is not sent.
+
+The size in bytes of the NULL-bitmap can be calculated with: {{{(parameter number + 7) / 8}}}
 
 ===  Binary parameter encoding
-&lt;&lt;style class=&#34;borders&#34;&gt;&gt;
-|[[result-set-packets/#field-types|MYSQL_TYPE_DOUBLE]] | [[resultset-row#double-binary-encoding|DOUBLE Binary encoding]]|
-|[[result-set-packets/#field-types|MYSQL_TYPE_FLOAT]] | [[resultset-row#float-binary-encoding|FLOAT Binary encoding]]|
-|[[result-set-packets/#field-types|MYSQL_TYPE_LONGLONG]] | [[resultset-row#bigint-binary-encoding|BIGINT Binary encoding]]|
-|[[result-set-packets/#field-types|MYSQL_TYPE_INTEGER]] | [[resultset-row#integer-binary-encoding|INTEGER Binary encoding]]|
-|[[result-set-packets/#field-types|MYSQL_TYPE_MEDIUMINT]] | [[resultset-row#mediumint-binary-encoding|MEDIUMINT Binary encoding]]|
-|[[result-set-packets/#field-types|MYSQL_TYPE_SMALLINT]]\\[[result-set-packets/#field-types|MYSQL_TYPE_YEAR]] | [[resultset-row#smallint-binary-encoding|SMALLINT Binary encoding]]|
-|[[result-set-packets/#field-types|MYSQL_TYPE_TINYINT]] | [[resultset-row#tinyint-binary-encoding|TINYINT Binary encoding]]|
-|[[result-set-packets/#field-types|MYSQL_TYPE_DATE]]\\[[result-set-packets/#field-types|MYSQL_TYPE_TIMESTAMP]]\\[[result-set-packets/#field-types|MYSQL_TYPE_DATETIME]] | [[resultset-row#timestamp-binary-encoding|TIMESTAMP Binary encoding]]|
-|[[result-set-packets/#field-types|MYSQL_TYPE_TIME]] | [[resultset-row#time-binary-encoding|TIME Binary encoding]]|
-|[[result-set-packets/#field-types|MYSQL_TYPE_TINY_BLOB]]\\[[result-set-packets/#field-types|MYSQL_TYPE_MEDIUM_BLOB]]\\[[result-set-packets/#field-types|MYSQL_TYPE_LONG_BLOB]]\\[[result-set-packets/#field-types|MYSQL_TYPE_BLOB]]\\[[result-set-packets/#field-types|MYSQL_TYPE_GEOMETRY]]\\[[result-set-packets/#field-types|MYSQL_TYPE_STRING]]\\[[result-set-packets/#field-types|MYSQL_TYPE_VARCHAR]]\\[[result-set-packets/#field-types|MYSQL_TYPE_VAR_STRING]]\\[[result-set-packets/#field-types|MYSQL_TYPE_NEWDECIMAL]] | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]]|
-&lt;&lt;/style&gt;&gt;
+
+The encoding of the COM_STMT_EXECUTE parameters are the same as the encoding of the [[result-set-packets/#field-types|binary resultsets]].
+
 
 === COM_STMT_EXECUTE response 
 The server can answer with 3 different responses: 

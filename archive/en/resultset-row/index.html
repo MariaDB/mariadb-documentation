@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-11-29 13:56">1 month, 3 weeks ago</span></dd>
+<span class="datetime" title="2024-01-26 10:10">6 hours, 50 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -396,7 +396,7 @@ The byte representation of the string according to <a href="/kb/en/1-connecting-
 <br><br></p>
 <h3 class="anchored_heading" id="binary-resultset-row">Binary resultset row</h3>
 <div class="cstm-style" style="padding: 16px;background-color: #f7f7f7;border-radius: 3px;"><ul start="1"><li>byte&lt;1&gt; 0x00 header
-</li><li>byte&lt;(number_of_columns + 9) / 8&gt; <a href="#NULL-Bitmap-values">NULL-Bitmap</a>
+</li><li>byte&lt;(number_of_columns + 7) / 8&gt; <a href="#null-bitmap-values">NULL-Bitmap</a>
 </li><li>for each column
 <ul start="1"><li>if column value is not null
 <ul start="1"><li>if MYSQL_TYPE_DOUBLE type : <a href="#double-binary-encoding">DOUBLE Binary encoding</a>
@@ -419,7 +419,7 @@ The byte representation of the string according to <a href="/kb/en/1-connecting-
 </div><p><br></p>
 <h4 class="anchored_heading" id="null-bitmap-values">NULL-Bitmap values</h4>
 <p>The NULL-Bitmap indicates if a parameter for a column is null (one bit per parameter) beginning with the 3rd bit.
-NULL-bitmap size is (number_of_columns + 9) / 8.</p>
+NULL-bitmap size is (number_of_columns + 7) / 8.</p>
 <p><br></p>
 <h4 class="anchored_heading" id="decimal-binary-encoding">DECIMAL Binary encoding.</h4>
 <p>DECIMAL has no fixed size, so will be encoded as <a href="/kb/en/protocol-data-types/#length-encoded-strings">string&lt;lenenc&gt;</a>.
@@ -474,15 +474,18 @@ Signed is defined by the <a href="/kb/en/resultset/#field-detail-flag">Column fi
 </div><p><br></p>
 <h4 class="anchored_heading" id="time-binary-encoding">TIME binary encoding</h4>
 <p>Data is encoded in 9 bytes without fractional seconds, 13 bytes with fractional seconds.</p>
-<div class="cstm-style borders"><table><tr><td>byte position</td><td>description</td></tr>
-<tr><td>1</td><td>data length : 0 for special '00:00:00' value, 8 without fractional seconds, 12 with fractional seconds</td></tr>
-<tr><td>2</td><td>is negative</td></tr>
-<tr><td>3-6</td><td>date on 4 bytes little-endian format</td></tr>
-<tr><td>7</td><td>hour of day</td></tr>
-<tr><td>8</td><td>minutes</td></tr>
-<tr><td>9</td><td>secondes</td></tr>
-<tr><td>10-13</td><td>micro-second on 4 bytes little-endian format (only if data-length is &gt; 7)</td></tr>
-</table>
+<div class="cstm-style" style="padding: 16px;background-color: #f7f7f7;border-radius: 3px;"><ul start="1"><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;1&gt;</a> data length: 0 for special '00:00:00' value, 8 without fractional seconds, 12 with fractional seconds
+</li><li>if data length &gt; 0
+<ul start="1"><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;1&gt;</a> 0 for positive time, 1 for negative time
+</li><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;4&gt;</a> days
+</li><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;1&gt;</a> hours
+</li><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;1&gt;</a> minutes
+</li><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;1&gt;</a> seconds
+</li><li>if data length &gt; 8
+<ul start="1"><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;4&gt;</a> microseconds
+</li></ul>
+</li></ul>
+</li></ul>
 </div><p><br></p>
 
     </div>
