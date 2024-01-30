@@ -288,7 +288,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/result-set-packets/+r/107633/">107633</a></dd>
+            <dd><a href="/kb/en/result-set-packets/+r/134478/">134478</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-4784">
@@ -297,7 +297,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2021-06-16 07:56">2021-06-16 07:56</span></dd>
+<span class="datetime" title="2024-01-26 07:57">2024-01-26 07:57</span></dd>
         </dl>
     </div>
     
@@ -360,10 +360,7 @@ A column definition packet describes a column in the result set. It uses the fol
 *[[protocol-data-types/#length-encoded-strings|string&lt;lenenc&gt;]] column alias 
 *[[protocol-data-types/#length-encoded-strings|string&lt;lenenc&gt;]] column 
 *if extended type supported (see ##MARIADB_CLIENT_EXTENDED_TYPE_INFO## ) 
-** [[protocol-data-types/#length-encoded-integers|int&lt;lenenc&gt;]] length extended info 
-** loop 
-*** [[protocol-data-types/#fixed-length-integers|int&lt;1&gt;]] data type: 0x00:type, 0x01: format 
-***[[protocol-data-types/#length-encoded-strings|string&lt;lenenc&gt;]] value 
+** [[protocol-data-types/#length-encoded-strings|string&lt;lenenc&gt;]] [[#extended-type-info|extended type info]] 
 *[[protocol-data-types/#length-encoded-integers|int&lt;lenenc&gt;]] length of fixed fields (=0xC) 
 *[[protocol-data-types/#fixed-length-integers|int&lt;2&gt;]] character set number 
 *[[protocol-data-types/#fixed-length-integers|int&lt;4&gt;]] max. column size 
@@ -373,51 +370,43 @@ A column definition packet describes a column in the result set. It uses the fol
 *[[protocol-data-types/#fixed-length-integers|int&lt;2&gt;]] - unused - 
 &lt;&lt;/style&gt;&gt; 
 
-
-This extended column type information can be used to find out more specific details about the column type.
-
-For example:
-
-* For a ##[[point|POINT]]## column, the column type field will be ##MYSQL_TYPE_GEOMETRY##, but the extended type will indicate &#39;point&#39;.
-* For a ##[[json|JSON]]## column, the column type field will be ##MYSQL_TYPE_STRING##, but the extended type will indicate &#39;json&#39;.
-
 === Field types
 
-The column type field in the column definition packet describes the base type of the column:
+The column type field in the column definition packet describes the base type of the column. It also indicates how the values are encoded for COM_STMT_EXECUTE parameters and binary resultset rows.
 
 &lt;&lt;style class=&#34;darkheader-nospace-borders&#34;&gt;&gt;
-|= Value |= Protocol Column Type |= Description |
-| 0 | MYSQL_TYPE_DECIMAL | |
-| 1 | MYSQL_TYPE_TINY | |
-| 2 | MYSQL_TYPE_SHORT | |
-| 3 | MYSQL_TYPE_LONG | |
-| 4 | MYSQL_TYPE_FLOAT | |
-| 5 | MYSQL_TYPE_DOUBLE | |
-| 6 | MYSQL_TYPE_NULL | |
-| 7 | MYSQL_TYPE_TIMESTAMP | |
-| 8 | MYSQL_TYPE_LONGLONG | |
-| 9 | MYSQL_TYPE_INT24 | |
-| 10 | MYSQL_TYPE_DATE | |
-| 11 | MYSQL_TYPE_TIME | |
-| 12 | MYSQL_TYPE_DATETIME | |
-| 13 | MYSQL_TYPE_YEAR | |
-| 14 | MYSQL_TYPE_NEWDATE | |
-| 15 | MYSQL_TYPE_VARCHAR | |
-| 16 | MYSQL_TYPE_BIT | |
-| 17 | MYSQL_TYPE_TIMESTAMP2 | |
-| 18 | MYSQL_TYPE_DATETIME2 | |
-| 19 | MYSQL_TYPE_TIME2 | |
-| 245 | MYSQL_TYPE_JSON | Only used with MySQL. MariaDB uses MYSQL_TYPE_STRING for JSON. |
-| 246 | MYSQL_TYPE_NEWDECIMAL | |
-| 247 | MYSQL_TYPE_ENUM | |
-| 248 | MYSQL_TYPE_SET | |
-| 249 | MYSQL_TYPE_TINY_BLOB | |
-| 250 | MYSQL_TYPE_MEDIUM_BLOB | |
-| 251 | MYSQL_TYPE_LONG_BLOB | |
-| 252 | MYSQL_TYPE_BLOB | |
-| 253 | MYSQL_TYPE_VAR_STRING | |
-| 254 | MYSQL_TYPE_STRING | |
-| 255 | MYSQL_TYPE_GEOMETRY | |
+|= Value |= Protocol Column Type |= Encoding |
+| 0 | MYSQL_TYPE_DECIMAL | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]] | 
+| 1 | MYSQL_TYPE_TINY | [[resultset-row#tinyint-binary-encoding|TINYINT Binary encoding]] | 
+| 2 | MYSQL_TYPE_SHORT| [[resultset-row#smallint-binary-encoding|SMALLINT Binary encoding]] | 
+| 3 | MYSQL_TYPE_LONG |[[resultset-row#integer-binary-encoding|INTEGER Binary encoding]]| 
+| 4 | MYSQL_TYPE_FLOAT  | [[resultset-row#float-binary-encoding|FLOAT Binary encoding]]| 
+| 5 | MYSQL_TYPE_DOUBLE | [[resultset-row#double-binary-encoding|DOUBLE Binary encoding]]| 
+| 6 | MYSQL_TYPE_NULL| Not used, nullness is indicated by the NULL-bitmap in the result | 
+| 7 | MYSQL_TYPE_TIMESTAMP | [[resultset-row#timestamp-binary-encoding|TIMESTAMP Binary encoding]] | 
+| 8 | MYSQL_TYPE_LONGLONG | [[resultset-row#bigint-binary-encoding|BIGINT Binary encoding]] | 
+| 9 | MYSQL_TYPE_INT24|[[resultset-row#integer-binary-encoding|INTEGER Binary encoding]] | 
+| 10 | MYSQL_TYPE_DATE  | [[resultset-row#timestamp-binary-encoding|TIMESTAMP Binary encoding]]| 
+| 11 | MYSQL_TYPE_TIME  | [[resultset-row#timestamp-binary-encoding|TIMESTAMP Binary encoding]]| 
+| 12 | MYSQL_TYPE_DATETIME | [[resultset-row#timestamp-binary-encoding|TIMESTAMP Binary encoding]] | 
+| 13 | MYSQL_TYPE_YEAR| [[resultset-row#smallint-binary-encoding|SMALLINT Binary encoding]] | 
+| 14 | MYSQL_TYPE_NEWDATE  | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]]| 
+| 15 | MYSQL_TYPE_VARCHAR | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]] | 
+| 16 | MYSQL_TYPE_BIT | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]] | 
+| 17 | MYSQL_TYPE_TIMESTAMP2| Used only in the replication protocol | 
+| 18 | MYSQL_TYPE_DATETIME2 | Used only in the replication protocol | 
+| 19 | MYSQL_TYPE_TIME2 | Used only in the replication protocol | 
+| 245 | MYSQL_TYPE_JSON  | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]] (only used with MySQL, MariaDB uses MYSQL_TYPE_STRING for JSON) |
+| 246 | MYSQL_TYPE_NEWDECIMAL  | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]] | 
+| 247 | MYSQL_TYPE_ENUM | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]]  | 
+| 248 | MYSQL_TYPE_SET  | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]] | 
+| 249 | MYSQL_TYPE_TINY_BLOB  | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]] | 
+| 250 | MYSQL_TYPE_MEDIUM_BLOB  | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]] | 
+| 251 | MYSQL_TYPE_LONG_BLOB | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]]  | 
+| 252 | MYSQL_TYPE_BLOB | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]]  | 
+| 253 | MYSQL_TYPE_VAR_STRING | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]] |
+| 254 | MYSQL_TYPE_STRING | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]]  | 
+| 255 | MYSQL_TYPE_GEOMETRY  | [[protocol-data-types/#length-encoded-bytes|byte&lt;lenenc&gt; encoding]] |
 &lt;&lt;/style&gt;&gt;
 
 
@@ -450,6 +439,22 @@ It is a bitmask with the following flags:
 The ##BLOB## flag cannot be used to determine if a column has binary data, because ##[[binary|BINARY]]## and ##[[varbinary|VARBINARY]]## columns are treated as strings, instead of blobs.
 
 The ##BINARY_COLLATION## flag can be used to determine if a string column has binary data.
+&lt;&lt;/style&gt;&gt;
+
+=== Extended type info
+
+
+This extended column type information can be used to find out more specific details about the column type.
+
+For example:
+
+* For a ##[[point|POINT]]## column, the column type field will be ##MYSQL_TYPE_GEOMETRY##, but the extended type will indicate &#39;point&#39;.
+* For a ##[[json|JSON]]## column, the column type field will be ##MYSQL_TYPE_STRING##, but the extended type will indicate &#39;json&#39;.
+
+&lt;&lt;style style=&#34;padding: 16px;background-color: #f7f7f7;border-radius: 3px;&#34;&gt;&gt;
+* while string has data
+** [[protocol-data-types/#fixed-length-integers|int&lt;1&gt;]] data type: 0x00:type, 0x01: format 
+**[[protocol-data-types/#length-encoded-strings|string&lt;lenenc&gt;]] value 
 &lt;&lt;/style&gt;&gt;</textarea>
     
 
