@@ -260,7 +260,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-12-02 08:34">1 month, 4 weeks ago</span></dd>
+<span class="datetime" title="2024-01-29 22:14">18 hours, 54 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -402,6 +402,8 @@
 
     <li class=""><a href="#creating-a-replication-pair" title="Creating a replication pair">Creating a replication pair</a></li>
 
+    <li class=""><a href="#event-scheduler-an-error-occurred-when-initializing-system-tables-disabling-the-event-scheduler" title="Event Scheduler: An error occurred when initializing system tables. Disabling the Event Scheduler.">Event Scheduler: An error occurred when initializing system tables. Disabling the Event Scheduler.</a></li>
+
     <li class=""><a href="#innodb-upgrade-after-a-crash-is-not-supported-the-redo-log-was-created-with-mariadb-xyz" title="InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB X.Y.Z">InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB X.Y.Z</a></li>
 
     <li class=""><a href="#every-mariadb-start-is-a-crash-recovery" title="Every MariaDB start is a crash recovery">Every MariaDB start is a crash recovery</a></li>
@@ -487,7 +489,12 @@ services:
     depends_on:
       master:
         condition: service_healthy
-</pre><h2 class="anchored_heading" id="innodb-upgrade-after-a-crash-is-not-supported-the-redo-log-was-created-with-mariadb-xyz">InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB X.Y.Z</h2>
+</pre><h2 class="anchored_heading" id="event-scheduler-an-error-occurred-when-initializing-system-tables-disabling-the-event-scheduler">Event Scheduler: An error occurred when initializing system tables. Disabling the Event Scheduler.</h2>
+<p>This will show up in the container log as:</p>
+<pre class="fixed">2024-01-29 17:38:13 0 [ERROR] Incorrect definition of table mysql.event: expected column 'definer' at position 3 to have type varchar(, found type char(141).
+2024-01-29 17:38:13 0 [ERROR] mariadbd: Event Scheduler: An error occurred when initializing system tables. Disabling the Event Scheduler.
+</pre><p>The cause is the underlying table has change structure from the last MariaDB version.  The easiest solution to this is to start the container with the environment variable [mariadb-server-docker-official-image-environment-variables/#mariadb_auto_upgrade-mariadb_disable_upgrade_backup|MARIADB_AUTO_UPGRADE=1] and system tables will be updated. This is safe to keep on as it detects the version installed. The next start should not show this error.</p>
+<h2 class="anchored_heading" id="innodb-upgrade-after-a-crash-is-not-supported-the-redo-log-was-created-with-mariadb-xyz">InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB X.Y.Z</h2>
 <p>This will show up in the error log as:</p>
 <pre class="fixed">2022-05-23 12:29:20 0 [ERROR] InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB 10.5.4.
 2022-05-23 12:29:20 0 [ERROR] InnoDB: Plugin initialization aborted with error Generic error
