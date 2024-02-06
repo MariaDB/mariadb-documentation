@@ -252,7 +252,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-01-25 17:12">4 days, 7 hours ago</span></dd>
+<span class="datetime" title="2024-02-05 14:07">11 hours, 4 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -797,6 +797,19 @@ If the client uses the IANA timezone, the server might have to load time zone in
 </div><p>The fastest way to load lots of data is using <a href="https://mariadb.com/kb/en/mariadb/load-data-infile/">LOAD DATA INFILE</a>. <br>However, using "LOAD DATA LOCAL INFILE" (ie: loading a file from the client) may be a security problem if someone can execute a query from the client, he can have access to any file on the client (according to the rights of the user running the client process).</p>
 <p>A specific option "allowLocalInfile" (default to true) can disable this functionality on the client side.
 The global variable <a href="/kb/en/server-system-variables/#local_infile">local_infile</a> can disable LOAD DATA LOCAL INFILE on the server side.</p>
+<p>You can provide custom stream as well using a specific setLocalInfileInputStream</p>
+<pre class="fixed">        Statement statement = connection.createStatement();
+        org.mariadb.jdbc.Statement mariaDbStatement =
+            statement.unwrap(org.mariadb.jdbc.Statement.class);
+        mariaDbStatement.setLocalInfileInputStream(in);
+
+        String sql =
+            &#34;LOAD DATA LOCAL INFILE 'notUsed'&#34;
+                + &#34; INTO TABLE myTable &#34;
+                + &#34; FIELDS TERMINATED BY '\\t' ENCLOSED BY ''&#34;
+                + &#34; ESCAPED BY '\\\\' LINES TERMINATED BY '\\n'&#34;;
+        statement.execute(sql);
+</pre><p>Contrary to mysql connector, setLocalInfileInputStream value can only be used for next execution.</p>
 <h3 class="anchored_heading" id="set-a-query-timeout">Set a Query Timeout</h3>
 <p>Driver follow the JDBC specifications, permitting Statement.setQueryTimeout() for a particular statement.</p>
 <p>If the goal is to set a timeout for all queries, since <a href="/kb/en/mariadb-1011-release-notes/">MariaDB 10.1.1</a>, the server permits a <a href="/kb/en/aborting-statements/">limiting query time</a> by setting the system variable <a href="/kb/en/server-system-variables/#max_statement_time">max_statement_time</a>.</p>
