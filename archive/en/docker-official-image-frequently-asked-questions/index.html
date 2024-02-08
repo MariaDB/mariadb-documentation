@@ -260,7 +260,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-01-29 22:14">6 days, 19 hours ago</span></dd>
+<span class="datetime" title="2024-02-06 03:15">2 days, 13 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -406,13 +406,19 @@
 
     <li class=""><a href="#innodb-upgrade-after-a-crash-is-not-supported-the-redo-log-was-created-with-mariadb-xyz" title="InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB X.Y.Z">InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB X.Y.Z</a></li>
 
+    <li class=""><a href="#every-mariadb-start-gives-permission-denies-messages" title="Every MariaDB start gives permission denies messages">Every MariaDB start gives permission denies messages</a></li>
+
     <li class=""><a href="#every-mariadb-start-is-a-crash-recovery" title="Every MariaDB start is a crash recovery">Every MariaDB start is a crash recovery</a></li>
 
     <li class=""><a href="#how-do-i-create-a-mariadb-backup-of-the-data" title="How do I create a MariaDB-backup of the data?">How do I create a MariaDB-backup of the data?</a></li>
 
     <li class=""><a href="#how-do-i-restore-from-a-mariadb-backup" title="How do I restore from a MariaDB-backup">How do I restore from a MariaDB-backup</a></li>
 
-    <li class=""><a href="#how-to-start-mariadb-with-apptainer" title="How to start MariaDB with Apptainer">How to start MariaDB with Apptainer</a> </ol>
+    <li class=""><a href="#how-to-start-mariadb-with-apptainer" title="How to start MariaDB with Apptainer">How to start MariaDB with Apptainer</a></li>
+
+    <li class=""><a href="#why-does-the-mariadb-container-start-as-root" title="Why does the MariaDB container start as root?">Why does the MariaDB container start as root?</a></li>
+
+    <li class=""><a href="#can-i-run-the-mariadb-container-as-an-arbitrary-user" title="Can I run the MariaDB container as an arbitrary user?">Can I run the MariaDB container as an arbitrary user?</a> </ol>
 </li>
 </div><p>
 Frequently asked questions about the Docker Official Image</p>
@@ -493,7 +499,7 @@ services:
 <p>This will show up in the container log as:</p>
 <pre class="fixed">2024-01-29 17:38:13 0 [ERROR] Incorrect definition of table mysql.event: expected column 'definer' at position 3 to have type varchar(, found type char(141).
 2024-01-29 17:38:13 0 [ERROR] mariadbd: Event Scheduler: An error occurred when initializing system tables. Disabling the Event Scheduler.
-</pre><p>The cause is the underlying table has change structure from the last MariaDB version.  The easiest solution to this is to start the container with the environment variable [mariadb-server-docker-official-image-environment-variables/#mariadb_auto_upgrade-mariadb_disable_upgrade_backup|MARIADB_AUTO_UPGRADE=1] and system tables will be updated. This is safe to keep on as it detects the version installed. The next start should not show this error.</p>
+</pre><p>The cause is the underlying table has change structure from the last MariaDB version.  The easiest solution to this is to start the container with the environment variable <a href="/kb/en/mariadb-server-docker-official-image-environment-variables/#mariadb_auto_upgrade-mariadb_disable_upgrade_backup">MARIADB_AUTO_UPGRADE=1</a> and system tables will be updated. This is safe to keep on as it detects the version installed. The next start should not show this error.</p>
 <h2 class="anchored_heading" id="innodb-upgrade-after-a-crash-is-not-supported-the-redo-log-was-created-with-mariadb-xyz">InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB X.Y.Z</h2>
 <p>This will show up in the error log as:</p>
 <pre class="fixed">2022-05-23 12:29:20 0 [ERROR] InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB 10.5.4.
@@ -505,6 +511,16 @@ services:
 <pre class="fixed">2023-11-06 10:49:23 0 [Note] InnoDB: Shutdown completed; log sequence number 84360; transaction id 49
 2023-11-06 10:49:23 0 [Note] mariadbd: Shutdown complete
 </pre><p>After you see this, you can update your MariaDB tag to a later version.</p>
+<h2 class="anchored_heading" id="every-mariadb-start-gives-permission-denies-messages">Every MariaDB start gives permission denies messages</h2>
+<pre class="fixed">2024-02-06 03:03:18+00:00 [Note] [Entrypoint]: Entrypoint script for MariaDB Server 1:10.11.6+maria~ubu2204 started.
+/usr/local/bin/docker-entrypoint.sh: line 600: /var/lib/mysql//mysql_upgrade_info: Permission denied
+2024-02-06 03:03:18+00:00 [Note] [Entrypoint]: MariaDB upgrade (mariadb-upgrade) required, but skipped due to $MARIADB_AUTO_UPGRADE setting
+2024-02-06  3:03:18 0 [Warning] Can't create test file '/var/lib/mysql/80a2bb81d698.lower-test' (Errcode: 13 &#34;Permission denied&#34;)
+2024-02-06  3:03:18 0 [Note] Starting MariaDB 10.11.6-MariaDB-1:10.11.6+maria~ubu2204 source revision fecd78b83785d5ae96f2c6ff340375be803cd299 as process 1
+2024-02-06  3:03:18 0 [ERROR] mariadbd: Can't create/write to file './ddl_recovery.log' (Errcode: 13 &#34;Permission denied&#34;)
+2024-02-06  3:03:18 0 [ERROR] DDL_LOG: Failed to create ddl log file: ./ddl_recovery.log
+2024-02-06  3:03:18 0 [ERROR] Aborting
+</pre><p>In this case, the container is running as a user that, inside the container, does not have write permissions on the datadir, <span class="external_image">External images are disabled</span>.</p>
 <h2 class="anchored_heading" id="every-mariadb-start-is-a-crash-recovery">Every MariaDB start is a crash recovery</h2>
 <p>Do you get on every start:</p>
 <pre class="fixed">db-1  | 2023-02-25 19:10:02 0 [Note] Starting MariaDB 10.11.2-MariaDB-1:10.11.2+maria~ubu2204-log source revision cafba8761af55ae16cc69c9b53a341340a845b36 as process 1                                                                                                         
@@ -545,7 +561,11 @@ docker exec mdb  rm -rf /backup/d
 apptainer run --no-home --bind $PWD/mydatadir:/var/lib/mysql --env MARIADB_RANDOM_ROOT_PASSWORD=1 --net --network-args &#34;portmap=3308:3306/tcp&#34; --fakeroot --scratch=/run/mysqld  docker://mariadb:10.5
 </pre><p>Alternately:</p>
 <pre class="fixed">apptainer run --no-home --bind $PWD/mydatadir:/var/lib/mysql --env MARIADB_RANDOM_ROOT_PASSWORD=1 --net --network-args &#34;portmap=3308:3306/tcp&#34; --fakeroot   docker://mariadb:10.5 --socket=/var/lib/mysql/mariadb.sock --pid-file=/var/lib/mysql/mariadb.pid
-</pre>
+</pre><h2 class="anchored_heading" id="why-does-the-mariadb-container-start-as-root">Why does the MariaDB container start as root?</h2>
+<p>The MariaDB entrypoint briefly starts as root, and if a explicit volume is there, the owner of this volume will be root. To allow MariaDB to use the CHOWN capability to change to the volume owner to a user that can write to this volume, it needs to be briefly root. After this one action is taken, the entrypoint uses gosu to drop to a non-root user and continues execution.</p>
+<h2 class="anchored_heading" id="can-i-run-the-mariadb-container-as-an-arbitrary-user">Can I run the MariaDB container as an arbitrary user?</h2>
+<p>Yes. using the <span class="attachment_not_found">Attachment 'user%3A_2022' not found</span> in a compose file, or <span class="attachment_not_found">Attachment '--user_2022' not found</span> on a command line will run the entrypoint as the user id 2022. When this occurs, it is assumed that the volume of the datadir has the right permissions for MariaDB to access the datadir. This can be useful if your local user is user id 2022 and your datadir is owned locally by this user. Note inside the container there isn't the same user names outside the container defined, so working with numbers is more portable.</p>
+
     </div>
 
 

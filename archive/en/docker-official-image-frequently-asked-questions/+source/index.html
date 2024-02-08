@@ -296,7 +296,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/docker-official-image-frequently-asked-questions/+r/134699/">134699</a></dd>
+            <dd><a href="/kb/en/docker-official-image-frequently-asked-questions/+r/135004/">135004</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-13052">
@@ -305,7 +305,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-01-29 22:14">2024-01-29 22:14</span></dd>
+<span class="datetime" title="2024-02-06 03:15">2024-02-06 03:15</span></dd>
         </dl>
     </div>
     
@@ -432,7 +432,7 @@ This will show up in the container log as:
 2024-01-29 17:38:13 0 [ERROR] mariadbd: Event Scheduler: An error occurred when initializing system tables. Disabling the Event Scheduler.
 &lt;&lt;/code&gt;&gt;
 
-The cause is the underlying table has change structure from the last MariaDB version.  The easiest solution to this is to start the container with the environment variable [mariadb-server-docker-official-image-environment-variables/#mariadb_auto_upgrade-mariadb_disable_upgrade_backup|MARIADB_AUTO_UPGRADE=1] and system tables will be updated. This is safe to keep on as it detects the version installed. The next start should not show this error.
+The cause is the underlying table has change structure from the last MariaDB version.  The easiest solution to this is to start the container with the environment variable [[mariadb-server-docker-official-image-environment-variables/#mariadb_auto_upgrade-mariadb_disable_upgrade_backup|MARIADB_AUTO_UPGRADE=1]] and system tables will be updated. This is safe to keep on as it detects the version installed. The next start should not show this error.
 
 == InnoDB: Upgrade after a crash is not supported. The redo log was created with MariaDB X.Y.Z
 
@@ -458,6 +458,20 @@ The logs on shutdown should have a message like:
 
 After you see this, you can update your MariaDB tag to a later version.
 
+== Every MariaDB start gives permission denies messages
+
+&lt;&lt;code&gt;&gt;
+2024-02-06 03:03:18+00:00 [Note] [Entrypoint]: Entrypoint script for MariaDB Server 1:10.11.6+maria~ubu2204 started.
+/usr/local/bin/docker-entrypoint.sh: line 600: /var/lib/mysql//mysql_upgrade_info: Permission denied
+2024-02-06 03:03:18+00:00 [Note] [Entrypoint]: MariaDB upgrade (mariadb-upgrade) required, but skipped due to $MARIADB_AUTO_UPGRADE setting
+2024-02-06  3:03:18 0 [Warning] Can&#39;t create test file &#39;/var/lib/mysql/80a2bb81d698.lower-test&#39; (Errcode: 13 &#34;Permission denied&#34;)
+2024-02-06  3:03:18 0 [Note] Starting MariaDB 10.11.6-MariaDB-1:10.11.6+maria~ubu2204 source revision fecd78b83785d5ae96f2c6ff340375be803cd299 as process 1
+2024-02-06  3:03:18 0 [ERROR] mariadbd: Can&#39;t create/write to file &#39;./ddl_recovery.log&#39; (Errcode: 13 &#34;Permission denied&#34;)
+2024-02-06  3:03:18 0 [ERROR] DDL_LOG: Failed to create ddl log file: ./ddl_recovery.log
+2024-02-06  3:03:18 0 [ERROR] Aborting
+&lt;&lt;/code&gt;&gt;
+
+In this case, the container is running as a user that, inside the container, does not have write permissions on the datadir, {{/var//lib/mysql}}.
 
 == Every MariaDB start is a crash recovery
 
@@ -530,7 +544,16 @@ Alternately:
 
 &lt;&lt;code&gt;&gt;
 apptainer run --no-home --bind $PWD/mydatadir:/var/lib/mysql --env MARIADB_RANDOM_ROOT_PASSWORD=1 --net --network-args &#34;portmap=3308:3306/tcp&#34; --fakeroot   docker://mariadb:10.5 --socket=/var/lib/mysql/mariadb.sock --pid-file=/var/lib/mysql/mariadb.pid
-&lt;&lt;/code&gt;&gt;</textarea>
+&lt;&lt;/code&gt;&gt;
+
+
+== Why does the MariaDB container start as root?
+
+The MariaDB entrypoint briefly starts as root, and if a explicit volume is there, the owner of this volume will be root. To allow MariaDB to use the CHOWN capability to change to the volume owner to a user that can write to this volume, it needs to be briefly root. After this one action is taken, the entrypoint uses gosu to drop to a non-root user and continues execution.
+
+== Can I run the MariaDB container as an arbitrary user?
+
+Yes. using the {{user: 2022}} in a compose file, or {{--user 2022}} on a command line will run the entrypoint as the user id 2022. When this occurs, it is assumed that the volume of the datadir has the right permissions for MariaDB to access the datadir. This can be useful if your local user is user id 2022 and your datadir is owned locally by this user. Note inside the container there isn&#39;t the same user names outside the container defined, so working with numbers is more portable.</textarea>
     
 
 
