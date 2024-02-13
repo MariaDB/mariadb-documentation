@@ -284,7 +284,7 @@ Administra..." />
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-02-17 19:44">1 year, 11 months ago</span></dd>
+<span class="datetime" title="2022-02-17 19:44">1 year, 12 months ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -301,7 +301,7 @@ Administra..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/6.4.13/Documentation/Getting-Started/Configuration-Guide.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/6.4.14/Documentation/Getting-Started/Configuration-Guide.md">GitHub</a></dd>
         
     </dl>
 
@@ -2095,15 +2095,19 @@ MaxScale and hence onwards to the backend servers via MariaDB MaxScale.</p>
 <p>This parameter sets a custom version string that is sent in the MySQL Handshake
 from MariaDB MaxScale to clients.</p>
 <p>Example:</p>
-<div><pre><span></span>version_string=5.5.37-MariaDB-RWsplit
+<div><pre><span></span>version_string=10.11.2-MariaDB-RWsplit
 </pre></div>
 
 
-<p>If not set, the default value is <code>5.5.5-10.0.0 MaxScale &lt;MaxScale version&gt;</code>
-where <code>&lt;MaxScale version&gt;</code> is the version of MaxScale. If the provided string
-does not start with the number 5, a 5.5.5- prefix will be added to it. This
-means that a <em>version_string</em> value of <em>MaxScale-Service</em> would result in a
-<em>5.5.5-MaxScale-Service</em> being sent to the client.</p>
+<p>If not set, MaxScale will attempt to use a version string from the
+backend databases by selecting the version string of the database with
+the lowest version number. If the selected version is from the MariaDB
+10 series, a <code>5.5.5-</code> prefix will be added to it similarly to how the
+MariaDB 10 series versions added it.</p>
+<p>If MaxScale has not been able to connect to a single database and the
+versions are unknown, the default value of <code>5.5.5-10.4.32 &lt;MaxScale
+version&gt;-maxscale</code> is used where <code>&lt;MaxScale version&gt;</code> is the version of
+MaxScale.</p>
 <h3 id="auth_all_servers"><code>auth_all_servers</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
@@ -3100,21 +3104,24 @@ certificate referred to in the previous parameter. It will be used to verify
 that the certificate is valid. This is a required parameter for both listeners
 and servers. The CA certificate can consist of a certificate chain.</p>
 <h3 id="ssl_version"><code>ssl_version</code></h3>
-<p><strong>Note:</strong> It is highly recommended to leave this parameter to the default value
-  of <em>MAX</em>. This will guarantee that the strongest available encryption is used.
-  <strong>Do not change this unless you know what you are doing</strong>.</p>
-<p>This parameter controls the level of encryption used. Accepted values are:</p>
+<p>This parameter controls the minimum TLS version used. Accepted values are:</p>
 <ul>
 <li>TLSv10</li>
 <li>TLSv11</li>
 <li>TLSv12</li>
-<li>TLSv13</li>
+<li>TLSv13 (not supported on OpenSSL 1.0)</li>
 <li>MAX</li>
 </ul>
-<p>The default is to use the highest level of encryption available that both the
-client and server support. MaxScale supports TLSv1.0, TLSv1.1, TLSv1.2 and
-TLSv1.3 depending on the OpenSSL library version.</p>
-<p>The <code>TLSv13</code> value was added in MaxScale 2.3.15 (<a href="https://jira.mariadb.org/browse/MXS-2762">MXS-2762</a>).</p>
+<p>E.g. setting <code>ssl_version=TLSv12</code> enables both TLSv12 and TLSv13. OpenSSL will
+generally use the highest version supported by both ends.</p>
+<p>The default setting (MAX) allows all supported versions. MaxScale supports
+TLSv1.0, TLSv1.1, TLSv1.2 and TLSv1.3 depending on the OpenSSL library version.
+TLSv1.0 and TLSv1.1 are considered deprecated and should not be used,
+so setting <code>ssl_version=TLSv12</code> or <code>ssl_version=TLSv13</code> is recommended.</p>
+<p>In MaxScale 6.4.13 and earlier, this setting defined the <em>only</em> allowed TLS
+version, e.g. <code>ssl_version=TLSv12</code> would only enable TLSv12. The interpretation
+changed in MaxScale 6.4.14 to enable the user to disable old versions while
+allowing multiple recent TLS versions.</p>
 <h3 id="ssl_cipher"><code>ssl_cipher</code></h3>
 <p>Set the list of TLS ciphers. By default, no explicit ciphers are defined and the
 system defaults are used. Note that this parameter does not modify TLSv1.3
@@ -3209,7 +3216,7 @@ run MariaDB MaxScale without a monitor module. In this case an external
 monitoring system must the status of each server via MaxCtrl or the REST
 API. <strong>Only do this if you know what you are doing.</strong></p>
 <h2 id="filter-modules">Filter Modules</h2>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/6.4.13/Documentation/Getting-Started/images/image_10.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/6.4.14/Documentation/Getting-Started/images/image_10.png"></p>
 <p>Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
 explanation of each filter's functionality can be found in its documentation.</p>
