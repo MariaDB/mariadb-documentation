@@ -256,7 +256,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-01-30 07:45">2 weeks, 6 days ago</span></dd>
+<span class="datetime" title="2024-02-21 21:34">19 hours, 28 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -403,19 +403,54 @@
     
     <div class="answer formatted">
         <div class="cstm-style greenbox"><p>Read the <a href="/kb/en/profiling-memory-usage/">Profiling Memory Usage</a> page for more information on how to debug high memory consumption.</p>
-</div><h3 class="anchored_heading" id="using-tcmalloc">Using tcmalloc</h3>
-<p><a href="http://goog-perftools.sourceforge.net/doc/tcmalloc.html">TCMalloc</a> is a malloc replacement library optimized for multi-threaded usage. It also features a built-in heap debugger and profiler. You can build MariaDB with it or LD_PRELOAD it.</p>
+</div><h3 class="anchored_heading" id="using-tcmalloc-or-jemalloc">Using tcmalloc or jemalloc</h3>
+<p><a href="http://goog-perftools.sourceforge.net/doc/tcmalloc.html">TCMalloc</a> is a malloc replacement library optimized for multi-threaded usage. It also features a built-in heap debugger and profiler.</p>
+<p>Another malloc replacement that may speed up MariaDB is <a href="https://jemalloc.net/">jemalloc</a>.</p>
+<p>The procedures to use one of these libraries with MariaDB are the same. Many other malloc replacement libraries (as well as heap debuggers and profilers) can be used with MariaDB in a similar fashion.</p>
+<h4 class="anchored_heading" id="checking-the-malloc-implementation-in-use">Checking the malloc Implementation in Use</h4>
+<p>If you are unsure which malloc implementation is in use, or if you used one of the procedures explained in this page and you want to verify if it succeeded, you can run this query:</p>
+<pre class="fixed">SHOW GLOBAL VARIABLES LIKE 'version_malloc_library';
+</pre><p>A value of "system" indicates the system default, which is normally malloc. If another library is used, this query will return the name and version of the library.</p>
+<h4 class="anchored_heading" id="building-mariadb-with-an-alternative-to-malloc">Building MariaDB with an alternative to malloc</h4>
 <p>To build <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a> with <code>TCMalloc</code>, you need to use the following command</p>
 <pre class="fixed">cmake -DCMAKE_EXE_LINKER_FLAGS='-ltcmalloc'  -DWITH_SAFEMALLOC=OFF
-</pre><p>Many other malloc replacement libraries (as well as heap debuggers and profilers) can be used with MariaDB in a similar fashion.</p>
-<p>You can also start a standard MariaDB server with <code>TCmalloc</code> with:</p>
-<pre class="fixed">/usr/sbin/mysqld_safe --malloc-lib=tcmalloc
-</pre><p>or add it to <code>my.cnf</code>. Alternatively just set LD_PRELOAD to point to the to be used malloc library:</p>
-<pre class="fixed">export LD_PRELOAD=/path/to/library
+</pre><p>To use jemalloc, the option should be <code>-ljemalloc</code>.</p>
+<h4 class="anchored_heading" id="starting-mariadbd-safe-with-an-alternative-to-malloc">Starting mariadbd-safe with an alternative to malloc</h4>
+<p>If you want to do this only one time, as a test, you can also start a standard MariaDB server with <code>TCmalloc</code> with:</p>
+<pre class="fixed">/usr/sbin/mariadbd-safe --malloc-lib=tcmalloc
+</pre><p>If you want to configure <a href="/kb/en/mariadbd-safe/">mariadbd-safe</a> to use tcmalloc or jemalloc, edit your <a href="/kb/en/configuring-mariadb-with-option-files/">configuration file</a>, in the <code>[server]</code> or <code>[mariadbd]</code> group:</p>
+<pre class="fixed">malloc-lib=tcmalloc
+</pre><h4 class="anchored_heading" id="starting-mariadbd-with-an-alternative-to-malloc">Starting mariadbd with an alternative to malloc</h4>
+<p>First, locate the library file that needs to be used:</p>
+<pre class="fixed"># jemalloc
+find /usr/lib -name &#34;libjemalloc.so.*&#34;
+# tcmalloc
+find /usr/lib -name &#34;libtcmalloc.so.*&#34;
+</pre><p>Now pass it to <code>mariadbd</code> using the <code>LD_PRELOAD</code> variable:</p>
+<pre class="fixed">LD_PRELOAD=/path/to/library mariadbd
 </pre><p>For example, on OpenSuse 15.4 one would do:</p>
-<pre class="fixed">export LD_PRELOAD=/usr/lib64/libtcmalloc.so.4
-</pre><h2 class="anchored_heading" id="using-jemalloc">Using jemalloc</h2>
-<p>The above procedure also works with jemalloc.  Just replace tcmalloc with jemalloc in the above commands.</p>
+<h4 class="anchored_heading" id="configuring-systemd">Configuring systemd</h4>
+<p>If you use systemd to run MariaDB, first locate the library as explained above. The locate the service configuration file:</p>
+<pre class="fixed">systemctl status mariadb |grep Loaded
+</pre><p>Now edit the <code>mariadb.service</code> file by adding a line to the <code>[Service]</code> group:</p>
+<pre class="fixed">Environment=LD_PRELOAD=&lt;path-to-library&gt;
+</pre><p>For example:</p>
+<pre class="fixed">[Service]
+Environment=LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
+</pre><p>Now you should reload the configuration, so that the news setting will take effect, and restart MariaDB:</p>
+<pre class="fixed">systemctl daemon-reload
+systemctl restart mariadb
+</pre><h4 class="anchored_heading" id="dockerfile">Dockerfile</h4>
+<p>If you run <a href="/kb/en/docker-and-mariadb/">MariaDB on Docker</a> and use an image from a Dockerfile that is publicly available, most probably you have an entrypoint that is a Bash script, which starts <code>mariadbd</code> directly. You can edit this Bash script as explained above. Or you can set the <code>LD_PRELOAD</code> variable from the Dockerfile:</p>
+<pre class="fixed">ENV LD_PRELOAD=&lt;path-to-library&gt;
+</pre><p>To find the library file you can run one of these commands while the container is running:</p>
+<pre class="fixed"># jemalloc
+docker exec -ti &lt;container-name&gt; find /usr/lib -name &#34;libjemalloc.so.*&#34;
+# tcmalloc
+docker exec -ti &lt;container-name&gt; find /usr/lib -name &#34;libtcmalloc.so.*&#34;
+</pre><h4 class="anchored_heading" id="vagrantfile">Vagrantfile</h4>
+<p>Usually <a href="/kb/en/vagrant-and-mariadb/">Vagrant</a> is used to start a complete system in a virtual machine. If this is your case, you can use one of the methods above, for example you can modify your Vagrantfile to copy a modified version of the <code>mariadb.service</code> file into the guest system to configure systemd.</p>
+<p>If you use Vagrant with the Docker provider, you can follow the instructions above to modify the Dockerfile.</p>
 <h3 class="anchored_heading" id="finding-memory-leaks-with-jemalloc">Finding memory leaks with jemalloc</h3>
 <p>jemalloc can provide a report of memory leaks at program exit:</p>
 <pre class="fixed">MALLOC_CONF=prof_leak:true,lg_prof_sample:0,prof_final:true \
