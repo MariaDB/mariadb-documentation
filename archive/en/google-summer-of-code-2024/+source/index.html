@@ -284,7 +284,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/google-summer-of-code-2024/+r/135054/">135054</a></dd>
+            <dd><a href="/kb/en/google-summer-of-code-2024/+r/135445/">135445</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2559">
@@ -293,7 +293,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-02-06 22:16">2024-02-06 22:16</span></dd>
+<span class="datetime" title="2024-02-23 13:52">2024-02-23 13:52</span></dd>
         </dl>
     </div>
     
@@ -308,7 +308,7 @@
 &lt;&lt;toc&gt;&gt;
 
 = Where to Start 
-Please join us on [[irc-chat-servers-and-zulip-instance|Zulip]] to mingle with the community. You should also subscribe to [[https://launchpad.net/~maria-developers|maria-developers@lists.launchpad.net]] (this is the main list where we discuss development).
+Please join us on [[irc-chat-servers-and-zulip-instance|Zulip]] to mingle with the community. You should also subscribe to the [[https://lists.mariadb.org/postorius/lists/developers.lists.mariadb.org|developers mailing list]] (this is the main list where we discuss development - there are also [[mailing-lists/|other mailing lists]]).
 
 To improve your chances of being accepted, it is a good idea to submit a pull request with a bug fix to the server.
 
@@ -317,14 +317,11 @@ Also see the [[https://jira.mariadb.org/issues/?jql=status%20%3D%20Open%20AND%20
 = List of Tasks
 
 == MariaDB Server
-
-
-== MariaDB Server
-=== Implement IVFFlat indexing strategy for MariaDB Vector and evaluate performance ===
+=== Implement IVFFlat indexing strategy for MariaDB Vector and evaluate performance
 ** Part-time (175h) or full-time project (350h) - depending on scope**
 MariaDB Vector is coming to MariaDB Server to serve AI Workloads. The current indexing strategy will use HNSW, but IVFFlat is a possible alternative that costs fewer resources to create. Having it as an option is desirable.
 
-=== [[https://jira.mariadb.org/browse/MDEV-17398|MDEV-17398]] Spatial (GIS) functions in MariaDB
+=== MDEV-17398 Spatial (GIS) functions in MariaDB
 ** Part-time (175h) or full-time project (350h) - depending on scope**
 
 Our GIS functionality is limitted compared to other DBMSes. Given that MariaDB looks to facilitate migration from MySQL, we should be on par. We have a list of functions that are missing in MariaDB compared to MySQL, as described in [[https://mariadb.com/kb/en/function-differences-between-mariadb-1010-and-mysql-80/]].
@@ -334,7 +331,7 @@ Our GIS functionality is limitted compared to other DBMSes. Given that MariaDB l
 \\ **Mentors:** Anel Husakovic (primary) / Vicențiu Ciorbaru (secondary)
 
 ----
-=== [[https://jira.mariadb.org/browse/MDEV-16482|MDEV-16482]] MariaDB Oracle mode misses Synonyms 
+=== MDEV-16482 MariaDB Oracle mode misses Synonyms 
 ** Full-time project 350h**
 
 Synonyms are an important feature, particularly as it helps smooth migration from other databases. While the initial project scope seems straightforward, there are a number of aspects that must be considered:
@@ -352,14 +349,52 @@ Synonyms are an important feature, particularly as it helps smooth migration fro
 \\**Mentors:** Vicențiu Ciorbaru (primary) / Michael Widenius (secondary)
 
 ----
-== Buildbot (CI/CD)
-=== [[https://jira.mariadb.org/browse/MDBF-320|MDBF-320]] Better Grid view for buildbot.mariadb.org (Python / Javascript / Web Dev
+
+=== MDEV-30645 CREATE TRIGGER FOR { STARTUP | SHUTDOWN }
 ** Full-time project 350h**
 
-Our CI/CD infrastructure uses a recent version of Buildbot. The GRID view plugin that comes with Buildbot is not adequate for our needs. In this project, you will discuss with your mentor as well as other MariaDB developers on how to best improve the User Experience of Buildbot&#39;s grid view for what MariaDB Developers needs to accomplish.
+Support generalized triggers like
+&lt;&lt;sql&gt;&gt;
+CREATE TRIGGER ... AFTER STARTUP ...
+CREATE TRIGGER ... BEFORE SHUTDOWN ...
+CREATE TRIGGER ... ON SCHEDULE ...
+&lt;&lt;/sql&gt;&gt;
+the latter being a synonym for ##CREATE EVENT##.
 
-**Skills needed: Understanding of web-dev technologies like Angular, React, and Javascript related libraries. Python may also be required.** 
-\\**Mentor**: Vlad Bogolin
+* should STARTUP/SHUTDOWN triggers run exclusively? that is, STARTUP trigger is run before any connection is allowed or in parallel with them? Same for SHUTDOWN.
+
+** Skills needed:** Understanding of C++ development. Able to write and discuss various tradeoffs such that we achieve a feature set that makes sense given the database&#39;s priorities.
+\\**Mentors:**
+
+----
+===  MDEV-21978 make my_vsnprintf to use gcc-compatible format extensions
+** Part-time project 175h**
+
+##my_vsnprintf()## is used internally in the server as a portable ##printf## replacement. And it&#39;s also exported to plugins as a service.
+
+It supports a subset of ##printf## formats and three extensions:
+
+* ##%`s## means that a string should be quoted like an `identifier`
+* ##%b## means that it&#39;s a binary string, not zero-terminated; printing won&#39;t stop at \0, so one should always specify the field width (like %.100b)
+* ##%M## is used in error messages and prints the integer (errno) and the corresponding strerror() for it
+
+##gcc## knows ##printf## formats and check whether actual arguments match the format string and issue a warning if they don&#39;t. Unfortunately there seems to be no easy way to teach ##gcc## our extensions, so for now we have to disable ##printf## format checks.
+
+An better approach would be to use ##gcc## compatible format extensions, like Linux kernel does. We should migrate to a different syntax for our extensions
+
+* ##%sI## to mean &#34;print as an identifier&#34;
+* ##%sB## to mean &#34;print a binary string&#34;
+* ##%uE## to mean &#34;print an errno&#34;
+* ##%sT## to put a &#34;...&#34; as truncation indicator
+
+old formats can still be supported or they can be removed and in the latter case the major version of the service should be increased to signal an incompatible change.
+
+All error messages and all usages of ##my_vsnprintf## should be changed to use the new syntax. One way to do it is to disable old syntax conditionally, only in debug builds. All ##gcc## ##printf## format checks should be enabled.
+
+** Skills needed:** Understanding of C development.
+\\**Mentors:**
+
+----
 
 = Suggest a Task
 Do you have an idea of your own, not listed above? Do let us know!</textarea>
