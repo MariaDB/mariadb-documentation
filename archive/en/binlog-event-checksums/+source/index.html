@@ -12,10 +12,12 @@
 
     <title>Binlog Event Checksums - Source - MariaDB Knowledge Base</title>
 
-    <link href="/kb/static/css/main.b9e1e104f007.css" rel="stylesheet" type="text/css" />
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
 
     
         <meta name="robots" content="noindex, nofollow">
+    
+
     
 
     <!-- FB Open Graph tags -->
@@ -75,6 +77,31 @@
 
         </div>
         <p class="text-center copyright">Copyright &copy; 2024 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <div id="wrapper">
@@ -284,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/binlog-event-checksums/+r/97337/">97337</a></dd>
+            <dd><a href="/kb/en/binlog-event-checksums/+r/135883/">135883</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -293,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2020-07-02 12:01">2020-07-02 12:01</span></dd>
+<span class="datetime" title="2024-03-05 13:03">2024-03-05 13:03</span></dd>
         </dl>
     </div>
     
@@ -313,24 +340,29 @@ the variable in any way (even to the existing value) forces a rotation of the
 [[binary-log|binary log]] (the intention is to avoid having a single binlog where some events
 are checksummed and others are not).
 
-When checksums are enabled, replication slaves will check events received over
+When checksums are enabled, replicas will check events received over
 the network for checksum errors, and will stop with an error if a corrupt event
 is detected.
 
 In addition, the server can be configured to verify checksums in two other
 places.
 
-One is when reading events from the binlog on the master, for example when
-sending events to a slave or for something like SHOW BINLOG EVENTS. This is
+One is when reading events from the binlog on the primary, for example when
+sending events to a replica or for something like SHOW BINLOG EVENTS. This is
 controlled by option master_verify_checksum, and is thus used to detect file
 system corruption of the binlog files.
 
-The other is when the slave SQL thread reads events from the [[relay-log|relay log]]. This is
+The other is when the replica SQL thread reads events from the [[relay-log|relay log]]. This is
 controlled by the slave_sql_verify_checksum option, and is used to detect file
-system corruption of slave relay log files.
+system corruption of replica relay log files.
+
+&lt;&lt;product mariadb from=11.4&gt;&gt;
+From MariaDB 11.4, binlog checksums are computed when writing events into the statement or transaction caches, where before this was done when the caches were copied to the real binlog file. This moves the
+checksum computation outside of holding LOCK_log, improving scalability. See MDEV-31273.
+&lt;&lt;/product&gt;&gt;
 
 ##master_verify_checksum##
-* **Description:** Verify binlog checksums when reading events from the binlog on the master.
+* **Description:** Verify binlog checksums when reading events from the binlog on the primary.
 * **Commandline:** &lt;&lt;code&gt;&gt;--master_verify_checksum=[0|1]&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Access Type:** Can be changed dynamically
@@ -338,16 +370,14 @@ system corruption of slave relay log files.
 * **Default Value:** ##OFF (0)##
 
 ##slave_sql_verify_checksum##
-* **Description:** Verify binlog checksums when the slave SQL thread reads events from the relay log.
+* **Description:** Verify binlog checksums when the replica SQL thread reads events from the relay log.
 * **Commandline:** &lt;&lt;code&gt;&gt;--slave_sql_verify_checksum=[0|1]&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Access Type:** Can be changed dynamically
 * **Data Type:** ##bool##
 * **Default Value:** ##ON (1)##
 
-The [[mysqlbinlog]] client program by default does not verify checksums when
-reading a binlog file, however it can be instructed to do so with the option
-verify-binlog-checksum:
+The [[mariadb-binlog]] client program by default does not verify checksums when reading a binlog file, however it can be instructed to do so with the option ##verify-binlog-checksum##:
 
 * **Variable Name:** ##verify-binlog-checksum##
 * **Data Type:** ##bool##
@@ -469,6 +499,6 @@ verify-binlog-checksum:
 
 </body>
 
-<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
 
 </html>

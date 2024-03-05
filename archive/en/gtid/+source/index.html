@@ -12,10 +12,12 @@
 
     <title>Global Transaction ID - Source - MariaDB Knowledge Base</title>
 
-    <link href="/kb/static/css/main.b9e1e104f007.css" rel="stylesheet" type="text/css" />
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
 
     
         <meta name="robots" content="noindex, nofollow">
+    
+
     
 
     <!-- FB Open Graph tags -->
@@ -75,6 +77,31 @@
 
         </div>
         <p class="text-center copyright">Copyright &copy; 2024 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <div id="wrapper">
@@ -284,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/gtid/+r/132240/">132240</a></dd>
+            <dd><a href="/kb/en/gtid/+r/135874/">135874</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -293,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-11-06 22:54">2023-11-06 22:54</span></dd>
+<span class="datetime" title="2024-03-05 12:36">2024-03-05 12:36</span></dd>
         </dl>
     </div>
     
@@ -333,8 +360,7 @@ include non-transactional DML statements, as well as DDL). As an event group
 is replicated from primary server to replica server, the global transaction ID is
 preserved. Since the ID is globally unique across the entire group of servers,
 this makes it easy to uniquely identify the same binlog events on different
-servers that replicate each other (this was not easily possible before MariaDB
-10.0.2).
+servers that replicate each other.
 
 == Benefits
 Using global transaction ID provides two main benefits:
@@ -817,11 +843,11 @@ stop the replica and execute on the replica:
 SET gtid_slave_pos=&#34;&lt;position with domains removed&gt;&#34;
 &lt;&lt;/sql&gt;&gt;
 
-== New Syntax For Global Transaction ID
+== Additional Syntax For Global Transaction ID
 
 === CHANGE MASTER
 
-[[change-master-to|CHANGE MASTER]] has a new option, ##master_use_gtid=[current_pos|slave_pos|no]##. When enabled (set to
+[[change-master-to|CHANGE MASTER]] has an option, ##master_use_gtid=[current_pos|slave_pos|no]##. When enabled (set to
 //current_pos// or //slave_pos//), the replica will connect to the master using the GTID position. When
 disabled (set to &#34;no&#34;), the old-style binlog filename/offset position is used to decide
 where to start replicating when connecting. Unlike in the old-style, when GTID is enabled, the values of the [[change-master-to#master_log_file|MASTER_LOG_FILE]] and [[change-master-to#master_log_pos|MASTER_LOG_POS]] options
@@ -930,7 +956,32 @@ position. If the position is not found in the current binlog, NULL is returned.
 === MASTER_GTID_WAIT
 The [[master_gtid_wait|MASTER_GTID_WAIT]] function is useful in replication for controlling primary/replica synchronization, and blocks until the replica has read and applied all updates up to the specified position in the primary log. See [[master_gtid_wait|MASTER_GTID_WAIT]] for details.
 
+== Binlog Indexing
+&lt;&lt;product mariadb from=11.4&gt;&gt;
+Prior to MariaDB 11.4, when a replica connects, MariaDB needs to scan [[binary-log|binlog]] files from the beginning in order to find the place to start replicating. If replica reconnects are frequent, this can be slow.
+
+MariaDB 11.4 introduces indexing on the binlog files, allowing GTIDs to be quickly found. This also detects if old-style replication tries to connect at an incorrect file offset (eg. in the middle of an event), avoiding sending potentially corrupted events.
+
+The feature is enabled by default. The size of the binlog index file (##.idx##) is generally less than 1% the size of the binlog, so should not have any negative impacts and should not normally need tuning. However, the feature can be disabled or managed with the following system variables:
+* [[replication-and-binary-log-system-variables/#binlog_gtid_index|binlog_gtid_index]] - enable/disable the feature
+* [[replication-and-binary-log-system-variables/#binlog_gtid_index_page_size|binlog_gtid_index_page_size]] - adjust the size of the pages
+* [[replication-and-binary-log-system-variables/#binlog_gtid_index_span_min|binlog_gtid_index_span_min]] - adjust the sparseness of the index
+
+There are two status variables that can be used to monitor the effectiveness of the index:
+* [[replication-and-binary-log-status-variables/#binlog_gtid_index_hit|binlog_gtid_index_hit]] - incremented for each successful lookup in a GTID index. 
+* [[replication-and-binary-log-status-variables/#binlog_gtid_index_miss|binlog_gtid_index_miss]] - incremented when a GTID index lookup is not possible, which indicates that the index file is missing (eg. binlog written by old server version without GTID index support), or corrupt. 
+&lt;&lt;/product&gt;&gt;
+
 == System Variables
+
+====##[[replication-and-binary-log-system-variables/#binlog_gtid_index|binlog_gtid_index]]##
+Enables/disables [[#binlog-indexing|binlog indexing]].
+
+====##[[replication-and-binary-log-system-variables/#binlog_gtid_index_page_size|binlog_gtid_index_page_size]]##
+Adjusts the size of the pages
+
+====##[[replication-and-binary-log-system-variables/#binlog_gtid_index_span_min|binlog_gtid_index_span_min]]##
+Adjusts the sparseness of the index
 
 ==== ##gtid_slave_pos##
 
@@ -1286,6 +1337,6 @@ Removing a storage engine from the variable will have no effect once the new tab
 
 </body>
 
-<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
 
 </html>
