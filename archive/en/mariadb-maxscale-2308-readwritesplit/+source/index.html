@@ -12,10 +12,12 @@
 
     <title> Readwritesplit - Source - MariaDB Knowledge Base</title>
 
-    <link href="/kb/static/css/main.b9e1e104f007.css" rel="stylesheet" type="text/css" />
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
 
     
         <meta name="robots" content="noindex, nofollow">
+    
+
     
 
     <!-- FB Open Graph tags -->
@@ -75,6 +77,31 @@
 
         </div>
         <p class="text-center copyright">Copyright &copy; 2024 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <div id="wrapper">
@@ -280,7 +307,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-maxscale-2308-readwritesplit/+r/133216/">133216</a></dd>
+            <dd><a href="/kb/en/mariadb-maxscale-2308-readwritesplit/+r/136312/">136312</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5571">
@@ -575,48 +602,56 @@ slave_selection_criteria=&lt;criteria&gt;
 
 Where `&lt;criteria&gt;` is one of the following values.
 
+* `least_current_operations` (default), the replica with least active operations
+* `adaptive_routing`, based on server average response times.
+* `least_behind_master`, the replica with smallest replication lag
 * `least_global_connections`, the replica with least connections from MariaDB MaxScale
 * `least_router_connections`, the replica with least connections from this service
-* `least_behind_master`, the replica with smallest replication lag
-* `least_current_operations` (default), the replica with least active operations
-* `adaptive_routing`, based on server average response times. See below.
+
+`least_current_operations` uses the current number of active operations
+(i.e. SQL queries) as the load balancing metric and it optimizes for maximal
+query throughput. Each query gets routed to the server with the least active
+operations which results in faster servers processing more traffic.
+
+`adaptive_routing` uses the server response time and current estimated server
+load as the load balancing metric. The server that is estimated to finish an
+additional query first is chosen. A modified average response time for each
+server is continuously updated to allow slow servers at least some traffic and
+quickly react to changes in server load conditions. This selection criteria is
+designed for heterogeneous clusters: servers of differing hardware, differing
+network distances, or when other loads are running on the servers (including a
+backup). If the servers are queried by other clients than MaxScale, the load
+caused by them is indirectly taken into account.
+
+`least_behind_master` uses the measured replication lag as the load balancing
+metric. This means that servers that are more up-to-date are favored which
+increases the likelihood of the data being read being up-to-date. However, this
+is not as effective as `causal_reads` would be as there&#39;s no guarantee that
+writes done by the same connection will be routed to a server that has
+replicated those changes. The recommended approach is to use
+`LEAST_CURRENT_OPERATIONS` or `ADAPTIVE_ROUTING` in combination with
+`causal_reads`
+
+**NOTE**: `least_global_connections` and `least_router_connections` should not
+be used, they are legacy options that exist only for backwards
+compatibility. Using them will result in skewed load balancing as the algorithm
+uses a metric that&#39;s too coarse (number of connections) to load balance
+something that&#39;s finer (individual SQL queries).
 
 The `least_global_connections` and `least_router_connections` use the
 connections from MariaDB MaxScale to the server, not the amount of connections
 reported by the server itself.
 
-`least_behind_master` and `adaptive_routing` do not take server weights into account
-when choosing a server.
-
-`adaptive_routing` measures average server response times. The server averages
-are used as proxies of server load conditions. At selection time the averages
-are copied and modified to favor faster servers, while at the same time
-guaranteeing at lest some traffic to the slowest servers. The server selection
-is probabilistic based on roulette wheel selection.
+Starting with MaxScale versions 2.5.29, 6.4.11, 22.08.9, 23.02.5 and 23.08.1,
+lowercase versions of the values are also accepted. For example,
+`slave_selection_criteria=LEAST_CURRENT_OPERATIONS` and
+`slave_selection_criteria=least_current_operations` are both accepted as valid
+values.
 
 Starting with MaxScale 23.08.1, the legacy uppercase values have been
 deprecated. All runtime modifications of the parameter will now be persisted in
 lowercase. The uppercase values are still accepted but will be removed in a
 future MaxScale release.
-
-#### Interaction Between `slave_selection_criteria` and `max_slave_connections`
-
-Depending on the value of `max_slave_connections`, the replica selection criteria
-behave in different ways. Here are a few example cases of how the different
-criteria work with different amounts of replica connections.
-
-* With `slave_selection_criteria=LEAST_GLOBAL_CONNECTIONS` and
-`max_slave_connections=1`, each session picks one replica and one primary
-
-* With `slave_selection_criteria=LEAST_CURRENT_OPERATIONS` and
-`max_slave_connections=100%`, each session picks one primary and as many replicas
-as possible
-
-* With `slave_selection_criteria=LEAST_CURRENT_OPERATIONS` each read is load
-balanced based on how many queries are active on a particular replica
-
-* With `slave_selection_criteria=LEAST_GLOBAL_CONNECTIONS` each read is sent to
-the replica with the least amount of connections
 
 ### `max_sescmd_history`
 
@@ -917,7 +952,7 @@ maximum replay time limit of `delayed_retry_timeout` multiplied by
 time limit can be as low as `transaction_replay_attempts` seconds (5 seconds by
 default) in cases where the connection fails after it was created. Usually this
 happens due to problems like the max_connections limit being hit on the database
-server or an Xpand group change being in progress.
+server.
 
 With the introduction of `transaction_replay_timeout`, these problems are
 avoided. Starting with MaxScale 6.2.1, this is the recommended method of
@@ -1895,6 +1930,6 @@ variables to the primary.
 
 </body>
 
-<script type="text/javascript" src="/kb/static/js/main.fed4ec768178.js" charset="utf-8"></script>
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
 
 </html>
