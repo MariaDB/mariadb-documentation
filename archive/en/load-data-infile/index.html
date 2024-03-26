@@ -291,7 +291,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-03-12 11:34">6 days, 10 hours ago</span></dd>
+<span class="datetime" title="2024-03-25 11:04">11 hours, 43 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -468,6 +468,8 @@
 
         <li class=""><a href="#replace-and-ignore" title="REPLACE and IGNORE">REPLACE and IGNORE</a></li>
 
+        <li class=""><a href="#ignore-number-linesrows" title="IGNORE number {LINES|ROWS}">IGNORE number {LINES|ROWS}</a></li>
+
         <li class=""><a href="#character-sets" title="Character-sets">Character-sets</a></li>
 
         <li class=""><a href="#preprocessing-inputs" title="Preprocessing Inputs">Preprocessing Inputs</a></li>
@@ -489,7 +491,7 @@
 <h2 class="anchored_heading" id="description">Description</h2>
 <div class="cstm-style redbox"><p><code>LOAD DATA INFILE</code> is <a href="/kb/en/unsafe-statements-for-replication/">unsafe</a> for statement-based replication.</p>
 </div><p>Reads rows from a text file into the designated table on the database at a very high speed. The file name must be given as a literal string. </p>
-<p>Files are written to disk using the <a href="/kb/en/select-into-outfile/">SELECT INTO OUTFILE</a> statement.  You can then read the files back into a table using the <code>LOAD DATA INFILE</code> statement.  The <code>FIELDS</code> and <code>LINES</code> clauses are the same in both statements.  These clauses are optional, but if both are specified then the <code>FIELDS</code> clause must precede <code>LINES</code>.</p>
+<p>Files are written to disk using the <a href="/kb/en/select-into-outfile/">SELECT INTO OUTFILE</a> statement.  You can then read the files back into a table using the <code>LOAD DATA INFILE</code> statement.  The <code>FIELDS</code> and <code>LINES</code> clauses are the same in both statements and by default fields are expected to be terminated with tabs (<code>\t</code>) and lines with newlines (<code>\n</code>).  These clauses are optional, but if both are specified then the <code>FIELDS</code> clause must precede <code>LINES</code>.</p>
 <p>Executing this statement activates <code>INSERT</code> <a href="/kb/en/triggers/">triggers</a>.</p>
 <p>One must have the <a href="/kb/en/grant/#file">FILE</a> privilege to be able to execute LOAD DATA INFILE. This is to ensure normal users cannot read system files. LOAD DATA LOCAL INFILE does not have this requirement.</p>
 <p>If the <a href="/kb/en/server-system-variables/#secure_file_priv">secure_file_priv</a> system variable is set (by default it is not), the loaded file must be present in the specified directory.</p>
@@ -513,6 +515,8 @@
 <p>The <code>REPLACE</code> keyword works like the <a href="/kb/en/replace/">REPLACE</a> statement. Here, the statement attempts to load the data from the file. If the row does not exist, it adds it to the table.  If the row contains an existing primary key, it replaces the table data. That is, in the event of a conflict, it assumes the file contains the desired row. </p>
 <p>This operation can cause a degradation in load speed by a factor of 20 or more if the part that has already been loaded is larger than the capacity of the <a href="/kb/en/innodb-buffer-pool/">InnoDB Buffer Pool</a>.  This happens because it causes a lot of turnaround in the buffer pool.</p>
 <p>Use the <code>IGNORE</code> keyword when you want to skip any rows that contain a conflicting primary key. Here, the statement attempts to load the data from the file. If the row does not exist, it adds it to the table. If the row contains an existing primary key, it ignores the addition request and moves on to the next. That is, in the event of a conflict, it assumes the table contains the desired row.</p>
+<h3 class="anchored_heading" id="ignore-number-linesrows"><code>IGNORE number {LINES|ROWS}</code></h3>
+<p>The <code>IGNORE number LINES</code> syntax can be used to ignore a number of rows from the beginning of the file. Most often this is needed when the file starts with one row that includes the column headings.</p>
 <h3 class="anchored_heading" id="character-sets">Character-sets</h3>
 <p>When the statement opens the file, it attempts to read the contents using the default character-set, as defined by the <a href="/kb/en/server-system-variables/#character_set_database">character_set_database</a> system variable.  </p>
 <p>In the cases where the file was written using a character-set other than the default, you can specify the character-set to use with the <code>CHARACTER SET</code> clause in the statement.  It ignores character-sets specified by the <a href="/kb/en/set-names/">SET NAMES</a> statement and by the <a href="/kb/en/server-system-variables/#character_set_client">character_set_client</a> system variable.  Setting the <code>CHARACTER SET</code> clause to a value of <code>binary</code> indicates "no conversion."</p>

@@ -25,11 +25,9 @@
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
     <meta property="og:site_name" content="MariaDB KnowledgeBase" />
     <meta property="fb:admins" content="514852603" />
-    <meta property="og:description" content="MariaDB starting with &lt;a href=&#34;/kb/en/what-is-mariadb-115/&#34;&gt;11.5&lt;/a&gt;The ability to limit the size of created disk temporary files and tables was introduced in MariaDB 11.5.
-Te..." />
+    <meta property="og:description" content="From MariaDB 11.5, it&#39;s possible to limit the size of created disk temporary files and tables." />
 
-    <meta name="description" content="MariaDB starting with &lt;a href=&#34;/kb/en/what-is-mariadb-115/&#34;&gt;11.5&lt;/a&gt;The ability to limit the size of created disk temporary files and tables was introduced in MariaDB 11.5.
-Te..." />
+    <meta name="description" content="From MariaDB 11.5, it&#39;s possible to limit the size of created disk temporary files and tables." />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
@@ -280,12 +278,12 @@ Te..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-03-18 13:51">4 hours, 40 minutes ago</span></dd>
+<span class="datetime" title="2024-03-18 13:51">1 week ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-03-18 14:16">4 hours, 15 minutes ago</span></dd>
+<span class="datetime" title="2024-03-18 21:05">6 days, 21 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -436,21 +434,15 @@ Te..." />
 
     
     <div class="answer formatted">
-        <div class="mariadb_from_11_5 mariadb from_11_5 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-115/">11.5</a></h5><p>The ability to limit the size of created disk temporary files and tables was introduced in <a href="/kb/en/what-is-mariadb-115/">MariaDB 11.5</a>.</p>
+        <div class="mariadb_from_11_5 mariadb from_11_5 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-115/">11.5</a></h5><p>From <a href="/kb/en/what-is-mariadb-115/">MariaDB 11.5</a>, it's possible to limit the size of created disk temporary files and tables. 
+When the internal in-memory temporary table is oversize and converting to MyISAM/Aria table to store on disk, this option will limit the max space of tmp_dir. If a new disk temporary table will cause tmp_dir over the limitation, then this query will return an error.</p>
 </div><h2 class="anchored_heading" id="temporary-space">Temporary Space</h2>
-<p>The temporary space is counted for:</p>
-<ul start="1"><li>All SQL level temporary files. This includes files for filesort,
-  transaction temporary space, analyze, binlog_stmt_cache etc.
-  It does not include engine internal temporary files used for repair,
-  alter table, index pre sorting etc.
-</li><li>All internal on disk temporary tables created as part of resolving a
-  SELECT, multi-source update etc.
+<p>The temporary space includes:</p>
+<ul start="1"><li>All SQL level temporary files. This includes files for filesort, transaction temporary space, analyze, binlog_stmt_cache etc. It does not include engine internal temporary files used for repair, alter table, index pre sorting etc.
+</li><li>All internal on disk temporary tables created as part of resolving a SELECT, multi-source update etc.
 </li></ul>
-<h2 class="anchored_heading" id="special-cases">Special cases</h2>
-<ul start="1"><li>When doing a commit, the last flush of the binlog_stmt_cache
-  will not cause an error even if the temporary space limit is exceeded.
-  This is to avoid giving errors on commit. This means that a user
-  can temporary go over the limit with up to binlog_stmt_cache_size.
+<h2 class="anchored_heading" id="special-cases">Special Cases</h2>
+<ul start="1"><li>When doing a commit, the last flush of the binlog_stmt_cache will not cause an error even if the temporary space limit is exceeded. This is to avoid giving errors on commit. This means that a user can temporary go over the limit with up to <a href="/kb/en/replication-and-binary-log-system-variables/#binlog_stmt_cache_size">binlog_stmt_cache_size</a>.
 </li></ul>
 <h2 class="anchored_heading" id="system-variables">System Variables</h2>
 <p>There are two system variables used for controlling this feature:</p>
@@ -458,54 +450,30 @@ Te..." />
 </li><li><a href="/kb/en/max_total_tmp_space_usage-system-variable/">max_total_tmp_space_usage</a>: Limits the temporary space allowance for all users.
 </li></ul>
 <h2 class="anchored_heading" id="status-variables">Status Variables</h2>
-<ul start="1"><li>tmp_space_used
-</li><li>max_tmp_space_used
+<ul start="1"><li><a href="/kb/en/server-status-variables/#tmp_space_used">tmp_space_used</a>
+</li><li><a href="/kb/en/server-status-variables/#max_tmp_space_used">max_tmp_space_used</a>
 </li></ul>
-<ul start="1"><li>New field in information_schema.process_list: TMP_SPACE_USED
+<h2 class="anchored_heading" id="information-schema">Information Schema</h2>
+<ul start="1"><li>New field in <a href="/kb/en/information-schema-processlist-table/">information_schema.process_list</a>: TMP_SPACE_USED
 </li></ul>
 <h2 class="anchored_heading" id="noteworthy-issue">Noteworthy issue</h2>
-<ul start="1"><li>One has to be careful when using small values for max_tmp_space_limit
-  together with binary logging and with non transactional tables.
-  If a the binary log entry for the query is bigger than
-  binlog_stmt_cache_size and one hits the limit of max_tmp_space_limit
-  when flushing the entry to disk, the query will abort and the
-  binary log will not contain the last changes to the table.
-  This will also stop the slave!
-  This is also true for all Aria tables as Aria cannot do rollback
-  (except in case of crashes)!
-  One way to avoid it is to use @@binlog_format=statement for
-  queries that updates a lot of rows.
+<ul start="1"><li>One has to be careful when using small values for max_tmp_space limit together with <a href="/kb/en/binary-log/">binary logging</a> and with non transactional tables.
+</li><li>If a binary log entry for the query is larger than <a href="/kb/en/replication-and-binary-log-system-variables/#binlog_stmt_cache_size">binlog_stmt_cache_size</a> and one hits the limit of max_tmp_space when flushing the entry to disk, the query will abort and the binary log will not contain the last changes to the table. This will also stop the replica!
+</li><li>This is also true for all Aria tables as Aria cannot do rollback (except in case of crashes)!
+</li><li>One way to avoid it is to use <a href="/kb/en/replication-and-binary-log-system-variables/#binlog_format">@@binlog_format=statement</a> for queries that update many lot of rows.
 </li></ul>
 <h2 class="anchored_heading" id="implementation">Implementation</h2>
-<ul start="1"><li>All writes to temporary files or internal temporary tables, that
-  increases the file size, are routed through temp_file_size_cb_func()
-  which updates and checks the temp space usage.
-</li><li>Most of the temporary file monitoring is done inside IO_CACHE.
-  Temporary file monitoring is done inside the Aria engine.
-</li><li>MY_TRACK and MY_TRACK_WITH_LIMIT are new flags for ini_io_cache().
-  MY_TRACK means that we track the file usage. TRACK_WITH_LIMIT means
-  that we track the file usage and we give an error if the limit is
-  breached. This is used to not give an error on commit when
-  binlog_stmp_cache is flushed.
-</li><li>global_tmp_space_used contains the total tmp space used so far.
-  This is needed quickly check against max_total_tmp_space_usage.
-</li><li>Temporary space errors are using EE_LOCAL_TMP_SPACE_FULL and
-  handler errors are using HA_ERR_LOCAL_TMP_SPACE_FULL.
-  This is needed until we move general errors to it's own error space
-  so that they cannot conflict with system error numbers.
-</li><li>Return value of my_chsize() and mysql_file_chsize() has changed
-  so that -1 is returned in the case my_chsize() could not decrease
-  the file size (very unlikely and will not happen on modern systems).
-  All calls to _chsize() are updated to check for &gt; 0 as the error
-  condition.
+<ul start="1"><li>All writes to temporary files or internal temporary tables, that increase the file size, are routed through temp_file_size_cb_func() which updates and checks the temp space usage.
+</li><li>Most of the temporary file monitoring is done inside IO_CACHE. Temporary file monitoring is done inside the Aria engine.
+</li><li>MY_TRACK and MY_TRACK_WITH_LIMIT are new flags for ini_io_cache(). MY_TRACK means that we track the file usage. TRACK_WITH_LIMIT means that we track the file usage and we give an error if the limit is breached. This is used to not give an error on commit when binlog_stmt_cache is flushed.
+</li><li>global_tmp_space_used contains the total tmp space used so far. This is needed quickly check against max_total_tmp_space_usage.
+</li><li>Temporary space errors are using EE_LOCAL_TMP_SPACE_FULL and handler errors are using HA_ERR_LOCAL_TMP_SPACE_FULL. This is needed until we move general errors to it's own error space so that they cannot conflict with system error numbers.
+</li><li>Return value of my_chsize() and mysql_file_chsize() has changed so that -1 is returned in the case my_chsize() could not decrease the file size (very unlikely and will not happen on modern systems). All calls to _chsize() are updated to check for &gt; 0 as the error condition.
 </li><li>At the destruction of THD we check that THD::tmp_file_space == 0
 </li><li>At server end we check that global_tmp_space_used == 0
-</li><li>As a precaution against errors in the tmp_space_used code, one can set
-  max_tmp_space_usage and max_total_tmp_space_usage to 0 to disable
-  the tmp space quota errors.
+</li><li>As a precaution against errors in the tmp_space_used code, one can set max_tmp_space_usage and max_total_tmp_space_usage to 0 to disable the tmp space quota errors.
 </li><li>truncate_io_cache() function added.
-</li><li>Aria tables using static or dynamic row length are registered in 8K
-  increments to avoid some calls to update_tmp_file_size().
+</li><li>Aria tables using static or dynamic row length are registered in 8K increments to avoid some calls to update_tmp_file_size().
 </li></ul>
 <h2 class="anchored_heading" id="see-also">See Also</h2>
 <ul start="1"><li><a href="https://jira.mariadb.org/browse/MDEV-9101">MDEV-9101</a> - Limit size of created disk temporary files and tables</li></ul>
