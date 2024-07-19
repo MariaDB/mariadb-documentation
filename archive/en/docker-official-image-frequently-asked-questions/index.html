@@ -282,12 +282,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-09-21 23:24">6 months ago</span></dd>
+<span class="datetime" title="2023-09-21 23:24">10 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-02-12 01:02">1 month, 1 week ago</span></dd>
+<span class="datetime" title="2024-05-21 23:21">1 month, 3 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -453,6 +453,8 @@
 
     <li class=""><a href="#every-mariadb-start-gives-permission-denies-messages" title="Every MariaDB start gives permission denies messages">Every MariaDB start gives permission denies messages</a></li>
 
+    <li class=""><a href="#bad-magic-header-in-tc-log" title="Bad magic header in tc log">Bad magic header in tc log</a></li>
+
     <li class=""><a href="#every-mariadb-start-is-a-crash-recovery" title="Every MariaDB start is a crash recovery">Every MariaDB start is a crash recovery</a></li>
 
     <li class=""><a href="#how-do-i-create-a-mariadb-backup-of-the-data" title="How do I create a MariaDB-backup of the data?">How do I create a MariaDB-backup of the data?</a></li>
@@ -566,6 +568,16 @@ services:
 2024-02-06  3:03:18 0 [ERROR] DDL_LOG: Failed to create ddl log file: ./ddl_recovery.log
 2024-02-06  3:03:18 0 [ERROR] Aborting
 </pre><p>In this case, the container is running as a user that, inside the container, does not have write permissions on the datadir, <span class="external_image">External images are disabled</span>.</p>
+<h2 class="anchored_heading" id="bad-magic-header-in-tc-log">Bad magic header in tc log</h2>
+<p>From the <a href="/kb/en/transaction-coordinator-log-overview/#bad-magic-header-in-tc-log">transaction coordinator log</a> this is a corrupted file. This will have a log message like the following:</p>
+<pre class="fixed">2024-05-21  8:55:58 0 [Note] Recovering after a crash using tc.log
+2024-05-21  8:55:58 0 [ERROR] Bad magic header in tc log
+2024-05-21  8:55:58 0 [ERROR] Crash recovery failed. Either correct the problem (if it's, for example, out of memory error) and restart, or delete tc log and start server with --tc-heuristic-recover={commit|rollback}
+2024-05-21  8:55:58 0 [ERROR] Can't init tc log
+2024-05-21  8:55:58 0 [ERROR] Aborting
+</pre><p>The cause of this is headed by the first not, its a crash recovery. Like the <a href="#every-mariadb-start-is-a-crash-recovery">Every MariaDB start is a crash recovery</a> answer below, this is an indication that MariaDB wasn't given enough time by the container runtime to shutdown cleanly. While MariaDB was shutdown, the new version that was started is a newer MariaDB and doesn't recognise the updated magic information in the header.</p>
+<p>MariaDB should always perform crash recovery with the same version that actually crashed, the same major/minor number at least.</p>
+<p>As such the solution is to restart the container with the previous MariaDB version that was running, and configure the container runtime to allow a longer stop time. See the  <a href="#every-mariadb-start-is-a-crash-recovery">Every MariaDB start is a crash recovery</a> answer below to see if the timeout is sufficiently extended.</p>
 <h2 class="anchored_heading" id="every-mariadb-start-is-a-crash-recovery">Every MariaDB start is a crash recovery</h2>
 <p>Do you get on every start:</p>
 <pre class="fixed">db-1  | 2023-02-25 19:10:02 0 [Note] Starting MariaDB 10.11.2-MariaDB-1:10.11.2+maria~ubu2204-log source revision cafba8761af55ae16cc69c9b53a341340a845b36 as process 1                                                                                                         

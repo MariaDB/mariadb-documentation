@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/using-tls-ssl-with-mariadb-java-connector/+r/120390/">120390</a></dd>
+            <dd><a href="/kb/en/using-tls-ssl-with-mariadb-java-connector/+r/138920/">138920</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3114">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-11-06 14:31">2022-11-06 14:31</span></dd>
+<span class="datetime" title="2024-05-07 09:50">2024-05-07 09:50</span></dd>
         </dl>
     </div>
     
@@ -349,61 +349,22 @@ The term SSL (Secure Sockets Layer) is often used interchangeably with TLS, alth
 == Server configuration
 To ensure that SSL is correctly configured on the server, the query &#34;SELECT @@have_ssl;&#34; must return YES. If not, please refer to the [[secure-connections|server documentation]].
 
-== TLS Protocol Version Support
-
-MariaDB Server can be built with different TLS and cryptography libraries that support different TLS protocol versions.
-
-&lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
-|= TLS Library |= Supported TLS Protocol Versions |
-| openSSL | TLSv1, TLSv1.1, TLSv1.2, TLSv1.3 |
-| wolfSSL | TLSv1, TLSv1.1, TLSv1.2, TLSv1.3 |
-| yaSSL | TLSv1, TLSv1.1 |
-&lt;&lt;/style&gt;&gt; 
-
-See [[tls-and-cryptography-libraries-used-by-mariadb|TLS and Cryptography Libraries Used by MariaDB]] for information about which TLS libraries are used in each package.
-
-See [[secure-connections-overview/#tls-protocol-version-support|Secure Connections Overview: TLS Protocol Version Support]] for more information about which TLS protocol versions are supported by MariaDB Server.
+Connecting to a server that doesn&#39;t support TLS with TLS option set, an exception &#34;Trying to connect with ssl, but ssl not enabled in the server&#34; will be thrown.
 
 == TLS Protocol Version Selection
 
-During TLS/SSL negotiation, the client normally indicates the maximum level supported, but before 10.2, YaSSL doesn&#39;t recognize the TLSv1.2 flag and then doesn&#39;t fallback to theTLSv1.1 protocol.
-
-If trying to connect with TLSv1.2 with a server before 10.2 using YaSSL, the connection will fail with the following exception :
-* with MariaDB server : &#34;Caused by: javax.net.ssl.SSLException: Unsupported record version Unknown-0.0&#34;
-* with MySQL server : &#34;Caused by: javax.net.ssl.SSLHandshakeException: Remote host terminated the handshake&#34;
-
 The MariaDB Java driver by default uses java default supported protocols . 
 If the servers are MariaDB on Unix or version &gt;= 10.2 , consider adding TLSv1.2 protocol.
-This can be set using the &#34;enabledSslProtocolSuites&#34; option (example: enabledSslProtocolSuites=TLSv1,TLSv1.1,TLSv1.2).
+This can be set using the &#34;enabledSslProtocolSuites&#34; option (example: enabledSslProtocolSuites=TLSv1.2,TLSv1.3).
 
 In addition to the protocol, the driver relies on the Java default cipher list. 
 The Java default enabled ciphers are [[https://docs.oracle.com/javase/8/docs/technotes/guides/security/SunProviders.html#SupportedCipherSuites|listed here]].
 JAVA allows cipher suites to be removed/excluded from use in the security policy using the Java system property &#34;jdk.tls.disabledAlgorithms&#34;. 
 The specific list of ciphers to be used can be set using the &#34;enabledSslCipherSuites&#34; driver option (example : &#34;enabledSSLCipherSuites=TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,...&#34;)
 
-== Oracle Java cryptographic limitation
-
-Due to import regulations in some countries, the Java Oracle implementation provides a default cryptographic jurisdiction policy file that limits the strength of cryptographic algorithms. 
-
-Here are the maximum key sizes allowed by this &#34;strong&#34; version of the jurisdiction policy files:	
-
-&lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
-|= Algorithm|= Maximum Keysize |
-| DES| 64|
-| DESede | * |
-| RC2 | 128 |
-| RC4 | 128 |
-| RC5 | 128 |
-| RSA | * |
-&lt;&lt;/style&gt;&gt; 
-	
-If stronger algorithms are needed (for example, AES with 256-bit keys), the JCE Unlimited Strength Jurisdiction Policy Files must be obtained and installed in the JDK/JRE to remove those limitation.
-
-It is strongly recommended, if permissible under local regulations,  to have JCE installed.
-
 = One way SSL authentication
 
-By default, the driver can be configured to use SSL, even if the user used for authentication is not set to use SSL, but the recommendation is to use a user created with &#34;REQUIRE SSL&#34;. See [[create-user/|CREATE USER]] for more details.
+By default, the driver can be configured to use TLS, even if the user used for authentication is not set to use TLS, but the recommendation is to use a user created with &#34;REQUIRE SSL&#34;. See [[create-user/|CREATE USER]] for more details, to ensure connector use TLS.
 
 Example;
 &lt;&lt;code&gt;&gt;
@@ -411,37 +372,41 @@ CREATE USER &#39;myUser&#39;@&#39;%&#39; IDENTIFIED BY &#39;MyPwd&#39;;
 GRANT ALL ON db_name.* TO &#39;myUser&#39;@&#39;%&#39; REQUIRE SSL;
 &lt;&lt;/code&gt;&gt;
 
-The &#34;useSSL&#34; option must be enabled to indicate to the driver to connect using SSL.
+Since version 3 of the connector, TLS is enable client side setting option &#34;sslMode&#34;. 
+The following values are supported:
+* disable: Do not use SSL/TLS (default)
+* trust: Only use SSL/TLS for encryption. Do not perform certificate or hostname verification. This mode is not safe for production applications.
+* verify-ca: Use SSL/TLS for encryption and perform certificates verification, but do not perform hostname verification.
+* verify-full: Use SSL/TLS for encryption, certificate verification, and hostname verification. This is the standard TLS behavior. Alias &#34;true&#34;/&#34;1&#34; are possible like &#34;sslMode=true&#34;
 
-Testing can be done with the trustServerCertificate=true option to validate encryption (NOT TO BE USED IN PRODUCTION!)
+
+&lt;&lt;style class=&#34;bluebox&#34;&gt;&gt;
+Before connector 3 version, other options where used in order to use TLS:
+* useSsl: boolean, indicate if TLS has to be enable.
+* trustServerCertificate: boolean, when enable with useSsl=true, corresponds to sslMode=trust 
+* disableSslHostnameVerification: boolean, when enable with useSsl=true and trustServerCertificate is not enable, corresponds to sslMode=verify-ca
+&lt;&lt;/style&gt;&gt;
+
+To ensure TLS is enable server side, first try with option &#34;sslMode=trust&#34;. 
 {{{
 try (Connection con = DriverManager.getConnection(&#34;jdbc:mariadb://localhost/myDb?user=myUser&amp;password=MyPwd&#34;
-		+ &#34;&amp;useSSL=true&amp;trustServerCertificate=true&#34;)) {
+		+ &#34;&amp;sslMode=trust&#34;)) {
 	try (Statement stmt = con.createStatement()) {
 		stmt.execute(&#34;select 1&#34;);
 	}
 }
 }}}
-The connection will then be encrypted. 
 
-If the trustServerCertificate option is not set, an exception &#34;unable to find valid certification path to requested target&#34; will be thrown.
-If the server doesn&#39;t support SSL, an exception &#34;Trying to connect with ssl, but ssl not enabled in the server&#34; will be thrown.
+Please note that this is not safe for production use, since even if all exchanges will be encrypted, the identity of the server is not verified, permitting man in the middle fake servers. 
 
-The Java system property &#34;-Djavax.net.debug=all&#34; permits logging all TLS exchanges.
+To validate the server identity, server root certificates and intermediate certificates must be trusted client side.
 
-To validate the server identity, server root certificates and intermediate certificates must be provided to the driver.
-There are several ways to configure this:
-* use the java default truststore in JKS format (or PKCS12 using java 9)
-* use a dedicated truststore in JKS format (or PKCS12 using java 9)
-* provide the certificate 
+There are several ways to achieve this:
+* Java has a default truststore  that contains well-known CAs including Let&#39;s Encrypt (since java 8u101), VeriSign, Entrust, and GTE CyberTrust.trusted Certificate Authorities (CA). If the server certificate is signed using a certificate chain using a root CA known in java default truststore, nothing has to be configured client side. The location of default truststore is set in system property &#34;javax.net.ssl.trustStore&#34;.
+* provide the certificate using option &#34;serverSslCert&#34;.
+* Zero-configuration TLS encyption using 3.4+ version of the connector and MariaDB 11.4+ server. See dedicated chapter.
 
-&lt;&lt;style class=&#34;bluebox&#34;&gt;&gt;
-Java has a default truststore that contains well-known CAs including Let&#39;s Encrypt (since java 8u101), VeriSign, Entrust, and GTE CyberTrust.trusted Certificate Authorities (CA).
-
-If the server certificate is signed using a certificate chain using a root CA known in java default truststore, no additional step is required. 
-&lt;&lt;/style&gt;&gt;
-
-Using self signed certificates has some specificities. 
+By default when sslMode is set (not disabled), connector will use &#34;serverSslCert&#34; is set or the default truststore if not. Using default truststore can be disable setting option &#34;fallbackToSystemTrustStore&#34; to false. 
 
 == Java default truststore
 
@@ -460,34 +425,10 @@ cp $JAVA_HOME/jre/lib/security/cacerts $JAVA_HOME/jre/lib/security/jssecacerts
 keytool -importcert -file myCA-root.cer -alias myCA -keystore /usr/java/default/jre/lib/security/jssecacerts -storepass changeit
 }}}
 
-with our previous example, the &#34;trustServerCertificate&#34; option can then be removed
+with our previous example, change sslMode to &#34;verify-full&#34;:
 {{{
-try (Connection con = DriverManager.getConnection(&#34;jdbc:mariadb://localhost/myDb?user=myUser&amp;password=MyPwd&amp;useSSL=true&#34;)) {
-	try (Statement stmt = con.createStatement()) {
-		stmt.execute(&#34;select 1&#34;);
-	}
-}
-}}}
-
-== Use a dedicated truststore
-If not using the alternative jssecacerts trustStore, there are 2 choices: 
-* use Java system properties &#34;javax.net.ssl.trustStore&#34; to define your specific trustStore. Be careful, as this trustore will completely replace the default cacerts/jssecacerts, and only the certificates imported will be trusted!
-* indicate to the driver the location of the dedicated trustore using &#34;trustStore&#34; option and if needed &#34;trustStorePassword&#34;.
-
-The dedicated trustore can be generated using this command :
-
-{{{
-   //Import the root certificate and create the truststore
-   //You will be prompted to confirm that the root certificate is trustworthy. Be sure to verify that the certificate is genuine before you import it.
-   keytool -importcert -keystore myTrustStore.jks -alias myCA-root -storepass myTrustPwd -file myCA-root.cer
-   
-   //Import the intermediate certificate into the truststore created in Step 1:   
-   keytool -importcert -keystore myTrustStore.jks -alias myCA-intermediate -storepass myTrustPwd -file myCA-intermediate.cer   
-}}}
-
-with our previous example, trustServerCertificate can then be removed:
-{{{
-try (Connection con = DriverManager.getConnection(&#34;jdbc:mariadb://localhost/myDb?user=myUser&amp;password=MyPwd&amp;trustStore=/pathToTrustStore/myTrustStore.jks&amp;trustStorePassword=mypwd&#34;)) {
+try (Connection con = DriverManager.getConnection(&#34;jdbc:mariadb://localhost/myDb?user=myUser&amp;password=MyPwd&#34;
+		+ &#34;&amp;sslMode=verify-full&#34;)) {
 	try (Statement stmt = con.createStatement()) {
 		stmt.execute(&#34;select 1&#34;);
 	}
@@ -503,21 +444,19 @@ The location can be used in one of 3 forms:
 
 Example :
 {{{
-try (Connection con = DriverManager.getConnection(&#34;jdbc:mariadb://localhost/myDb?user=myUser&amp;password=MyPwd&amp;serverSslCert=/path/to/cert.pem)) {
+try (Connection con = DriverManager.getConnection(&#34;jdbc:mariadb://localhost/myDb?user=myUser&amp;password=MyPwd&amp;serverSslCert=/path/to/cert.pem&amp;&amp;sslMode=verify-full&#34;)) {
 	try (Statement stmt = con.createStatement()) {
 		stmt.execute(&#34;select 1&#34;);
 	}
 }
 }}}
 
-== Handling self-signed certificates
-Using self-signed certificates, you will not only have to register the root and intermediates certificates, but each individual certificate of each server!
-So if using more than one server, each self-signed certificate must be registered. 
+== Zero-configuration TLS encryption
 
-Import the test certificate into the truststore:
-{{{
-    keytool -importcert -keystore my.truststore -alias server1 -storepass trustChangeMe -file server1.cer
-}}}
+TLS use has been simplified with MariaDB Server 11.4. For MariaDB Connector/J 3.4+ to establish an SSL encrypted connection to MariaDB Server 11.4, enabling SSL does not require any special configuration apart from using &#34;sslMode=verify-full&#34;
+
+During TLS exchange, server will send certificate, client will validate server identity with the certificate fingerprint and password hashing. This required that the password is not empty.
+
 
 = Mutual (2-way) authentication
 Mutual SSL authentication or certificate based mutual authentication refers to two parties authenticating each other through verifying the provided digital certificate so that both parties are assured of the others&#39; identity.
@@ -534,7 +473,6 @@ GRANT ALL ON db_name.* TO &#39;myUser&#39;@&#39;%&#39; REQUIRE X509;
 
 The client (driver) must then have its own certificate too (and related private key).
 If the driver doesn&#39;t provide a certificate, and the user used to connect is defined with &#34;REQUIRE X509&#34;, the server will then return a basic &#34;Access denied for user&#34;.
-Check how the user is defined with &#34;select SSL_TYPE, SSL_CIPHER, X509_ISSUER, X509_SUBJECT FROM mysql.user u where u.User = &#39;&lt;myUser&gt;&#39;&#34;.
 
 Java stores this client certificate and private key in a keyStore file.
 A keystore file is similar to trustore, in fact trustore and keystore are often the same file. 
@@ -567,11 +505,6 @@ In JKS keystore, an additional password for a specific key may have been set. Th
 
 = Troubleshooting
 
-== Diffie-Hellman size error
-
-If using Java 7, the Diffie-Hellman (DH) prime size is limited to 1024 (JDK-6521495). Java has some artificial restriction that restricts size: Java 7 max size is 1024, Java 8 is 2048, Java 9 will be 8192.
-Java 7 with extended support has a 2048 limit.
-
 == SSL not enabled on server
 
 If the following error occurs: &#34;java.sql.SQLException: Trying to connect with ssl, but ssl not enabled in the server&#34;, SSL is not enabled on the server-side. 
@@ -583,7 +516,7 @@ Execute &#34;show variables like &#39;%ssl%&#39;;&#34; on the server-side to ide
 When the driver tries to connect using SSL, but no certificate is provided, or the &#34;trustServerCertificate=true&#34; option is not set, the driver will fail with the following exception &#34;Caused by: sun.security.validator.ValidatorException: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target&#34;
 
 Solution: 
-- not recommended: set the &#34;trustServerCertificate=true&#34; option.
+- not recommended: set the &#34;sslMode&#34; option to &#34;trust&#34; value
 - add the server certificate to the driver (see documentation above).
 
 == java.sql.SQLInvalidAuthorizationSpecException: Could not connect: Access denied for user 

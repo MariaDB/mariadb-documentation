@@ -199,15 +199,15 @@
     
 
     
-    » <a class="crumb" href="/kb/en/mariadb-administration/">MariaDB Administration</a>
+    » <a class="crumb" href="/kb/en/using-mariadb-server/">Using MariaDB Server</a>
     
 
     
-    » <a class="crumb" href="/kb/en/getting-installing-and-upgrading-mariadb/">Getting, Installing, and Upgrading MariaDB</a>
+    » <a class="crumb" href="/kb/en/clients-utilities/">Clients &amp; Utilities</a>
     
 
     
-    » <a class="crumb" href="/kb/en/starting-and-stopping-mariadb/">Starting and Stopping MariaDB</a>
+    » <a class="crumb" href="/kb/en/legacy-clients-and-utilities/">Legacy Clients and Utilities</a>
     
 
 
@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mysqld_multi/+r/126499/">126499</a></dd>
+            <dd><a href="/kb/en/mysqld_multi/+r/141231/">141231</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-05-29 20:29">2023-05-29 20:29</span></dd>
+<span class="datetime" title="2024-07-08 14:29">2024-07-08 14:29</span></dd>
         </dl>
     </div>
     
@@ -334,194 +334,9 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;product mariadb from=10.4.6&gt;&gt;
-From MariaDB 10.4.6, ##mariadbd-multi## is a symlink to ##mysqld_multi##.
-&lt;&lt;/product&gt;&gt;
+        <textarea id="answer_source" class="creole_source autogrow">From MariaDB 10.5, the client is called ##mariadbd-multi##. It can still be accessed under its original ##mysqld_multi## name via a symlink in Linux, or an alternate binary in Windows.
 
-&lt;&lt;product mariadb from=10.5.2&gt;&gt;
-From MariaDB 10.5.2, ##mariadbd-multi## is the name of the server, with ##mysqld_multi## a symlink .
-&lt;&lt;/product&gt;&gt;
-
-&lt;&lt;style class=&#34;redbox&#34;&gt;&gt;
-Before using mysqld_multi be sure that you understand the meanings of the options that are passed to the mysqld servers and why you would want to have separate mysqld processes. Beware of the dangers of using multiple mysqld servers with the same data directory. Use separate data directories, unless you know what you are doing. Starting multiple servers with the same data directory does not give you extra performance in a threaded system.
-&lt;&lt;/style&gt;&gt;
-&lt;&lt;toc&gt;&gt;
-
-The ##mysqld_multi## startup script is in MariaDB distributions on Linux and Unix. It is a wrapper that is designed to manage several ##mysqld## processes running on the same host. In order for multiple ##mysqld## processes to work on the same host, these processes must:
-
-* Use different Unix socket files for local connections.
-* Use different TCP/IP ports for network connections.
-* Use different data directories.
-* Use different process ID files (specified by the ##--pid-file## option) if using ##[[mysqld_safe]]## to start ##mysqld##.
-
-##mysqld_multi## can start or stop servers, or report their current status.
-
-== Using mysqld_multi
-
-The command to use ##mysqld_multi## and the general syntax is:
-
-&lt;&lt;code&gt;&gt;
-mysqld_multi [options] {start|stop|report} [GNR[,GNR] ...]
-&lt;&lt;/code&gt;&gt;
-
-##start##, ##stop##, and ##report## indicate which operation to perform.
-
-You can specify which servers to perform the operation on by providing one or more ##GNR## values. ##GNR## refers to an option group number, and it is explained more in the [[#option-groups|option groups]] section below. If there is no ##GNR## list, then ##mysqld_multi## performs the operation for all ##GNR## values found in its option files.
-
-Multiple ##GNR## values can be specified as a comma-separated list. ##GNR## values can also be specified as a range by separating the numbers by a dash. There must not be any whitespace characters in the ##GNR## list.
-
-For example:
-
-This command starts a single server using option group ##[mysqld17]##:
-
-&lt;&lt;code&gt;&gt;
-mysqld_multi start 17
-&lt;&lt;/code&gt;&gt;
-
-This command stops several servers, using option groups ##[mysqld8]## and ##[mysqld10]## through ##[mysqld13]##:
-
-&lt;&lt;code&gt;&gt;
-mysqld_multi stop 8,10-13
-&lt;&lt;/code&gt;&gt;
-
-=== Options
-
-##mysqld_multi## supports the following options:
-
-&lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
-|= Option |= Description |
-| ##--example## | Give an example of a config file with extra information.
-| ##--help## | Display help and exit.
-| ##--log=filename## | Specify the path and name of the log file. If the file exists, log output is appended to it.
-| ##--mysqladmin=prog_name## | The [[mariadb-admin]] binary to be used to stop servers. Can be given within groups ##[mysqld#]##.
-| ##--mysqld=prog_name## | The mysqld binary to be used. Note that you can also specify [[mysqld_safe]] as the value for this option. If you use mysqld_safe to start the server, you can include the ##mysqld## or ##ledir## options in the corresponding ##[mysqldN]## option group. These options indicate the name of the server that mysqld_safe should start and the path name of the directory where the server is located. Example:\\##[mysqld38]##\\##mysqld = mysqld-debug##\\##ledir  = /opt/local/mysql/libexec##.
-| ##--no-log## | Print to stdout instead of the log file. By default the log file is turned on.
-| ##--password=password## | The password of the MariaDB account to use when invoking [[mariadb-admin]]. Note that the password value is not optional for this option, unlike for other MariaDB programs.
-| ##--silent | Silent mode; disable warnings.
-| ##--tcp-ip## | Connect to the MariaDB server(s) via the TCP/IP port instead of the UNIX socket. This affects stopping and reporting. If a socket file is missing, the server may still be running, but can be accessed only via the TCP/IP port. By default connecting is done via the UNIX socket. This option affects stop and report operations.
-| ##--user=username## | The user name of the MariaDB account to use when invoking [[mariadb-admin]].
-| ##--verbose## | Be more verbose.
-| ##--version## | Display version information and exit.
-| ##--wsrep-new-cluster## | Bootstrap a cluster. Added in MariaDB 10.1.15.
-&lt;&lt;/style&gt;&gt;
-
-=== Option Files
-
-In addition to reading options from the command-line, ##mysqld_multi## can also read options from [[configuring-mariadb-with-option-files|option files]]. If an unknown option is provided to ##mysqld_multi## in an option file, then it is ignored.
-
-The following options relate to how MariaDB command-line tools handles option files. They must be given as the first argument on the command-line:
-
-&lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
-|= Option |= Description
-| ##--print-defaults## | Print the program argument list and exit.|
-| ##--no-defaults## | Don&#39;t read default options from any option file.|
-| ##--defaults-file=# ## | Only read default options from the given file #.|
-| ##--defaults-extra-file=# ## | Read this file after the global files are read.|
-| ##--defaults-group-suffix=# ## | In addition to the default option groups, also read option groups with this suffix.|
-&lt;&lt;/style&gt;&gt;
-
-==== Option Groups
-
-##mysqld_safe## reads options from the following [[configuring-mariadb-with-option-files/#option-groups|option groups]] from [[configuring-mariadb-with-option-files|option files]]:
-
-&lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
-|= Group |= Description |
-| ##[mysqld_multi]## | Options read by ##mysqld_multi##, which includes both MariaDB Server and MySQL Server. 
-&lt;&lt;/style&gt;&gt;
-
-##mysqld_multi## also searches [[configuring-mariadb-with-option-files|option files]] for [[configuring-mariadb-with-option-files/#option-groups|option groups]] with names like ##[mysqldN]##, where ##N## can be any positive integer. This number is referred to in the following discussion as the option group number, or ##GNR##:
-
-&lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
-|= Group |= Description |
-| ##[mysqldN]## | Options read by a ##mysqld## instance managed by ##mysqld_multi##, which includes both MariaDB Server and MySQL Server. The ##N## refers to the instance&#39;s ##GNR##.
-&lt;&lt;/style&gt;&gt;
-
-##GNR## values distinguish option groups from one another and are used as arguments to ##mysqld_multi## to specify which servers you want to start, stop, or obtain a status report for. The ##GNR## value should be the number at the end of the option group name in the option file. For example, the ##GNR## for an option group named ##[mysqld17]## is ##17##.
-
-Options listed in these option groups are the same that you would use in the regular server option groups used for configuring ##mysqld##. However, when using multiple servers, it is necessary that each one use its own value for options such as the Unix socket file and TCP/IP port number.
-
-The ##[mysqld_multi]## option group can be used for options that are needed for ##mysqld_multi## itself. ##[mysqldN]## option groups can be used for options passed to specific ##mysqld## instances.
-
-The regular server [[configuring-mariadb-with-option-files/#option-groups|option groups]] can also be used for common options that are read by all instances:
-
-&lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
-|= Group |= Description |
-| ##[mysqld]## | Options read by ##mysqld##, which includes both MariaDB Server and MySQL Server. |
-| ##[server]## | Options read by MariaDB Server. |
-| ##[mysqld-X.Y]## | Options read by a specific version of ##mysqld##, which includes both MariaDB Server and MySQL Server. For example, ##[mysqld-5.5]##. |
-| ##[mariadb]## | Options read by MariaDB Server. |
-| ##[mariadb-X.Y]## | Options read by a specific version of MariaDB Server. |
-| ##[client-server]## | Options read by all MariaDB [[clients-utilities|client programs]] and the MariaDB Server. This is useful for options like socket and port, which is common between the server and the clients. |
-| ##[galera]## | Options read by a galera-capable MariaDB Server. Available on systems compiled with Galera support.
-&lt;&lt;/style&gt;&gt;
-
-For an example of how you might set up an option file, use this command:
-
-&lt;&lt;code&gt;&gt;
-mysqld_multi --example
-&lt;&lt;/code&gt;&gt;
-
-=== Authentication and Privileges
-
-Make sure that the MariaDB account used for stopping the ##mysqld## processes (with the [[mariadb-admin]] utility) has the same user name and password for each server. Also, make sure that the account has the ##SHUTDOWN## privilege. If the servers that you want to manage have different user names or passwords for the administrative accounts, you might want to create an account on each server that has the same user name and password. For example, you might set up a common ##multi_admin## account by executing the following commands for each server:
-
-&lt;&lt;code&gt;&gt;
-shell&gt; mysql -u root -S /tmp/mysql.sock -p
-Enter password:
-mysql&gt; GRANT SHUTDOWN ON *.*
- -&gt; TO ´multi_admin´@´localhost´ IDENTIFIED BY ´multipass´;
-&lt;&lt;/code&gt;&gt;
-
-Change the connection parameters appropriately when connecting to each one. Note that the host name part of the account name must allow you to connect as ##multi_admin## from the host where you want to run ##mysqld_multi##.
-
-== User Account
-
-Make sure that the data directory for each server is fully accessible to the Unix account that the specific ##mysqld## process is started as. If you run the ##mysqld_multi## script as the Unix ##root## account, and if you want the ##mysqld## process to be started with another Unix account, then you can use use the ##--user## option with ##mysqld##. If you specify the ##--user## option in an option file, and if you did not run the ##mysqld_multi## script as the Unix ##root## account, then it will just log a warning and the ##mysqld## processes are started under the original Unix account.
-
-Do not run the ##mysqld## process as the Unix ##root## account, unless you know what you are doing.
-
-== Example
-
-The following example shows how you might set up an option file for use with mysqld_multi. The order in which the mysqld programs are started or stopped depends on the order in which they appear in the option file. Group numbers need not form an unbroken sequence. The first and fifth [mysqldN] groups were intentionally omitted from the example to illustrate that you can have “gaps” in the option file. This gives you more flexibility.
-
-&lt;&lt;code&gt;&gt;
-           # This file should probably be in your home dir (~/.my.cnf)
-           # or /etc/my.cnf
-           # Version 2.1 by Jani Tolonen
-           [mysqld_multi]
-           mysqld     = /usr/local/bin/mysqld_safe
-           mysqladmin = /usr/local/bin/mysqladmin
-           user       = multi_admin
-           password   = multipass
-           [mysqld2]
-           socket     = /tmp/mysql.sock2
-           port       = 3307
-           pid-file   = /usr/local/mysql/var2/hostname.pid2
-           datadir    = /usr/local/mysql/var2
-           language   = /usr/local/share/mysql/english
-           user       = john
-           [mysqld3]
-           socket     = /tmp/mysql.sock3
-           port       = 3308
-           pid-file   = /usr/local/mysql/var3/hostname.pid3
-           datadir    = /usr/local/mysql/var3
-           language   = /usr/local/share/mysql/swedish
-           user       = monty
-           [mysqld4]
-           socket     = /tmp/mysql.sock4
-           port       = 3309
-           pid-file   = /usr/local/mysql/var4/hostname.pid4
-           datadir    = /usr/local/mysql/var4
-           language   = /usr/local/share/mysql/estonia
-           user       = tonu
-           [mysqld6]
-           socket     = /tmp/mysql.sock6
-           port       = 3311
-           pid-file   = /usr/local/mysql/var6/hostname.pid6
-           datadir    = /usr/local/mysql/var6
-           language   = /usr/local/share/mysql/japanese
-           user       = jani
-&lt;&lt;/code&gt;&gt;</textarea>
+See [[mariadbd-multi]] for details.</textarea>
     
 
 

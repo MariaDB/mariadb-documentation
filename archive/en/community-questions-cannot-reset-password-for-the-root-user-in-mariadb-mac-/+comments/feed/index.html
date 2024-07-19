@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Cannot reset password for the root user in MariaDB (Mac keeps changing it on restart)</title><link>https://mariadb.com/kb/en/community-questions-cannot-reset-password-for-the-root-user-in-mariadb-mac-/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/community-questions-cannot-reset-password-for-the-root-user-in-mariadb-mac-/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 19 Jul 2024 00:46:34 +0000</lastBuildDate><item><title>Re: Cannot reset password for the root user in MariaDB (Mac keeps changing it on restart)</title><link>https://mariadb.com/kb/en/community-questions-cannot-reset-password-for-the-root-user-in-mariadb-mac-/+comments/6816</link><description>&lt;p&gt;I formatted your output for you :)&lt;/p&gt;
+&lt;p&gt;"Invalid" as a password means that password authentication is disabled. See &lt;a href="/kb/en/authentication-from-mariadb-10-4/"&gt;Authentication from MariaDB 10.4&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;"some users may wish to log in as MariaDB root without using sudo. Hence the old authentication method — conventional MariaDB password — is still available. By default it is disabled (“invalid” is not a valid password hash), but one can set the password with a usual SET PASSWORD statement."&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/community-questions-cannot-reset-password-for-the-root-user-in-mariadb-mac-/+comments/6816</guid></item><item><title>Re: Cannot reset password for the root user in MariaDB (Mac keeps changing it on restart)</title><link>https://mariadb.com/kb/en/community-questions-cannot-reset-password-for-the-root-user-in-mariadb-mac-/+comments/6815</link><description>&lt;p&gt;Ok, let me answer your questions:&lt;/p&gt;
+&lt;p&gt;1. provide the version you're using&lt;/p&gt;
+&lt;pre class="fixed"&gt;```sh
+$ mariadb --version
+mariadb from 11.4.2-MariaDB, client 15.2 for osx10.19 (arm64) using  EditLine wrapper
+```
+&lt;/pre&gt;&lt;p&gt;2. when you first install and have access, the contents of the global_priv table:&lt;/p&gt;
+&lt;pre class="fixed"&gt;```sh
+$ sudo mysql -uroot
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 15
+Server version: 11.4.2-MariaDB Homebrew
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]&amp;gt; SELECT CONCAT(user, '@', host, ' =&amp;gt; ', JSON_DETAILED(priv)) FROM mysql.global_priv;
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| CONCAT(user, '@', host, ' =&amp;gt; ', JSON_DETAILED(priv))                                                                                                                                                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| mariadb.sys@localhost =&amp;gt; {
+    &amp;#34;access&amp;#34;: 0,
+    &amp;#34;plugin&amp;#34;: &amp;#34;mysql_native_password&amp;#34;,
+    &amp;#34;authentication_string&amp;#34;: &amp;#34;&amp;#34;,
+    &amp;#34;account_locked&amp;#34;: true,
+    &amp;#34;password_last_changed&amp;#34;: 0
+}                                                                         |
+| root@localhost =&amp;gt; {
+    &amp;#34;access&amp;#34;: 18446744073709551615,
+    &amp;#34;plugin&amp;#34;: &amp;#34;mysql_native_password&amp;#34;,
+    &amp;#34;authentication_string&amp;#34;: &amp;#34;invalid&amp;#34;,
+    &amp;#34;auth_or&amp;#34;: 
+    [
+        {
+        },
+        {
+            &amp;#34;plugin&amp;#34;: &amp;#34;unix_socket&amp;#34;
+        }
+    ]
+}        |
+| victorcosta@localhost =&amp;gt; {
+    &amp;#34;access&amp;#34;: 18446744073709551615,
+    &amp;#34;plugin&amp;#34;: &amp;#34;mysql_native_password&amp;#34;,
+    &amp;#34;authentication_string&amp;#34;: &amp;#34;invalid&amp;#34;,
+    &amp;#34;auth_or&amp;#34;: 
+    [
+        {
+        },
+        {
+            &amp;#34;plugin&amp;#34;: &amp;#34;unix_socket&amp;#34;
+        }
+    ]
+} |
+| PUBLIC@ =&amp;gt; {
+    &amp;#34;access&amp;#34;: 0,
+    &amp;#34;is_role&amp;#34;: true
+}                                                                                                                                                                                                      |
+| @localhost =&amp;gt; {
+}                                                                                                                                                                                                                                        |
+| @victors-macbook-pro.local =&amp;gt; {
+}                                                                                                                                                                                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+6 rows in set (0.002 sec)
+```
+&lt;/pre&gt;&lt;p&gt;3. Also, let me show here the list of the users and the local passwords, because some of these passwords are `invalid`, which is weird.&lt;/p&gt;
+&lt;pre class="fixed"&gt;
+```sh
+MariaDB [mysql]&amp;gt; select Host, User, Password from user;
++---------------------------+-------------+----------+
+| Host                      | User        | Password |
++---------------------------+-------------+----------+
+| localhost                 | mariadb.sys |          |
+| localhost                 | root        | invalid  |
+| localhost                 | victorcosta | invalid  |
+|                           | PUBLIC      |          |
+| localhost                 |             |          |
+| victors-macbook-pro.local |             |          |
++---------------------------+-------------+----------+
+6 rows in set (0.001 sec)
+```
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Victor Costa</dc:creator><guid>https://mariadb.com/kb/en/community-questions-cannot-reset-password-for-the-root-user-in-mariadb-mac-/+comments/6815</guid></item><item><title>Re: Cannot reset password for the root user in MariaDB (Mac keeps changing it on restart)</title><link>https://mariadb.com/kb/en/community-questions-cannot-reset-password-for-the-root-user-in-mariadb-mac-/+comments/6802</link><description>&lt;p&gt;I can't help with Mac specifically, but take a look at &lt;a href="/kb/en/troubleshooting-connection-issues/#authentication-problems"&gt;Troubleshooting Connection Issues&lt;/a&gt;, in particular &lt;a href="/kb/en/authentication-from-mariadb-10-4/"&gt;Authentication from MariaDB 10.4&lt;/a&gt;. &lt;/p&gt;
+&lt;p&gt;Note that if you're using any of the &lt;a href="https://mariadb.org/about/#maintenance-policy"&gt;currently maintained versions&lt;/a&gt; (&lt;a href="/kb/en/what-is-mariadb-105/"&gt;MariaDB 10.5&lt;/a&gt;+), the name of the binaries will be mariadb*, not mysql*&lt;/p&gt;
+&lt;p&gt;If you're still having problems, provide the version you're using, and, when you first install and have access, the contents of the &lt;a href="/kb/en/mysqlglobal_priv-table/"&gt;global_priv table&lt;/a&gt;:&lt;/p&gt;
+&lt;pre class="fixed"&gt;SELECT CONCAT(user, '@', host, ' =&amp;gt; ', JSON_DETAILED(priv)) FROM mysql.global_priv;
+&lt;/pre&gt;&lt;p&gt;Further reading:&lt;/p&gt;
+&lt;ul start="1"&gt;&lt;li&gt;&lt;a href="/kb/en/mariadb-secure-installation/"&gt;mariadb-secure-installation&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/community-questions-cannot-reset-password-for-the-root-user-in-mariadb-mac-/+comments/6802</guid></item></channel></rss>

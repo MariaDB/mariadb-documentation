@@ -199,11 +199,11 @@
     
 
     
-    » <a class="crumb" href="/kb/en/mariadb-maxscale-24-02-beta/">MariaDB MaxScale 24.02 Beta</a>
+    » <a class="crumb" href="/kb/en/mariadb-maxscale-24-02/">MariaDB MaxScale 24.02</a>
     
 
     
-    » <a class="crumb" href="/kb/en/mariadb-maxscale-24-02-beta-monitors/">MaxScale 24.02Monitors</a>
+    » <a class="crumb" href="/kb/en/maxscale-24-02monitors/">MaxScale 24.02 Monitors</a>
     
 
 
@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-maxscale-2402-maxscale-2402-mariadb-monitor/+r/135660/">135660</a></dd>
+            <dd><a href="/kb/en/mariadb-maxscale-2402-maxscale-2402-mariadb-monitor/+r/140830/">140830</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5571">
@@ -544,14 +544,14 @@ separated to different network interfaces.
 
 ### `master_conditions`
 
-Enum, default: *primary_monitor_master*. Designate additional conditions for
-*Master*-status, i.e qualified for read and write queries.
+Enum, default: *primary_monitor_master, disk_space_ok*. Designate additional
+conditions for *Master*-status, i.e qualified for read and write queries.
 
 Normally, if a suitable primary candidate server is found as described in
 [Primary selection](#primary-selection), MaxScale designates it *Master*.
 *master_conditions* sets additional conditions for a primary server. This
 setting is an enum, allowing multiple conditions to be set simultaneously.
-Conditions 2, 3 and 4 refer to replica servers. If combined, a single replica must
+Conditions 2, 3 and 4 refer to replica servers. A single replica must
 fulfill all of the given conditions for the primary to be viable.
 
 If the primary candidate fails *master_conditions* but fulfills
@@ -574,10 +574,15 @@ replica must also be *Running*.
 [cooperating](#cooperative-monitoring) with another MaxScale and this is the
 secondary MaxScale, require that the candidate primary is selected also by the
 primary MaxScale.
+6. disk_space_ok : The candidate primary must not be low on disk space. This
+option only takes effect if
+[disk space check](node:maxscale-24-02-common-monitor-parameters#disk_space_threshold) is enabled. Added in
+MaxScale 23.08.5.
 
 The default value of this setting is
-`master_requirements=primary_monitor_master` to ensure that both monitors use
-the same primary server when cooperating.
+`master_requirements=primary_monitor_master,disk_space_ok` to ensure that both
+monitors use the same primary server when cooperating and that the primary is
+not out of disk space.
 
 For example, to require that the primary must have a replica which is both
 connected and running, set
@@ -610,6 +615,10 @@ applies to any relays between the replica and the primary.
 [cooperating](#cooperative-monitoring) with another MaxScale and this is the
 secondary MaxScale, require that the candidate primary is selected also by the
 primary MaxScale.
+6. disk_space_ok : The replica must not be low on disk space. This
+option only takes effect if
+[disk space check](node:maxscale-24-02-common-monitor-parameters#disk_space_threshold) is enabled. Added in
+MaxScale 23.08.5.
 
 For example, to require that the primary server of the cluster must be running
 and writable for any servers to have *Slave*-status, set
@@ -661,12 +670,29 @@ prefers to select a writable server as primary if possible.
 
 This feature is disabled by default. If set to ON, the monitor attempts to
 enable the *read_only*-flag on any writable replica server. The flag is checked
-every monitor tick. The monitor user requires the SUPER-privilege for this
-feature to work. While the `read_only`-flag is ON, only users with the
+every monitor tick. The monitor user requires the SUPER-privilege
+(or READ_ONLY ADMIN) for this
+feature to work. While the *read_only*-flag is ON, only users with the
 SUPER-privilege (or READ_ONLY ADMIN) can write to the backend server. If
 temporary write access is required, this feature should be disabled before
-attempting to disable *read_only*. Otherwise the monitor will quickly re-enable
-it.
+attempting to disable *read_only* manually. Otherwise, the monitor will quickly
+re-enable it.
+
+*read_only* won&#39;t be enabled on the master server, even if it has
+lost [Master]-status due to [master_conditions](#master_conditions) and is
+marked [Slave].
+
+### `enforce_read_only_servers`
+
+Boolean, default: false. Works similar to
+[enforce_read_only_slaves](#enforce_read_only_slaves) except will set
+*read_only* on any writable server that is not the primary and not in
+maintenance (a superset of the servers altered by *enforce_read_only_slaves*).
+
+The monitor user requires the SUPER-privilege
+(or READ_ONLY ADMIN) for this feature to work. If the cluster has no valid
+primary or primary candidate, *read_only* is not set on any server as it is
+unclear which servers should be altered.
 
 ### `maintenance_on_low_disk_space`
 
@@ -1380,13 +1406,22 @@ causing writes to fail.
 
 The lock-setting defines how many locks are required for primary status. Setting
 `cooperative_monitoring_locks=majority_of_all` means that the primary monitor
-needs *n_servers/2 + 1* (rounded down) locks. For example, a cluster of 3
-servers needs 2 locks for majority, a cluster of 4 needs 3, and a cluster of 5
-needs 3. This scheme is resistant against split-brain situations in the sense
+needs *n_servers/2 + 1* (rounded down) locks. For example, a cluster of three
+servers needs two locks for majority, a cluster of four needs three, and a
+cluster of five needs three.
+This scheme is resistant against split-brain situations in the sense
 that multiple monitors cannot be primary simultaneously. However, a split may
 cause both monitors to consider themselves secondary, in which case a primary
-server won&#39;t be detected. Also, if too many servers go down, neither monitor can
-claim lock majority.
+server won&#39;t be detected.
+
+Even without a network split, `cooperative_monitoring_locks=majority_of_all`
+will lead to neither monitor claiming lock majority once too many servers go
+down. This scenario is depicted in the image below. Only two out of four servers
+are running when three are needed for majority. Although both MaxScales see both
+running servers, neither is certain they have majority and the cluster stays in
+read-only mode. If the primary server is down, no failover is performed either.
+
+&lt;img src=&#34;images/coop_lock_no_majority.png&#34; alt=&#34;Neither MaxScale can claim majority if too many servers go down when using majority_of_all&#34;/&gt;
 
 Setting `cooperative_monitoring_locks=majority_of_running` changes the way
 *n_servers* is calculated. Instead of using the total number of servers, only
@@ -1394,9 +1429,15 @@ servers currently [Running] are considered. This scheme adapts to multiple
 servers going down, ensuring that claiming lock majority is always possible.
 However, it can lead to multiple monitors claiming primary status in a
 split-brain situation. As an example, consider a cluster with servers 1 to 4
-with MaxScales A and B. If A can connect to 1 and 2 but not to 3 and 4, while B
-does the opposite, both MaxScales will claim two locks out of two running
-servers. The two MaxScales will then route writes to different servers.
+with MaxScales A and B, as in the image below. MaxScale A can connect to
+servers 1 and 2 (and claim their locks) but not to servers 3 and 4 due to
+a network split. MaxScale A thus assumes servers 3 and 4 are down. MaxScale B
+does the opposite, claiming servers 3 and 4 and assuming 1 and 2 are down.
+Both MaxScales claim two locks out of two available and assume that they have
+lock majority. Both MaxScales may then promote their own primaries and route
+writes to different servers.
+
+&lt;img src=&#34;images/coop_lock_split_brain.png&#34; alt=&#34;Both MaxScales claim majority in split-brain situation when using majority_of_running&#34;/&gt;
 
 The recommended strategy depends on which failure scenario is more likely and/or
 more destructive. If it&#39;s unlikely that multiple servers are ever down
@@ -1411,19 +1452,24 @@ the field value is *null*. Lock information for individual servers is listed in
 the server-specific field **lock_held**. Again, *null* indicates that locks are
 not in use or the lock status is unknown.
 
-If multiple MaxScale instances end up in a situation where none of them gets the
-needed number of servers, they try again at a random point in time. Eventually,
-one MaxScale will end up receiving all of the servers. The time it takes for
-this to occur depends on multiple factors but it is estimated that the time to
-resolve conflicts is low enough that no additional special treatment for
-conflicts is needed.
+If a MaxScale instance tries to acquire the locks but fails to get majority
+(perhaps another MaxScale was acquiring locks simultaneously) it will release
+any acquired locks and try again after a random number of monitor ticks. This
+prevents multiple MaxScales from fighting over the locks continuously as one
+MaxScale will eventually wait less time than the others. Conflict probability
+can be further decreased by configuring each monitor with a different
+*monitor_interval*.
+
+The flowchart below illustrates the lock handling logic.
+
+&lt;img src=&#34;images/coop_lock_flowchart.svg&#34; alt=&#34;Cooperative monitoring lock decision flowchart&#34; width=&#34;550&#34;/&gt;
 
 ### Releasing locks
 
 Monitor cooperation depends on the server locks. The locks are
 connection-specific. The owning connection can manually release a lock, allowing
 another connection to claim it. Also, if the owning connection closes, the
-MariaDB-server process releases the lock. How quickly a lost connection is
+MariaDB Server process releases the lock. How quickly a lost connection is
 detected affects how quickly the primary monitor status moves from one monitor
 and MaxScale to another.
 
@@ -1431,17 +1477,24 @@ If the primary MaxScale or its monitor is stopped normally, the monitor
 connections are properly closed, releasing the locks. This allows the secondary
 MaxScale to quickly claim the locks. However, if the primary simply vanishes
 (broken network), the connection may just look idle. In this case, the
-MariaDB-server may take a long time before it considers the monitor connection
+MariaDB Server may take a long time before it considers the monitor connection
 lost. This time ultimately depends on TCP keepalive settings on the machines
-running MariaDB-server.
+running MariaDB Server.
 
-On MariaDB-server 10.3.3 and later, the TCP keepalive settings can be configured
+On MariaDB Server 10.3.3 and later, the TCP keepalive settings can be configured
 for just the server process. See
 [Server System Variables](https://mariadb.com/kb/en/server-system-variables/#tcp_keepalive_interval)
 for information on settings *tcp_keepalive_interval*, *tcp_keepalive_probes* and
 *tcp_keepalive_time*. These settings can also be set on the operating system
 level, as described
 [here](http://www.tldp.org/HOWTO/TCP-Keepalive-HOWTO/usingkeepalive.html).
+
+As of MaxScale  6.4.16, 22.08.13, 23.02.10, 23.08.6 and 24.02.2, configuring
+TCP keepalive is no longer necessary as monitor sets the session *wait_timeout*
+variable when acquiring a lock. This causes the MariaDB Server to close the
+monitor connection if the connection appears idle for too long. The value of
+*wait_timeout* used depends on the monitor interval and connection timeout
+settings, and is logged at MaxScale startup.
 
 A monitor can also be ordered to manually release its locks via the module
 command *release-locks*. This is useful for manually changing the primary

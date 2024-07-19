@@ -25,13 +25,13 @@
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
     <meta property="og:site_name" content="MariaDB KnowledgeBase" />
     <meta property="fb:admins" content="514852603" />
-    <meta property="og:description" content="Simple Sharding with Two Servers
+    <meta property="og:description" content="Schemarouter: Simple Sharding With Two Servers
+Sharding is the method of splitting a single logical database server into
+separate physical databases. This tutorial describes a..." />
 
-Sharding is the method of splitting a single database server into separate parts. This tutorial describes a very simple way of sharding. Each..." />
-
-    <meta name="description" content="Simple Sharding with Two Servers
-
-Sharding is the method of splitting a single database server into separate parts. This tutorial describes a very simple way of sharding. Each..." />
+    <meta name="description" content="Schemarouter: Simple Sharding With Two Servers
+Sharding is the method of splitting a single logical database server into
+separate physical databases. This tutorial describes a..." />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
@@ -201,7 +201,7 @@ Sharding is the method of splitting a single database server into separate parts
     
 
     
-    » <a class="crumb" href="/kb/en/mariadb-maxscale-23-08-tutorials/">Tutorials</a>
+    » <a class="crumb" href="/kb/en/mariadb-maxscale-23-08-tutorials/">MaxScale 23.08 Tutorials</a>
     
 
 
@@ -270,12 +270,12 @@ Sharding is the method of splitting a single database server into separate parts
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-09-05 20:20">6 months, 3 weeks ago</span></dd>
+<span class="datetime" title="2023-09-05 20:20">10 months, 2 weeks ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-05 20:20">6 months, 3 weeks ago</span></dd>
+<span class="datetime" title="2023-09-05 20:20">10 months, 2 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -292,7 +292,7 @@ Sharding is the method of splitting a single database server into separate parts
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.08.5/Documentation/Tutorials/Simple-Sharding-Tutorial.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.08.6/Documentation/Tutorials/Simple-Sharding-Tutorial.md">GitHub</a></dd>
         
     </dl>
 
@@ -410,47 +410,118 @@ Sharding is the method of splitting a single database server into separate parts
 
     
     <div class="answer formatted">
-        <h1 id="simple-sharding-with-two-servers">Simple Sharding with Two Servers</h1>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.08.5/Documentation/Tutorials/images/Simple-Sharding.png"></p>
-<p>Sharding is the method of splitting a single database server into separate parts. This tutorial describes a very simple way of sharding. Each schema is located on a different database server and MariaDB MaxScale's <strong>schemarouter</strong> module is used to combine them into a single database server.</p>
-<p>MariaDB MaxScale will appear to the client as a database server with the combination of all the schemas in all the configured servers.</p>
-<h2 id="environment-solution-space">Environment &amp; Solution Space</h2>
-<p>This document is designed as a simple tutorial on schema-based sharding using MariaDB MaxScale in an environment in which you have two servers. The object of this tutorial is to have a system that, to the client side, acts like a single MariaDB database but actually is sharded between the two servers.</p>
-<p>The database users should be configured according to <a href="/kb/en/mariadb-maxscale-2308-mariadb-maxscale-configuration-guide/">the configuration guide</a>. The <a href="/kb/en/mariadb-maxscale-2308-setting-up-mariadb-maxscale/">MaxScale Tutorial</a> contains easy to follow instructions on how to set up MaxScale.</p>
-<p>This tutorial will assume the user is using of the binary distributions available and has installed this in the default location. The process of configuring MariaDB MaxScale will be covered within this document. The installation and configuration of the MariaDB servers will not be covered in-depth.</p>
-<h2 id="preparing-maxscale">Preparing MaxScale</h2>
-<p>Follow the <a href="/kb/en/mariadb-maxscale-2308-setting-up-mariadb-maxscale/">MaxScale Tutorial</a> to install and prepare the required database users for MaxScale. You don't need to create the configuration file  for MaxScale as it will be covered in the next section.</p>
-<h3 id="creating-your-mariadb-maxscale-configuration">Creating Your MariaDB MaxScale Configuration</h3>
-<p>The first step in the creation of your maxscale.cnf file is to define the global maxscale section. This section configures the number of threads MariaDB MaxScale uses. A good rule of thumb is to use at most as may threads as you have CPUs. MariaDB MaxScale uses few threads for internal operations so one or two threads less than the maximum should be enough.</p>
-<div><pre><span></span>[maxscale]
-threads=8
+        <h1 id="schemarouter-simple-sharding-with-two-servers">Schemarouter: Simple Sharding With Two Servers</h1>
+<p>Sharding is the method of splitting a single logical database server into
+separate physical databases. This tutorial describes a very simple way of
+sharding. Each schema is located on a different database server and MariaDB
+MaxScale's schemarouter module is used to combine them into a single logical
+database server.</p>
+<h2 id="environment">Environment</h2>
+<p>This tutorial was written for Ubuntu 22.04, MaxScale 23.08 and
+<a href="https://mariadb.com/kb/en/what-is-mariadb-1011/">MariaDB 10.11</a>. In addition to
+the MaxScale server, you'll need two MariaDB servers which will be used for the
+sharding. The installation of MariaDB is not covered by this tutorial.</p>
+<h2 id="installing-maxscale">Installing MaxScale</h2>
+<p>The easiest way to install MaxScale is to use the MariaDB repositories.</p>
+<div><pre><span></span># Install MaxScale
+apt update
+apt -y install sudo curl
+curl -LsS https://r.mariadb.com/downloads/mariadb_repo_setup | sudo bash
+apt -y install maxscale
 </pre></div>
 
 
-<p>After this we configure two servers we will use to shard our database. The <code>accounts_east</code> server will hold one schema and the <code>accounts_west</code> will hold another schema. We will use these two servers to create our sharded database.</p>
-<div><pre><span></span>[accounts_east]
+<h2 id="creating-users">Creating Users</h2>
+<p>This tutorial uses a broader set of grants than is required for the sake of
+brevity and backwards compatibility. For the minimal set of grants, refer to the
+<a href="/kb/en/mariadb-maxscale-2308-mariadb-maxscale-configuration-guide/">MaxScale Configuration Guide</a>.</p>
+<p>All MaxScale configurations require at least two accounts: one for reading
+authentication data and another for monitoring the state of the
+database. Services will use the first one and monitors will use the second
+one. In addition to this, we want to have a separate account that our
+application will use.</p>
+<div><pre><span></span>-- Create the user for the service
+-- https://mariadb.com/kb/en/mariadb-maxscale-2308-authentication-modules/#required-grants
+CREATE USER 'service_user'@'%' IDENTIFIED BY 'secret';
+GRANT SELECT ON mysql.* TO 'service_user'@'%';
+GRANT SHOW DATABASES ON *.* TO 'service_user'@'%';
+
+-- Create the user for the monitor
+-- https://mariadb.com/kb/en/mariadb-maxscale-2308-galera-monitor/#required-grants
+CREATE USER 'monitor_user'@'%' IDENTIFIED BY 'secret';
+GRANT REPLICATION CLIENT ON *.* TO 'monitor_user'@'%';
+
+-- Create the application user
+-- https://mariadb.com/kb/en/mariadb-maxscale-2308-authentication-modules/#limitations-and-troubleshooting
+CREATE USER app_user@'%' IDENTIFIED BY 'secret';
+GRANT SELECT, INSERT, UPDATE, DELETE ON *.* TO app_user@'%';
+</pre></div>
+
+
+<p>All of the users must be created on both of the MariaDB servers.</p>
+<h2 id="creating-the-schemas-and-tables">Creating the Schemas and Tables</h2>
+<p>Each server will hold one unique schema which contains the data of one specific
+customer. We'll also create a shared schema that is present on all shards that
+the shard-local tables can be joined into.</p>
+<p>Create the tables on the first server:</p>
+<div><pre><span></span>CREATE DATABASE IF NOT EXISTS customer_01;
+CREATE TABLE IF NOT EXISTS customer_01.accounts(id INT, account_type INT, account_name VARCHAR(255));
+INSERT INTO customer_01.accounts VALUES (1, 1, 'foo');
+
+-- The shared schema that's on all shards
+CREATE DATABASE IF NOT EXISTS shared_info;
+CREATE TABLE IF NOT EXISTS shared_info.account_types(account_type INT, type_name VARCHAR(255));
+INSERT INTO shared_info.account_types VALUES (1, 'admin'), (2, 'user');
+</pre></div>
+
+
+<p>Create the tables on the second server:</p>
+<div><pre><span></span>CREATE DATABASE IF NOT EXISTS customer_02;
+CREATE TABLE IF NOT EXISTS customer_02.accounts(id INT, account_type INT, account_name VARCHAR(255));
+INSERT INTO customer_02.accounts VALUES (2, 2, 'bar');
+
+-- The shared schema that's on all shards
+CREATE DATABASE IF NOT EXISTS shared_info;
+CREATE TABLE IF NOT EXISTS shared_info.account_types(account_type INT, type_name VARCHAR(255));
+INSERT INTO shared_info.account_types VALUES (1, 'admin'), (2, 'user');
+</pre></div>
+
+
+<h2 id="configuring-maxscale">Configuring MaxScale</h2>
+<p>The MaxScale configuration is stored in <code>/etc/maxscale.cnf</code>.</p>
+<p>First, we configure two servers we will use to shard our database. The <code>db-01</code>
+server has the <code>customer_01</code> schema and the <code>db-02</code> server has the <code>customer_02</code>
+schema.</p>
+<div><pre><span></span>[db-01]
 type=server
-address=192.168.56.102
+address=192.168.0.102
 port=3306
 
-[accounts_west]
+[db-02]
 type=server
-address=192.168.122.85
+address=192.168.0.103
 port=3306
 </pre></div>
 
 
-<p>The next step is to configure the service which the users connect to. This section defines which router to use, which servers to connect to and the credentials to use. The router we use in this tutorial is the <code>schemarouter</code>.</p>
+<p>The next step is to configure the service which the users connect to. This
+section defines which router to use, which servers to connect to and the
+credentials to use. For sharding, we use schemarouter router and the
+service_user credentials we defined earlier. By default the schemarouter warns
+if two or more nodes have duplicate schemas so we need to ignore them with
+<code>ignore_tables_regex=.*</code>.</p>
 <div><pre><span></span>[Sharded-Service]
 type=service
 router=schemarouter
-servers=accounts_west,accounts_east
-user=sharduser
-password=YqztlYGDvZ8tVMe3GUm9XCwQi
+targets=db-02,db-01
+user=service_user
+password=secret
+ignore_tables_regex=.*
 </pre></div>
 
 
-<p>After this we configure a listener for the service. The listener is the actual port the user connects to. We will use the port 4000.</p>
+<p>After this we configure a listener for the service. The listener is the actual
+port that the user connects to. We will use the port 4000.</p>
 <div><pre><span></span>[Sharded-Service-Listener]
 type=listener
 service=Sharded-Service
@@ -459,23 +530,140 @@ port=4000
 </pre></div>
 
 
-<p>The final step is to configure a monitor which will monitor the state of the servers. The monitor will notify MariaDB MaxScale if the servers are down. We add the two servers to the monitor, define the credentials to use and we set the monitoring cycle interval.</p>
-<div><pre><span></span>[MySQL-Monitor]
+<p>The final step is to configure a monitor which will monitor the state of the
+servers. The monitor will notify MariaDB MaxScale if the servers are down. We
+add the two servers to the monitor and use the <code>monitor_user</code> credentials. For
+the sharding use-case, the <code>galeramon</code> module is suitable even if we're not
+using a Galera cluster. The <code>schemarouter</code> is only interested in whether the
+server is in the <code>Running</code> state or in the <code>Down</code> state.</p>
+<div><pre><span></span>[Shard-Monitor]
 type=monitor
-module=mariadbmon
-servers=accounts_west,accounts_east
-user=monitoruser
-password=7SP1Zcsow8TG+9EkEBVEbaKa
-monitor_interval=1s
+module=galeramon
+servers=db-02,db-01
+user=monitor_user
+password=secret
 </pre></div>
 
 
-<p>After this we have a fully working configuration and we can move on to starting MariaDB MaxScale.</p>
-<h2 id="starting-mariadb-maxscale">Starting MariaDB MaxScale</h2>
-<p>Upon completion of the configuration process MariaDB MaxScale is ready to be started . This may either be done manually by running the maxscale command or via the service interface. The service scripts are located in the <code>/etc/init.d/</code> folder and are accessible through both the <code>service</code> and <code>systemctl</code> commands.</p>
-<p>MariaDB MaxScale is now ready to start accepting client connections and routing them. Queries are routed to the right servers based on the database they target and switching between the shards is seamless since MariaDB MaxScale keeps the session state intact between servers.</p>
-<p>If MariaDB MaxScale fails to start, check the error log in <code>/var/log/maxscale</code> to see what sort of errors were detected.</p>
-<p><strong>Note:</strong> As the sharding solution in MaxScale is relatively simple, cross-database queries between two or more shards are not supported.</p>
+<p>After this we have a fully working configuration and the contents of
+<code>/etc/maxscale.cnf</code> should look like this.</p>
+<div><pre><span></span>[db-01]
+type=server
+address=192.168.0.102
+port=3306
+
+[db-02]
+type=server
+address=192.168.0.103
+port=3306
+
+[Sharded-Service]
+type=service
+router=schemarouter
+targets=db-02,db-01
+user=service_user
+password=secret
+ignore_tables_regex=.*
+
+[Sharded-Service-Listener]
+type=listener
+service=Sharded-Service
+protocol=MariaDBClient
+port=4000
+
+[Shard-Monitor]
+type=monitor
+module=galeramon
+servers=db-02,db-01
+user=monitor_user
+password=secret
+</pre></div>
+
+
+<p>Then you're ready to start MaxScale.</p>
+<div><pre><span></span>systemctl start maxscale.service
+</pre></div>
+
+
+<h2 id="testing-the-sharding">Testing the Sharding</h2>
+<p>MariaDB MaxScale is now ready to start accepting client connections and routing
+them. Queries are routed to the right servers based on the database they target
+and switching between the shards is seamless since MariaDB MaxScale keeps the
+session state intact between servers.</p>
+<p>To test, we query the schema that's located on the local shard and join it to
+the shared table.</p>
+<div><pre><span></span>$ mariadb -A -u app_user -psecret -h 127.0.0.1 -P 4000
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 3
+Server version: 10.11.7-MariaDB-1:10.11.7+maria~ubu2004-log mariadb.org binary distribution
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]&gt; USE customer_01;
+Database changed
+MariaDB [customer_01]&gt; SELECT c.account_name, c.account_type, s.type_name FROM accounts c
+    -&gt;   JOIN shared_info.account_types s ON (c.account_type = s.account_type);
++--------------+--------------+-----------+
+| account_name | account_type | type_name |
++--------------+--------------+-----------+
+| foo          |            1 | admin     |
++--------------+--------------+-----------+
+1 row in set (0.001 sec)
+
+MariaDB [customer_01]&gt; USE customer_02;
+Database changed
+MariaDB [customer_02]&gt; SELECT c.account_name, c.account_type, s.type_name FROM accounts c
+    -&gt;   JOIN shared_info.account_types s ON (c.account_type = s.account_type);
++--------------+--------------+-----------+
+| account_name | account_type | type_name |
++--------------+--------------+-----------+
+| bar          |            2 | user      |
++--------------+--------------+-----------+
+1 row in set (0.000 sec)
+</pre></div>
+
+
+<p>The sharding also works even if no default database is selected.</p>
+<div><pre><span></span>MariaDB [(none)]&gt; SELECT c.account_name, c.account_type, s.type_name FROM customer_01.accounts c
+    -&gt;   JOIN shared_info.account_types s ON (c.account_type = s.account_type);
++--------------+--------------+-----------+
+| account_name | account_type | type_name |
++--------------+--------------+-----------+
+| foo          |            1 | admin     |
++--------------+--------------+-----------+
+1 row in set (0.001 sec)
+
+MariaDB [(none)]&gt; SELECT c.account_name, c.account_type, s.type_name FROM customer_02.accounts c
+    -&gt;   JOIN shared_info.account_types s ON (c.account_type = s.account_type);
++--------------+--------------+-----------+
+| account_name | account_type | type_name |
++--------------+--------------+-----------+
+| bar          |            2 | user      |
++--------------+--------------+-----------+
+1 row in set (0.001 sec)
+</pre></div>
+
+
+<p>One limitation of this sort of simple sharding is that cross-shard joins are not possible.</p>
+<div><pre><span></span>MariaDB [(none)]&gt; SELECT * FROM customer_01.accounts UNION SELECT * FROM customer_02.accounts;
+ERROR 1146 (42S02): Table 'customer_01.accounts' doesn't exist
+MariaDB [(none)]&gt; USE customer_01;
+Database changed
+MariaDB [customer_01]&gt; SELECT * FROM customer_01.accounts UNION SELECT * FROM customer_02.accounts;
+ERROR 1146 (42S02): Table 'customer_02.accounts' doesn't exist
+MariaDB [customer_01]&gt; USE customer_02;
+Database changed
+MariaDB [customer_02]&gt; SELECT * FROM customer_01.accounts UNION SELECT * FROM customer_02.accounts;
+ERROR 1146 (42S02): Table 'customer_01.accounts' doesn't exist
+</pre></div>
+
+
+<p>In most multi-tenant situations, this is an acceptable limitation. If you do
+need cross-shard joins, the
+<a href="https://mariadb.com/kb/en/spider-storage-engine-overview/">Spider</a> storage
+engine will provide you this.</p>
     </div>
 
 
@@ -498,8 +686,8 @@ monitor_interval=1s
                     </li>
                 
                 
-                    <li><a href="/kb/en/mariadb-maxscale-2308-tutorials/">
-                        ↑ Tutorials ↑
+                    <li><a href="/kb/en/maxscale-23-08-tutorials/">
+                        ↑ MaxScale 23.08 Tutorials ↑
                     </a>
                     </li>
                 
@@ -544,8 +732,8 @@ monitor_interval=1s
         
         <ul class="section_navigation well well-small hidden-xs hidden-sm">
             
-                <li class="parent"><a href="/kb/en/mariadb-maxscale-2308-tutorials/">
-                    ↑ Tutorials ↑
+                <li class="parent"><a href="/kb/en/maxscale-23-08-tutorials/">
+                    ↑ MaxScale 23.08 Tutorials ↑
                 </a>
                 </li>
             

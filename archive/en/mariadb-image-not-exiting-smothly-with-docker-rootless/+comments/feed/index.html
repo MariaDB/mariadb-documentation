@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: mariadb image not exiting smothly with docker rootless</title><link>https://mariadb.com/kb/en/mariadb-image-not-exiting-smothly-with-docker-rootless/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/mariadb-image-not-exiting-smothly-with-docker-rootless/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 19 Jul 2024 00:58:47 +0000</lastBuildDate><item><title>Re: mariadb image not exiting smothly with docker rootless</title><link>https://mariadb.com/kb/en/mariadb-image-not-exiting-smothly-with-docker-rootless/+comments/6774</link><description>&lt;p&gt;The following might be able to kill, and this more closely maps the user that does it in the entrypoint.&lt;/p&gt;
+&lt;pre class="fixed"&gt;docker exec --user mysql -ti test-db bash
+&lt;/pre&gt;&lt;p&gt;There are uid maps, the only root (or faked root) priv required is the changing of file permissions/ownership.&lt;/p&gt;
+&lt;p&gt;I'm even looking at making these non-fatal - &lt;a href="https://github.com/MariaDB/mariadb-docker/pull/595"&gt;https://github.com/MariaDB/mariadb-docker/pull/595&lt;/a&gt; - but this would have showed up differently in your logs.&lt;/p&gt;
+&lt;p&gt;Glad the 11.4 container is fine.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/mariadb-image-not-exiting-smothly-with-docker-rootless/+comments/6774</guid></item><item><title>Re: mariadb image not exiting smothly with docker rootless</title><link>https://mariadb.com/kb/en/mariadb-image-not-exiting-smothly-with-docker-rootless/+comments/6773</link><description>&lt;p&gt;thanks Daniel for your Reply!&lt;/p&gt;
+&lt;p&gt;yeah - i think i once also tried to &lt;/p&gt;
+&lt;pre class="fixed"&gt;docker exec -ti test-db bash
+&lt;/pre&gt;&lt;p&gt;and try to kill the process - but get the same permission denied.
+such *not possible to kill* scenarios can also come from some sort of io-problem:
+the process is in a *read or write* operation that the kernel can not stop.
+i had this on my development-laptop long time ago with some very experimental setup..&lt;/p&gt;
+&lt;p&gt;my os and docker are - i think - up to date:&lt;/p&gt;
+&lt;pre class="fixed"&gt;Operating System: Kubuntu 24.04
+KDE Plasma Version: 5.27.11
+KDE Frameworks Version: 5.115.0
+Qt Version: 5.15.13
+Kernel Version: 6.8.0-35-generic (64-bit)
+Graphics Platform: X11
+Processors: 16 × Intel® Core™ i9-9980HK CPU @ 2.40GHz
+Memory: 31,2 GiB of RAM
+Graphics Processor: Mesa Intel® UHD Graphics 630
+Manufacturer: ASUSTeK COMPUTER INC.
+Product Name: ZenBook Pro Duo UX581GV_UX581GV
+System Version: 1.0
+&lt;/pre&gt;&lt;pre class="fixed"&gt;$ docker version
+Client: Docker Engine - Community
+ Version:           26.1.3
+ API version:       1.45
+ Go version:        go1.21.10
+ Git commit:        b72abbb
+ Built:             Thu May 16 08:33:27 2024
+ OS/Arch:           linux/amd64
+ Context:           rootless
+
+Server: Docker Engine - Community
+ Engine:
+  Version:          26.1.3
+  API version:      1.45 (minimum version 1.24)
+  Go version:       go1.21.10
+  Git commit:       8e96db1
+  Built:            Thu May 16 08:33:27 2024
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          1.6.32
+  GitCommit:        8b3b7ca2e5ce38e8f31a34f35b2b68ceb8470d89
+ runc:
+  Version:          1.1.12
+  GitCommit:        v1.1.12-0-g51d5e94
+ docker-init:
+  Version:          0.19.0
+  GitCommit:        de40ad0
+ rootlesskit:
+  Version:          2.0.2
+  ApiVersion:       1.1.1
+  NetworkDriver:    slirp4netns
+  PortDriver:       builtin
+  StateDir:         /run/user/1000/dockerd-rootless
+ slirp4netns:
+  Version:          1.2.1
+  GitCommit:        09e31e92fa3d2a1d3ca261adaeb012c8d75a8194
+&lt;/pre&gt;&lt;p&gt;as already posted - with the 11.4 image it does work.&lt;/p&gt;
+&lt;p&gt;i am with you - it is really odd..
+maybe something to do with *root* creating the volume and therefore the directories and files - and somehow this root is different when rootless is in play...?!
+for now i try to just use the current lts version&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Stefan Krüger</dc:creator><guid>https://mariadb.com/kb/en/mariadb-image-not-exiting-smothly-with-docker-rootless/+comments/6773</guid></item><item><title>Re: mariadb image not exiting smothly with docker rootless</title><link>https://mariadb.com/kb/en/mariadb-image-not-exiting-smothly-with-docker-rootless/+comments/6771</link><description>&lt;p&gt;This is really weird:&lt;/p&gt;
+&lt;p&gt;docker-entrypoint.sh: line 149: kill: (109) - Permission denied&lt;/p&gt;
+&lt;p&gt;The 109 is the process of the temporary server started which is in the logs. There hasn't been any change in user. So its effectively the entry-point running a background mysqld process and then not being able to kill the same process.&lt;/p&gt;
+&lt;p&gt;Evidently the docker root mode doesn't hit this "Permission denied".&lt;/p&gt;
+&lt;p&gt;Look at upgrading your OS and docker version. Something seems incompatible there though I can't pinpoint what it might be.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/mariadb-image-not-exiting-smothly-with-docker-rootless/+comments/6771</guid></item><item><title>Re: mariadb image not exiting smothly with docker rootless</title><link>https://mariadb.com/kb/en/mariadb-image-not-exiting-smothly-with-docker-rootless/+comments/6769</link><description>&lt;p&gt;ok - it seems to be the old image..
+with the current lts (mariadb:11.4) it seems working fine.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Stefan Krüger</dc:creator><guid>https://mariadb.com/kb/en/mariadb-image-not-exiting-smothly-with-docker-rootless/+comments/6769</guid></item></channel></rss>

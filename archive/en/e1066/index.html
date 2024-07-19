@@ -286,12 +286,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-01-29 12:41">1 month, 3 weeks ago</span></dd>
+<span class="datetime" title="2024-01-29 12:41">5 months, 3 weeks ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-01-29 12:43">1 month, 3 weeks ago</span></dd>
+<span class="datetime" title="2024-07-17 13:14">1 day, 2 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -434,8 +434,48 @@
 </li>
 </div>
 <h2 class="anchored_heading" id="possible-causes-and-solutions">Possible Causes and Solutions</h2>
-<div class="cstm-style greenbox"><p>This article doesn't currently contain any content. <a href="/kb/en/writing-and-editing-knowledge-base-articles/">You can help!</a></p>
-</div>
+<p>In order to avoid ambiguity, a table name or alias must uniquely identify an object. There are many situations where this could occur.</p>
+<p>For example,  <a href="/kb/en/handler-commands/">HANDLER</a> statements use unqualified table names, requiring the use of an alias in certain contexts. For example:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">f1</span> <span class="nb">INT</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t1</span> <span class="k">VALUES</span> <span class="p">(</span><span class="mi">1</span><span class="p">),(</span><span class="mi">2</span><span class="p">),(</span><span class="mi">3</span><span class="p">);</span>
+
+<span class="k">HANDLER</span> <span class="n">t1</span> <span class="k">OPEN</span><span class="p">;</span>
+
+<span class="k">HANDLER</span> <span class="n">t1</span> <span class="k">READ</span> <span class="k">NEXT</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">------+</span>
+<span class="o">|</span> <span class="n">f1</span>   <span class="o">|</span>
+<span class="o">+</span><span class="c1">------+</span>
+<span class="o">|</span>    <span class="mi">1</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">------+</span>
+
+<span class="k">HANDLER</span> <span class="n">t1</span> <span class="k">READ</span> <span class="k">NEXT</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">------+</span>
+<span class="o">|</span> <span class="n">f1</span>   <span class="o">|</span>
+<span class="o">+</span><span class="c1">------+</span>
+<span class="o">|</span>    <span class="mi">2</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">------+</span>
+</pre><p>In the previous example, the HANDLER was opened with the t1 table name. Since HANDLERs use unqualified table names, trying to access another table with this same name, even though it's in another database, will result in ambiguity. An alias needs to be used to avoid the ambiguity:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="n">db_new</span><span class="p">;</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">db_new</span><span class="p">.</span><span class="n">t1</span> <span class="p">(</span><span class="n">id</span> <span class="nb">INT</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">db_new</span><span class="p">.</span><span class="n">t1</span> <span class="k">VALUES</span> <span class="p">(</span><span class="mi">4</span><span class="p">),(</span><span class="mi">5</span><span class="p">),(</span><span class="mi">6</span><span class="p">);</span>
+
+<span class="k">HANDLER</span> <span class="n">db_new</span><span class="p">.</span><span class="n">t1</span> <span class="k">OPEN</span><span class="p">;</span>
+<span class="n">ERROR</span> <span class="mi">1066</span> <span class="p">(</span><span class="mi">42000</span><span class="p">):</span> <span class="k">Not</span> <span class="k">unique</span> <span class="k">table</span><span class="o">/</span><span class="k">alias</span><span class="p">:</span> <span class="s1">&#39;t1&#39;</span>
+
+<span class="k">HANDLER</span> <span class="n">db_new</span><span class="p">.</span><span class="n">t1</span> <span class="k">OPEN</span> <span class="k">AS</span> <span class="n">db_new_t1</span><span class="p">;</span>
+
+<span class="k">HANDLER</span> <span class="n">db_new_t1</span> <span class="k">READ</span> <span class="k">NEXT</span> <span class="k">LIMIT</span> <span class="mi">3</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">------+</span>
+<span class="o">|</span> <span class="n">id</span>   <span class="o">|</span>
+<span class="o">+</span><span class="c1">------+</span>
+<span class="o">|</span>    <span class="mi">4</span> <span class="o">|</span>
+<span class="o">|</span>    <span class="mi">5</span> <span class="o">|</span>
+<span class="o">|</span>    <span class="mi">6</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">------+</span>
+</pre>
     </div>
 
 

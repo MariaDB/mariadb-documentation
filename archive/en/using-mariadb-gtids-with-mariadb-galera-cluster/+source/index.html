@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/using-mariadb-gtids-with-mariadb-galera-cluster/+r/130968/">130968</a></dd>
+            <dd><a href="/kb/en/using-mariadb-gtids-with-mariadb-galera-cluster/+r/138849/">138849</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3487">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-10-12 22:03">2023-10-12 22:03</span></dd>
+<span class="datetime" title="2024-04-24 11:17">2024-04-24 11:17</span></dd>
         </dl>
     </div>
     
@@ -350,6 +350,7 @@ MariaDB supports [[galera-cluster-system-variables/#wsrep_gtid_mode|wsrep_gtid_m
 
 MariaDB has a feature called wsrep GTID mode. When this mode is enabled, MariaDB uses some tricks to try to associate each Galera Cluster write set with a [[gtid|GTID]] that is globally unique, but that is also consistent for that write set on each cluster node. These tricks work in some cases, but [[gtid|GTIDs]] can still become inconsistent among cluster nodes.
 
+
 ==== Enabling Wsrep GTID Mode
 
 Several things need to be configured for wsrep GTID mode to work, such as:
@@ -365,6 +366,17 @@ Several things need to be configured for wsrep GTID mode to work, such as:
 And as an extra safety measure:
 
 * ##[[gtid/#gtid_domain_id|gtid_domain_id]]## should be set to a different value on all nodes in a given cluster, and each of these values should be different than the configured ##[[galera-cluster-system-variables/#wsrep_gtid_domain_id|wsrep_gtid_domain_id]]## value. This is to prevent a node from using the same domain used for Galera Cluster&#39;s write sets when assigning [[gtid|GTIDs]] for non-Galera transactions, such as DDL executed with ##[[galera-cluster-system-variables/#wsrep_sst_method|wsrep_sst_method=RSU]]## set or DML executed with ##[[galera-cluster-system-variables/#wsrep_on|wsrep_on=OFF]]## set.
+
+If you want to avoid writes accidentialy local GTIDS, you can avoid it with 
+##[[galera-cluster-system-variables/#wsrep_gtid_mode|wsrep_gtid_mode]]## = DISALLOW_LOCAL_GTID
+
+
+In this case you get an error:
+ERROR 4165 (HY000): Galera replication not supported
+
+You can overwrite it temporarily with
+set ##[[replication-and-binary-log-server-system-variables/#sql_log_bin|sql_log_bin]]##  = 0;
+
 
 For information on setting ##[[replication-and-binary-log-system-variables/#server_id|server_id]]##, see [[using-mariadb-replication-with-mariadb-galera-cluster-using-mariadb-replica/#setting-server_id-on-cluster-nodes|Using MariaDB Replication with MariaDB Galera Cluster: Setting server_id on Cluster Nodes]].
 

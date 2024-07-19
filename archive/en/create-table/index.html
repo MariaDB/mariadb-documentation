@@ -282,12 +282,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2010-04-02 18:44">13 years, 11 months ago</span></dd>
+<span class="datetime" title="2010-04-02 18:44">14 years, 3 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-03-13 16:29">1 week, 5 days ago</span></dd>
+<span class="datetime" title="2024-07-10 11:35">1 week, 1 day ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -373,6 +373,11 @@
                             >MariaDB starting with 10.5</label>
                 </li>
             
+                <li class="mariadb_from_10_5_3">
+                    <label><input type="checkbox" data-product-class="mariadb_from_10_5_3"
+                            >MariaDB starting with 10.5.3</label>
+                </li>
+            
                 <li class="mariadb_from_10_6_0">
                     <label><input type="checkbox" data-product-class="mariadb_from_10_6_0"
                             >MariaDB starting with 10.6.0</label>
@@ -391,6 +396,11 @@
                 <li class="mariadb_from_10_5">
                     <label><input type="checkbox" data-product-class="mariadb_from_10_5"
                             >MariaDB starting with 10.5</label>
+                </li>
+            
+                <li class="mariadb_from_10_5_3">
+                    <label><input type="checkbox" data-product-class="mariadb_from_10_5_3"
+                            >MariaDB starting with 10.5.3</label>
                 </li>
             
                 <li class="mariadb_from_10_6_0">
@@ -591,6 +601,8 @@ CREATE [OR REPLACE] [TEMPORARY] TABLE [IF NOT EXISTS] tbl_name
 
             <li class=""><a href="#with-parser-index-option" title="WITH PARSER Index Option">WITH PARSER Index Option</a></li>
 
+            <li class=""><a href="#visible-index-option" title="VISIBLE Index Option">VISIBLE Index Option</a></li>
+
             <li class=""><a href="#comment-index-option" title="COMMENT Index Option">COMMENT Index Option</a></li>
 
             <li class=""><a href="#clustering-index-option" title="CLUSTERING Index Option">CLUSTERING Index Option</a></li>
@@ -705,7 +717,7 @@ except when using the <a href="#create-temporary-table">TEMPORARY</a> keyword.</
 <p>Executing the <code>CREATE TABLE</code> statement requires the <a href="/kb/en/grant/#table-privileges">CREATE</a> privilege for the table or the database.</p>
 <h2 class="anchored_heading" id="create-or-replace">CREATE OR REPLACE</h2>
 <p>If the <code>OR REPLACE</code> clause is used and the table already exists, then instead of returning an error, the server will drop the existing table and replace it with the newly defined table.</p>
-<p>This syntax was originally added to make <a href="/kb/en/replication/">replication</a> more robust if it has to rollback and repeat statements such as <code>CREATE ... SELECT</code> on replicas.</p>
+<p>This syntax was originally added to make <a href="/kb/en/standard-replication/">replication</a> more robust if it has to rollback and repeat statements such as <code>CREATE ... SELECT</code> on replicas.</p>
 <pre class="fixed">CREATE OR REPLACE TABLE table_name (a int);
 </pre><p>is basically the same as:</p>
 <pre class="fixed">DROP TABLE IF EXISTS table_name;
@@ -717,7 +729,7 @@ CREATE TABLE table_name (a int);
 <h3 class="anchored_heading" id="things-to-be-aware-of-with-create-or-replace">Things to be Aware of With CREATE OR REPLACE</h3>
 <ul start="1"><li>The table is dropped first (if it existed), after that the <code class="highlight fixed" style="white-space:pre-wrap">CREATE</code> is done. Because of this, if the <code class="highlight fixed" style="white-space:pre-wrap">CREATE</code> fails, then the table will not exist anymore after the statement.  If the table was used with <code class="highlight fixed" style="white-space:pre-wrap">LOCK TABLES</code> it will be unlocked.
 </li><li>One can't use <code class="highlight fixed" style="white-space:pre-wrap">OR REPLACE</code> together with <code class="highlight fixed" style="white-space:pre-wrap">IF EXISTS</code>.
-</li><li>Slaves in replication will by default use <code class="highlight fixed" style="white-space:pre-wrap">CREATE OR REPLACE</code> when replicating <code class="highlight fixed" style="white-space:pre-wrap">CREATE</code> statements that don''t use <code class="highlight fixed" style="white-space:pre-wrap">IF EXISTS</code>. This can be changed by setting the variable <a href="/kb/en/replication-and-binary-log-server-system-variables/#slave_ddl_exec_mode">slave-ddl-exec-mode</a> to <code class="highlight fixed" style="white-space:pre-wrap">STRICT</code>.
+</li><li><a href="/kb/en/standard-replication/">Replicas</a> will by default use <code class="highlight fixed" style="white-space:pre-wrap">CREATE OR REPLACE</code> when replicating <code class="highlight fixed" style="white-space:pre-wrap">CREATE</code> statements that don''t use <code class="highlight fixed" style="white-space:pre-wrap">IF EXISTS</code>. This can be changed by setting the variable <a href="/kb/en/replication-and-binary-log-server-system-variables/#slave_ddl_exec_mode">slave-ddl-exec-mode</a> to <code class="highlight fixed" style="white-space:pre-wrap">STRICT</code>.
 </li></ul>
 <h2 class="anchored_heading" id="create-table-if-not-exists">CREATE TABLE IF NOT EXISTS</h2>
 <p>If the <code>IF NOT EXISTS</code> clause is used, then the table will only be created if a table with the same name does not already exist. If the table already exists, then a warning will be triggered by default.</p>
@@ -866,6 +878,7 @@ index_option:
     [ KEY_BLOCK_SIZE [=] value
   {{{|}}} index_type
   {{{|}}} WITH PARSER parser_name
+  {{{|}}} VISIBLE
   {{{|}}} COMMENT 'string'
   {{{|}}} CLUSTERING={YES| NO} ]
   [ IGNORED | NOT IGNORED ]
@@ -880,6 +893,7 @@ reference_option:
     RESTRICT | CASCADE | SET NULL | NO ACTION
 </pre><p><code>INDEX</code> and <code>KEY</code> are synonyms. </p>
 <p>Index names are optional, if not specified an automatic name will be assigned. Index name are needed to drop indexes and appear in error messages when a constraint is violated.</p>
+<p>For limits on InnoDB indexes, see <a href="/kb/en/innodb-limitations/">InnoDB Limitations</a>.</p>
 <h3 class="anchored_heading" id="index-categories">Index Categories</h3>
 <h4 class="anchored_heading" id="plain-indexes">Plain Indexes</h4>
 <p>Plain indexes are regular indexes that are not unique, and are not acting as a primary key or a foreign key. They are also not the "specialized" <code>FULLTEXT</code> or <code>SPATIAL</code> indexes.</p>
@@ -923,9 +937,12 @@ reference_option:
 </li><li><code>RTREE</code> is the default for <a href="/kb/en/spatial/">SPATIAL</a> indexes, but if the storage engine does not support it <code>BTREE</code> can be used.
 </li></ul>
 <p>Index columns names are listed between parenthesis. After each column, a prefix length can be specified. If no length is specified, the whole column will be indexed. <code>ASC</code> and <code>DESC</code> can be specified. Prior to <a href="/kb/en/what-is-mariadb-108/">MariaDB 10.8</a>, this was only for compatibility with other DBMSs, but had no meaning in MariaDB. From <a href="/kb/en/what-is-mariadb-108/">MariaDB 10.8</a>, individual columns in the index can now be explicitly sorted in ascending or descending order. This can be useful for optimizing certain ORDER BY cases (<a href="https://jira.mariadb.org/browse/MDEV-13756">MDEV-13756</a>, <a href="https://jira.mariadb.org/browse/MDEV-26938">MDEV-26938</a>, <a href="https://jira.mariadb.org/browse/MDEV-26939">MDEV-26939</a>, <a href="https://jira.mariadb.org/browse/MDEV-26996">MDEV-26996</a>). From <a href="/kb/en/mariadb-11-4-0-release-notes/">MariaDB 11.4.0</a>, not only ascending, but also descending, indexes can now be used to optimize <a href="/kb/en/min/">MIN()</a> and <a href="/kb/en/max/">MAX()</a> (<a href="https://jira.mariadb.org/browse/MDEV-27576">MDEV-27576</a>). </p>
+<p>The maximum number of parts in an index is 32.</p>
 <h4 class="anchored_heading" id="with-parser-index-option">WITH PARSER Index Option</h4>
 <p>The <code>WITH PARSER</code> index option only applies to <a href="/kb/en/full-text-indexes/">FULLTEXT</a> indexes and contains the fulltext parser name. The fulltext parser must be an installed plugin.</p>
-<h4 class="anchored_heading" id="comment-index-option">COMMENT Index Option</h4>
+<h4 class="anchored_heading" id="visible-index-option">VISIBLE Index Option</h4>
+<div class="mariadb_from_10_5_3 mariadb from_10_5_3 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/mariadb-1053-release-notes/">10.5.3</a></h5><p>From <a href="/kb/en/mariadb-1053-release-notes/">MariaDB 10.5.3</a>, indexes can be declared visible. This is the default and it shows up in <a href="/kb/en/show-create-table/">SHOW CREATE TABLE</a>.</p>
+</div><h4 class="anchored_heading" id="comment-index-option">COMMENT Index Option</h4>
 <p>A comment of up to 1024 characters is permitted with the <code>COMMENT</code> index option.</p>
 <p>The <code>COMMENT</code> index option allows you to specify a comment with user-readable text describing what the index is for. This information is not used by the server itself.</p>
 <h4 class="anchored_heading" id="clustering-index-option">CLUSTERING Index Option</h4>
@@ -1003,7 +1020,7 @@ One can use most deterministic functions in a constraint, including <a href="/kb
 <h3 class="anchored_heading" id="connection">CONNECTION</h3>
 <p><code>CONNECTION</code> is used to specify a server name or a connection string for a <a href="/kb/en/spider/">Spider</a>, <a href="/kb/en/connect/">CONNECT</a>, <a href="/kb/en/about-federatedx/">Federated or FederatedX table</a>.</p>
 <h3 class="anchored_heading" id="data-directoryindex-directory">DATA DIRECTORY/INDEX DIRECTORY</h3>
-<p><code>DATA DIRECTORY</code> and <code>INDEX DIRECTORY</code> are supported for MyISAM and Aria, and DATA DIRECTORY is also supported by InnoDB if the <a href="/kb/en/innodb-system-variables/#innodb_file_per_table">innodb_file_per_table</a> server system variable is enabled, but only in CREATE TABLE, not in <a href="/kb/en/alter-table/">ALTER TABLE</a>. So, carefully choose a path for InnoDB tables at creation time, because it cannot be changed without dropping and re-creating the table. These options specify the paths for data files and index files, respectively. If these options are omitted, the database's directory will be used to store data files and index files. Note that these table options do not work for <a href="/kb/en/managing-mariadb-partitioning/">partitioned</a> tables (use the partition options instead), or if the server has been invoked with the <a href="/kb/en/mariadbd-options-full-list/">--skip-symbolic-links startup option</a>. To avoid the overwriting of old files with the same name that could be present in the directories, you can use <a href="/kb/en/mariadbd-options-full-list/">the <code>--keep_files_on_create</code> option</a> (an error will be issued if files already exist). These options are ignored if the <code>NO_DIR_IN_CREATE</code> <a href="/kb/en/sql-mode/">SQL_MODE</a> is enabled (useful for replication slaves). Also note that symbolic links cannot be used for InnoDB tables.</p>
+<p><code>DATA DIRECTORY</code> and <code>INDEX DIRECTORY</code> are supported for MyISAM and Aria, and DATA DIRECTORY is also supported by InnoDB if the <a href="/kb/en/innodb-system-variables/#innodb_file_per_table">innodb_file_per_table</a> server system variable is enabled, but only in CREATE TABLE, not in <a href="/kb/en/alter-table/">ALTER TABLE</a>. So, carefully choose a path for InnoDB tables at creation time, because it cannot be changed without dropping and re-creating the table. These options specify the paths for data files and index files, respectively. If these options are omitted, the database's directory will be used to store data files and index files. Note that these table options do not work for <a href="/kb/en/managing-mariadb-partitioning/">partitioned</a> tables (use the partition options instead), or if the server has been invoked with the <a href="/kb/en/mariadbd-options-full-list/">--skip-symbolic-links startup option</a>. To avoid the overwriting of old files with the same name that could be present in the directories, you can use <a href="/kb/en/mariadbd-options-full-list/">the <code>--keep_files_on_create</code> option</a> (an error will be issued if files already exist). These options are ignored if the <code>NO_DIR_IN_CREATE</code> <a href="/kb/en/sql-mode/">SQL_MODE</a> is enabled (useful for replicas). Also note that symbolic links cannot be used for InnoDB tables.</p>
 <p><code>DATA DIRECTORY</code> works by creating symlinks from where the table would normally have been (inside the <a href="/kb/en/server-system-variables/#datadir">datadir</a>) to where the option specifies. For security reasons, to avoid bypassing the privilege system, the server does not permit symlinks inside the datadir. Therefore, <code>DATA DIRECTORY</code> cannot be used to specify a location inside the datadir. An attempt to do so will result in an error <code>1210 (HY000) Incorrect arguments to DATA DIRECTORY</code>.</p>
 <h3 class="anchored_heading" id="delay_key_write">DELAY_KEY_WRITE</h3>
 <p><code>DELAY_KEY_WRITE</code> is supported by MyISAM and Aria, and can be set to 1 to speed up write operations. In that case, when data are modified, the indexes are not updated until the table is closed. Writing the changes to the index file altogether can be much faster. However, note that this option is applied only if the <code>delay_key_write</code> server variable is set to 'ON'. If it is 'OFF' the delayed index writes are always disabled, and if it is 'ALL' the delayed index writes are always used, disregarding the value of <code>DELAY_KEY_WRITE</code>.</p>
@@ -1178,8 +1195,9 @@ key name (name(32))
 </li><li><a href="/kb/en/drop-table/">DROP TABLE</a>
 </li><li><a href="/kb/en/character-sets-and-collations/">Character Sets and Collations</a>
 </li><li><a href="/kb/en/show-create-table/">SHOW CREATE TABLE</a>
-</li><li>Storage engines can add their own <a href="/kb/en/engine-defined-new-tablefieldindex-attributes/">attributes for columns, indexes and tables</a>.
-</li><li>Variable <a href="/kb/en/replication-and-binary-log-server-system-variables/#slave_ddl_exec_mode">slave-ddl-exec-mode</a>.</li></ul>
+</li><li>Storage engines can add their own <a href="/kb/en/engine-defined-new-tablefieldindex-attributes/">attributes for columns, indexes and tables</a>
+</li><li>Variable <a href="/kb/en/replication-and-binary-log-server-system-variables/#slave_ddl_exec_mode">slave-ddl-exec-mode</a>
+</li><li><a href="InnoDB_Limitations">InnoDB Limitations</a></li></ul>
 
     </div>
 
@@ -1276,6 +1294,15 @@ key name (name(32))
                         <a href="/kb/en/create-view/">
                             <span class="pull-right not_primary"></span>
                             CREATE VIEW
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/create-catalog/">
+                            <span class="pull-right not_primary"></span>
+                            CREATE CATALOG
                         </a>
                     </li>
                 

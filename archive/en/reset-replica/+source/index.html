@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
     <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
 
-    <title>RESET REPLICA/SLAVE - Source - MariaDB Knowledge Base</title>
+    <title>RESET REPLICA - Source - MariaDB Knowledge Base</title>
 
     <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
 
@@ -21,7 +21,7 @@
     
 
     <!-- FB Open Graph tags -->
-    <meta property="og:title" content="RESET REPLICA/SLAVE - Source" />
+    <meta property="og:title" content="RESET REPLICA - Source" />
     <meta property="og:type" content="article" />
     <meta property="og:url" content="https://mariadb.com/kb/en/reset-replica/+source/" />
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
@@ -219,7 +219,7 @@
     
 
 
-    » <a class="node_link crumb" href="/kb/en/reset-replica/">RESET REPLICA/SLAVE</a>
+    » <a class="node_link crumb" href="/kb/en/reset-replica/">RESET REPLICA</a>
 
 
                 </div>
@@ -307,7 +307,7 @@
             
             <section id="content" class="limited_width col-md-10 clearfix">
                 
-                    <h1>RESET REPLICA/SLAVE - Source</h1>
+                    <h1>RESET REPLICA - Source</h1>
                 
 
                 
@@ -323,7 +323,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/reset-replica/+r/115423/">115423</a></dd>
+            <dd><a href="/kb/en/reset-replica/+r/140967/">140967</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-7">
@@ -332,7 +332,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-04-24 13:37">2022-04-24 13:37</span></dd>
+<span class="datetime" title="2024-06-25 21:18">2024-06-25 21:18</span></dd>
         </dl>
     </div>
     
@@ -352,17 +352,17 @@ RESET SLAVE [&#34;connection_name&#34;] [ALL]  [FOR CHANNEL &#34;connection_name
 &lt;&lt;toc&gt;&gt;
 
 == Description
-RESET REPLICA/SLAVE makes the replica forget its [[replication]] position in the
+RESET REPLICA (RESET SLAVE) makes the replica forget its [[replication]] position in the
 master&#39;s [[binary-log|binary log]]. This statement is meant to be used for a clean
 start. It deletes the master.info and relay-log.info files, all the
-[[relay-log|relay log]] files, and starts a new relay log file. To use RESET REPLICA/SLAVE,
-the replica threads must be stopped (use [[stop-replica|STOP REPLICA/SLAVE]] if
+[[relay-log|relay log]] files, and starts a new relay log file. To use RESET REPLICA,
+the replica threads must be stopped (use [[stop-replica|STOP REPLICA]] if
 necessary).
 
 &lt;&lt;style class=&#34;graybox&#34;&gt;&gt;
 Note: All relay log files are deleted, even if they have not been
 completely executed by the slave SQL thread. (This is a condition
-likely to exist on a replication slave if you have issued a STOP REPLICA/SLAVE
+likely to exist on a replication slave if you have issued a STOP REPLICA
 statement or if the slave is highly loaded.)
 &lt;&lt;/style&gt;&gt;
 
@@ -381,28 +381,27 @@ reset using any values specified in the corresponding startup options.
 This information includes values such as master host, master port,
 master user, and master password. If the replica SQL thread was in the
 middle of replicating temporary tables when it was stopped, and RESET
-REPLICA/SLAVE is issued, these replicated temporary tables are deleted on the
+REPLICA is issued, these replicated temporary tables are deleted on the
 slave.
 
-The &lt;&lt;fixed&gt;&gt;ALL&lt;&lt;/fixed&gt;&gt; also resets the &lt;&lt;fixed&gt;&gt;PORT&lt;&lt;/fixed&gt;&gt;, &lt;&lt;fixed&gt;&gt;HOST&lt;&lt;/fixed&gt;&gt;, &lt;&lt;fixed&gt;&gt;USER&lt;&lt;/fixed&gt;&gt; and &lt;&lt;fixed&gt;&gt;PASSWORD&lt;&lt;/fixed&gt;&gt; parameters for the slave. If you are using a connection name, it will permanently delete it and it will not show up anymore in [[show-replica-status|SHOW ALL REPLICAS/SLAVE STATUS]].
+The &lt;&lt;fixed&gt;&gt;ALL&lt;&lt;/fixed&gt;&gt; also resets the &lt;&lt;fixed&gt;&gt;PORT&lt;&lt;/fixed&gt;&gt;, &lt;&lt;fixed&gt;&gt;HOST&lt;&lt;/fixed&gt;&gt;, &lt;&lt;fixed&gt;&gt;USER&lt;&lt;/fixed&gt;&gt; and &lt;&lt;fixed&gt;&gt;PASSWORD&lt;&lt;/fixed&gt;&gt; parameters for the slave. If you are using a connection name, it will permanently delete it and it will not show up anymore in [[show-replica-status|SHOW ALL REPLICAS STATUS]].
 
 ==== connection_name
 The ##connection_name## option is used for [[multi-source-replication|multi-source replication]].
 
-If there is only one nameless primary, or the default primary (as specified by the [[replication-and-binary-log-server-system-variables#default_master_connection|default_master_connection]] system variable) is intended, ##connection_name## can be omitted. If provided, the ##RESET REPLICA/SLAVE## statement will apply to the specified primary. ##connection_name## is case-insensitive.
+If there is only one nameless primary, or the default primary (as specified by the [[replication-and-binary-log-server-system-variables#default_master_connection|default_master_connection]] system variable) is intended, ##connection_name## can be omitted. If provided, the ##RESET REPLICA## statement will apply to the specified primary. ##connection_name## is case-insensitive.
 
 &lt;&lt;product MariaDB from=10.7.0&gt;&gt;
 The ##FOR CHANNEL## keyword was added for MySQL compatibility. This is identical as
 using the channel_name directly after ##RESET REPLICA##.
 &lt;&lt;/product&gt;&gt;
 
-==== RESET REPLICA
-&lt;&lt;product mariadb from=10.5.1&gt;&gt;
-##RESET REPLICA## is an alias for ##RESET SLAVE## from MariaDB 10.5.1. 
+&lt;&lt;product MariaDB from=11.6.0&gt;&gt;
+From MariaDB 11.6, RESET REPLICA resets the Master/Slave_last_event_time values (see [[show-replica-status|SHOW REPLICA STATUS]]).
 &lt;&lt;/product&gt;&gt;
 
 == See Also
-* [[stop-replica|STOP REPLICA/SLAVE]] stops the replica, but it can be restarted with [[start-replica|START REPLICA/SLAVE]] or after next MariaDB server restart.</textarea>
+* [[stop-replica|STOP REPLICA]] stops the replica, but it can be restarted with [[start-replica|START REPLICA]] or after next MariaDB server restart.</textarea>
     
 
 

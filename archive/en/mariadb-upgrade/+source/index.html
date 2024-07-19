@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-upgrade/+r/137071/">137071</a></dd>
+            <dd><a href="/kb/en/mariadb-upgrade/+r/141044/">141044</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-03-21 03:16">2024-03-21 03:16</span></dd>
+<span class="datetime" title="2024-06-26 13:39">2024-06-26 13:39</span></dd>
         </dl>
     </div>
     
@@ -332,27 +332,19 @@
         
         <textarea id="answer_source" class="creole_source autogrow">##mariadb-upgrade## is a tool that checks and updates your tables to the latest version.
 
-&lt;&lt;product mariadb from=10.4.6&gt;&gt;
-From MariaDB 10.4.6, ##mariadb-upgrade## is a symlink to ##mysql_upgrade##, the tool that checks and updates your tables to the latest version.
-&lt;&lt;/product&gt;&gt;
-
-&lt;&lt;product mariadb from=10.5.2&gt;&gt;
-From MariaDB 10.5.2, ##mysql_upgrade## is the symlink, and ##mariadb-upgrade## the binary name.
-&lt;&lt;/product&gt;&gt;
-
-&lt;&lt;product mariadb from=10.4.23&gt;&gt;
-Starting from ##mysql_upgrade## / ##mariadb-upgrade## 2.0, the user running the upgrade tool must have write access to ##datadir/mysql_upgrade_info##, so that the tool can write the current MariaDB version into the file. ##mysql-upgrade## was updated in MariaDB 10.2.42, MariaDB 10.3.33, MariaDB 10.4.23, MariaDB 10.5.14, MariaDB 10.6.6, MariaDB 10.7.2 and newer.
-&lt;&lt;/product&gt;&gt;
+Prior to MariaDB 10.5, the client was called ##mysql_upgrade##. It can still be accessed under this name, via a symlink in Linux, or an alternate binary in Windows.
 
 &lt;&lt;toc&gt;&gt;
-
 
 You should run ##mariadb-upgrade## after upgrading from one major MySQL/MariaDB release to another, such as [[upgrading-to-mariadb-from-mysql|from MySQL 5.0 to MariaDB 10.4]] or MariaDB 10.4 to MariaDB 10.5. You also have to use ##mariadb-upgrade## after a direct &#34;horizontal&#34; migration, for example from MySQL 5.5.40 to MariaDB 5.5.40. It&#39;s also safe to run ##mariadb-upgrade## for minor upgrades, as if there are no incompatibilities nothing is changed.
 
 It needs to be run as a user with write access to the data directory.
 
-##mariadb-upgrade## is run after starting the new MariaDB server.  Running it before you shut down the old version will not hurt anything and will allow you to make sure it works and figure out authentication for it ahead of time.
+&lt;&lt;product mariadb from=10.5.14&gt;&gt;
+Starting from ##mariadb-upgrade## 2.0, the user running the upgrade tool must have write access to ##datadir/mysql_upgrade_info##, so that the tool can write the current MariaDB version into the file. ##mariadb-upgrade## (or ##mysql_upgrade##) was updated in MariaDB 10.2.42, MariaDB 10.3.33, MariaDB 10.4.23, MariaDB 10.5.14, MariaDB 10.6.6, MariaDB 10.7.2 and newer.
+&lt;&lt;/product&gt;&gt;
 
+##mariadb-upgrade## is run after starting the new MariaDB server.  Running it before you shut down the old version will not hurt anything and will allow you to make sure it works and figure out authentication for it ahead of time.
 
 It is recommended to make a [[backing-up-and-restoring|backup]] of all the databases before running ##mariadb-upgrade##.
 
@@ -399,40 +391,40 @@ mariadb-upgrade --verbose --verbose other-options
 ##mariadb-upgrade## supports the following options:
 
 &lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
-|= Option |= Description |= Version|
-| ##-?##, ##--help## | Display this help message and exit. | |
-| ##--basedir=path## | Old option accepted for backward compatibility but ignored. | |
-| ##--character-sets-dir=path## | Old option accepted for backward compatibility but ignored. | |
-| ##check-if-upgrade-is-needed## | Do a quick check if upgrade is needed. Returns 0 if yes, 1 if no. |2.0|
-| ##--compress=name## | Old option accepted for backward compatibility but ignored. | |
-| ##--datadir=name## | Old option accepted for backward compatibility but ignored. | |
-| ##-# [name]##, ##--debug[=name]## | For debug builds, output debug log. | |
-| ##--debug-check## | Check memory and open file usage at exit. | |
-| ##-T##, ##--debug-info## | Print some debug info at exit. | |
-| ##--default-character-set=name## | Old option accepted for backward compatibility but ignored. | |
-| ##-f##, ##--force## | Force execution of mariadb-check even if ##mariadb-upgrade## has already been executed for the current version of MariaDB. Ignores ##mysql_upgrade_info##. | |
-| ##-h##, ##--host=name## | Connect to MariaDB on the given host. | |
-| ##-p##, ##--password[=name]## | Password to use when connecting to server. If password is not given, it&#39;s solicited on the command line (which should be considered insecure). You can use an option file to avoid giving the password on the command line. | |
-| ##-P##, ##--port=name## | Port number to use for connection or 0 for default to, in order of preference, my.cnf, the MYSQL_TCP_PORT [[mariadb-environment-variables|environment variable]], /etc/services, built-in default (3306). | |
-| ##--protocol=name## | The protocol to use for connection (tcp, socket, pipe, memory). | |
-| ##--silent## | Print less information. | |
-| ##-S##, ##--socket=name## | For connections to localhost, the Unix socket file to use, or, on Windows, the name of the named pipe to use. | |
-| ##--ssl## | Enables [[data-in-transit-encryption|TLS]]. TLS is also enabled even without setting this option when certain other TLS options are set. Starting with MariaDB 10.2, the ##--ssl## option will not enable [[secure-connections-overview/#server-certificate-verification|verifying the server certificate]] by default. In order to verify the server certificate, the user must specify the ##--ssl-verify-server-cert## option. | |
-| ##--ssl-ca=name## | Defines a path to a PEM file that should contain one or more X509 certificates for trusted Certificate Authorities (CAs) to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. See [[secure-connections-overview/#certificate-authorities-cas|Secure Connections Overview: Certificate Authorities (CAs)]] for more information. This option implies the ##--ssl## option. | |
-| ##--ssl-capath=name##  | Defines a path to a directory that contains one or more PEM files that should each contain one X509 certificate for a trusted Certificate Authority (CA) to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. The directory specified by this option needs to be run through the [[https://www.openssl.org/docs/man1.1.1/man1/rehash.html|openssl rehash]] command. See [[secure-connections-overview/#certificate-authorities-cas|Secure Connections Overview: Certificate Authorities (CAs)]] for more information. This option is only supported if the client was built with OpenSSL or yaSSL. If the client was built with GnuTLS or Schannel, then this option is not supported. See [[tls-and-cryptography-libraries-used-by-mariadb|TLS and Cryptography Libraries Used by MariaDB]] for more information about which libraries are used on which platforms. This option implies the ##--ssl## option. | |
-| ##--ssl-cert=name##  | Defines a path to the X509 certificate file to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. This option implies the ##--ssl## option. | |
-| ##--ssl-cipher=name## | List of permitted ciphers or cipher suites to use for [[data-in-transit-encryption|TLS]]. This option implies the ##--ssl## option. | |
-| ##--ssl-crl=name## | Defines a path to a PEM file that should contain one or more revoked X509 certificates to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. See [[secure-connections-overview/#certificate-revocation-lists-crls|Secure Connections Overview: Certificate Revocation Lists (CRLs)]] for more information. This option is only supported if the client was built with OpenSSL or Schannel. If the client was built with yaSSL or GnuTLS, then this option is not supported. See [[tls-and-cryptography-libraries-used-by-mariadb|TLS and Cryptography Libraries Used by MariaDB]] for more information about which libraries are used on which platforms. | |
-| ##--ssl-crlpath=name## | Defines a path to a directory that contains one or more PEM files that should each contain one revoked X509 certificate to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. The directory specified by this option needs to be run through the [[https://www.openssl.org/docs/man1.1.1/man1/rehash.html|openssl rehash]] command. See [[secure-connections-overview/#certificate-revocation-lists-crls|Secure Connections Overview: Certificate Revocation Lists (CRLs)]] for more information. This option is only supported if the client was built with OpenSSL. If the client was built with yaSSL, GnuTLS, or Schannel, then this option is not supported. See [[tls-and-cryptography-libraries-used-by-mariadb|TLS and Cryptography Libraries Used by MariaDB]] for more information about which libraries are used on which platforms. | |
-| ##--ssl-key=name## | Defines a path to a private key file to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. This option implies the ##--ssl## option. | |
-| ##--ssl-verify-server-cert##     | Enables [[secure-connections-overview/#server-certificate-verification|server certificate verification]]. This option is disabled by default. | |
-| ##-t##, ##--tmpdir=name## | Directory for temporary files. | |
-| ##-s##, ##--upgrade-system-tables## |  Only upgrade the system tables in the mysql database. Tables in other databases are not checked or touched. | |
-| ##-u##, ##--user=name## | User for login if not current user. | |
-| ##-v##, ##--verbose## | Display more output about the process, using it twice will print connection arguments; using it 3 times will print out all [[check-table|CHECK]], [[rename-table|RENAME]] and [[alter-table|ALTER TABLE]] commands used during the check phase; using it 4 times will also write out all [[mariadb-check]] commands used.  | |
-| ##-V##, ##--version## | Output version information and exit. | |
-| ##-k##, ##--version-check## | Run this program only if its &#39;server version&#39; matches the version of the server to which it&#39;s connecting check. Note: the &#39;server version&#39; of the program is the version of the MariaDB server with which it was built/distributed.  (Defaults to on; use ##--skip-version-check## to disable.) | |
-| ##--write-binlog## | All commands including those run by [[mariadb-check]] are written to the [[binary-log|binary log]]. Disabled by default. Before MariaDB 10.0.6 and MariaDB 5.5.34, this was enabled by default, and ##--skip-write-binlog## should be used when commands should not be sent to replication slaves. | |
+|= Option |= Description |
+| ##-?##, ##--help## | Display this help message and exit. |
+| ##--basedir=path## | Old option accepted for backward compatibility but ignored. |
+| ##--character-sets-dir=path## | Old option accepted for backward compatibility but ignored. |
+| ##check-if-upgrade-is-needed## | Do a quick check if upgrade is needed. Returns 0 if yes, 1 if no. From version 2.0. |
+| ##--compress=name## | Old option accepted for backward compatibility but ignored. |
+| ##--datadir=name## | Old option accepted for backward compatibility but ignored. |
+| ##-# [name]##, ##--debug[=name]## | For debug builds, output debug log. |
+| ##--debug-check## | Check memory and open file usage at exit. |
+| ##-T##, ##--debug-info## | Print some debug info at exit. |
+| ##--default-character-set=name## | Old option accepted for backward compatibility but ignored. |
+| ##-f##, ##--force## | Force execution of mariadb-check even if ##mariadb-upgrade## has already been executed for the current version of MariaDB. Ignores ##mysql_upgrade_info##. |
+| ##-h##, ##--host=name## | Connect to MariaDB on the given host. |
+| ##-p##, ##--password[=name]## | Password to use when connecting to server. If password is not given, it&#39;s solicited on the command line (which should be considered insecure). You can use an option file to avoid giving the password on the command line. |
+| ##-P##, ##--port=name## | Port number to use for connection or 0 for default to, in order of preference, my.cnf, the MYSQL_TCP_PORT [[mariadb-environment-variables|environment variable]], /etc/services, built-in default (3306). |
+| ##--protocol=name## | The protocol to use for connection (tcp, socket, pipe, memory). |
+| ##--silent## | Print less information. |
+| ##-S##, ##--socket=name## | For connections to localhost, the Unix socket file to use, or, on Windows, the name of the named pipe to use. |
+| ##--ssl## | Enables [[data-in-transit-encryption|TLS]]. TLS is also enabled even without setting this option when certain other TLS options are set. Starting with MariaDB 10.2, the ##--ssl## option will not enable [[secure-connections-overview/#server-certificate-verification|verifying the server certificate]] by default. In order to verify the server certificate, the user must specify the ##--ssl-verify-server-cert## option. |
+| ##--ssl-ca=name## | Defines a path to a PEM file that should contain one or more X509 certificates for trusted Certificate Authorities (CAs) to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. See [[secure-connections-overview/#certificate-authorities-cas|Secure Connections Overview: Certificate Authorities (CAs)]] for more information. This option implies the ##--ssl## option. |
+| ##--ssl-capath=name##  | Defines a path to a directory that contains one or more PEM files that should each contain one X509 certificate for a trusted Certificate Authority (CA) to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. The directory specified by this option needs to be run through the [[https://www.openssl.org/docs/man1.1.1/man1/rehash.html|openssl rehash]] command. See [[secure-connections-overview/#certificate-authorities-cas|Secure Connections Overview: Certificate Authorities (CAs)]] for more information. This option is only supported if the client was built with OpenSSL or yaSSL. If the client was built with GnuTLS or Schannel, then this option is not supported. See [[tls-and-cryptography-libraries-used-by-mariadb|TLS and Cryptography Libraries Used by MariaDB]] for more information about which libraries are used on which platforms. This option implies the ##--ssl## option. |
+| ##--ssl-cert=name##  | Defines a path to the X509 certificate file to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. This option implies the ##--ssl## option. |
+| ##--ssl-cipher=name## | List of permitted ciphers or cipher suites to use for [[data-in-transit-encryption|TLS]]. This option implies the ##--ssl## option. |
+| ##--ssl-crl=name## | Defines a path to a PEM file that should contain one or more revoked X509 certificates to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. See [[secure-connections-overview/#certificate-revocation-lists-crls|Secure Connections Overview: Certificate Revocation Lists (CRLs)]] for more information. This option is only supported if the client was built with OpenSSL or Schannel. If the client was built with yaSSL or GnuTLS, then this option is not supported. See [[tls-and-cryptography-libraries-used-by-mariadb|TLS and Cryptography Libraries Used by MariaDB]] for more information about which libraries are used on which platforms. |
+| ##--ssl-crlpath=name## | Defines a path to a directory that contains one or more PEM files that should each contain one revoked X509 certificate to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. The directory specified by this option needs to be run through the [[https://www.openssl.org/docs/man1.1.1/man1/rehash.html|openssl rehash]] command. See [[secure-connections-overview/#certificate-revocation-lists-crls|Secure Connections Overview: Certificate Revocation Lists (CRLs)]] for more information. This option is only supported if the client was built with OpenSSL. If the client was built with yaSSL, GnuTLS, or Schannel, then this option is not supported. See [[tls-and-cryptography-libraries-used-by-mariadb|TLS and Cryptography Libraries Used by MariaDB]] for more information about which libraries are used on which platforms. |
+| ##--ssl-key=name## | Defines a path to a private key file to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. This option implies the ##--ssl## option. |
+| ##--ssl-verify-server-cert##     | Enables [[secure-connections-overview/#server-certificate-verification|server certificate verification]]. This option is disabled by default. |
+| ##-t##, ##--tmpdir=name## | Directory for temporary files. |
+| ##-s##, ##--upgrade-system-tables## |  Only upgrade the system tables in the mysql database. Tables in other databases are not checked or touched. |
+| ##-u##, ##--user=name## | User for login if not current user. |
+| ##-v##, ##--verbose## | Display more output about the process, using it twice will print connection arguments; using it 3 times will print out all [[check-table|CHECK]], [[rename-table|RENAME]] and [[alter-table|ALTER TABLE]] commands used during the check phase; using it 4 times will also write out all [[mariadb-check]] commands used.  |
+| ##-V##, ##--version## | Output version information and exit. |
+| ##-k##, ##--version-check## | Run this program only if its &#39;server version&#39; matches the version of the server to which it&#39;s connecting check. Note: the &#39;server version&#39; of the program is the version of the MariaDB server with which it was built/distributed.  (Defaults to on; use ##--skip-version-check## to disable.) |
+| ##--write-binlog## | All commands including those run by [[mariadb-check]] are written to the [[binary-log|binary log]]. Disabled by default. Before MariaDB 10.0.6 and MariaDB 5.5.34, this was enabled by default, and ##--skip-write-binlog## should be used when commands should not be sent to replication slaves. |
 &lt;&lt;/style&gt;&gt;
 
 == mariadb-upgrade 2.0

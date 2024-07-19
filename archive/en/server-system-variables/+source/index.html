@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/server-system-variables/+r/137048/">137048</a></dd>
+            <dd><a href="/kb/en/server-system-variables/+r/141379/">141379</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-03-19 12:46">2024-03-19 12:46</span></dd>
+<span class="datetime" title="2024-07-18 11:48">2024-07-18 11:48</span></dd>
         </dl>
     </div>
     
@@ -334,7 +334,7 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt; 
 == About the Server System Variables
 
 MariaDB has many system variables that can be changed to suit your needs.
@@ -432,7 +432,7 @@ The suffix can be upper or lower-case.
 ----
 
 ==== ##alter_algorithm##
-* **Description:** The implied ##ALGORITHM## for [[alter-table|ALTER TABLE]] if no ##ALGORITHM## clause is specified. The deprecated variable [[#old_alter_table|old_alter_table]] is an alias for this.
+* **Description:** The implied ##ALGORITHM## for [[alter-table|ALTER TABLE]] if no ##ALGORITHM## clause is specified. The deprecated variable [[#old_alter_table|old_alter_table]] is an alias for this. The feature was removed in MariaDB 11.5. See [[alter-table/#algorithmdefault|ALGORITHM=DEFAULT]].
 ** ##COPY## corresponds to the pre-MySQL 5.1 approach of creating an intermediate table, copying data one row at a time, and renaming and dropping tables. 
 ** ##INPLACE## requests that the operation be refused if it cannot be done natively inside a the storage engine. 
 ** ##DEFAULT## (the default) chooses ##INPLACE## if available, and falls back to ##COPY##. 
@@ -445,7 +445,7 @@ The suffix can be upper or lower-case.
 * **Default Value:** ##DEFAULT##
 * **Valid Values:** ##DEFAULT##, ##COPY##, ##INPLACE##, ##NOCOPY##, ##INSTANT##
 * **Introduced:** MariaDB 10.3.7
-
+* **Deprecated:** MariaDB 11.5
 
 ==== ##analyze_sample_percentage##
 * **Description:** Percentage of rows from the table [[analyze-table|ANALYZE TABLE]] will sample to collect table statistics. Set to 0 to let MariaDB decide what percentage of rows to sample.
@@ -680,7 +680,9 @@ The suffix can be upper or lower-case.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##string##
-* **Default Value:** Empty
+* **Default Value:** 
+** ##utf8mb3=utf8mb3_uca1400_ai_ci, ucs2=ucs2_uca1400_ai_ci, utf8mb4=utf8mb4_uca1400_ai_ci, utf16=utf16_uca1400_ai_ci, utf32=utf32_uca1400_ai_ci## (&gt;= MariaDB 11.5)
+** Empty (&lt;= MariaDB 11.4)
 * **Introduced:** MariaDB 11.2
 ----
 
@@ -697,7 +699,7 @@ The suffix can be upper or lower-case.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##string##
-* **Default Value:** ##latin1##
+* **Default Value:** ##utf8mb4## (&gt;= MariaDB 11.6.0), ##latin1## (&lt;= MariaDB 11.5)
 ----
 
 ==== ##character_set_filesystem##
@@ -723,7 +725,7 @@ The suffix can be upper or lower-case.
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##string##
-* **Default Value:** ##latin1##
+* **Default Value:** ##utf8mb4## (&gt;= MariaDB 11.6.0), ##latin1## (&lt;= MariaDB 11.5)
 ----
 
 ==== ##character_set_system##
@@ -2347,7 +2349,7 @@ SELECT (55/23244*1000);
 ----
 
 ==== ##log_slow_min_examined_row_limit##
-* **Description:** If a query examines more than this number of rows, it is logged to the [[slow-query-log|slow query log]]. If set to ##0##, the default, no row limit is used. ##min_examined_row_limit## is an alias.
+* **Description:** Don&#39;t write queries to [[slow-query-log|slow query log]] that examine fewer rows than the set value. If set to ##0##, the default, no row limit is used. ##min_examined_row_limit## is an alias.
 * **Commandline:** &lt;&lt;code&gt;&gt;--log-slow-min-examined-row-limit=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global, Session
 * **Dynamic:** Yes
@@ -2573,7 +2575,7 @@ This system variable&#39;s value cannot be changed after the datadir has been in
 ----
 
 ====  ##max_connections##
-* **Description:** The maximum number of simultaneous client connections. See also [[handling-too-many-connections|Handling Too Many Connections]]. Note that this value affects the number of file descriptors required on the operating system. Minimum was changed from ##1## to ##10## to avoid possible unexpected results for the user (MDEV-18252). Note that MariaDB always has one reserved connection for a superuser. Additionally it can listen on a separate port, so will be available even when the max_connections limit is reached.
+* **Description:** The maximum number of simultaneous client connections. See also [[handling-too-many-connections|Handling Too Many Connections]]. Note that this value affects the number of file descriptors required on the operating system. Minimum was changed from ##1## to ##10## to avoid possible unexpected results for the user (MDEV-18252). Note that MariaDB always has one reserved connection for a ##SUPER## (or ##CONNECTION ADMIN## user). Additionally it can listen on a separate port, so will be available even when the max_connections limit is reached.
 * **Commandline:** &lt;&lt;code&gt;&gt;--max-connections=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
@@ -2785,7 +2787,7 @@ Maximum simultaneous connections permitted for each user account.  When set to #
 ----
 
 ==== ##metadata_locks_cache_size##
-* **Description:** Size of the metadata locks cache, used for reducing the need to create and destroy synchronization objects. It is particularly helpful on systems where this process is inefficient, such as Windows XP.
+* **Description:** Unused since 10.1.4
 * **Commandline:** &lt;&lt;code&gt;&gt;--metadata-locks-cache-size=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** No
@@ -2795,7 +2797,7 @@ Maximum simultaneous connections permitted for each user account.  When set to #
 ----
 
 ==== ##metadata_locks_hash_instances##
-* **Description:** Number of hashes used by the set of metadata locks. The metadata locks are partitioned into separate hashes in order to reduce contention.
+* **Description:** Unused since 10.1.4
 * **Commandline:** &lt;&lt;code&gt;&gt;--metadata-locks-hash-instances=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** No
@@ -2805,7 +2807,7 @@ Maximum simultaneous connections permitted for each user account.  When set to #
 ----
 
 ==== ##min_examined_row_limit##
-* **Description:** If a query examines more than this number of rows, it is logged to the [[slow-query-log|slow query log]]. If set to ##0##, the default, no row limit is used. From MariaDB 10.11.0, this is an alias for [[#log_slow_min_examined_row_limit|log_slow_min_examined_row_limit]].
+* **Description:** Don&#39;t write queries to [[slow-query-log|slow query log]] that examine fewer rows than the set value. If set to ##0##, the default, no row limit is used. From MariaDB 10.11.0, this is an alias for [[#log_slow_min_examined_row_limit|log_slow_min_examined_row_limit]].
 * **Commandline:** &lt;&lt;code&gt;&gt;--min-examined-row-limit=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global, Session
 * **Dynamic:** Yes
@@ -3032,7 +3034,7 @@ MariaDB sets the limit with ##[[https://linux.die.net/man/2/setrlimit|setrlimit]
 ----
 
 ==== ##optimizer_max_sel_args##
-* **Description:** The maximum number of SEL_ARG objects created when optimizing a range. If more objects would be needed, the range will not be used by the optimizer.
+* **Description:** The maximum number of SEL_ARG objects created when optimizing a range. If more objects would be needed, range scans will not be used by the optimizer.
 * **Commandline:** &lt;&lt;code&gt;&gt;--optimizer-max-sel-args=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global, Session
 * **Dynamic:** Yes
@@ -3042,7 +3044,8 @@ MariaDB sets the limit with ##[[https://linux.die.net/man/2/setrlimit|setrlimit]
 * **Introduced:** MariaDB 10.6.16
 ----
 ==== ##optimizer_max_sel_arg_weight##
-* **Description:** The maximum weight of the SEL_ARG graph. Set to 0 for no limit.
+* **Description:** This is an actively enforced maximum effective SEL_ARG tree weight limit. A SEL_ARG weight is the number of effective &#34;ranges&#34; hanging off this root (that is, merged tree elements are &#34;unmerged&#34; to count the weight). During range analysis, looking for possible index merges, SEL_ARG graphs related to key ranges in query conditions are being processed. Graphs exceeding this limit will stop keys being &#39;and&#39;ed and &#39;or&#39;ed together to form a new larger SEL_ARG graph.  After each &#39;and&#39; or &#39;or&#39; process, this maximum weight limit is enforced. It enforces this limit by pruning the key part being used. This key part pruning can be used to limit/disable index merge SEL_ARG graph construction on overly long query conditions.
+See [[optimizer_max_sel_arg_weight]] for details.
 * **Commandline:** &lt;&lt;code&gt;&gt;--optimizer-max-sel-arg-weight=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global, Session
 * **Dynamic:** Yes

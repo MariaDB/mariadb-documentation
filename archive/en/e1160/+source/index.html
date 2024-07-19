@@ -327,7 +327,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/e1160/+r/134721/">134721</a></dd>
+            <dd><a href="/kb/en/e1160/+r/140319/">140319</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -336,7 +336,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-02-01 07:46">2024-02-01 07:46</span></dd>
+<span class="datetime" title="2024-06-18 12:50">2024-06-18 12:50</span></dd>
         </dl>
     </div>
     
@@ -352,11 +352,45 @@
 &lt;&lt;/style&gt;&gt;
 &lt;&lt;toc&gt;&gt;
 
-== Possible Causes and Solutions
 
-&lt;&lt;style class=&#34;greenbox&#34;&gt;&gt;
-This article doesn&#39;t currently contain any content. [[writing-and-editing-knowledge-base-articles/|You can help!]]
-&lt;&lt;/style&gt;&gt;</textarea>
+== Possible Causes
+
+This error tells us that the connection between the server and client was aborted.
+The most common cause is that the client hard-aborted the connection, without calling mysql_close().
+It could also be a problem with the connection to the server, such as a wrong or lost package.
+
+== How to Find Out More
+
+The [[error-log|error log]] may have more information about the cause of the error.
+Setting the MariaDB server option [[server-system-variables/#log_warnings|log_warnings]] to a value of 4 or above can generate more diagnostic warnings in the error log when there is a problem reading packages:
+
+&lt;&lt;code&gt;&gt;
+2024-02-17 12:32:45 5461 [ERROR] mariadbd: Could not write packet: fd: 406  state: 2  errno: 32  vio_errno: 1160  length: 34
+&lt;&lt;/code&gt;&gt;
+
+How to interpret the above:
+
+* ##5461## is the connection id that got the warning/error.
+* ##fd: 406## 406 is the file descriptor that had a problem.
+* ##state: 2## 
+* ##length: 34## is how many characters the server tried to wrote to the file.
+* ##errno 32## is the system error code (more below).
+* ##vio_errno: 1160## is our internal error code from the vio library, which stands for ER_NET_WRITE_ERROR &#34;Got an error writing communication packets&#34;.
+* ##length: -1## is how many characters was reported to be read from the read() system call. -1 indicates failure.  If ##length## &lt;= ##read_length## then something broke in the communication.
+
+You can use the perror utility to get a description of system and storage engine errors:
+&lt;&lt;code&gt;&gt;
+shell&gt; perror 104
+OS error code 104: Connection reset by peer
+&lt;&lt;/code&gt;&gt;
+This means the connection was aborted by the application/user.
+
+== How to Fix
+* Ensure you have a stable internet connection.
+* Ensure that your applications calls mysql_close() for all open connections before exiting.
+
+== See Also
+* [[perror]] Getting a description for an error number.</textarea>
     
 
 

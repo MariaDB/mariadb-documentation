@@ -278,12 +278,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2010-08-24 20:12">13 years, 7 months ago</span></dd>
+<span class="datetime" title="2010-08-24 20:12">13 years, 10 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-05-04 11:59">1 year, 10 months ago</span></dd>
+<span class="datetime" title="2024-07-17 13:15">1 day, 1 hour ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -465,14 +465,16 @@ HANDLER tbl_name CLOSE
 
     <li class=""><a href="#error-codes" title="Error Codes">Error Codes</a></li>
 
+    <li class=""><a href="#examples" title="Examples">Examples</a></li>
+
     <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
 </li>
 </div>
 <h2 class="anchored_heading" id="description">Description</h2>
 <p>The <code>HANDLER</code> statement provides direct access to table
 storage engine interfaces for key lookups and key or table scans. It is available for at least <a href="/kb/en/aria-formerly-known-as-maria/">Aria</a>, <a href="/kb/en/memory-storage-engine/">Memory</a>, <a href="/kb/en/myisam-storage-engine/">MyISAM</a> and <a href="/kb/en/xtradb-and-innodb/">InnoDB</a> tables (and should work with most 'normal' storage engines, but not with system tables, <a href="/kb/en/merge/">MERGE</a> or <a href="/kb/en/views/">views</a>).</p>
-<p><code>HANDLER ... OPEN</code> opens a table, allowing it to be accessible to subsequent <code>HANDLER ... READ</code> statements. The table can either be opened using an alias (which must then be used by <code>HANDLER ... READ</code>, or a table name.</p>
-<p>The table object is only closed when <code>HANDLER ... CLOSE</code> is called by the session, and is not shared by other sessions.</p>
+<p><code>HANDLER ... OPEN</code> opens a table, allowing it to be accessible to subsequent <code>HANDLER ... READ</code> statements. The table can either be opened using an alias, or a table name. If opened with an alias, references to this table by further HANDLER statements must use this alias, and not the table name. If opened with a table name qualified by database name, further references to this table must use the unqualified table name. For example, if a table is opened with <code>db1.t1</code>, further references must use <code>t1</code>. </p>
+<p>The table object is only closed when <code>HANDLER ... CLOSE</code> is called by the session, or the session closes, and is not shared by other sessions.</p>
 <p><a href="/kb/en/prepared-statements/">Prepared statements</a> work with <code>HANDLER READ</code>, which gives a much higher performance (50% speedup) as there is no parsing and all data is transformed in binary (without conversions to text, as with the normal protocol).</p>
 <p>The HANDLER command does not work with <a href="/kb/en/managing-mariadb-partitioning/">partitioned tables</a>.</p>
 <h2 class="anchored_heading" id="key-lookup">Key Lookup</h2>
@@ -511,18 +513,58 @@ HANDLER tbl_name READ NEXT  [ LIMIT ... ]
 </li><li>If you do an ALTER TABLE for a table that is used by some other connection with HANDLER, the ALTER TABLE will wait for the HANDLER to be closed.
 </li><li>For HASH keys, you must use all key parts when searching for a row.
 </li><li>For HASH keys, you can't do a key scan of all values. You can only find all rows with the same key value.
-</li><li>While each HANDLER READ command is atomic, if you do a scan in many steps, then some engines may give you error 1020 if the table changed between the commands. Please refer to the <a href="/kb/en/handler-handler/">specific engine handler page</a> if this happens.
+</li><li>While each HANDLER READ command is atomic, if you do a scan in many steps, then some engines may give you <a href="/kb/en/e1020/">error 1020</a> if the table changed between the commands. Please refer to the <a href="/kb/en/handler-handler/">specific engine handler page</a> if this happens.
 </li></ul>
 <h2 class="anchored_heading" id="error-codes">Error Codes</h2>
-<ul start="1"><li>Error 1031 (ER_ILLEGAL_HA) Table storage engine for 't1' doesn't have this option
+<ul start="1"><li><a href="/kb/en/e1031/">Error 1031</a> (ER_ILLEGAL_HA) Table storage engine for 't1' doesn't have this option
 <ul start="1"><li>If you get this for HANDLER OPEN it means the storage engine doesn't support HANDLER calls.
 </li><li>If you get this for HANDLER READ it means you are trying to use an incomplete HASH key.
 </li></ul>
-</li><li>Error 1020 (ER_CHECKREAD) Record has changed since last read in table '...'
+</li><li><a href="/kb/en/e1020/">Error 1020</a> (ER_CHECKREAD) Record has changed since last read in table '...'
 <ul start="1"><li>This means that the table changed between two reads and the handler can't handle this case for the given scan.
 </li></ul>
 </li></ul>
-<h2 class="anchored_heading" id="see-also">See Also</h2>
+<h2 class="anchored_heading" id="examples">Examples</h2>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">f1</span> <span class="nb">INT</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">t1</span> <span class="k">VALUES</span> <span class="p">(</span><span class="mi">1</span><span class="p">),(</span><span class="mi">2</span><span class="p">),(</span><span class="mi">3</span><span class="p">);</span>
+
+<span class="k">HANDLER</span> <span class="n">t1</span> <span class="k">OPEN</span><span class="p">;</span>
+
+<span class="k">HANDLER</span> <span class="n">t1</span> <span class="k">READ</span> <span class="k">NEXT</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">------+</span>
+<span class="o">|</span> <span class="n">f1</span>   <span class="o">|</span>
+<span class="o">+</span><span class="c1">------+</span>
+<span class="o">|</span>    <span class="mi">1</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">------+</span>
+
+<span class="k">HANDLER</span> <span class="n">t1</span> <span class="k">READ</span> <span class="k">NEXT</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">------+</span>
+<span class="o">|</span> <span class="n">f1</span>   <span class="o">|</span>
+<span class="o">+</span><span class="c1">------+</span>
+<span class="o">|</span>    <span class="mi">2</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">------+</span>
+</pre><p>In the previous example, the HANDLER was opened with the t1 table name. Since HANDLERs use unqualified table names, trying to access another table with this same name, even though it's in another database, will result in ambiguity. An alias needs to be used to avoid the ambiguity, resulting in <a href="/kb/en/e1066/">Error 1066: Not unique table/alias</a>:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">DATABASE</span> <span class="n">db_new</span><span class="p">;</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">db_new</span><span class="p">.</span><span class="n">t1</span> <span class="p">(</span><span class="n">id</span> <span class="nb">INT</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">db_new</span><span class="p">.</span><span class="n">t1</span> <span class="k">VALUES</span> <span class="p">(</span><span class="mi">4</span><span class="p">),(</span><span class="mi">5</span><span class="p">),(</span><span class="mi">6</span><span class="p">);</span>
+
+<span class="k">HANDLER</span> <span class="n">db_new</span><span class="p">.</span><span class="n">t1</span> <span class="k">OPEN</span><span class="p">;</span>
+<span class="n">ERROR</span> <span class="mi">1066</span> <span class="p">(</span><span class="mi">42000</span><span class="p">):</span> <span class="k">Not</span> <span class="k">unique</span> <span class="k">table</span><span class="o">/</span><span class="k">alias</span><span class="p">:</span> <span class="s1">&#39;t1&#39;</span>
+
+<span class="k">HANDLER</span> <span class="n">db_new</span><span class="p">.</span><span class="n">t1</span> <span class="k">OPEN</span> <span class="k">AS</span> <span class="n">db_new_t1</span><span class="p">;</span>
+
+<span class="k">HANDLER</span> <span class="n">db_new_t1</span> <span class="k">READ</span> <span class="k">NEXT</span> <span class="k">LIMIT</span> <span class="mi">3</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">------+</span>
+<span class="o">|</span> <span class="n">id</span>   <span class="o">|</span>
+<span class="o">+</span><span class="c1">------+</span>
+<span class="o">|</span>    <span class="mi">4</span> <span class="o">|</span>
+<span class="o">|</span>    <span class="mi">5</span> <span class="o">|</span>
+<span class="o">|</span>    <span class="mi">6</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">------+</span>
+</pre><h2 class="anchored_heading" id="see-also">See Also</h2>
 <ul start="1"><li><a href="/kb/en/what-is-mariadb-53/">What is MariaDB 5.3</a></li></ul>
 
     </div>

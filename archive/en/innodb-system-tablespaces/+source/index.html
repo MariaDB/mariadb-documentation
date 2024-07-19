@@ -319,7 +319,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-system-tablespaces/+r/127460/">127460</a></dd>
+            <dd><a href="/kb/en/innodb-system-tablespaces/+r/140403/">140403</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5454">
@@ -328,7 +328,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-06-21 18:47">2023-06-21 18:47</span></dd>
+<span class="datetime" title="2024-06-19 18:26">2024-06-19 18:26</span></dd>
         </dl>
     </div>
     
@@ -370,9 +370,16 @@ Under this configuration, when the last system tablespace grows beyond the size 
 
 === Decreasing the Size
 
+&lt;&lt;product mariadb from=11.2&gt;&gt;
+From MariaDB 11.2.0, when MariaDB starts up, unused InnoDB tablespace can be reclaimed, reducing the file size (MDEV-14795). This is disabled by default and is enabled by adding the ##:autoshrink## attribute to the ##[[innodb-system-variables#innodb_data_file_path|innodb_data_file_path]]## system variable, e.g.:
 
-&lt;&lt;product mariadb from=11.2.0&gt;&gt;
-From MariaDB 11.2.0, when MariaDB starts up, unused InnoDB tablespace is reclaimed, reducing the file size (MDEV-14795).
+&lt;&lt;code&gt;&gt;
+[mariadb]
+...
+innodb_data_file_path=ibdata1:12M;ibdata2:50M:autoextend:autoshrink
+&lt;&lt;/code&gt;&gt;
+
+Alternatively, starting with MariaDB 11.2.3, the shrinking can be set to happen during a slow shutdown (e.g. after ##SET GLOBAL innodb_fast_shutdown=0##) (MDEV-32452).
 
 Technically, how this works is:
 # Find the last used extent in the system tablespace by iterating through the BITMAP in the extent descriptor page.

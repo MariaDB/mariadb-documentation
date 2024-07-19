@@ -278,12 +278,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2017-11-01 10:38">6 years, 4 months ago</span></dd>
+<span class="datetime" title="2017-11-01 10:38">6 years, 8 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2018-05-07 12:10">5 years, 10 months ago</span></dd>
+<span class="datetime" title="2024-06-26 10:37">3 weeks, 1 day ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -421,6 +421,8 @@
 
     <li class=""><a href="#cant-open-file" title="Can&#39;t Open File">Can&#39;t Open File</a></li>
 
+    <li class=""><a href="#could-not-find-a-valid-tablespace-file" title="Could not find a valid tablespace file">Could not find a valid tablespace file</a></li>
+
     <li class=""><a href="#removing-orphan-intermediate-tables" title="Removing Orphan Intermediate Tables">Removing Orphan Intermediate Tables</a></li>
 
     <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
@@ -435,7 +437,11 @@ InnoDB: of InnoDB though the .frm file for the table exists. Maybe you
 InnoDB: have deleted and recreated InnoDB data files but have forgotten
 InnoDB: to delete the corresponding .frm files of InnoDB tables?
 </pre><p>If this is the case, as the text describes, delete the orphan <code>.frm</code> file on the filesystem.</p>
-<h2 class="anchored_heading" id="removing-orphan-intermediate-tables">Removing Orphan Intermediate Tables</h2>
+<h2 class="anchored_heading" id="could-not-find-a-valid-tablespace-file">Could not find a valid tablespace file</h2>
+<p>In this case the table definition, the <code>.frm</code> file, is missing and the InnoDB dictionary expects it to be there. To remove the InnoDB dictionary entry, the existence of the file needs to faked and then dropped. The existence of the file is faked by creating the <code>tablename.frm</code> and potential the database directory if it is missing. Then a <code>DROP TABLE</code> or <code>DROP DATABASE</code> can be executed which will remove the InnoDB dictionary entry.</p>
+<p>Use the query to identify potentially other tablespaces that are known but missing with:</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">INFORMATION_SCHEMA</span><span class="p">.</span><span class="n">INNODB_SYS_TABLES</span> <span class="k">WHERE</span> <span class="n">NAME</span> <span class="k">LIKE</span> <span class="s1">&#39;dbname/%&#39;</span><span class="p">;</span>
+</pre><h2 class="anchored_heading" id="removing-orphan-intermediate-tables">Removing Orphan Intermediate Tables</h2>
 <p>An orphan intermediate table may prevent you from dropping the tablespace even if it is otherwise empty, and generally takes up unnecessary space.</p>
 <p>It may come about if MariaDB exits in the middle of an <a href="/kb/en/alter-table/#algorithm">ALTER TABLE ... ALGORITHM=INPLACE</a> operation. They will be listed in the <a href="/kb/en/information-schema-innodb_sys_tables-table/">INFORMATION_SCHEMA.INNODB_SYS_TABLES</a> table, and always start with an <code>#sql-ib</code> prefix. The accompanying <code>.frm</code> file also begins with <code>#sql-</code>, but has a different name.</p>
 <p>To identify orphan tables, run:</p>

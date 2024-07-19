@@ -259,7 +259,7 @@ Comments - Delayed Replication
             <div class="info">
                 
 
-<span class="datetime" title="2018-10-12 17:09">5 years, 5 months ago</span>
+<span class="datetime" title="2018-10-12 17:09">5 years, 9 months ago</span>
                 
 <span class="user" id="user-5432">
 <a href="/kb/user/id/5432" title="Andrei Elkin">Andrei Elkin</a>
@@ -322,7 +322,63 @@ MariaDB-slave [test]&gt; show slave status\G
                 <div class="clearfix"></div>
             </div>
         </div>
+        <a name="comment_6683"></a>
+        <div class="comment approved" style="margin-left: 10px">
+            <div class="info">
+                
+
+<span class="datetime" title="2024-04-12 12:05">3 months, 1 week ago</span>
+                
+<span class="user" id="user-5432">
+<a href="/kb/user/id/5432" title="Andrei Elkin">Andrei Elkin</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6683">Re: 4. Seconds behind master for the parallel slave</a>
+                
+            </div><div class="comment_text">
+                <p>Note the above formula is correct only to the serial "legacy" slave.</p>
+<p>In the parallel case the relation between the above parameters can be seen from the following illustration.<br>
+Let the binlog contains two adjacent events</p>
+<pre class="fixed">  <span class="o">#</span><span class="mi">240329</span> <span class="mi">7</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="n">server</span> <span class="n">id</span> <span class="mi">2</span> <span class="n">end_log_pos</span> <span class="mi">6657072</span> <span class="n">CRC32</span> <span class="mi">0</span><span class="n">xf0da1817</span>   <span class="n">Xid</span> <span class="o">=</span> <span class="mi">23868012</span>
+  <span class="k">COMMIT</span><span class="cm">/*!*/</span><span class="p">;</span>
+  <span class="o">#</span><span class="mi">240329</span> <span class="mi">8</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="n">server</span> <span class="n">id</span> <span class="mi">2</span> <span class="n">end_log_pos</span> <span class="mi">6657114</span> <span class="n">CRC32</span> <span class="mi">0</span><span class="n">x1e4b110b</span>   <span class="n">GTID</span> <span class="mi">1</span><span class="o">-</span><span class="mi">2</span><span class="o">-</span><span class="mi">47672</span> <span class="n">trans</span>
+</pre><p>Let the parallel slave is set up with</p>
+<pre class="fixed">                     <span class="n">SQL_Delay</span><span class="p">:</span> <span class="mi">60</span>
+</pre><p>Suppose they arrive at slave about the time, the 1st is executed to commit its transaction and by that
+update Seconds_Behind_Master's "base". Since this point</p>
+<pre class="fixed">   <span class="n">Seconds_Behind_Master</span> <span class="o">=</span> <span class="n">clock_time_on_slave</span> <span class="o">-</span> <span class="n">clock_when_ending_execution_of_the_event_on_master</span>
+</pre><p>when the timezone difference is implied to be zero.
+Now the 2nd transaction starts, and say at 8:00:20 it would be still hanging in waiting, Show-Slave-Status reports</p>
+<pre class="fixed">         <span class="n">Seconds_Behind_Master</span><span class="p">:</span> <span class="mi">3600</span><span class="o">+</span><span class="mi">20</span>
+           <span class="n">SQL_Remaining_Delay</span><span class="p">:</span> <span class="mi">40</span>
+</pre><p>The first line value may surprise yet it says the last committed transaction was that many seconds ago.
+The 2nd transaction will start in 40 seconds and only when it ends Seconds_Behind_Master's "base" will update again.
+That means all execution time of the second transaction Seconds_Behind_Master would be growing over 3600 + 60.</p>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/delayed-replication/+comments/6683/flag"
+                       data-flag-url="/kb/en/delayed-replication/+comments/6683/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
         
+    
+
     
 
     

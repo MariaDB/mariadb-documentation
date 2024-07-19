@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/enabling-core-dumps/+r/131096/">131096</a></dd>
+            <dd><a href="/kb/en/enabling-core-dumps/+r/139329/">139329</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3487">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-10-23 07:21">2023-10-23 07:21</span></dd>
+<span class="datetime" title="2024-05-22 04:18">2024-05-22 04:18</span></dd>
         </dl>
     </div>
     
@@ -529,13 +529,13 @@ Or you can check for MariaDB Server core dumps specifically with:
 If an actual core file got stored you&#39;ll see ##present## in the COREFILE column of the output, you can then extract the core file with:
 
 &lt;&lt;code&gt;&gt;
-# coredump dump -o mariadbd.core ...PID...
+# coredumpctl dump -o mariadbd.core ...PID...
 &lt;&lt;/code&gt;&gt;
 
 using the process id number from the PID column, or when you just want to retrieve the latest MariaDB Server related entry:
 
 &lt;&lt;code&gt;&gt;
-# coredump dump -o mariadb.core /usr/sbin/mariadbd
+# coredumpctl dump -o mariadb.core /usr/sbin/mariadbd
 &lt;&lt;/code&gt;&gt;
 
 Starting with ##systemd## 248 it is also possible to invoke the ##gdb## debugger directly using the new ##--debugger-arguments=...## option, e.g. making the extraction of all thread backtraces from the most recent MariaDB server crash a one liner without even having to extract the core dump file first (requires ##gdb## to be installed):
@@ -580,7 +580,16 @@ EOF
 
 === Forcing a Core File on Linux
 
-To force a core file for ##mariadbd## you can send the process the ##sigabrt## signal, which has the signal code ##6##. This is very useful to get the state of the unresponsive ##mariadbd## process. However, this will cause ##mariadbd## to crash, and crash recovery will be run on restart.
+You can get a core dump from a running server with:
+
+&lt;&lt;code&gt;&gt;
+sudo gcore -o filename $(pidof mariadbd)
+&lt;&lt;/code&gt;&gt;
+
+This will store a core dump in ##filename.pid## where pid is the process ID of ##mariadbd##.
+##mariadbd## will continue to be running and will not be affected by ##gcore##.
+
+Another method is to force a core file for ##mariadbd## by sending the process the ##sigabrt## signal, which has the signal code ##6##. This is very useful to get the state of the unresponsive ##mariadbd## process. However, this will cause ##mariadbd## to crash, and crash recovery will be run on restart.
 
 You can send the signal with the ##[[https://linux.die.net/man/1/kill|kill]]## command. For example:
 

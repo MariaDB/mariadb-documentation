@@ -307,7 +307,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/changes-improvements-in-mariadb-11-4/+r/136995/">136995</a></dd>
+            <dd><a href="/kb/en/changes-improvements-in-mariadb-11-4/+r/141280/">141280</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -316,7 +316,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-03-18 21:12">2024-03-18 21:12</span></dd>
+<span class="datetime" title="2024-07-15 08:03">2024-07-15 08:03</span></dd>
         </dl>
     </div>
     
@@ -330,14 +330,39 @@
 
 &lt;&lt;toc&gt;&gt;
 
-MariaDB 11.4 is a current short-term development series. See [[plans-for-mariadb-11-4|Plans for MariaDB 11.4]].
+MariaDB 11.4 is a current long-term series, maintained until May 2029.
 
-&lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 == Upgrading
-* See [[upgrading-between-major-mariadb-versions|Upgrading Between Major MariaDB Versions]] and [[upgrading-from-mariadb-10-11-to-mariadb-11-0|Upgrading from MariaDB 10.11 to MariaDB 11.0]].
-&lt;&lt;/style&gt;&gt;
+* See [[upgrading-between-major-mariadb-versions|Upgrading Between Major MariaDB Versions]] and [[upgrading-from-mariadb-10-11-to-mariadb-11-4|Upgrading from MariaDB 10.11 to MariaDB 11.4]].
 
 == New Features
+
+This list includes features from the MariaDB 11.0, MariaDB 11.1 and MariaDB 11.2 short-term releases, and the MariaDB 11.3 rolling release.
+
+===Optimizer
+* Major improvements to the Optimizer. See [[the-optimizer-cost-model-from-mariadb-11-0/|The Optimizer Cost Model from MariaDB 11.0]].
+* [[semi-join-subquery-optimizations|Semi-join optimization]] for single-table [[update|UPDATE]]/[[delete|DELETE]] statements. Update and delete statements that use subqueries can now use all subquery optimization strategies that MariaDB offers, so now if you use subqueries in UPDATE or DELETE, these statements will likely be much faster (MDEV-7487, MariaDB 11.1)
+* Queries with the [[date-function|DATE]] or [[year|YEAR]] functions comparing against a constant can now make use of indexes, so these will be noticeably quicker in certain instances. For example ##SELECT * FROM t2 WHERE YEAR(a) = 2019## or ##SELECT * FROM t2 WHERE DATE(a) &lt;= &#39;2017-01-01&#39;##. See [[sargable-date-and-year|Sargable DATE and YEAR]] (MDEV-8320, MariaDB 11.1)
+* Queries like [[upper|UCASE(varchar_col)=...]] can now use an index on ##varchar_col## if its collation is case insensitive. An [[optimizer-switch|optimizer_switch]] option, [[sargable-upper|sargable_casefold=ON]], has been added to enable this optimization. (MDEV-31496, MariaDB 11.3)
+* Not only ascending, but also [[create-table/#index-types|descending indexes]] can now be used to optimize [[min|MIN()]] and [[max|MAX()]] (MDEV-27576)
+
+=== InnoDB
+* Shrink [[innodb-temporary-tablespaces|temporary tablespaces]] without restart by setting the [[innodb-system-variables/#innodb_truncate_temporary_tablespace_now|innodb_truncate_temporary_tablespace_now]] system variable. (MDEV-28699, MariaDB 11.3)
+* The [[innodb-system-tablespaces|InnoDB system tablespace]] is now shrunk by reclaiming unused space at startup (MDEV-14795, MariaDB 11.2)
+
+=== Online Schema Change
+* [[alter-table|ALTER TABLE]] can now do most operations with ##ALGORITHM=COPY, LOCK=NONE##, that is, in most cases, unless the algorithm and lock level are explicitly specified, ##ALTER TABLE## will be performed using the [[alter-table/#algorithmcopy|COPY]] algorithm while simultaneously allowing concurrent [[data-manipulation|DML statements]] on the altered table. (MariaDB 11.2)
+
+===Replication and Binary Log
+* [[binary-log|Binary log]] writing speed was improved by moving checksum calculations out of the global binlog mutex (MDEV-31273). This is a contribution by Kristian Nielsen
+* New system variable [[replication-and-binary-log-system-variables/#max_binlog_total_size|max_binlog_total_size]] enables binary log purging when the total size of all binary logs exceeds the specified threshold. The implementation is based on the patch from Percona (MDEV-31404)
+* New system variable [[replication-and-binary-log-system-variables/#slave_connections_needed_for_purge|slave_connections_needed_for_purge]] disables binary log purging until the number of connected slaves reaches the specified threshold (MDEV-31404).
+* ##FULL_NODUP## is a new value for the [[replication-and-binary-log-system-variables/#binlog_row_image|binlog_row_image]] system variable. It essentially works like ##FULL##, that is all columns are included in the event, but it takes less space, because the after image omits columns that were not changed by the ##UPDATE## statement, and have same values as in the before image. This is a contribution from Alibaba (MDEV-32589)
+* [[flashback|mariadb-binlog --flashback]] support for the [[replication-and-binary-log-system-variables/#binlog_row_image|FULL_NODUP]] mode. This is a contribution from Alibaba (MDEV-32894).
+* MariaDB can optionally maintain a [[gtid/#binlog-indexing|special index of GTIDs]] and their location in the binary log. If enabled (the default), it allows finding very quickly where a new connecting replica should start replicating from. Without an index, this required scanning the binlog. This is a contribution by Kristian Nielsen (MDEV-4991).
+* Add keywords &#34;SQL_BEFORE_GTIDS&#34; and &#34;SQL_AFTER_GTIDS&#34; for [[gtid/#sql_before_gtidssql_after_gtids|START SLAVE UNTIL]] (MDEV-27247, MariaDB 11.3). 
+SQL_BEFORE_GTIDS stops the replica when it sees gtids of the option&#39;s argument list, without executing them. (MariaDB 11.3)
+* All binlog* variables are now visible as system variables, specifically [[replication-and-binary-log-system-variables/#binlog_do_db|binlog_do_db]], [[replication-and-binary-log-system-variables/#binlog_ignore_db|binlog_ignore_db]], [[replication-and-binary-log-system-variables/#binlog_row_event_max_size|binlog_row_event_max_size]] (MDEV-30188, MariaDB 11.2)
 
 ===SSL/TLS
 * [[data-in-transit-encryption|SSL]] is now enabled in the server by default. No configuration necessary, if no server certificate was provided a self-signed certificate will be automatically generated by the server. See [[https://mariadb.org/mission-impossible-zero-configuration-ssl/|Mission Impossible: Zero-Configuration SSL]] for details (MDEV-31856).
@@ -347,32 +372,21 @@ MariaDB 11.4 is a current short-term development series. See [[plans-for-mariadb
 * Use ##--disable-ssl## or ##--disable-ssl-verify-server-cert## to revert to the old behavior.
 * Clients can use new command line options [[mariadb-command-line-client/#-tls-fpname|--tls-fp]] and [[mariadb-command-line-client/#-tls-fplistname|--tls-fplist]] to verify the server certificate by its fingerprint
 
-===Partitioning
-* [[partitioning-overview/#exchanging-partitions|ALTER TABLE … EXCHANGE PARTITION]] and [[partitioning-overview/#converting-partitions-tofrom-tables|ALTER TABLE … CONVERT TABLE … TO]] now support the ##WITH VALIDATION## and ##WITHOUT VALIDATION## clauses. If neither is specified, the default behavior is ##WITH VALIDATION## (MDEV-22164)
+=== JSON
+* [[json_table|JSON_TABLE]] now allows retrieval of the key when iterating on JSON objects (MDEV-30145, MariaDB 11.2)
+* New functions [[JSON_OBJECT_FILTER_KEYS]], [[JSON_OBJECT_TO_ARRAY]] and [[json_array_intersect|JSON_ARRAY_INTERSECT]] to check for JSON intersection (MDEV-26182, MariaDB 11.2)
+* [[json_schema_valid|JSON_SCHEMA_VALID]] function for validating a JSON schema (MDEV-27128, MariaDB 11.1)
 
-===Sys Schema
-* New view [[privileges_by_table_by_level|sys.privileges_by_table_by_level]] shows granted privileges broken down by table on which they allow access and level on which they were granted. For example, if a user ##x## has ##SELECT## privilege granted ##ON db.*##, this view will list all tables in the ##db## schema with the user ##x## having ##SELECT## privilege on them. This is different from [[information-schema-table_privileges-table|INFORMATION_SCHEMA.TABLE_PRIVILEGES]], which only lists privileges granted on the table level (MDEV-24486)
-
-===Optimizer
-* Not only ascending, but also [[create-table/#index-types|descending indexes]] can now be used to optimize [[min|MIN()]] and [[max|MAX()]] (MDEV-27576)
-
-===Spider
-* The preferred way to specify [[spider-table-parameters/|Spider parameters]] is to use the dedicated Spider table options (implemented in MariaDB 11.3). Abusing the table ##COMMENT## clause is now deprecated (MDEV-28861)
-
-===Miscellaneous
-* [[conv|CONV()]] function now supports conversion up to base 62 (MDEV-30879)
-* Added support for packages ([[create-package|CREATE PACKAGE]]) outside of ORACLE sql_mode (MDEV-32101)
-
-===Replication
-* [[binary-log|Binary log]] writing speed was improved by moving checksum calculations out of the global binlog mutex (MDEV-31273). This is a contribution by Kristian Nielsen
-* New system variable [[replication-and-binary-log-system-variables/#max_binlog_total_size|max_binlog_total_size]] enables binary log purging when the total size of all binary logs exceeds the specified threshold. The implementation is based on the patch from Percona (MDEV-31404)
-* New system variable [[replication-and-binary-log-system-variables/#slave_connections_needed_for_purge|slave_connections_needed_for_purge]] disables binary log purging until the number of connected slaves reaches the specified threshold (MDEV-31404).
-* ##FULL_NODUP## is a new value for the [[replication-and-binary-log-system-variables/#binlog_row_image|binlog_row_image]] system variable. It essentially works like ##FULL##, that is all columns are included in the event, but it takes less space, because the after image omits columns that were not changed by the ##UPDATE## statement, and have same values as in the before image. This is a contribution from Alibaba (MDEV-32589)
-* [[flashback|mariadb-binlog --flashback]] support for the [[replication-and-binary-log-system-variables/#binlog_row_image|FULL_NODUP]] mode. This is a contribution from Alibaba (MDEV-32894).
-* MariaDB can optionally maintain a [[gtid/#binlog-indexing|special index of GTIDs]] and their location in the binary log. If enabled (the default), it allows finding very quickly where a new connecting replica should start replicating from. Without an index, this required scanning the binlog. This is a contribution by Kristian Nielsen (MDEV-4991).
+===Data Types
+* It is now possible to create [[partitioning-tables|partitions]] on tables that contain [[geometry-types/|GEOMETRY types]] (MDEV-19177, MariaDB 11.3)
+* [[inet4|INET4]] data types can now be cast into [[inet6|INET6]] types (MDEV-31626, MariaDB 11.3)
+* This means INET4 values can be compared with INET6 values and can be inserted into INET6 columns;
+the server can automatically convert INET4 value into INET6 as needed (MariaDB 11.3)
 
 === Backup and Restore
 * New [[mariadb-dump]] option, ##-j##, ##--parallel=### for increased parallelism, specifies the number of dump table jobs executed in parallel (only for use with the ##--tab## option). Also added to [[mariadb-import]], with ##--use-threads## as a synonym. (MDEV-32216)
+* [[mariabackup-options/#-innobackupex|mariabackup --innobackupex]] mode has been deprecated (MDEV-31505, MariaDB 11.3) 
+* Rename [[mariabackup|Mariabackup’s]] xtrabackup_* files to mariadb_backup_* (MDEV-18931, MariaDB 11.1)
 
 === Application-Time Periods
 * Add views for [[application-time-periods|periods]] in information_schema (MDEV-22597), in particular
@@ -380,8 +394,58 @@ MariaDB 11.4 is a current short-term development series. See [[plans-for-mariadb
 * New view [[information-schema-key_period_usage-table|INFORMATION_SCHEMA.KEY_PERIOD_USAGE]]
 * New columns ##IS_SYSTEM_TIME_PERIOD_START## and ##IS_SYSTEM_TIME_PERIOD_END## in the [[information-schema-columns-table/|INFORMATION_SCHEMA.COLUMNS]] view
 
+===Sys Schema
+* New view [[privileges_by_table_by_level|sys.privileges_by_table_by_level]] shows granted privileges broken down by table on which they allow access and level on which they were granted. For example, if a user ##x## has ##SELECT## privilege granted ##ON db.*##, this view will list all tables in the ##db## schema with the user ##x## having ##SELECT## privilege on them. This is different from [[information-schema-table_privileges-table|INFORMATION_SCHEMA.TABLE_PRIVILEGES]], which only lists privileges granted on the table level (MDEV-24486)
+
+===Partitioning
+* [[partitioning-overview/#exchanging-partitions|ALTER TABLE … EXCHANGE PARTITION]] and [[partitioning-overview/#converting-partitions-tofrom-tables|ALTER TABLE … CONVERT TABLE … TO]] now support the ##WITH VALIDATION## and ##WITHOUT VALIDATION## clauses. If neither is specified, the default behavior is ##WITH VALIDATION## (MDEV-22164)
+
+===Connection Redirection
+* Added a [[connection-redirection-mechanism-in-the-mariadb-clientserver-protocol|redirect mechanism]] using the [[server-system-variables/#redirect_url|redirect_url]] system variable (MDEV-15935, MariaDB 11.3)
+* At the moment client-side support is missing
+
+=== Privileges
+* Add a new database-level [[grant|privilege]], ##SHOW CREATE ROUTINE## that allows one to see the routine definition even if the user isn&#39;t the routine owner (MDEV-29167, MariaDB 11.3)
+
+===Spider
+* The preferred way to specify [[spider-table-parameters/|Spider parameters]] is to use the dedicated Spider table options (implemented in MariaDB 11.3). Abusing the table ##COMMENT## clause is now deprecated (MDEV-28861)
+* The [[spider|Spider]] storage engine now supports table options instead of having to encode them in COMMENT/CONNECTION strings. When any table option is specified, Spider will ignore COMMENT/CONNECTION strings at the same table/partition/subpartition. A new variable [[spider-system-variables/#spider_ignore_comments|spider_ignore_comments]] is introduced to ignore them globally at all levels (table/partition/subpartition). Another variable, [[spider-system-variables/#spider_suppress_comment_ignored_warning|spider_suppress_comment_ignored_warning]], is introduced to suppress warnings when Spider ignores COMMENT/CONNECTION strings. (MDEV-28856, MariaDB 11.3)
+
+=== Miscellaneous Functions
+* [[conv|CONV()]] function now supports conversion up to base 62 (MDEV-30879)
+* Values generated by the Key Derivation Function [[kdf|KDF]] are resistant against password hashing generators, so are good for strongly hashed passwords (MDEV-31474)
+* Given a time in picoseconds, the new function [[format_pico_time|FORMAT_PICO_TIME]] returns a human-readable time value and unit indicator (MDEV-19629, MariaDB 11.0) 
+
+
+===Date and Time
+* [[date_format|DATE_FORMAT]] function can now print the current time zone abbreviation and current time zone offset from UTC with ##%Z## and ##%z## format specifiers. (MDEV-31684, MariaDB 11.3)
+
+=== Processlist
+* Added a ##SENT_ROWS## column to the [[information-schema-processlist-table|Information Schema PROCESSLIST]] table, as well as extended the display size for the columns in processlist to ensure
+that most results will fit in display (MDEV-3953, MariaDB 11.3)
+
+=== Miscellaneous
+* Added support for packages ([[create-package|CREATE PACKAGE]]) outside of [[sql_modeoracle|ORACLE sql_mode]] (MDEV-32101)
+* Setting a non-default [[old_mode]] value will now always issue a deprecation warning (MDEV-31811, MariaDB 11.3)
+* [[alter-table|ALTER TABLE IMPORT]] enhancement (MDEV-26137, MariaDB 11.2)
+* Temporary tables are now displayed in the [[information-schema-tables-table|Information Schema TABLES Table]], [[show-tables|SHOW TABLES]] and [[show-table-status|SHOW TABLE STATUS]] (MDEV-12459, MariaDB 11.2)
+* [[stored-routines|Stored programs]]: validation of stored program statements (MDEV-5816, MariaDB 11.2)
+* Extend [[aes_encrypt|AES_ENCRYPT()]] and [[aes_decrypt|AES_DECRYPT()]] to support an initialization vector and algorithm (MDEV-9069, MariaDB 11.2)
+* The [[server-system-variables/#transaction_isolation|transaction_isolation]] option is now a system variable, and the tx_isolation system variable is deprecated (MDEV-21921, MariaDB 11.1)
+
 === Variables
 * For a list of all new variables, see [[system-variables-added-in-mariadb-11-4|System Variables Added in MariaDB 11.4]].
+
+====Removed
+The following deprecated features and system variables have been removed (MDEV-32104, MariaDB 11.3):
+* sr_YU [[server-locale|locale]] (deprecated since MariaDB 10.0.11)
+* &#34;engine_condition_pushdown&#34; in [[optimizer-switch|optimizer_switch]] (deprecated since MariaDB 10.1.1)
+* [[server-system-variables/#date_format|date_format]], [[server-system-variables/#datetime_format|datetime_format]], [[server-system-variables/#time_format|time_format]], [[server-system-variables/#max_tmp_tables|max_tmp_tables]] (deprecated since MariaDB 10.1.2)
+* [[galera-cluster-system-variables/#wsrep_causal_reads|wsrep_causal_reads]] (deprecated since MariaDB 10.1.3)
+* &#34;parser&#34; in [[mroonga]] table comment (deprecated since MariaDB 10.2.11)
+* [[server-system-variables/#old_alter_table|old_alter_table]] variable (MDEV-30905, MariaDB 11.3)
+* [[innodb-system-variables/#innodb_defragment|innodb_defragment]] and related parameters (MDEV-30545, MariaDB 11.1)
+* The [[innodb-change-buffering|InnoDB Change Buffer]] has been removed (MDEV-29694, MariaDB 11.0)
 
 &lt;&lt;style2 class=&#34;hidden&#34;&gt;&gt;
 == Security Vulnerabilities Fixed in MariaDB 11.4
@@ -396,6 +460,8 @@ page.
 == List of All MariaDB 11.4 Releases
 &lt;&lt;style class=&#34;underheader graybox centered&#34;&gt;&gt;
 |= Date |= Release |= Status |= Release Notes |= Changelog
+| Unreleased | **MariaDB 11.4.3**  | Stable (GA)          | [[mariadb-11-4-3-release-notes|Release Notes]] | |
+| 29 May 2024 | **MariaDB 11.4.2**  | Stable (GA) | [[mariadb-11-4-2-release-notes|Release Notes]] | [[mariadb-11-4-2-changelog|Changelog]]
 | 16 Feb 2024 | **MariaDB 11.4.1**  | RC          | [[mariadb-11-4-1-release-notes|Release Notes]] | [[mariadb-11-4-1-changelog|Changelog]]
 | 24 Dec 2023 | **MariaDB 11.4.0**  | Alpha       | [[mariadb-11-4-0-release-notes|Release Notes]] | |
 &lt;&lt;/style&gt;&gt;</textarea>

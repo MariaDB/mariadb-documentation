@@ -327,7 +327,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/e1062/+r/134509/">134509</a></dd>
+            <dd><a href="/kb/en/e1062/+r/139305/">139305</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -336,7 +336,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-01-29 12:43">2024-01-29 12:43</span></dd>
+<span class="datetime" title="2024-05-20 18:27">2024-05-20 18:27</span></dd>
         </dl>
     </div>
     
@@ -354,9 +354,46 @@
 
 == Possible Causes and Solutions
 
-&lt;&lt;style class=&#34;greenbox&#34;&gt;&gt;
-This article doesn&#39;t currently contain any content. [[writing-and-editing-knowledge-base-articles/|You can help!]]
-&lt;&lt;/style&gt;&gt;</textarea>
+This error occurs when a key that requires a unique value ([[getting-started-with-indexes/#unique-index|unique]] or [[getting-started-with-indexes/#primary-key|primary]]) instead receives a duplicate.
+For example:
+
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE t1 (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  f VARCHAR(10) UNIQUE
+);
+
+INSERT INTO t1 (f) VALUES (&#39;a&#39;),(&#39;b&#39;);
+
+SELECT * FROM t1;
++----+------+
+| id | f    |
++----+------+
+|  1 | a    |
+|  2 | b    |
++----+------+
+
+INSERT INTO t1 (f) VALUES (&#39;b&#39;),(&#39;c&#39;);
+ERROR 1062 (23000): Duplicate entry &#39;b&#39; for key &#39;f&#39;
+&lt;&lt;/sql&gt;&gt;
+ 
+Solve the error by either not attempting to insert a duplicate value, or not requiring the key to be unique. For example, the below replaces the unique index with an index permitting duplicates:
+
+&lt;&lt;sql&gt;&gt;
+ALTER TABLE t1 DROP INDEX f, ADD INDEX (f);
+
+INSERT INTO t1 (f) VALUES (&#39;b&#39;),(&#39;c&#39;);
+
+SELECT * FROM t1;
++----+------+
+| id | f    |
++----+------+
+|  1 | a    |
+|  2 | b    |
+|  3 | b    |
+|  4 | c    |
++----+------+
+&lt;&lt;/sql&gt;&gt;</textarea>
     
 
 

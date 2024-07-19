@@ -270,12 +270,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2018-12-28 00:07">5 years, 2 months ago</span></dd>
+<span class="datetime" title="2018-12-28 00:07">5 years, 6 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-11-23 05:02">4 months ago</span></dd>
+<span class="datetime" title="2024-07-03 16:04">2 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -436,7 +436,14 @@
 </li></ul>
 <h2 class="anchored_heading" id="performance-related-options">Performance-related Options</h2>
 <p>These are optional optimizations that can be made to improve performance.</p>
-<ul start="1"><li><code><a href="/kb/en/innodb-system-variables/#innodb_flush_log_at_trx_commit">innodb_flush_log_at_trx_commit=0</a></code> — This is not usually recommended in the case of standard MariaDB. However, it is a bit safer with Galera Cluster, since inconsistencies can always be fixed by recovering from another node.
+<ul start="1"><li><code><a href="/kb/en/innodb-system-variables/#innodb_flush_log_at_trx_commit">innodb_flush_log_at_trx_commit=0</a></code> — This is not usually recommended in the case of standard MariaDB. However, it is a safer, recommended option with Galera Cluster, since inconsistencies can always be fixed by recovering from another node.
+</li></ul>
+<ul start="1"><li><code><a href="/kb/en/innodb-system-variables/#innodb_autoinc_lock_mode">innodb_autoinc_lock_mode=2</a></code> — This tells InnoDB to use interleaved method. Interleaved is the fastest and most scalable lock mode, and should be used when BINLOG_FORMAT is set to ROW.
+Setting the auto-increment lock mode for InnoDB to interleaved, you’re allowing slaves threads to operate in parallel.
+</li></ul>
+<ul start="1"><li><code><a href="/kb/en/galera-cluster-system-variables/#wsrep_slave_threads">wsrep_slave_threads=0</a></code> 
+— This makes state transfers quicker for new nodes. You should start with four slave threads per CPU core.
+The logic here is that, in a balanced system, four slave threads can typically saturate a CPU core. However, I/O performance can increase this figure several times over. For example, a single-core ThinkPad R51 with a 4200 RPM drive can use thirty-two slave threads. The value should not be set higher than <a href="/kb/en/galera-cluster-status-variables/#wsrep_cert_deps_distance">wsrep_cert_deps_distance</a>.
 </li></ul>
 <h2 class="anchored_heading" id="writing-replicated-write-sets-to-the-binary-log">Writing Replicated Write Sets to the Binary Log</h2>
 <p>Like with <a href="/kb/en/high-availability-performance-tuning-mariadb-replication/">MariaDB replication</a>, write sets that are received by a node with <a href="/kb/en/about-galera-replication/">Galera Cluster's certification-based replication</a> are not written to the <a href="/kb/en/binary-log/">binary log</a> by default. If you would like a node to write its replicated write sets to the <a href="/kb/en/binary-log/">binary log</a>, then you will have to set <code><a href="/kb/en/replication-and-binary-log-system-variables/#log_slave_updates">log_slave_updates=ON</a></code>. This is especially helpful if the node is a replication master. See <a href="https://mariadb.com/kb/en/library/using-mariadb-replication-with-mariadb-galera-cluster-using-mariadb-replica/#configuring-a-cluster-node-as-a-replication-master">Using MariaDB Replication with MariaDB Galera Cluster: Configuring a Cluster Node as a Replication Master</a>.</p>

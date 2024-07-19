@@ -327,7 +327,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/e1149/+r/134683/">134683</a></dd>
+            <dd><a href="/kb/en/e1149/+r/138876/">138876</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -336,7 +336,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-01-29 21:19">2024-01-29 21:19</span></dd>
+<span class="datetime" title="2024-05-01 11:25">2024-05-01 11:25</span></dd>
         </dl>
     </div>
     
@@ -354,9 +354,125 @@
 
 == Possible Causes and Solutions
 
-&lt;&lt;style class=&#34;greenbox&#34;&gt;&gt;
-This article doesn&#39;t currently contain any content. [[writing-and-editing-knowledge-base-articles/|You can help!]]
-&lt;&lt;/style&gt;&gt;</textarea>
+This is one of the most common errors to see. It&#39;s caused by an SQL syntax error. The error message will give you a clue as to where the error could be, as MariaDB displays the text following where it picked up an error. There are a huge number of possible causes (and in most cases they&#39;re simple typos), but here are a few common ones;
+=== Delimiters
+Delimiters need to be present at the end of each statement. See [[delimiters|Delimiters]].
+For example:
+&lt;&lt;sql&gt;&gt;
+SELECT 1
+SELECT 2;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds 
+  to your MariaDB server version for the right syntax to use near &#39;SELECT 2&#39; at line 2
+&lt;&lt;/sql&gt;&gt;
+Here, there was no delimiter separating the first and the second line. MariaDB picked up the error at the start of the second line, pointing one to the end of the first line. The correct syntax is:
+&lt;&lt;sql&gt;&gt;
+SELECT 1;
+SELECT 2;
+&lt;&lt;/sql&gt;&gt;
+
+=== Delimiters in Stored Programs
+When creating [[stored-programs-and-views|stored programs]] from the command-line, it is likely you will need to differentiate between the regular delimiter and a delimiter inside a [[begin-end|BEGIN END]] block. See [[delimiters|Delimiters]].
+
+For example, take the following, seemingly-valid declaration:
+&lt;&lt;sql&gt;&gt;
+CREATE FUNCTION FortyTwo() RETURNS TINYINT DETERMINISTIC
+BEGIN
+  DECLARE x TINYINT;
+  SET x = 42;
+  RETURN x;
+END;
+&lt;&lt;/sql&gt;&gt;
+
+Attempting to run will result in an error:
+&lt;&lt;sql&gt;&gt;
+CREATE FUNCTION FortyTwo() RETURNS TINYINT DETERMINISTIC
+    -&gt; BEGIN
+    -&gt;   DECLARE x TINYINT;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds 
+  to your MariaDB server version for the right syntax to use near &#39;&#39; at line 3
+&lt;&lt;/sql&gt;&gt;
+
+The error was picked up at the end of the ##DECLARE x TINYINT;## line, guiding one to the delimiter found there. The solution is to specify a distinct delimiter for the duration of the process, using the DELIMITER command, for example:
+&lt;&lt;sql&gt;&gt;
+DELIMITER //
+
+CREATE FUNCTION FortyTwo() RETURNS TINYINT DETERMINISTIC
+BEGIN
+  DECLARE x TINYINT;
+  SET x = 42;
+  RETURN x;
+END 
+
+//
+
+DELIMITER ;
+&lt;&lt;/sql&gt;&gt;
+
+=== Reserved Words
+[[reserved-words|Reserved words]] cannot be used as [[identifier-names|identifiers]] unless they are quoted. For example:
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE accessible(id INT);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds 
+  to your MariaDB server version for the right syntax to use near &#39;accessible(id INT)&#39; at line 1
+&lt;&lt;/sql&gt;&gt;
+
+The error was picked up after the ##accessible## identifier, leading one to suspect that it&#39;s causing the problem. And indeed, it&#39;s a [[reserved-words|reserved word]]. There are a number of possible solutions.
+
+Use a new, non-reserved, identifier:
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE accessible_status(id INT);
+&lt;&lt;/sql&gt;&gt;
+or quote the identifier:
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE `accessible`(id INT);
+&lt;&lt;/sql&gt;&gt;
+or [[identifier-qualifiers|fully qualify]] the identifier:
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE test.accessible(id INT);
+&lt;&lt;/sql&gt;&gt;
+
+=== Syntax Doesn&#39;t Match SQL_MODE
+Some syntax may be valid in a particular [[sql-mode|SQL_MODE]], but not in others. There are too many to list here, but the [[sql-mode|SQL_MODE]] page provides a full list.
+For example:
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE &#34;t&#34; (id INT);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds 
+  to your MariaDB server version for the right syntax to use near &#39;&#34;t&#34; (id INT)&#39; at line 1
+&lt;&lt;/sql&gt;&gt;
+The error message directs one to the identifier ##t##. Double quotes cannot be used to [[identifier-names/#quote-character|quote identifiers]] unless ANSI_MODE is set, which in this case it isn&#39;t:
+&lt;&lt;sql&gt;&gt;
+select @@sql_mode;
++-------------------------------------------------------------------------------------------+
+| @@sql_mode                                                                                |
++-------------------------------------------------------------------------------------------+
+| STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION |
++-------------------------------------------------------------------------------------------+
+&lt;&lt;/sql&gt;&gt;
+Either quote with the standard quote character, the backtick, or set the appropriate SQL_MODE:
+&lt;&lt;sql&gt;&gt;
+SET @@SQL_MODE = CONCAT(@@SQL_MODE, &#39;,ANSI_QUOTES&#39;);
+CREATE TABLE &#34;t&#34; (id INT);
+&lt;&lt;/sql&gt;&gt;
+
+==== Oracle Mode
+[[sql_modeoracle|Oracle mode]] in particular has a large number of differences to the default [[sql-mode|SQL_MODE]], for example:
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE t (id VARCHAR2(10));
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds 
+  to your MariaDB server version for the right syntax to use near &#39;(10))&#39; at line 1
+&lt;&lt;/sql&gt;&gt;
+The error is identified just after the VARCHAR2 type is specified, and this type is not valid in the default mode:
+&lt;&lt;sql&gt;&gt;
+SELECT @@sql_mode;
++--------------------------------------------------------------------+
+| @@sql_mode                                                         |
++--------------------------------------------------------------------+
+| STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER |
++--------------------------------------------------------------------+
+SET SQL_MODE=&#39;ORACLE&#39;;
+CREATE TABLE t (id VARCHAR2(10));
+&lt;&lt;/sql&gt;&gt;
+See [[sql_modeoracle|Oracle mode]] for a full list of syntax differences.</textarea>
     
 
 

@@ -1,5 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: UUID Data Type</title><link>https://mariadb.com/kb/en/uuid-data-type/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/uuid-data-type/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Mon, 25 Mar 2024 21:16:42 +0000</lastBuildDate><item><title>Function to simulate</title><link>https://mariadb.com/kb/en/uuid-data-type/+comments/6640</link><description>&lt;p&gt;To simulate the new UUID type insert and retrieve to a BINARY(16) format these functions might come in handy:&lt;/p&gt;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: UUID Data Type</title><link>https://mariadb.com/kb/en/uuid-data-type/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/uuid-data-type/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 18 Jul 2024 18:17:00 +0000</lastBuildDate><item><title>Re: Function to simulate</title><link>https://mariadb.com/kb/en/uuid-data-type/+comments/6785</link><description>&lt;p&gt;The functions above provided by Johannes gave me cause for concern about the consistency of the new &lt;code class="fixed" style="white-space:pre-wrap"&gt;uuid&lt;/code&gt; data type with existing usage of the &lt;code class="fixed" style="white-space:pre-wrap"&gt;BINARY(16)&lt;/code&gt; data type.  Eventually I worked out that, unfortunately, the functions he provided are &lt;strong&gt;not symmetric, and inconsistent with how the new uuid data type is represented&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Taking an example query from a database table I have, where:&lt;/p&gt;
+&lt;ul start="1"&gt;&lt;li&gt;the &lt;code class="fixed" style="white-space:pre-wrap"&gt;uuid_as_binary16&lt;/code&gt; column has data type &lt;code class="fixed" style="white-space:pre-wrap"&gt;BINARY(16)&lt;/code&gt;
+&lt;/li&gt;&lt;li&gt;all &lt;code class="fixed" style="white-space:pre-wrap"&gt;SELECT&lt;/code&gt; queries shown below retrieve data from the same pre-existing row
+&lt;/li&gt;&lt;li&gt;the &lt;code class="fixed" style="white-space:pre-wrap"&gt;uuid&lt;/code&gt; column has data type &lt;code class="fixed" style="white-space:pre-wrap"&gt;UUID&lt;/code&gt; and was populated by running &lt;code class="fixed" style="white-space:pre-wrap"&gt;UPDATE oliver_test SET uuid = uuid_as_binary16;&lt;/code&gt;
+&lt;/li&gt;&lt;/ul&gt;
+&lt;pre class="fixed"&gt;+--------------------------------------------------+
+| HEX(UUID_TO_BIN(BIN_TO_UUID2(uuid_as_binary16))) |
++--------------------------------------------------+
+| 3FEBCBE0500DAF0E4CDFFB19BDBB4847                 |
++--------------------------------------------------+
+
++----------------------------------+
+| HEX(uuid_as_binary16)            |
++----------------------------------+
+| 3FEBCBE0500D4CDFAF0EFB19BDBB4847 |
++----------------------------------+
+&lt;/pre&gt;&lt;p&gt;After some research I came across &lt;a href="https://gist.github.com/jamesgmarks/56502e46e29a9576b0f5afea3a0f595c"&gt;https://gist.github.com/jamesgmarks/56502e46e29a9576b0f5afea3a0f595c&lt;/a&gt; which provided alternative functions (reprinted here in case the link target gets changed):&lt;/p&gt;
+&lt;pre class="fixed"&gt;DELIMITER //
+
+CREATE FUNCTION BIN_TO_UUID(b BINARY(16))
+RETURNS CHAR(36)
+BEGIN
+   DECLARE hexStr CHAR(32);
+   SET hexStr = HEX(b);
+   RETURN LOWER(CONCAT(
+        SUBSTR(hexStr, 1, 8), '-',
+        SUBSTR(hexStr, 9, 4), '-',
+        SUBSTR(hexStr, 13, 4), '-',
+        SUBSTR(hexStr, 17, 4), '-',
+        SUBSTR(hexStr, 21)
+    ));
+END//
+
+CREATE FUNCTION UUID_TO_BIN(uuid CHAR(36))
+RETURNS BINARY(16)
+BEGIN
+    RETURN UNHEX(REPLACE(uuid, '-', ''));
+END//
+
+DELIMITER ;
+&lt;/pre&gt;&lt;p&gt;Using these functions provides symmetrical results:&lt;/p&gt;
+&lt;pre class="fixed"&gt;+-------------------------------------------------+
+| HEX(UUID_TO_BIN(BIN_TO_UUID(uuid_as_binary16))) |
++-------------------------------------------------+
+| 3FEBCBE0500D4CDFAF0EFB19BDBB4847                |
++-------------------------------------------------+
+
++----------------------------------+
+| HEX(uuid_as_binary16)            |
++----------------------------------+
+| 3FEBCBE0500D4CDFAF0EFB19BDBB4847 |
++----------------------------------+
+&lt;/pre&gt;&lt;p&gt;Also, crucially, these functions (unlike the ones provided by Johannes) provide a representation that is consistent with how the new data type works.
+Initially I had run:&lt;/p&gt;
+&lt;pre class="fixed"&gt;UPDATE oliver_test SET uuid = uuid_as_binary16;
+&lt;/pre&gt;&lt;p&gt;Then I could compare the two datatypes:&lt;/p&gt;
+&lt;pre class="fixed"&gt;+--------------------------------------+
+| BIN_TO_UUID(uuid_as_binary16)        |
++--------------------------------------+
+| 3febcbe0-500d-4cdf-af0e-fb19bdbb4847 |
++--------------------------------------+
+
++--------------------------------------+
+| uuid                                 |
++--------------------------------------+
+| 3febcbe0-500d-4cdf-af0e-fb19bdbb4847 |
++--------------------------------------+
+&lt;/pre&gt;&lt;p&gt;I hope this is useful to others.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Oliver Lockwood</dc:creator><guid>https://mariadb.com/kb/en/uuid-data-type/+comments/6785</guid></item><item><title>Function to simulate</title><link>https://mariadb.com/kb/en/uuid-data-type/+comments/6640</link><description>&lt;p&gt;To simulate the new UUID type insert and retrieve to a BINARY(16) format these functions might come in handy:&lt;/p&gt;
 &lt;p&gt;to convert (and store) a UUID in a 16 byte binary&lt;/p&gt;
 &lt;pre class="fixed"&gt;CREATE FUNCTION `UUID_TO_BIN`(uuid char(36))
 RETURNS binary(16)

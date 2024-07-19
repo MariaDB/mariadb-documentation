@@ -323,7 +323,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/using-healthcheck-sh/+r/136582/">136582</a></dd>
+            <dd><a href="/kb/en/using-healthcheck-sh/+r/140310/">140310</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-13052">
@@ -332,7 +332,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-03-13 04:21">2024-03-13 04:21</span></dd>
+<span class="datetime" title="2024-06-16 23:42">2024-06-16 23:42</span></dd>
         </dl>
     </div>
     
@@ -348,7 +348,40 @@ The script processes a number of argument and tests, together, in strict order. 
 
 By default, (since 2023-06-27), official images will create healthcheck@localhost, healthcheck@127.0.0.1, healthcheck@::1 users with a random password and USAGE privileges. ##[[mariadb-server-docker-official-image-environment-variables/#mariadb_healthcheck_grants|MARIADB_HEALTHCHECK_GRANTS]]## can be used for ##--replication## where additional grants are required. This is stored in .my-healthcheck.cnf in the datadir of the container and passed as the ##--defaults-extra-file## to the healthcheck.sh script if it exists. The ##.my-healthcheck.cnf## also sets ##protocol=tcp## for the ##mariadb## so ##--connect## is effectively there on all tests.
 
+The ##[[mariadb-server-docker-official-image-environment-variables/#mariadb_auto_upgrade|MARIADB_AUTO_UPGRADE=1]] will regenerate the .my-healthcheck.cnf file if missing and recreate the healthcheck users of the database with a new random password. The current port configuration of the MariaDB container is written into this file.
+
 The ##[[mariadb-server-docker-official-image-environment-variables/#mariadb_mysql_localhost_user-mariadb_mysql_localhost_grants|MARIADB_MYSQL_LOCALHOST_USER=1, MARIADB_MYSQL_LOCALHOST_GRANTS]]## environment variables can also be used, but with the creation of the healthcheck user, these are backwards compatible. 
+
+= Compose File Example
+
+An example of a compose file that uses the healthcheck.sh to determine a healthy service as a depedency before starting a wordpress service:
+&lt;&lt;code&gt;&gt;
+version: &#34;3&#34;
+services:
+  mariadb:
+    image: mariadb:lts
+    environment:
+      - MARIADB_DATABASE=testdb
+      - MARIADB_USER=testuser
+      - MARIADB_PASSWORD=password
+      - MARIADB_RANDOM_ROOT_PASSWORD=1
+    healthcheck:
+      test: [&#34;CMD&#34;, &#34;healthcheck.sh&#34;, &#34;--connect&#34;, &#34;--innodb_initialized&#34;]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  wordpress:
+    image: wordpress
+    environment:
+      - WORDPRESS_DB_HOST=mariadb
+      - WORDPRESS_DB_NAME=testdb
+      - WORDPRESS_DB_USER=testuser
+      - WORDPRESS_DB_PASSWORD=password
+    depends_on:
+      mariadb:
+        condition: service_healthy
+&lt;&lt;/code&gt;&gt;&gt;
 
 = Tests
 

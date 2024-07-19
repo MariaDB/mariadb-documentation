@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-dump/+r/135588/">135588</a></dd>
+            <dd><a href="/kb/en/mariadb-dump/+r/141320/">141320</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-02-28 08:30">2024-02-28 08:30</span></dd>
+<span class="datetime" title="2024-07-16 12:27">2024-07-16 12:27</span></dd>
         </dl>
     </div>
     
@@ -334,20 +334,19 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;product mariadb from=10.4.6&gt;&gt;
-From MariaDB 10.4.6, ##mariadb-dump## is a symlink to ##mysqldump##, the backup tool. 
-&lt;&lt;/product&gt;&gt;
+        <textarea id="answer_source" class="creole_source autogrow">The ##mariadb-dump## client is a backup program originally written by Igor Romanenko.
 
-&lt;&lt;product mariadb from=10.5.2&gt;&gt;
-From MariaDB 10.5.2, ##mariadb-dump## is the name of the tool, with ##mysqldump## a symlink .
-&lt;&lt;/product&gt;&gt;
+Prior to MariaDB 10.5, the client used to be called ##mysqldump##, and can still be accessed under this name, via a symlink in Linux, or an alternate binary in Windows.
 
 &lt;&lt;product mariadb from=11.0.1&gt;&gt;
 From MariaDB 11.0.1, ##mysqldump## (the symlink) is deprecated and removed from the ##mariadb## Docker Official Image.
 &lt;&lt;/product&gt;&gt;
 
+&lt;&lt;style class=&#34;yellowbox&#34;&gt;&gt;
+**Note:** From MariaDB 10.5.25, MariaDB 10.6.18, MariaDB 10.11.8, MariaDB 11.0.6, MariaDB 11.1.5, MariaDB 11.2.4 and MariaDB 11.4.2 ##mariadb-dump## generates a command at the beginning of the dump to enable [[mariadb-command-line-client#-sandbox|sandbox]] mode. This command cannot be interpreted by earlier versions of the [[mariadb-command-line-client|MariaDB command line client]] or by MySQL&#39;s command line client, and the client will generate an error if used against the versions that do not support it. This does not affect other methods of importing the data.
+&lt;&lt;/style&gt;&gt;
 
-The ##mariadb-dump## client (originally called ##mysqldump##)is a backup program originally written by Igor Romanenko. It can be used to dump a database or a collection of databases for backup or transfer to another database server (not necessarily MariaDB or MySQL). The dump typically contains SQL statements to create the table, populate it, or both. However, ##mariadb-dump## can also be used to generate files in CSV, other delimited text, or XML format.
+The ##mariadb-dump## client can be used to dump a database or a collection of databases for backup or transfer to another database server (not necessarily MariaDB or MySQL). The dump typically contains SQL statements to create the table, populate it, or both. However, ##mariadb-dump## can also be used to generate files in CSV, other delimited text, or XML format.
 
 If you are doing a backup on the server and your tables all are [[MyISAM]] tables, consider using [[mariadb-hotcopy]] instead because it can accomplish faster backups and faster restores.
 
@@ -410,7 +409,7 @@ dump to be reloaded into a very old MySQL server, you should not use the
 
 ##mariadb-dump## supports the following options:
 
-&lt;&lt;style2 style=&#34;font-size:0.8em;&#34;&gt;&gt;
+&lt;&lt;style2 style=&#34;font-size:0.89em;&#34;&gt;&gt;
 &lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
 |= Option |= Description
 | ##--all## | Deprecated. Use ##--create-options## instead.
@@ -419,18 +418,18 @@ dump to be reloaded into a very old MySQL server, you should not use the
 | ##-y##, ##--no-tablespaces## | Do not dump any tablespace information.
 | ##--add-drop-database## | Add a [[drop-database|DROP DATABASE]] before each create. Typically used in conjunction with the ##--all-databases## or ##--databases## option because no [[create-database|CREATE DATABASE]] statements are written unless one of those options is specified. |
 | ##--add-drop-table## | Add a [[drop-table|DROP TABLE]] before each create.
-| ##--add-drop-trigger## | Add a [[drop-trigger|DROP TRIGGER]] statement before each [[create-trigger|CREATE TRIGGER]]. From MariaDB 10.2.6.
+| ##--add-drop-trigger## | Add a [[drop-trigger|DROP TRIGGER]] statement before each [[create-trigger|CREATE TRIGGER]].
 | ##--add-locks## | Add locks around [[insert|INSERT]] statements, which results in faster inserts when the dump file is reloaded. Use ##--skip-add-locks## to disable.
 | ##--allow-keywords## | Allow creation of column names that are keywords. This works by prefixing each column name with the table name.
 | ##--apply-slave-statements## | Adds [[stop-slave|STOP SLAVE]] prior to [[change-master-to|CHANGE MASTER]] and [[start-slave|START SLAVE]] to bottom of dump.
-| ##--as-of## | Dump [[system-versioned-tables|system versioned table]] as of specified timestamp. From MariaDB 10.7.0.
+| ##--as-of=name## | Dump [[system-versioned-tables|system versioned table]] as of specified timestamp. Argument is interpreted according to the ##--tz-utc## setting. Table structures are always dumped as of current timestamp.From MariaDB 10.7.0.
 | ##--character-sets-dir=name## | Directory for [[data-types-character-sets-and-collations|character set]] files.
 | ##-i##, ##--comments## | Write additional information in the dump file such as program version, server version, and host. Disable with ##--skip-comments##.
 | ##--compact## | Give less verbose output (useful for debugging). Disables structure comments and header/footer constructs. Enables the ##--skip-add-drop-table##, ##--skip-add-locks##, ##--skip-comments##, ##--skip-disable-keys##, and ##--skip-set-charset## options.
 | ##--compatible=name## | Change the dump to be compatible with a given mode. By default tables are dumped in a format optimized for MariaDB and MySQL. Legal modes are: ##ansi##, ##mysql323##, ##mysql40##, ##postgresql##, ##oracle##, ##mssql##, ##db2##, ##maxdb##, ##no_key_options##, ##no_table_options##, and ##no_field_options##. One can use several modes separated by commas.\\\\This option does not guarantee compatibility with other servers. It only enables those SQL mode values that are currently available for making dump output more compatible. For example, ##--compatible=oracle## does not map data types to Oracle types or use Oracle comment syntax.\\\\
 | ##-c##, ##--complete-insert## | Use complete [[insert|INSERT]] statements that include column names.
 | ##-C##, ##--compress## | Use compression in server/client protocol. Both client and server must support compression for this to work.
-| ##--copy-s3-tables| By default [[s3-storage-engine|S3]] tables are ignored. With this option set, the result file will contain a CREATE statement for a similar [[aria-storage-engine|Aria]] table, followed by the table data and ending with an ##ALTER TABLE xxx ENGINE=S3##. From MariaDB 10.5.0.
+| ##--copy-s3-tables| By default [[s3-storage-engine|S3]] tables are ignored. With this option set, the result file will contain a CREATE statement for a similar [[aria-storage-engine|Aria]] table, followed by the table data and ending with an ##ALTER TABLE xxx ENGINE=S3##. 
 | ##-a##, ##--create-options## | Include all MariaDB and/or MySQL specific create options in ##CREATE TABLE## statements. Use ##--skip-create-options## to disable.
 | ##-B##, ##--databases## | Dump several databases. Normally, ##mariadb-dump## treats the first name argument on the command line as a database name and following names as table names. With this option, it treats all name arguments as database names. [[create-database|CREATE DATABASE]] and [[use|USE]] statements are included in the output before each new database.
 | &lt;&lt;code&gt;&gt;-#, --debug[=#]&lt;&lt;/code&gt;&gt; | If using a debug version of MariaDB, write a debugging log. A typical debug_options string is ´d:t:o,file_name´. The default value is ´d:t:o,/tmp/mysqldump.trace´. If using a non-debug version, ##mariadb-dump## will catch this and exit.
@@ -443,6 +442,7 @@ dump to be reloaded into a very old MySQL server, you should not use the
 | ##--defaults-group-suffix=str## | Also read groups with a suffix of //str//. For example, since //mariadb-dump// normally reads the [client] and [mariadb-dump] (or [mysqldump]) groups, --defaults-group-suffix=x would cause it to also read the groups [mariadb-dump_x] (or [mysqldump_x]) and [client_x].
 | ##--delayed-insert## | Insert rows with [[insert-delayed|INSERT DELAYED]] instead of [[insert|INSERT]].
 | ##--delete-master-logs## | On a primary replication server, delete the binary logs by sending a [[sql-commands-purge-logs|PURGE BINARY LOGS]] statement to the server after performing the dump operation. This option automatically enables ##--master-data=2##.
+| ##--dir## | Parallel dump of multiple databases. Works just like ##--tab##, with regard to output (sql file for table definition and tab-separated for data, same options, e.g ##--parallel##). It also allows the ##--databases## and ##--all-databases## options. When ##--dir## is used, it creates the directory structure in the output directory pointed to by ##--dir##. For every database to be dumped, there will be a directory with the database name. All options that ##--tab## supports are also supported by ##--dir##, in particular ##--parallel##. From MariaDB 11.5.
 | ##-K##, ##--disable-keys## | &lt;&lt;code&gt;&gt;&#39;/*!40000 ALTER TABLE tb_name DISABLE KEYS */;&lt;&lt;/code&gt;&gt; and &lt;&lt;code&gt;&gt;&#39;/*!40000 ALTER TABLE tb_name ENABLE KEYS */;&lt;&lt;/code&gt;&gt; will be put in the output. This makes loading the dump file faster because the indexes are created after all rows are inserted. This option is effective only for non-unique indexes of MyISAM tables. Disable with ##--skip-disable-keys##.
 | ##--dump-date## | If the &lt;&lt;code&gt;&gt;--comments&lt;&lt;/code&gt;&gt; option and this option are given, ##mariadb-dump## produces a comment at the end of the dump of the following form:\\##-- Dump completed on DATE##\\ However, the date causes dump files taken at different times to appear to be different, even if the data are otherwise identical. &lt;&lt;code&gt;&gt;--dump-date&lt;&lt;/code&gt;&gt; and &lt;&lt;code&gt;&gt;--skip-dump-date&lt;&lt;/code&gt;&gt; control whether the date is added to the comment. The default is &lt;&lt;code&gt;&gt;--dump-date&lt;&lt;/code&gt;&gt; (include the date in the comment). &lt;&lt;code&gt;&gt;--skip-dump-date&lt;&lt;/code&gt;&gt; suppresses date printing.
 | ##-H##, ##--dump-history## | Dump tables with [[system-versioned-tables|history]]. From [[mariadb-10-11-0-release-notes|MariaDB 10.11.0]]. Until this option, ##mariadb-dump## could not read historical rows from versioned tables, and so historical data would not be backed up.
@@ -461,16 +461,16 @@ dump to be reloaded into a very old MySQL server, you should not use the
 | ##-?##, ##--help## | Display a help message and exit.
 | ##--hex-blob## | Dump binary strings in hexadecimal format (for example, ##´abc´## becomes ##0x616263##). The affected data types are [[binary|BINARY]], [[varbinary|VARBINARY]], the [[blob|BLOB]] types, and [[bit|BIT]].
 | ##-h name##, ##--host=name## | Connect to and dump data from the MariaDB or MySQL server on the given host. The default host is ##localhost##.
-| ##--ignore-database=name## | Do not dump the specified database. To specify more than one database to ignore, use the directive multiple times, once for each database. Only takes effect when used together with ##--all-databases## or ##-A##. Added in MariaDB 10.3.7.
+| ##--ignore-database=name## | Do not dump the specified database. To specify more than one database to ignore, use the directive multiple times, once for each database. Only takes effect when used together with ##--all-databases## or ##-A##.
 | ##--ignore-table=name## | Do not dump the specified table. To specify more than one table to ignore, use the directive multiple times, once for each table. Each table must be specified with both database and table names, e.g., ##--ignore-table=database.table##. This option also can be used to ignore views.
-| ##--ignore-table-data=name## | Do not dump the specified table data (only the structure). To specify more than one table to ignore, use the directive multiple times, once for each table. Each table must be specified with both database and table names. From MariaDB 10.1.46, MariaDB 10.2.33, MariaDB 10.3.24, MariaDB 10.4.14 and MariaDB 10.5.3. See also ##--no-data##.
+| ##--ignore-table-data=name## | Do not dump the specified table data (only the structure). To specify more than one table to ignore, use the directive multiple times, once for each table. Each table must be specified with both database and table names. See also ##--no-data##.
 | ##--include-master-host-port## | Add the ##MASTER_HOST## and ##MASTER_PORT## options for the [[change-master-to|CHANGE MASTER TO]] statement when using the ##--dump-slave## option for a replica dump.
 | ##--insert-ignore## | Insert rows with ##INSERT IGNORE## instead of ##INSERT##.
 | ##--lines-terminated-by=name## | Lines in the output file are terminated by the given string. This option is used with the ##--tab## option and has the same meaning as the corresponding ##LINES## clause for [[load-data-infile|LOAD DATA INFILE]].
 | ##-x##, ##--lock-all-tables## | Lock all tables across all databases. This is achieved by acquiring a global read lock for the duration of the whole dump by executing [[flush|FLUSH TABLES WITH READ LOCK]]. This option automatically turns off ##--single-transaction## and ##--lock-tables##.
 | ##-l##, ##--lock-tables## | For each dumped database, lock all tables to be dumped before dumping them. The tables are locked with ##READ LOCAL## to allow concurrent inserts in the case of [[myisam|MyISAM]] tables. For transactional tables such as [[innodb|InnoDB]], ##--single-transaction## is a much better option than ##--lock-tables## because it does not need to lock the tables at all.\\\\Because ##--lock-tables## locks tables for each database separately, this option does not guarantee that the tables in the dump file are logically consistent between databases. Tables in different databases may be dumped in completely different states. Use ##--skip-lock-tables## to disable.
 | ##--log-error=name## | Log warnings and errors by appending them to the named file. The default is to do no logging.
-| ##--log-queries## | When restoring the dump, the server will, if logging is turned on, log the queries to the general and [[slow-query-log|slow query log]]. Defaults to on; use --skip-log-queries to disable. Added in MariaDB 10.1.1.
+| ##--log-queries## | When restoring the dump, the server will, if logging is turned on, log the queries to the general and [[slow-query-log|slow query log]]. Defaults to on; use --skip-log-queries to disable.
 | ##--master-data[=#]## | Causes the [[binary-log|binary log]] position and filename to be appended to the output, useful for dumping a primary replication server to produce a dump file that can be used to set up another server as a replica of the primary. These are the primary server coordinates from which the replica should start replicating after you load the dump file into the replica. If the option is set to 1 (the default), will print it as a [[change-master-to|CHANGE MASTER]] command; if set to 2, that command will be prefixed with a comment symbol. This ##--master-data## option will turn ##--lock-all-tables## on, unless ##--single-transaction## is specified too. Before MariaDB 5.3 this would take a global read lock for a short time at the beginning of the dump - see [[enhancements-for-start-transaction-with-consistent-snapshot|Enhancements for START TRANSACTION WITH CONSISTENT SNAPSHOT]] and the ##--single-transaction## option below). In all cases, any action on logs will happen at the exact moment of the dump. This option automatically turns ##--lock-tables## off.\\\\ In all cases, any action on logs happens at the exact moment of the dump.\\\\ It is also possible to set up a replica by dumping an existing replica of the primary. To do this, use the following procedure on the existing replica:\\\\1. Stop the replica&#39;s SQL thread and get its current status:\\##mariadb&gt; STOP SLAVE SQL_THREAD;##\\##mariadb&gt; SHOW SLAVE STATUS;##\\\\2. From the output of the SHOW SLAVE STATUS statement, the binary log coordinates of the primary server from which the new replica should start replicating are the values of the Relay_Master_Log_File and Exec_Master_Log_Pos fields. Denote those values as file_name and file_pos.\\\\2. Dump the replica server:\\##shell&gt; mariadb-dump --master-data=2 --all-databases &gt; dumpfile##\\\\3. Restart the replica:\\##mariadb&gt; START SLAVE;##\\\\4. On the new replica, load the dump file:\\##shell&gt; mariadb &lt; dumpfile##\\\\5. On the new replica, set the replication coordinates to those of the primary server obtained earlier:\\##mariadb&gt; CHANGE MASTER TO MASTER_LOG_FILE = ´file_name´, MASTER_LOG_POS = file_pos;##\\ The ##CHANGE MASTER## TO statement might also need other parameters, such as MASTER_HOST to point the replica to the correct primary server host. Add any such parameters as necessary.
 | ##--max-allowed-packet=# ## | The maximum packet length to send to or receive from server. The maximum is 1GB.
 | ##--max-statement-time=# ## | Sets the maximum time any statement can run before being timed out by the server. (Default value is 0 (no limit))
@@ -512,7 +512,7 @@ dump to be reloaded into a very old MySQL server, you should not use the
 | ##--skip-triggers## | Disable the ##--triggers## option.
 | ##--skip-tz-utc## | Disable the ##--tz-utc## option.
 | ##-S name##, ##--socket=name## | For connections to localhost, the Unix socket file to use, or, on Windows, the name of the named pipe to use.
-| ##--ssl## | Enables [[data-in-transit-encryption|TLS]]. TLS is also enabled even without setting this option when certain other TLS options are set. Starting with MariaDB 10.2, the ##--ssl## option will not enable [[secure-connections-overview/#server-certificate-verification|verifying the server certificate]] by default. In order to verify the server certificate, the user must specify the ##--ssl-verify-server-cert## option. |
+| ##--ssl## | Enables [[data-in-transit-encryption|TLS]]. TLS is also enabled even without setting this option when certain other TLS options are set. The ##--ssl## option does not enable [[secure-connections-overview/#server-certificate-verification|verifying the server certificate]] by default. In order to verify the server certificate, the user must specify the ##--ssl-verify-server-cert## option. |
 | ##--ssl-ca=name## | Defines a path to a PEM file that should contain one or more X509 certificates for trusted Certificate Authorities (CAs) to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. See [[secure-connections-overview/#certificate-authorities-cas|Secure Connections Overview: Certificate Authorities (CAs)]] for more information. This option implies the ##--ssl## option. |
 | ##--ssl-capath=name##  | Defines a path to a directory that contains one or more PEM files that should each contain one X509 certificate for a trusted Certificate Authority (CA) to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. The directory specified by this option needs to be run through the ##[[https://www.openssl.org/docs/man1.1.1/man1/rehash.html|openssl rehash]]## command. See [[secure-connections-overview/#certificate-authorities-cas|Secure Connections Overview: Certificate Authorities (CAs)]] for more information. This option is only supported if the client was built with OpenSSL or yaSSL. If the client was built with GnuTLS or Schannel, then this option is not supported. See [[tls-and-cryptography-libraries-used-by-mariadb|TLS and Cryptography Libraries Used by MariaDB]] for more information about which libraries are used on which platforms. This option implies the ##--ssl## option. |
 | ##--ssl-cert=name##  | Defines a path to the X509 certificate file to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. This option implies the ##--ssl## option. |
@@ -521,10 +521,10 @@ dump to be reloaded into a very old MySQL server, you should not use the
 | ##--ssl-crlpath=name## | Defines a path to a directory that contains one or more PEM files that should each contain one revoked X509 certificate to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. The directory specified by this option needs to be run through the ##[[https://www.openssl.org/docs/man1.1.1/man1/rehash.html|openssl rehash]]## command. See [[secure-connections-overview/#certificate-revocation-lists-crls|Secure Connections Overview: Certificate Revocation Lists (CRLs)]] for more information. This option is only supported if the client was built with OpenSSL. If the client was built with yaSSL, GnuTLS, or Schannel, then this option is not supported. See [[tls-and-cryptography-libraries-used-by-mariadb|TLS and Cryptography Libraries Used by MariaDB]] for more information about which libraries are used on which platforms. |
 | ##--ssl-key=name## | Defines a path to a private key file to use for [[data-in-transit-encryption|TLS]]. This option requires that you use the absolute path, not a relative path. This option implies the ##--ssl## option. |
 | ##--ssl-verify-server-cert##     | Enables [[secure-connections-overview/#server-certificate-verification|server certificate verification]]. This option is disabled by default. |
-| ##--system=option[,option]]## | Dump the database&#39;s system tables in a logical form. With this option, the [[the-mysql-database-tables|mysql database]] tables are dumped as [[create-user|CREATE USER]], [[create-server|CREATE SERVER]] and other forms of logical portable SQL statements. The option values here are from the set of ##all##, ##users##, ##plugins##, ##udfs##, ##servers##, ##stats##, ##timezones##. From MariaDB 10.2.37, MariaDB 10.3.28, MariaDB 10.4.18 and MariaDB 10.5.9. |
+| ##--system=option[,option]]## | Dump the database&#39;s system tables in a logical form. With this option, the [[the-mysql-database-tables|mysql database]] tables are dumped as [[create-user|CREATE USER]], [[create-server|CREATE SERVER]] and other forms of logical portable SQL statements. The option values here are from the set of ##all##, ##users##, ##plugins##, ##udfs##, ##servers##, ##stats##, ##timezones##. |
 | ##-T##, ##--tab=name## | Produce tab-separated text-format data files. With this option, for each dumped table ##mariadb-dump## will create a ##tbl_name.sql## file containing the ##CREATE TABLE## statement that creates the table, and a ##tbl_name.txt## file containing the table&#39;s data. The option value is the directory in which to write the files.\\\\**Note:** //This option can only be used when //mariadb-dump/ is run on the same machine as the mysqld server. You must have the ##FILE## privilege, and the server must have permission to write files in the directory that you specify.//\\\\By default, the ##.txt## data files are formatted using tab characters between column values and a newline at the end of each line. The format can be specified explicitly using the ##--fields-xxx## and ##--lines-terminated-by## options.\\\\ Column values are converted to the character set specified by the ##--default-character-set## option.
 | ##--tables## | This option overrides the ##--databases## (##-B##) option. //mariadb-dump// regards all name arguments following the option as table names.
-| ##--tls-version=name## | This option accepts a comma-separated list of TLS protocol versions. A TLS protocol version will only be enabled if it is present in this list. All other TLS protocol versions will not be permitted. See [[secure-connections-overview/#tls-protocol-versions|Secure Connections Overview: TLS Protocol Versions]] for more information. This option was added in MariaDB 10.4.6.
+| ##--tls-version=name## | This option accepts a comma-separated list of TLS protocol versions. A TLS protocol version will only be enabled if it is present in this list. All other TLS protocol versions will not be permitted. See [[secure-connections-overview/#tls-protocol-versions|Secure Connections Overview: TLS Protocol Versions]] for more information.
 | ##--triggers## | Include [[triggers]] for each dumped table in the output. This option is enabled by default; disable it with ##--skip-triggers##.
 | ##--tz-utc## | This option enables [[timestamp|TIMESTAMP]] columns to be dumped and reloaded between servers in different time zones. //mariadb-dump// sets its connection time zone to UTC and adds ##SET TIME_ZONE=´+00:00´## to the dump file. Without this option, TIMESTAMP columns are dumped and reloaded in the time zones local to the source and destination servers, which can cause the values to change if the servers are in different time zones. ##--tz-utc## also protects against changes due to daylight saving time. ##--tz-utc## is enabled by default. To disable it, use ##--skip-tz-utc##. 
 | ##-u name##, ##--user=name## | The MariaDB user name to use when connecting to the server.
@@ -613,7 +613,7 @@ The following options relate to how MariaDB command-line tools handles option fi
 &lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
 |= Group |= Description |
 | ##[mysqldump]## | Options read by //mariadb-dump//, which includes both MariaDB Server and MySQL Server. |
-| ##[mariadb-dump]## | Options read by //mariadb-dump//. Available starting with MariaDB 10.4.6. |
+| ##[mariadb-dump]## | Options read by //mariadb-dump//. |
 | ##[client]## | Options read by all MariaDB and MySQL [[clients-utilities|client programs]], which includes both MariaDB and MySQL clients. For example, ##mysqldump##. |
 | ##[client-server]## | Options read by all MariaDB [[clients-utilities|client programs]] and the MariaDB Server. This is useful for options like socket and port, which is common between the server and the clients. |
 | ##[client-mariadb]## | Options read by all MariaDB [[clients-utilities|client programs]]. |

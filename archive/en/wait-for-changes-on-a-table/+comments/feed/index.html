@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Wait for changes on a table</title><link>https://mariadb.com/kb/en/wait-for-changes-on-a-table/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/wait-for-changes-on-a-table/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Fri, 19 Jul 2024 01:10:13 +0000</lastBuildDate><item><title>Re: Wait for changes on a table</title><link>https://mariadb.com/kb/en/wait-for-changes-on-a-table/+comments/6732</link><description>&lt;p&gt;Like is mentioned in &lt;a href="https://jira.mariadb.org/browse/MDEV-16590"&gt;MDEV-16590&lt;/a&gt;, this can be emulated in SQL. Here's a quick little prototype of a pair of stored procedures and a table that can be used to send and wait for signals. Adding signal IDs and versions for notify_one/notify_all should be possible.&lt;/p&gt;
+&lt;pre class="fixed"&gt;delimiter $$ ;
+CREATE OR REPLACE PROCEDURE wait_for_signal(IN timeout INT)
+BEGIN
+    INSERT INTO signal_waiters VALUES (CONNECTION_ID());
+    EXECUTE IMMEDIATE CONCAT('SELECT ''wait_for_signal'', SLEEP (', timeout, ')');
+    DELETE FROM signal_waiters WHERE id = CONNECTION_ID();
+END $$
+
+CREATE OR REPLACE PROCEDURE send_signal()
+BEGIN
+    START TRANSACTION;
+    FOR rec IN (SELECT id FROM signal_waiters FOR UPDATE)
+    DO
+      EXECUTE IMMEDIATE CONCAT('KILL QUERY ', rec.id);
+      DELETE FROM signal_waiters WHERE id = rec.id;
+    END FOR;
+    COMMIT;
+END $$
+delimiter ; $$
+
+CREATE OR REPLACE TABLE signal_waiters(id BIGINT PRIMARY KEY);
+
+-- To wait for a signal
+CALL wait_for_signal(10);
+
+-- To send a signal
+CALL send_signal();
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Markus Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/wait-for-changes-on-a-table/+comments/6732</guid></item><item><title>Re: Wait for changes on a table</title><link>https://mariadb.com/kb/en/wait-for-changes-on-a-table/+comments/6731</link><description>&lt;p&gt;Not currently - there is feature &lt;a href="https://jira.mariadb.org/browse/MDEV-16590"&gt;MDEV-16590&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;A replication based client connector, not java connector unfortunately, with the right amount of replication filters might be able to listen for a change, but its not there currently.&lt;/p&gt;
+&lt;p&gt;Sorry, polling it is.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/wait-for-changes-on-a-table/+comments/6731</guid></item></channel></rss>

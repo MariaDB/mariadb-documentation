@@ -1,5 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Using Healthcheck.sh</title><link>https://mariadb.com/kb/en/using-healthcheck-sh/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/using-healthcheck-sh/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Mon, 25 Mar 2024 20:27:13 +0000</lastBuildDate><item><title>Re: Using Healthcheck.sh</title><link>https://mariadb.com/kb/en/using-healthcheck-sh/+comments/6578</link><description>&lt;p&gt;To use this script in docker-compose.yml:&lt;/p&gt;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Using Healthcheck.sh</title><link>https://mariadb.com/kb/en/using-healthcheck-sh/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/using-healthcheck-sh/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 18 Jul 2024 17:31:42 +0000</lastBuildDate><item><title>Re: Using Healthcheck.sh With Custom Port (Docker)</title><link>https://mariadb.com/kb/en/using-healthcheck-sh/+comments/6761</link><description>&lt;p&gt;The .my-healthcheck.cnf is generated from the configuration at initialization. If you remove the .my-healthcheck.sh and have MARIADB_AUTO_UPGRADE=1 then the .my-healthcheck.cnf will be regenerated with the currently configured port.&lt;/p&gt;
+&lt;p&gt;The healtcheck user/password will be regenerated in the server also with this option.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/using-healthcheck-sh/+comments/6761</guid></item><item><title>Using Healthcheck.sh With Custom Port (Docker)</title><link>https://mariadb.com/kb/en/using-healthcheck-sh/+comments/6749</link><description>&lt;p&gt;I had issues using &lt;code&gt;healthcheck.sh&lt;/code&gt; as suggested by Bren X., because I set up MariaDB with a custom port 3307 directly within the MariaDB configuration, such as:&lt;/p&gt;
+&lt;pre&gt;
+[mariadb]
+port = 3307
+&lt;/pre&gt;
+&lt;p&gt;This custom port collides with the default &lt;code&gt;healthcheck.sh&lt;/code&gt; in Docker, that uses a file &lt;code&gt;/var/lib/mysql/.my-healthcheck.cnf&lt;/code&gt; generated similar to this:&lt;/p&gt;
+&lt;pre&gt;
+[mariadb-client]
+port=3306
+socket=/run/mysqld/mysqld.sock
+user=healthcheck
+password=...
+protocol=tcp
+&lt;/pre&gt;
+&lt;p&gt;This file is passed as &lt;code&gt;--defaults-extra-file&lt;/code&gt; to the MariaDB client.&lt;/p&gt;
+&lt;p&gt;Overriding this file is not an option, as it contains a generated password.&lt;/p&gt;
+&lt;p&gt;What works, but is undocumented here, is, that &lt;code&gt;healthcheck.sh&lt;/code&gt; also accepts parameters &lt;code&gt;--defaults-file&lt;/code&gt; and &lt;code&gt;--defaults-extra-file&lt;/code&gt;. By experiment, as the MariaDB client documentation is not that clear to me, it works passing &lt;code&gt;--defaults-file&lt;/code&gt; with reference to a file like this:&lt;/p&gt;
+&lt;pre&gt;
+[mariadb-client]
+port=3307
+&lt;/pre&gt;
+&lt;p&gt;It will override the port from the extra-file.&lt;/p&gt;
+&lt;p&gt;Now, extending the &lt;code&gt;test&lt;/code&gt; section as given by Bren X., this extended &lt;code&gt;healthcheck.sh&lt;/code&gt; call would work for a file mounted to, for example, &lt;code&gt;/etc/mysql/conf.d/custom-client.cnf&lt;/code&gt;:&lt;/p&gt;
+&lt;pre&gt;
+test:
+  [
+    "CMD",
+    "healthcheck.sh",
+    "--su-mysql",
+    "--defaults-file=/etc/mysql/conf.d/custom-client.cnf"
+    "--connect",
+    "--innodb_initialized"
+  ]
+&lt;/pre&gt;
+&lt;p&gt;There may be better options, like just sticking to the default port 3306 internally and use Docker to map it to 3307 to the outside. But at least, this approach works, and of course could also be used to pass other parameters to the MariaDB client.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Mark Michaelis</dc:creator><guid>https://mariadb.com/kb/en/using-healthcheck-sh/+comments/6749</guid></item><item><title>Re: Using Healthcheck.sh</title><link>https://mariadb.com/kb/en/using-healthcheck-sh/+comments/6578</link><description>&lt;p&gt;To use this script in docker-compose.yml:&lt;/p&gt;
 &lt;pre&gt;
 services:
   db:

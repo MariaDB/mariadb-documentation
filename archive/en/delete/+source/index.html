@@ -323,7 +323,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/delete/+r/115389/">115389</a></dd>
+            <dd><a href="/kb/en/delete/+r/141009/">141009</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -332,7 +332,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-04-23 23:22">2022-04-23 23:22</span></dd>
+<span class="datetime" title="2024-06-26 11:47">2024-06-26 11:47</span></dd>
         </dl>
     </div>
     
@@ -351,6 +351,7 @@ Single-table syntax:
 DELETE [LOW_PRIORITY] [QUICK] [IGNORE] 
   FROM tbl_name [PARTITION (partition_list)]
   [FOR PORTION OF period FROM expr1 TO expr2]
+  [AS alias]                    -- from MariaDB 11.6
   [WHERE where_condition]
   [ORDER BY ...]
   [LIMIT row_count]
@@ -423,13 +424,22 @@ within a transaction or if you have a lock on the table,
 can. See [[truncate-table|TRUNCATE TABLE]], and
 [[lock|LOCK]].
 
+=== AS
+&lt;&lt;product MariaDB from=11.6&gt;&gt;
+From MariaDB 11.6, single table DELETEs support aliases. For example:
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE t1 (c1 INT);
+INSERT INTO t1 VALUES (1), (2);
+
+DELETE FROM t1 AS a1 WHERE a1.c1 = 2;
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/product&gt;&gt;
+
 === PARTITION
 See [[partition-pruning-and-selection|Partition Pruning and Selection]] for details.
 
 === FOR PORTION OF
-&lt;&lt;product MariaDB from=10.4.3&gt;&gt;
 See [[application-time-periods/#deletion-by-portion|Application Time Periods - Deletion by Portion]].
-&lt;&lt;/product&gt;&gt;
 
 === RETURNING
 
@@ -439,18 +449,14 @@ Any of SQL expression that can be calculated from a single row fields is allowed
 
 The use of aggregate functions is not allowed. RETURNING cannot be used in multi-table DELETEs.
 
-&lt;&lt;product mariadb from=10.3.1&gt;&gt;
 === Same Source and Target Table
-Until MariaDB 10.3.1, deleting from a table with the same source and target was not possible. From MariaDB 10.3.1, this is now possible. For example:
+It is possible to delete from a table with the same source and target. For example:
 &lt;&lt;sql&gt;&gt;
 DELETE FROM t1 WHERE c1 IN (SELECT b.c1 FROM t1 b WHERE b.c2=0);
 &lt;&lt;/sql&gt;&gt;
-&lt;&lt;/product&gt;&gt;
 
-&lt;&lt;product mariadb from=10.3.4&gt;&gt;
 === DELETE HISTORY
 One can use ##DELETE HISTORY## to delete historical information from [[system-versioned-tables|System-versioned tables]].
-&lt;&lt;/product&gt;&gt;
 
 == Examples
 

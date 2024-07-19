@@ -199,11 +199,11 @@
     
 
     
-    » <a class="crumb" href="/kb/en/mariadb-maxscale-24-02-beta/">MariaDB MaxScale 24.02 Beta</a>
+    » <a class="crumb" href="/kb/en/mariadb-maxscale-24-02/">MariaDB MaxScale 24.02</a>
     
 
     
-    » <a class="crumb" href="/kb/en/mariadb-maxscale-24-02-beta-getting-started/">MaxScale 24.02Getting-Started</a>
+    » <a class="crumb" href="/kb/en/maxscale-24-02getting-started/">MaxScale 24.02 Getting-Started</a>
     
 
 
@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-maxscale-2402-maxscale-2402-mariadb-maxscale-configuration-guide/+r/135642/">135642</a></dd>
+            <dd><a href="/kb/en/mariadb-maxscale-2402-maxscale-2402-mariadb-maxscale-configuration-guide/+r/140812/">140812</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5571">
@@ -373,9 +373,10 @@ Drained       | The server has been drained. The server was being drained and no
 Auth Error    | The monitor cannot login and query the server due to insufficient privileges.
 Maintenance   | The server is under maintenance. Typically this status bit is turned on manually using _maxctrl_, but it will also be turned on for a server that for some reason is blocking connections from MaxScale. When a server is in maintenance mode, no connections will be created to it and existing connections will be closed.
 Slave of External Master | The server is a replica of a primary that is not being monitored.
+Master Stickiness | The server is monitored by a galeramon with `disable_master_failback=true`. See [disable_master_failback](./Monitors/Galera-Monitor.md#disable_master_failback) for more information.
 
 For more information on how to manually set these states via MaxCtrl, read the
-[Administration Tutorial](../Tutorials/Administration-Tutorial.md).
+[Administration Tutorial](node:maxscale-24-02-mariadb-maxscale-administration-tutorial).
 
 ### Monitor
 
@@ -447,7 +448,7 @@ The administration of MaxScale can be divided in two parts:
 
 * Writing the MaxScale configuration file, which is described in the following
   [section](#configuration).
-* Performing runtime modifications using [MaxCtrl](../Reference/MaxCtrl.md)
+* Performing runtime modifications using [MaxCtrl](node:maxscale-24-02-maxctrl)
 
 For detailed information about _MaxCtrl_ please refer to the specific
 documentation referred to above. In the following it will only be explained how
@@ -474,7 +475,7 @@ by enabling [admin_audit](#admin_audit).
 
 For more detail see the admin audit configuration values `admin_audit`,
 `admin_audit_file` and `admin_audit_exclude_methods` below
-and [Administration Tutorial](../Tutorials/Administration-Tutorial.md#administration-audit-file).
+and [Administration Tutorial](node:maxscale-24-02-mariadb-maxscale-administration-tutorial#administration-audit-file).
 
 ## Static Configuration Parameters
 
@@ -514,6 +515,7 @@ runtime and can only be defined in a configuration file:
 * `persistdir`
 * `piddir`
 * `query_retries`
+* `secretsdir`
 * `sharedir`
 * `sql_mode`
 * `substitute_variables`
@@ -1174,6 +1176,19 @@ The default value is `/var/lib/maxscale/`.
 datadir=/var/lib/maxscale/
 ```
 
+### `secretsdir`
+
+- **Type**: path
+- **Mandatory**: No
+- **Dynamic**: No
+- **Default**: `&#34;&#34;`
+
+The location where the `.secrets` file is read from. If `secretsdir` is not
+defined, the file is read from [datadir](#datadir).
+
+This parameter was added in MaxScale 6.4.16, 22.08.13, 23.02.10, 23.08.6
+and 24.02.2.
+
 ### `libdir`
 
 Set the directory where MariaDB MaxScale looks for modules. The library
@@ -1678,7 +1693,7 @@ Enable REST API authentication using HTTP Basic Access
 authentication. This is not a secure method of authentication without HTTPS but
 it does add a small layer of security.
 
-For more information, read the [REST API documentation](../REST-API/API.md).
+For more information, read the [REST API documentation](node:maxscale-24-02-rest-api).
 
 ### `admin_ssl_key`
 
@@ -1707,21 +1722,45 @@ optional starting with MaxScale 2.3.19.
 
 ### `admin_ssl_version`
 
-Controls the minimum TLS version required to use the REST API.
+- **Type**: [enum_mask](#enumerations)
+- **Mandatory**: No
+- **Dynamic**: No
+- **Values**: `MAX`, `TLSv1.0`, `TLSv1.1`, `TLSv1.2`, `TLSv1.3`, `TLSv10`, `TLSv11`, `TLSv12`, `TLSv13`
+- **Default**: `MAX`
 
-Accepted values are:
+This parameter controls the enabled TLS versions in the REST API. Accepted
+values are:
 
- * TLSv10
- * TLSv11
- * TLSv12
- * TLSv13
- * MAX
+ * `TLSv10`
+ * `TLSv11`
+ * `TLSv12`
+ * `TLSv13` (not supported on OpenSSL 1.0)
+ * `MAX`
 
-The default value is MAX which negotiates the highest level of encryption that
+MaxScale versions 6.4.16, 22.08.13, 23.02.10, 23.08.6, 24.02.2 and all newer
+releases accept also the following alias values:
+
+ * `TLSv1.0`
+ * `TLSv1.1`
+ * `TLSv1.2`
+ * `TLSv1.3` (not supported on OpenSSL 1.0)
+
+The default value is `MAX` which negotiates the highest level of encryption that
 both the client and server support. The list of supported TLS versions depends
 on the operating system and what TLS versions the GnuTLS library supports.
 
+For example, to enable only TLSv1.1 and TLSv1.3, use
+`admin_ssl_version=TLSv1.1,TLSv1.3`.
+
 This parameter was added in MaxScale 2.5.7.
+
+Older versions of MaxScale interpreted `admin_ssl_version` as the minimum
+allowed TLS version. In those versions, `admin_ssl_version=TLSv1.2` allowed both
+TLSv1.2 and TLSv1.3. In MaxScale 6.4.16, 22.08.13, 23.02.10, 23.08.6, 24.02.2
+and all newer versions, the value is a enumeration of accepted TLS protocol
+versions. In these versions, `admin_ssl_version=TLSv1.2` only allows TLSv1.2. To
+retain the old behavior, specify all the accepted values with
+`admin_ssl_version=TLSv1.2,TLSv1.3`
 
 ### `admin_enabled`
 
@@ -1836,7 +1875,7 @@ The signature algorithm used by the MaxScale REST API when generating JSON Web
 Tokens.
 
 For more information about the tokens and how they work, refer to [the REST API
-documentation](../REST-API/API.md).
+documentation](node:maxscale-24-02-rest-api).
 
 If a symmetric algorithm is used (i.e. `HS256`, `HS384` or `HS512`), MaxScale
 will generate a random encryption key on startup and use that to sign the
@@ -2004,11 +2043,13 @@ Enable logging of incoming REST API calls.
 - **Type**: string
 - **Mandatory**: No
 - **Dynamic**: Yes
-- **Default**: `admin_audit.csv` in [logdir](#logdir)
+- **Default**: `/var/log/maxscale/admin_audit.csv`
 
-If specified, the absolute path must be given, e.g.
-`/var/log/maxscale/audit_files/audit.csv`, the directory
-`/var/log/maxscale/audit_files` must exist.
+The file where the REST API auditing information is logged.
+
+If a non-default value is used, the directory where the file resides must
+exist. For example, with `/var/log/maxscale/audit_files/audit.csv`, the
+directory `/var/log/maxscale/audit_files` must exist.
 
 ### `admin_audit_exclude_methods`
 
@@ -2060,6 +2101,20 @@ This account must have the following grants:
 
 ```
 GRANT SELECT, INSERT, UPDATE, CREATE ON `mysql`.`maxscale_config`
+```
+
+The `mysql.maxscale_config` table can be pre-created in which case the `CREATE`
+grant is not needed by the user configured in `config_sync_user`. The following
+SQL is used to create the table.
+
+```
+CREATE TABLE IF NOT EXISTS mysql.maxscale_config(
+  cluster VARCHAR(256) PRIMARY KEY,
+  version BIGINT NOT NULL,
+  config JSON NOT NULL,
+  origin VARCHAR(254) NOT NULL,
+  nodes JSON NOT NULL
+) ENGINE=InnoDB;
 ```
 
 If the database where the table is created is changed with `config_sync_db`, the
@@ -2331,7 +2386,7 @@ user=maxscale
 password=Mhu87p2D
 ```
 
-See [MySQL protocol authentication documentation](../Authenticators/Authentication-Modules.md)
+See [MySQL protocol authentication documentation](node:maxscale-24-02-authentication-modules)
 for more information (such as required grants) and troubleshooting tips
 regarding user account management and client authentication.
 
@@ -2750,6 +2805,17 @@ state plus a safety margin of 10. The safety margin reserves some extra space
 for new commands that might be executed due to changes in the client side
 application.
 
+Starting with MaxScale 24.02.1, the execution of simple session commands done
+with binary protocol prepared statements are also stored in the history.  A
+simple session command in the binary protocol is one that:
+
+- Takes no parameters
+- Modifies the session state
+- Is executed while the original prepared statement is still in the history
+
+The same limitations that apply to the text protocol session commands apply to
+the binary protocol session commands.
+
 This parameter was moved into the MaxScale core in MaxScale 6.0. The parameter
 can be configured for all routers that support the session command
 history. Currently only `readwritesplit` and `schemarouter` support it.
@@ -3071,7 +3137,7 @@ error.
 
 Alternative IP-address or hostname for the server. This is currently only used
 by MariaDB Monitor to detect and set up replication. See
-[MariaDB Monitor documentation](../Monitors/MariaDB-Monitor.md#private_address)
+[MariaDB Monitor documentation](node:maxscale-24-02-mariadb-monitor#private_address)
 for more information.
 
 ### `monitoruser` and `monitorpw`
@@ -3265,7 +3331,7 @@ as they match the configured server type.
 
 Readwritesplit will pick servers that have the same rank as the current
 primary. Read the
-[readwritesplit documentation on server ranks](../Routers/ReadWriteSplit.md#server-ranks)
+[readwritesplit documentation on server ranks](node:maxscale-24-02-readwritesplit#server-ranks)
 for a detailed description of the behavior.
 
 The following example server configuration demonstrates how `rank` can be used
@@ -3305,7 +3371,7 @@ they are available. When they are no longer available, the `DR-site-primary` and
 
 Server priority. Currently only used by galeramon to choose the order in which
 nodes are selected as the current primary server. Refer to the
-[Server Priorities](../Monitors/Galera-Monitor.md#interaction-with-server-priorities)
+[Server Priorities](node:maxscale-24-02-galera-monitor#interaction-with-server-priorities)
 section of the galeramon documentation for more information on how to use it.
 
 Starting with MaxScale 2.5.21, this parameter also accepts negative values. In
@@ -3324,7 +3390,7 @@ the source of the replication. That is, if monitor sends a &#34;CHANGE MASTER TO
 command to server A telling it to replicate from server B, the setting value
 from MaxScale configuration for server A would be used.
 
-See [MariaDB Monitor documentation](../Monitors/MariaDB-Monitor.md#replication_custom_options)
+See [MariaDB Monitor documentation](node:maxscale-24-02-mariadb-monitor#replication_custom_options)
 for more information.
 
 ## Monitor
@@ -3332,7 +3398,7 @@ for more information.
 Monitor sections are used to define the monitoring module that watches a set of
 servers. Each server can only be monitored by one monitor.
 
-Common monitor parameters [can be found here](../Monitors/Monitor-Common.md).
+Common monitor parameters [can be found here](node:maxscale-24-02-common-monitor-parameters).
 
 ## Listener
 
@@ -3463,7 +3529,7 @@ empty, which disables the feature.
 user_mapping_file=/home/root/mapping.json
 ```
 Should not be used together with
-[PAM Authenticator](../Authenticators/PAM-Authenticator.md)
+[PAM Authenticator](node:maxscale-24-02-pam-authenticator)
 settings `pam_backend_mapping` or `pam_mapped_pw_file`, as these may overwrite
 the mapped credentials. Is most powerful when combined with service setting
 `user_accounts_file`, as then MaxScale can accept users that do not exist on
@@ -3726,7 +3792,7 @@ MariaDB servers or compatible.
 
 ## `CDC`
 
-See [Change Data Capture Protocol](../Protocols/CDC.md) for more information.
+See [Change Data Capture Protocol](node:maxscale-24-02-change-data-capture-cdc-protocol) for more information.
 
 ## `Postgresql` or `Postgresprotocol`
 
@@ -3738,7 +3804,7 @@ backends used by the service should be PostgreSQL servers or compatible.
 ## `nosqlprotocol`
 
 Accepts MongoDB® connections, yet stores and fetches results to/from
-MariaDB servers. See [NoSQL documentation](../Protocols/NoSQL.md)
+MariaDB servers. See [NoSQL documentation](node:mariadb-maxscale-2402-maxscale-2402-nosql-protocol-module)
 for more information.
 
 # TLS/SSL encryption
@@ -3826,26 +3892,50 @@ The CA certificate can consist of a certificate chain.
 
 ### `ssl_version`
 
-This parameter controls the minimum TLS version used. Accepted values are:
+- **Type**: [enum_mask](#enumerations)
+- **Mandatory**: No
+- **Dynamic**: No
+- **Values**: `MAX`, `TLSv1.0`, `TLSv1.1`, `TLSv1.2`, `TLSv1.3`, `TLSv10`, `TLSv11`, `TLSv12`, `TLSv13`
+- **Default**: `MAX`
 
- * TLSv10
- * TLSv11
- * TLSv12
- * TLSv13 (not supported on OpenSSL 1.0)
- * MAX
+This parameter controls the allowed TLS version. Accepted values are:
 
-E.g. setting `ssl_version=TLSv12` enables both TLSv12 and TLSv13. OpenSSL will
-generally use the highest version supported by both ends.
+ * `TLSv10`
+ * `TLSv11`
+ * `TLSv12`
+ * `TLSv13` (not supported on OpenSSL 1.0)
+ * `MAX`
+
+MaxScale versions 6.4.16, 22.08.13, 23.02.10, 23.08.6, 24.02.2 and all newer
+releases accept also the following alias values:
+
+ * `TLSv1.0`
+ * `TLSv1.1`
+ * `TLSv1.2`
+ * `TLSv1.3` (not supported on OpenSSL 1.0)
 
 The default setting (MAX) allows all supported versions. MaxScale supports
 TLSv1.0, TLSv1.1, TLSv1.2 and TLSv1.3 depending on the OpenSSL library version.
-TLSv1.0 and TLSv1.1 are considered deprecated and should not be used,
-so setting `ssl_version=TLSv12` or `ssl_version=TLSv13` is recommended.
+TLSv1.0 and TLSv1.1 are considered deprecated and should not be used, so setting
+`ssl_version=TLSv1.2,TLSv1.3` or `ssl_version=TLSv1.3` is recommended.
 
-In MaxScale 23.08.3 and earlier, this setting defined the *only* allowed TLS
-version, e.g. `ssl_version=TLSv12` would only enable TLSv12. The interpretation
-changed in MaxScale 23.08.4 to allow the user to disable old versions while
-enabling multiple recent TLS versions.
+In MaxScale versions 6.4.13, 22.08.11, 23.02.7, 23.08.3 and earlier, this
+setting defined the *only* allowed TLS version, e.g. `ssl_version=TLSv12` would
+only enable TLSv12. The interpretation changed in MaxScale versions 6.4.14,
+22.08.12, 23.02.8, 23.08.4 to enable the user to disable old versions while
+allowing multiple recent TLS versions. In these versions, `ssl_version=TLSv1.2`
+enabled both TLSv1.2 and TLSv1.3.
+
+The interpretation changed again in MaxScale versions 6.4.16, 22.08.13,
+23.02.10, 23.08.6, 24.02.2. In these versions the value of `ssl_version` is an
+enumeration of accepted TLS protocol versions. This means that
+`admin_ssl_version=TLSv1.2` again only allows TLSv1.2. To retain the behavior
+from the previous releases where the newer versions were automatically enabled,
+the protocol versions must be explicitly listed, for example
+`admin_ssl_version=TLSv1.2,TLSv1.3`. The change was done to make the
+`ssl_version` behave identically to how the MariaDB
+[tls_version](https://mariadb.com/kb/en/ssltls-system-variables/#tls_version)
+parameter works.
 
 ### `ssl_cipher`
 
@@ -3945,16 +4035,16 @@ Currently a number of routing modules are available, these are designed for a
 range of different needs.
 
 Connection based load balancing:
-* [ReadConnRoute](../Routers/ReadConnRoute.md)
+* [ReadConnRoute](node:maxscale-24-02-readconnroute)
 
 Read/Write aware statement based router:
-* [ReadWriteSplit](../Routers/ReadWriteSplit.md)
+* [ReadWriteSplit](node:maxscale-24-02-readwritesplit)
 
 Simple sharding on database level:
-* [SchemaRouter](../Routers/SchemaRouter.md)
+* [SchemaRouter](node:maxscale-24-02-schemarouter)
 
 Binary log server:
-* [Binlogrouter](../Routers/Binlogrouter.md)
+* [Binlogrouter](node:maxscale-24-02-binlogrouter)
 
 ## Monitor Modules
 
@@ -3965,8 +4055,8 @@ server is a suitable destination for routing connections for particular query
 classifications. The monitors are run within separate threads of MariaDB
 MaxScale and do not affect MariaDB MaxScale&#39;s routing performance.
 
-* [MariaDB Monitor](../Monitors/MariaDB-Monitor.md)
-* [Galera Monitor](../Monitors/Galera-Monitor.md)
+* [MariaDB Monitor](node:maxscale-24-02-mariadb-monitor)
+* [Galera Monitor](node:maxscale-24-02-galera-monitor)
 
 The use of monitors in MaxScale is not absolutely mandatory: it is possible to
 run MariaDB MaxScale without a monitor module. In this case an external
@@ -3975,20 +4065,20 @@ API. **Only do this if you know what you are doing.**
 
 ## Filter Modules
 
-![image alt text](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/24.02.0/Documentation/Getting-Started/images/image_10.png)
+![image alt text](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/24.02.2/Documentation/Getting-Started/images/image_10.png)
 
 Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
 explanation of each filter&#39;s functionality can be found in its documentation.
 
-The [Filter Tutorial](../Tutorials/Filter-Tutorial.md) document shows how you
+The [Filter Tutorial](node:maxscale-24-02-filters) document shows how you
 can add a filter to a service and combine multiple filters in one service.
 
-* [Query Log All (QLA) Filter](../Filters/Query-Log-All-Filter.md)
-* [Regular Expression Filter](../Filters/Regex-Filter.md)
-* [Tee Filter](../Filters/Tee-Filter.md)
-* [Top Filter](../Filters/Top-N-Filter.md)
-* [Query Redirection Filter](../Filters/Named-Server-Filter.md)
+* [Query Log All (QLA) Filter](node:maxscale-24-02-query-log-all-filter)
+* [Regular Expression Filter](node:maxscale-24-02-regex-filter)
+* [Tee Filter](node:maxscale-24-02-tee-filter)
+* [Top Filter](node:maxscale-24-02-top-filter)
+* [Query Redirection Filter](node:maxscale-24-02-named-server-filter)
 
 # Encrypting Passwords
 
@@ -4005,6 +4095,10 @@ maxkeys /var/lib/maxscale/
 
 Changing the encryption key for MariaDB MaxScale will invalidate any currently
 encrypted keys stored in the maxscale.cnf file.
+
+**Note**: The password encryption format changed in MaxScale 2.5. All
+  encrypted passwords created with MaxScale 2.4 or older need to be
+  re-encrypted.
 
 ## Creating Encrypted Passwords
 
@@ -4037,13 +4131,13 @@ Read the following documents for different methods of altering the MaxScale
 configuration at runtime.
 
 * MaxCtrl
-  * [`create`](../Reference/MaxCtrl.md#create)
-  * [`destroy`](../Reference/MaxCtrl.md#destroy)
-  * [`add`](../Reference/MaxCtrl.md#add)
-  * [`remove`](../Reference/MaxCtrl.md#remove)
-  * [`alter`](../Reference/MaxCtrl.md#alter)
+  * [`create`](node:maxscale-24-02-maxctrl#create)
+  * [`destroy`](node:maxscale-24-02-maxctrl#destroy)
+  * [`add`](node:maxscale-24-02-maxctrl#add)
+  * [`remove`](node:maxscale-24-02-maxctrl#remove)
+  * [`alter`](node:maxscale-24-02-maxctrl#alter)
 
-* [REST API](../REST-API/API.md) documentation
+* [REST API](node:maxscale-24-02-rest-api) documentation
 
 All changes to the configuration done via MaxCtrl are persisted as individual
 configuration files in `/var/lib/maxscale/maxscale.cnf.d/`. The content of these
@@ -4566,7 +4660,7 @@ error log file. By default, MariaDB MaxScale will log to a file in
 
 # Limitations
 
-The current limitations of MaxScale are listed in the [Limitations](../About/Limitations.md) document.
+The current limitations of MaxScale are listed in the [Limitations](node:maxscale-24-02-limitations-and-known-issues-within-mariadb-maxscale) document.
 
 # Performance Optimization
 

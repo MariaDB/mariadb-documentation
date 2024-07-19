@@ -197,7 +197,7 @@ plugins. Since limitations are related to spe..." />
 
 
     
-    » <a class="crumb" href="/kb/en/mariadb-maxscale-2208/">MariaDB MaxScale 22.08</a>
+    » <a class="crumb" href="/kb/en/mariadb-maxscale-22-08/">MariaDB MaxScale 22.08</a>
     
 
     
@@ -270,12 +270,12 @@ plugins. Since limitations are related to spe..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2022-08-17 22:05">1 year, 7 months ago</span></dd>
+<span class="datetime" title="2022-08-17 22:05">1 year, 11 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-08-17 22:05">1 year, 7 months ago</span></dd>
+<span class="datetime" title="2022-08-17 22:05">1 year, 11 months ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -292,7 +292,7 @@ plugins. Since limitations are related to spe..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/22.08.12/Documentation/About/Limitations.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/22.08.13/Documentation/About/Limitations.md">GitHub</a></dd>
         
     </dl>
 
@@ -531,9 +531,11 @@ transaction or change the autocommit mode using a prepared statement.</p>
 </li>
 <li>
 <p>If a <code>KILL [CONNECTION] &lt;ID&gt;</code> statement is executed, MaxScale will intercept
-  it. If the ID matches a MaxScale session ID, it will be closed, similarly to
-  how MariaDB does it. If the <code>KILL CONNECTION USER &lt;user&gt;</code> form is given, all
-  connections with a matching username will be closed.</p>
+  it. If the ID matches a MaxScale session ID, it will be closed by sending
+  modified <code>KILL</code> commands of the same type to all backend server to which the
+  session in question is connected to. This results in behavior that is similar
+  to how MariaDB does it. If the <code>KILL CONNECTION USER &lt;user&gt;</code> form is given,
+  all connections with a matching username will be closed instead.</p>
 </li>
 <li>
 <p>MariaDB MaxScale does not support <code>KILL QUERY ID &lt;query_id&gt;</code> type
@@ -544,6 +546,16 @@ transaction or change the autocommit mode using a prepared statement.</p>
 <p>Any <code>KILL</code> commands executed using a prepared statement are ignored by
   MaxScale. If any are executed, it is highly likely that the wrong connection
   ends up being killed.</p>
+</li>
+<li>
+<p>If a <code>KILL</code> connection kills a session that is connected to a readwritesplit
+  service that has <code>transaction_replay</code> or <code>delayed_retry</code> enabled, it is
+  possible that the query is retried even if the connection is killed. To avoid
+  this, use <code>KILL QUERY</code> instead.</p>
+</li>
+<li>
+<p>A <code>KILL</code> on one service can cause a connection from another service to be
+  closed even if it uses a different protocol.</p>
 </li>
 <li>
 <p>The change user command (COM_CHANGE_USER) only works with standard

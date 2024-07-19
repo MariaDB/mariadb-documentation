@@ -274,12 +274,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2018-09-04 20:52">5 years, 6 months ago</span></dd>
+<span class="datetime" title="2018-09-04 20:52">5 years, 10 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-10-23 07:21">5 months ago</span></dd>
+<span class="datetime" title="2024-05-22 04:18">1 month, 3 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -594,9 +594,9 @@ kernel.core_pattern = |/usr/lib/systemd/systemd-coredump %P %u %g %s %t %c %h %e
 </pre><p>Or you can check for MariaDB Server core dumps specifically with:</p>
 <pre class="fixed"># coredumpctl list /usr/sbin/mariadbd 
 </pre><p>If an actual core file got stored you'll see <code>present</code> in the COREFILE column of the output, you can then extract the core file with:</p>
-<pre class="fixed"># coredump dump -o mariadbd.core ...PID...
+<pre class="fixed"># coredumpctl dump -o mariadbd.core ...PID...
 </pre><p>using the process id number from the PID column, or when you just want to retrieve the latest MariaDB Server related entry:</p>
-<pre class="fixed"># coredump dump -o mariadb.core /usr/sbin/mariadbd
+<pre class="fixed"># coredumpctl dump -o mariadb.core /usr/sbin/mariadbd
 </pre><p>Starting with <code>systemd</code> 248 it is also possible to invoke the <code>gdb</code> debugger directly using the new <code>--debugger-arguments=...</code> option, e.g. making the extraction of all thread backtraces from the most recent MariaDB server crash a one liner without even having to extract the core dump file first (requires <code>gdb</code> to be installed):</p>
 <pre class="fixed"># coredumpctl debug --debugger-arguments=&#34;-batch -ex 'thread apply all bt full'&#34; /usr/sbin/mariadbd
 </pre><p>So far none of the long term support Linux distribution releases have a new enough <code>systemd</code> version for this, the (as of this writing) still upcoming Ubuntu 22.04 "Jammy Jellyfish" will probably the first to support this.</p>
@@ -613,7 +613,11 @@ fs.suid_dumpable=2
 EOF
 </pre><div class="cstm-style bluebox"><p><strong>Note:</strong> If you don't want to change <code>fs.suid_dumpable</code>, then another solution is to start <code>mariadbd</code> directly as the <code>mysql</code> user, so that the <code><a href="https://linux.die.net/man/2/setuid">setuid</a></code> call is not needed.</p>
 </div><h3 class="anchored_heading" id="forcing-a-core-file-on-linux">Forcing a Core File on Linux</h3>
-<p>To force a core file for <code>mariadbd</code> you can send the process the <code>sigabrt</code> signal, which has the signal code <code>6</code>. This is very useful to get the state of the unresponsive <code>mariadbd</code> process. However, this will cause <code>mariadbd</code> to crash, and crash recovery will be run on restart.</p>
+<p>You can get a core dump from a running server with:</p>
+<pre class="fixed">sudo gcore -o filename $(pidof mariadbd)
+</pre><p>This will store a core dump in <code>filename.pid</code> where pid is the process ID of <code>mariadbd</code>.
+<code>mariadbd</code> will continue to be running and will not be affected by <code>gcore</code>.</p>
+<p>Another method is to force a core file for <code>mariadbd</code> by sending the process the <code>sigabrt</code> signal, which has the signal code <code>6</code>. This is very useful to get the state of the unresponsive <code>mariadbd</code> process. However, this will cause <code>mariadbd</code> to crash, and crash recovery will be run on restart.</p>
 <p>You can send the signal with the <code><a href="https://linux.die.net/man/1/kill">kill</a></code> command. For example:</p>
 <pre class="fixed">sudo kill -6 $(pidof mariadbd)
 </pre><p>As an alternative to <code>$(pidof mariadbd)</code>, you can find the process ID either by using the <code><a href="https://linux.die.net/man/1/ps">ps</a></code> utility or by checking the file defined by the <code><a href="/kb/en/server-system-variables/#pid_file">pid_file</a></code> system variable.</p>

@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-system-variables/+r/135865/">135865</a></dd>
+            <dd><a href="/kb/en/innodb-system-variables/+r/141263/">141263</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-01-12 04:00">2024-01-12 04:00</span></dd>
+<span class="datetime" title="2024-07-10 12:41">2024-07-10 12:41</span></dd>
         </dl>
     </div>
     
@@ -1023,7 +1023,7 @@ These tables do not support new features, such as larger innodb_page_size or ins
 ----
 
 ==== ##innodb_data_file_path##
-* **Description:** Individual [[InnoDB]] data files, paths and sizes. The value of [[#innodb_data_home_dir|innodb_data_home_dir]] is joined to each path specified by innodb_data_file_path to get the full directory path. If innodb_data_home_dir is an empty string, absolute paths can be specified here. A file size is specified with K for kilobytes, M for megabytes and G for gigabytes, and whether or not to autoextend the data file is also specified.
+* **Description:** Individual [[InnoDB]] data files, paths and sizes. The value of [[#innodb_data_home_dir|innodb_data_home_dir]] is joined to each path specified by innodb_data_file_path to get the full directory path. If innodb_data_home_dir is an empty string, absolute paths can be specified here. A file size is specified (with K for kilobytes, M for megabytes and G for gigabytes). Also whether or not to ##autoextend## the data file, and whether or not to ##[[innodb-system-tablespaces#decreasing-the-size|autoshrink]]## on startup may also be specified.
 * **Commandline:** &lt;&lt;code&gt;&gt;--innodb-data-file-path=name&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** No
@@ -1256,7 +1256,7 @@ These tables do not support new features, such as larger innodb_page_size or ins
 
 ==== ##innodb_encrypt_log##
 * **Description:** Enables encryption of the [[innodb-redo-log|InnoDB redo log]]. This also enables encryption of some temporary files created internally by InnoDB, such as those used for merge sorts and row logs.
-** See [[data-at-rest-encryption|Data-at-Rest Encryption]] and [[innodb-enabling-encryption/#enabling-encryption-for-the-redo-log|InnoDB / XtraDB Enabling Encryption: Enabling Encryption for Redo Log]] for more information.
+** See [[data-at-rest-encryption|Data-at-Rest Encryption]] and [[innodb-enabling-encryption/#enabling-encryption-for-the-redo-log|Enabling InnoDB Encryption: Enabling Encryption for the Redo Log]] for more information.
 * **Commandline:** &lt;&lt;code&gt;&gt;--innodb-encrypt-log&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** No
@@ -1269,7 +1269,7 @@ These tables do not support new features, such as larger innodb_page_size or ins
 ** ##OFF## - Disables table encryption for all new and existing tables that have the ##[[create-table/#encrypted|ENCRYPTED]]## table option set to ##DEFAULT##.
 ** ##ON## - Enables table encryption for all new and existing tables that have the ##[[create-table/#encrypted|ENCRYPTED]]## table option set to ##DEFAULT##, but allows unencrypted tables to be created.
 ** ##FORCE## - Enables table encryption for all new and existing tables that have the ##[[create-table/#encrypted|ENCRYPTED]]## table option set to ##DEFAULT##, and doesn&#39;t allow unencrypted tables to be created (CREATE TABLE ... ENCRYPTED=NO will fail). 
-** See [[data-at-rest-encryption|Data-at-Rest Encryption]] and [[innodb-enabling-encryption/#enabling-encryption-for-automatically-encrypted-tablespaces|InnoDB / XtraDB Enabling Encryption: Enabling Encryption for Automatically Encrypted Tablespaces]] for more information. 
+** See [[data-at-rest-encryption|Data-at-Rest Encryption]] and [[innodb-enabling-encryption/#enabling-encryption-for-automatically-encrypted-tablespaces|Enabling InnoDB Encryption: Enabling Encryption for Automatically Encrypted Tablespaces]] for more information. 
 * **Commandline:** &lt;&lt;code&gt;&gt;--innodb-encrypt-tables={0|1}&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
@@ -2164,13 +2164,15 @@ add/drop/reorder of columns.
 ----
 
 ==== ##innodb_max_dirty_pages_pct_lwm##
-* **Description:** Low water mark percentage of dirty pages that will enable preflushing to lower the dirty page ratio. The value 0 (default) means &#39;refer to [[#innodb_max_dirty_pages_pct|innodb_max_dirty_pages_pct]]&#39;.
+* **Description:** Low water mark percentage of dirty pages that will enable preflushing to lower the dirty page ratio. The value 0 (default) means &#39;refer to [[#innodb_max_dirty_pages_pct|innodb_max_dirty_pages_pct]]&#39;. (Note that 0 meant 0 in 10.5.7 to 10.5.8, but was then reverted back to &#34;same as innodb_max_dirty_pages_pct&#34; again in 10.5.9)
 ** See [[innodb-page-flushing|InnoDB Page Flushing]] for more information.
 * **Commandline:** &lt;&lt;code&gt;&gt;--innodb-max-dirty-pages-pct-lwm=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Value:** ##0##
+* **Default Value:**
+** ##0## (&gt;= MariaDB 10.2.1)
+** ##0.001## (&lt;= MariaDB 10.2.0)
 * **Range:**  ##0## to ##99.999##
 ----
 
@@ -2955,7 +2957,7 @@ add/drop/reorder of columns.
 ----
 
 ==== ##innodb_undo_tablespaces##
-* **Description:** Number of tablespaces files used for dividing up the [[undo-log|undo logs]]. Zero (the default before MariaDB 11.0) means that undo logs are all part of the system tablespace, which contains one undo tablespace more than the ##innodb_undo_tablespaces## setting. A value of 1 is reset to 0 as 2 or more are needed for separate tablespaces. When the undo logs can grow large, splitting them over multiple tablespaces will reduce the size of any single tablespace. Until MariaDB 10.11.1, must be set before InnoDB is initialized, or else MariaDB will fail to start, with an error saying that ##InnoDB did not find the expected number of undo tablespaces##. The files are created in the directory specified by [[#innodb_undo_directory|innodb_undo_directory]], and are named ##undoN##, N being an integer. The default size of an undo tablespace is 10MB.\\From MariaDB 10.11, multiple undo tablespaces are enabled by default, and the default is changed to 3 so that the space occupied by possible bursts of undo log records can be reclaimed after [[#innodb_undo_log_truncate|innodb_undo_log_truncate]] is set. Before MariaDB 10.6, [[#innodb_undo_logs|innodb_undo_logs]] must have a non-zero setting for ##innodb_undo_tablespaces## to take effect.
+* **Description:** Number of tablespaces files used for dividing up the [[undo-log|undo logs]]. Zero (the default before MariaDB 11.0) means that undo logs are all part of the system tablespace, which contains one undo tablespace more than the ##innodb_undo_tablespaces## setting. A value of 1 is reset to 0 as 2 or more are needed for separate tablespaces. When the undo logs can grow large, splitting them over multiple tablespaces will reduce the size of any single tablespace. Until MariaDB 10.11.1, must be set before InnoDB is initialized, or else MariaDB will fail to start, with an error saying that ##InnoDB did not find the expected number of undo tablespaces##. The files are created in the directory specified by [[#innodb_undo_directory|innodb_undo_directory]], and are named ##undoN##, N being an integer. The default size of an undo tablespace is 10MB.\\From MariaDB 11.0, multiple undo tablespaces are enabled by default, and the default is changed to 3 so that the space occupied by possible bursts of undo log records can be reclaimed after [[#innodb_undo_log_truncate|innodb_undo_log_truncate]] is set. Before MariaDB 10.6, [[#innodb_undo_logs|innodb_undo_logs]] must have a non-zero setting for ##innodb_undo_tablespaces## to take effect.
 * **Commandline:** &lt;&lt;code&gt;&gt;--innodb-undo-tablespaces=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** No

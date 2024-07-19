@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/configuring-mariadb-galera-cluster/+r/132656/">132656</a></dd>
+            <dd><a href="/kb/en/configuring-mariadb-galera-cluster/+r/141193/">141193</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3487">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-11-23 05:02">2023-11-23 05:02</span></dd>
+<span class="datetime" title="2024-07-03 16:04">2024-07-03 16:04</span></dd>
         </dl>
     </div>
     
@@ -349,7 +349,14 @@ Several options are mandatory, which means that they *must* be set in order for 
 
 These are optional optimizations that can be made to improve performance.
 
-* ##[[innodb-system-variables#innodb_flush_log_at_trx_commit|innodb_flush_log_at_trx_commit=0]]## — This is not usually recommended in the case of standard MariaDB. However, it is a bit safer with Galera Cluster, since inconsistencies can always be fixed by recovering from another node.
+* ##[[innodb-system-variables#innodb_flush_log_at_trx_commit|innodb_flush_log_at_trx_commit=0]]## — This is not usually recommended in the case of standard MariaDB. However, it is a safer, recommended option with Galera Cluster, since inconsistencies can always be fixed by recovering from another node.
+
+* ##[[innodb-system-variables#innodb_autoinc_lock_mode|innodb_autoinc_lock_mode=2]]## — This tells InnoDB to use interleaved method. Interleaved is the fastest and most scalable lock mode, and should be used when BINLOG_FORMAT is set to ROW.
+Setting the auto-increment lock mode for InnoDB to interleaved, you’re allowing slaves threads to operate in parallel.
+
+* ##[[galera-cluster-system-variables#wsrep_slave_threads|wsrep_slave_threads=0]]## 
+— This makes state transfers quicker for new nodes. You should start with four slave threads per CPU core.
+The logic here is that, in a balanced system, four slave threads can typically saturate a CPU core. However, I/O performance can increase this figure several times over. For example, a single-core ThinkPad R51 with a 4200 RPM drive can use thirty-two slave threads. The value should not be set higher than [[galera-cluster-status-variables#wsrep_cert_deps_distance|wsrep_cert_deps_distance]].
 
 == Writing Replicated Write Sets to the Binary Log
 

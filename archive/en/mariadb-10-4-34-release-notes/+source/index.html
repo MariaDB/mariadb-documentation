@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-10-4-34-release-notes/+r/135591/">135591</a></dd>
+            <dd><a href="/kb/en/mariadb-10-4-34-release-notes/+r/139293/">139293</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-02-28 09:45">2024-02-28 09:45</span></dd>
+<span class="datetime" title="2024-05-18 21:38">2024-05-18 21:38</span></dd>
         </dl>
     </div>
     
@@ -330,21 +330,22 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;include slug=&#34;unreleased-104&#34;&gt;&gt;
-&lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
-&lt;&lt;button target=&#34;https://mariadb.com/downloads/&#34; class=&#34;btn-primary&#34;&gt;&gt;Download&lt;&lt;/button&gt;&gt;
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;button target=&#34;https://mariadb.com/downloads/&#34; class=&#34;btn-primary&#34;&gt;&gt;Download&lt;&lt;/button&gt;&gt;
 &lt;&lt;button target=&#34;mariadb-10-4-34-release-notes&#34; class=&#34;btn-info disabled&#34;&gt;&gt;Release Notes&lt;&lt;/button&gt;&gt;
-&lt;&lt;button target=&#34;mariadb-10-4-33-changelog&#34; class=&#34;btn-info&#34;&gt;&gt;Changelog&lt;&lt;/button&gt;&gt;
+&lt;&lt;button target=&#34;mariadb-10-4-34-changelog&#34; class=&#34;btn-info&#34;&gt;&gt;Changelog&lt;&lt;/button&gt;&gt;
 &lt;&lt;button target=&#34;what-is-mariadb-104&#34; class=&#34;btn-info&#34;&gt;&gt;Overview of 10.4&lt;&lt;/button&gt;&gt;
 
 ^^//[[https://downloads.mariadb.org/mariadb/10.4.34/|Alternate download from mariadb.org]]//^^
 
-**Release date:** ?
-&lt;&lt;/style&gt;&gt;
+**Release date:** 16 May 2024
 
 MariaDB 10.4 is a previous //stable// series of MariaDB, [[https://mariadb.org/about/#maintenance-policy|maintained until]] June 2024. It is an evolution of MariaDB 10.3 with several entirely new features not found anywhere else and with backported and reimplemented features from MySQL.
 
 MariaDB 10.4.34 is a **//[[release-criteria|Stable (GA)]]//** release.
+
+&lt;&lt;style class=&#34;yellowbox&#34;&gt;&gt;
+MariaDB 10.4.34 is the last release of the MariaDB 10.4 release series.
+&lt;&lt;/style&gt;&gt;
 
 &lt;&lt;style class=&#34;greenbox&#34;&gt;&gt;
 **For an overview of MariaDB 10.4 see the
@@ -353,19 +354,59 @@ MariaDB 10.4.34 is a **//[[release-criteria|Stable (GA)]]//** release.
 
 Thanks, and enjoy MariaDB!
 
+&lt;&lt;toc&gt;&gt;
+
 == Notable Items
 
-The following list of tasks due to be fixed in MariaDB 10.4.34 is pulled from [[jira|JIRA]].
+=== Storage Engines
 
-&lt;&lt;style style=&#34;border-left: 1px solid grey; padding-left: 10px;&#34;&gt;&gt;
-&lt;&lt;jira search=&#34;project = MDEV  AND fixVersion = 10.4.34 ORDER BY component  ASC&#34;&gt;&gt;
-=== %fields.summary%
+==== InnoDB
+* Fix adaptive hash index corruption after [[alter-table/#discard-tablespace|ALTER TABLE…DISCARD TABLESPACE]] (MDEV-33400) 
+* Fix InnoDB: Failing assertion on UPDATE (MDEV-32346) 
+* Fix fatal InnoDB error or assertion ##`!is_v&#39;## failure upon multi-update with indexed virtual column (MDEV-31154) 
+* Fix InnoDB fatal error: Clustered record field for column x not found (MDEV-33558) 
+* Fix alter operation hang when encryption thread works on the same tablespace (MDEV-33770) 
+* Fix MariaDB segfault on rowid filter query involving generated column (MDEV-33795) 
+* Fix discard/import tablespace, restart, index corruption (MDEV-33512) 
+* Fix alter table corruption while applying the modification log (MDEV-19044)  
+* Fix weird read view after ROLLBACK of other transactions (MDEV-33802) 
+* Table no longer gets rebuilt with ALTER TABLE ADD COLUMN (MDEV-33214) 
 
-|=Details:|[[https://jira.mariadb.org/browse/%key%|%key%]]
+==== RocksDB
+* Unsafe use of LOCK_thd_kill in my_malloc_size_cb_func() (MDEV-33443) 
 
-----
-&lt;&lt;/jira&gt;&gt;
-&lt;&lt;/style&gt;&gt;
+==== [[spider|Spider]]
+* sql plugin init failure with traditional sql_mode (MDEV-33584) 
+* spider returns parsing failure on valid left join select by translating the on expression to () (MDEV-33679) 
+* Spider: ERROR 12710 (HY000): Invalid information from remote table when using MariaDB 10.5 local and MariaDB 10.6 remote (MDEV-33777) 
+* Fix bug where [[spider-system-variables|Spider variables]] were not available if Spider was loaded upon server startup (MDEV-33441) 
+
+=== Backup
+* [[mariabackup|mariadb-backup]] now preserves [[innodb-system-variables/#innodb_encrypt_tables|innodb_encrypt_tables]] (MDEV-33334) 
+* Fix [[mariabackup|]] problem on older mariadb (opendir(NULL)) caused by MDEV-30968 (MDEV-31251) 
+* [[mariabackup|mariadb-backup --backup]] now includes retry logic for undo tablespaces (MDEV-33980) 
+* Fix crash recovery in [[mariabackup|mariabackup --prepare]] due to insufficient [[innodb-system-variables/#innodb_log_file_size|innodb_log_file_size]] (MDEV-33540) 
+
+=== [[character-sets|Character Sets]], [[data-types|Data Types]]
+* Default charset now works with PHP MySQLi extension (MDEV-32975) 
+
+=== Optimization &amp; Tuning
+* Server crashes in JOIN_CACHE::write_record_data upon EXPLAIN with subqueries and constant tables (MDEV-21102) 
+
+=== Replication
+* --gtid-ignore-duplicate can double-apply event in case of parallel replication retry (MDEV-33475) 
+
+=== SQL, Data Definition, and Data Manipulation
+* Fix incorrect DEFAULT expression evaluated in [[update|UPDATE]] (MDEV-33790) 
+
+==== Prepared Statements
+* Incorrect handling of UPDATE in PS mode in case a table&#39;s colum declared as NOT NULL (MDEV-33549) 
+* Crash in EXECUTE IMMEDIATE &#39;CREATE OR REPLACE TABLE t1 (a INT DEFAULT ?)&#39; USING DEFAULT, UBSAN runtime error: member call on null pointer of type &#39;struct TABLE_LIST&#39; in Item_param::save_in_field (MDEV-15703) 
+
+=== General
+
+==== Server
+* Original IP not shown in network related error messages when proxy_protocol is in use (MDEV-33506) 
 
 &lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 === Security
@@ -373,14 +414,12 @@ The following list of tasks due to be fixed in MariaDB 10.4.34 is pulled from [[
 ** CVE-####-#####
 &lt;&lt;/style&gt;&gt;
 
-&lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 == Changelog
-For a complete list of changes made in MariaDB 10.4.33, with links to detailed
-information on each push, see the [[mariadb-10-4-33-changelog|changelog]].
+For a complete list of changes made in MariaDB 10.4.34, with links to detailed
+information on each push, see the [[mariadb-10-4-34-changelog|changelog]].
 
 == Contributors
-For a full list of contributors to MariaDB 10.4.34, see the [[https://mariadb.org/mariadb-10-11-3-10-10-4-10-9-6-10-8-8-10-6-13-10-5-20-10-4-29-and-10-3-39-now-available/|MariaDB Foundation release announcement]].
-&lt;&lt;/style&gt;&gt;
+For a full list of contributors to MariaDB 10.4.34, see the [[https://mariadb.org/mariadb-11-2-4-11-1-5-11-0-6-10-11-8-10-6-18-10-5-25-10-4-34-now-available/|MariaDB Foundation release announcement]].
 
 &lt;&lt;include slug=&#34;release-notification&#34;&gt;&gt;</textarea>
     

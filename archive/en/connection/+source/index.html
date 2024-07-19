@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/connection/+r/135414/">135414</a></dd>
+            <dd><a href="/kb/en/connection/+r/140296/">140296</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-16">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-02-22 00:01">2024-02-22 00:01</span></dd>
+<span class="datetime" title="2024-06-13 09:52">2024-06-13 09:52</span></dd>
         </dl>
     </div>
     
@@ -357,6 +357,8 @@ Connection is done by many exchanges:
 **** Authentication switch ends with server sending either [[ok_packet/|OK_Packet]]  or  [[err_packet/|ERR_Packet]]
 
 \\\\
+
+
 === Initial Handshake Packet
 
 &lt;&lt;style style=&#34;padding: 16px;background-color: #f7f7f7;border-radius: 3px;&#34;&gt;&gt;
@@ -405,6 +407,36 @@ If the client requests a TLS/SSL connection, first response will be an SSL conne
 
 \\\\
 
+====  ZERO-CONFIGURATION SSL ENCRYPTION
+
+Automatic Encrypted Connections (MariaDB 11.4+):
+
+Previously, failed SSL connections due to self-signed certificates prevented communication. MariaDB 11.4+ introduces a secondary validation method that works for all servers.
+
+===== What Happens When SSL Validation Fails?
+
+Even without a valid SSL certificate, the connector can still authenticate by remembering the server&#39;s fingerprint (unique identifier). However, it needs to confirm the connection is secure.
+
+===== Verifying a Secure Connection:
+
+The confirmation method depends on the connection type. When using secure MitM-proof methods, like Unix sockets, connector can automatically validate the connection. Otherwise, a shared secret is used.
+
+===== Shared Secret for Secure Connection:
+
+The shared secret is only used if the authentication plugin password is hashable (e.g., mysql_native_password or client_ed25519) and not empty. It&#39;s calculated by hashing the user&#39;s hash password with the authentication seed and the server fingerprint.
+
+===== Server 11.4+ Confirmation Details:
+
+For servers running MariaDB 11.4 or later, the final confirmation packet contains:
+
+* [[protocol-data-types/#fixed-length-integers|int&lt;1&gt;]] encryption (actually only 0x01 = SHA256 encryption)
+* [[protocol-data-types/#end-of-file-length-bytes|byte&lt;EOF&gt;]] shared secret.
+
+===== Matching the Shared Secret:
+
+If the calculated shared secret matches the received one, the SSL connection is considered valid (host validation is not needed). Otherwise, the connection must be closed for security reasons.
+
+\\\\
 
 ==== Handshake Response Packet
 &lt;&lt;style style=&#34;padding: 16px;background-color: #f7f7f7;border-radius: 3px;&#34;&gt;&gt;
@@ -588,6 +620,7 @@ client with capabilities CLIENT_MYSQL + CONNECT_WITH_DB will have a value of 9 (
 |MARIADB_CLIENT_STMT_BULK_OPERATIONS|1 &lt;&lt; 34|Permit bulk insert|
 |MARIADB_CLIENT_EXTENDED_TYPE_INFO|1 &lt;&lt; 35|Add extended metadata information|
 |MARIADB_CLIENT_CACHE_METADATA|1 &lt;&lt; 36|Permit skipping metadata|
+|MARIADB_CLIENT_BULK_UNIT_RESULTS|1 &lt;&lt; 37|when enable, indicate that Bulk command can use STMT_BULK_FLAG_SEND_UNIT_RESULTS flag that permit to return a result-set of all affected rows and auto-increment values|
 &lt;&lt;/style&gt;&gt;
 
 \\

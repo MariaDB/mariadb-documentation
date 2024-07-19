@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>기본 SQL Debugging - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
+
+    
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="기본 SQL Debugging" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/ko/basic-sql-debugging/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+쿼리 설계
+다음과 같은 몇 가지 규칙을 따르면 쿼리에서 오류를 훨씬 쉽게 찾을 수 있으며, 특히 SQL은 알지만 특정 스키마에 대해서는 전혀 모르는 사람에게 도움을 요청할 때 더욱 그렇습니다. 읽기 쉬운 쿼리는 디버깅하기 쉬운 쿼리입니다.  쿼리 내에서 절을 그룹화하려면 공백을 사용하세요. 테이블과 필드 별칭을..." />
+
+    <meta name="description" content="
+쿼리 설계
+다음과 같은 몇 가지 규칙을 따르면 쿼리에서 오류를 훨씬 쉽게 찾을 수 있으며, 특히 SQL은 알지만 특정 스키마에 대해서는 전혀 모르는 사람에게 도움을 요청할 때 더욱 그렇습니다. 읽기 쉬운 쿼리는 디버깅하기 쉬운 쿼리입니다.  쿼리 내에서 절을 그룹화하려면 공백을 사용하세요. 테이블과 필드 별칭을..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/ko/basic-sql-debugging/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2024 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/ko/basic-sql-debugging/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/ko/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/ko/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/ko/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/ko/mariadb-korean/">MariaDB - Korean</a>
+    
+
+    
+    » <a class="crumb" href="/kb/ko/training-tutorials/">Training &amp; Tutorials</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/ko/basic-sql-debugging/">기본 SQL Debugging</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/ko/">홈</a></li>
+                            
+                                
+                                    <li><a href="/kb/ko/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/ko/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/ko/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/ko/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/ko/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/ko/basic-sql-debugging/+history" rel="nofollow">히스토리</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/ko/basic-sql-debugging/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/ko/basic-sql-debugging/+flag"
+                data-flag-url="/kb/ko/basic-sql-debugging/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/ko/basic-sql-debugging/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2024-04-09 05:39">3개월, 1주 ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2024-04-09 05:39">3개월, 1주 ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/ko/basic-sql-debugging/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/ko/basic-sql-debugging/+history/feed/">
+            히스토리</a>
+        </li>
+        <li><a href="/kb/ko/basic-sql-debugging/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/ko/basic-sql-debugging/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+        
+
+<div class="well well-small box"><div><h5>Localized Versions</h5></div><div>
+
+        <ul>
+            
+            <li><a href="/kb/en/basic-sql-debugging/">Basic SQL Debugging</a> [en]</li>
+            
+        </ul>
+        
+</div>
+</div>
+
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>기본 SQL Debugging</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#쿼리-설계" title="쿼리 설계">쿼리 설계</a>    <ol class="toc">
+
+        <li class=""><a href="#공백-사용" title="공백 사용">공백 사용</a></li>
+
+        <li class=""><a href="#테이블-및-필드-별칭" title="테이블 및 필드 별칭">테이블 및 필드 별칭</a></li>
+
+        <li class=""><a href="#join-조건-배치" title="JOIN 조건 배치">JOIN 조건 배치</a>    </ol>
+</li>
+
+    <li class=""><a href="#구문-오류-찾기" title="구문 오류 찾기">구문 오류 찾기</a>    <ol class="toc">
+
+        <li class=""><a href="#빈-오류-해석하기" title="빈 오류 해석하기">빈 오류 해석하기</a></li>
+
+        <li class=""><a href="#키워드-확인" title="키워드 확인">키워드 확인</a></li>
+
+        <li class=""><a href="#버전별-구문" title="버전별 구문">버전별 구문</a>    </ol>
+ </ol>
+</li>
+</div>
+<h2 class="anchored_heading" id="쿼리-설계">쿼리 설계</h2>
+<p>다음과 같은 몇 가지 규칙을 따르면 쿼리에서 오류를 훨씬 쉽게 찾을 수 있으며, 특히 SQL은 알지만 특정 스키마에 대해서는 전혀 모르는 사람에게 도움을 요청할 때 더욱 그렇습니다. 읽기 쉬운 쿼리는 디버깅하기 쉬운 쿼리입니다.  쿼리 내에서 절을 그룹화하려면 공백을 사용하세요. 테이블과 필드 별칭을 선택할 때는 혼란스럽지 않고 명확하도록 하세요. 쿼리의 의미를 나타내는 구문을 선택하세요.</p>
+<h3 class="anchored_heading" id="공백-사용">공백 사용</h3>
+<p>읽기 어려운 쿼리는 디버깅하기 어려운 쿼리입니다. 공백은 무료입니다. 새로운 줄과 들여쓰기는 쿼리를 읽기 쉽게 만들어 주며, 특히 스크립팅 언어 내에서 쿼리를 구성할 때 변수가 쿼리 전반에 걸쳐 배치되는 경우에 그렇습니다.</p>
+<p>다음에는 구문 오류가 있습니다. 얼마나 빨리 찾을 수 있나요?</p>
+<pre class="fixed">SELECT u.id, u.name, alliance.ally FROM users u JOIN alliance ON
+(u.id=alliance.userId) JOIN team ON (alliance.teamId=team.teamId
+WHERE team.teamName='Legionnaires' AND u.online=1 AND ((u.subscription='paid'
+AND u.paymentStatus='current') OR u.subscription='free') ORDER BY u.name;
+</pre><p>다음은 공백을 올바르게 사용한 동일한 쿼리입니다. 오류를 더 빨리 찾을 수 있나요?</p>
+<pre class="fixed">SELECT
+    u.id
+    , u.name
+    , alliance.ally
+FROM
+    users u
+    JOIN alliance ON (u.id = alliance.userId)
+    JOIN team ON (alliance.teamId = team.teamId
+WHERE
+    team.teamName = 'Legionnaires'
+    AND u.online = 1
+    AND (
+        (u.subscription = 'paid' AND u.paymentStatus = 'current')
+        OR
+        u.subscription = 'free'
+    )
+ORDER BY
+    u.name;
+</pre><p>SQL을 모르더라도 team.teamId 뒤에 ')'가 누락된 것을 발견했을 수도 있습니다.</p>
+<p>사용하는 정확한 형식 스타일은 그다지 중요하지 않습니다. select 목록에서 표현식을 따라오는 쉼표를 선호할 수도 있고, 그보다는 앞에 오도록 할 수도 있습니다. 탭이나 공백으로 들여쓰기를 할 수 있습니다. 특정 형식을 고수하는 것은 중요하지 않습니다. 가독성만이 유일한 목표입니다.</p>
+<h3 class="anchored_heading" id="테이블-및-필드-별칭">테이블 및 필드 별칭</h3>
+<p>별칭을 사용하면 쿼리 내에서 사용할 테이블과 필드의 이름을 바꿀 수 있습니다. 원래 이름이 매우 긴 경우 유용할 수 있으며, 셀프 조인 및 특정 서브쿼리에 필수적입니다. 그러나 별칭을 잘못 선택하면 쿼리를 더 쉽게 디버깅하기는커녕 더 어렵게 만들 수 있습니다. 별칭은 임의의 문자열이 아니라 원래 테이블 이름을 반영해야 합니다.</p>
+<p>잘못된 예:</p>
+<pre class="fixed">SELECT *
+FROM
+    financial_reportQ_1 AS a
+    JOIN sales_renderings AS b ON (a.salesGroup = b.groupId)
+    JOIN sales_agents AS c ON (b.groupId = c.group)
+WHERE
+    b.totalSales &gt; 10000
+    AND c.id != a.clientId
+</pre><p>조인된 테이블 목록과 WHERE 절이 늘어남에 따라, 주어진 별칭이 어떤 테이블을 가리키는지 확인하기 위해 쿼리의 맨 위를 반복해서 살펴봐야 합니다.</p>
+<p>더 좋은 방법:</p>
+<pre class="fixed">SELECT *
+FROM
+    financial_report_Q_1 AS frq1
+    JOIN sales_renderings AS sr ON (frq1.salesGroup = sr.groupId)
+    JOIN sales_agents AS sa ON (sr.groupId = sa.group)
+WHERE
+    sr.totalSales &gt; 10000
+    AND sa.id != frq1.clientId
+</pre><p>각 별칭은 조금 더 길지만, 테이블 이니셜은 데이터베이스에 익숙한 사람이라면 전체 테이블 이름을 한 번만 보고도 쿼리의 나머지 부분을 읽으면서 어떤 테이블이 어떤 별칭과 연결되는지 대체로 기억할 수 있을 만큼 충분한 단서를 제공합니다.</p>
+<h3 class="anchored_heading" id="join-조건-배치">JOIN 조건 배치</h3>
+<p>매뉴얼에서는 행을 제한하는 목적으로 JOIN 조건(즉, ON 절)을 사용하지 않도록 경고하고 있습니다. 특히 암시적 조인을 사용하는 몇몇 쿼리는 모든 조인 조건이 WHERE 절로 이동하는 정반대의 극단적인 방식을 취합니다. 결과적으로 테이블 관계가 비즈니스 로직과 혼합됩니다.</p>
+<p>잘못된 예:</p>
+<pre class="fixed">SELECT *
+FROM
+    family,
+    relationships
+WHERE
+    family.personId = relationships.personId
+    AND relationships.relation = 'father'
+</pre><p>WHERE 절을 자세히 살펴보지 않으면 두 테이블을 연결하는 것이 무엇인지 알 수 없습니다.</p>
+<p>더 좋은 방법:</p>
+<pre class="fixed">SELECT *
+FROM
+    family
+    JOIN relationships ON (family.personId = relationships.personId)
+WHERE
+    relationships.relation = 'father'
+</pre><p>테이블 간의 관계가 바로 명확해집니다. WHERE 절은 결과 셋의 행을 제한하는 데 사용됩니다.</p>
+<p>이러한 제한을 준수하면 쉼표 연산자를 사용하여 테이블을 조인할 수 없습니다. 이는 작은 대가를 치르는 것입니다. 어쨌든 쿼리는 명시적인 JOIN 키워드를 사용하여 작성해야 하며, 새 버전에서 연산자 우선순위가 변경될 때마다 모든 쿼리를 다시 작성하고 싶지 않다면 이 두 가지를 혼용해서는 안 됩니다.</p>
+<h2 class="anchored_heading" id="구문-오류-찾기">구문 오류 찾기</h2>
+<p>구문 오류는 가장 쉽게 해결할 수 있는 문제 중 하나입니다. MariaDB는 파서가 혼란스러워진 정확한 지점을 보여 주는 오류 메시지를 제공합니다. 오류 메시지에 표시된 구문 앞의 몇 단어를 포함하여 쿼리를 확인하세요. 대부분의 구문 및 구문 분석 오류는 다시 살펴보면 확실해지지만, 오류 텍스트가 비어 있거나 유효한 키워드를 가리키거나 완전히 올바른 구문에서 오류가 발생한 것처럼 보이는 경우 등 좀 더 파악하기 어려운 경우도 있습니다.</p>
+<h3 class="anchored_heading" id="빈-오류-해석하기">빈 오류 해석하기</h3>
+<p>대부분의 구문 오류는 해석하기 쉽습니다. 오류는 일반적으로 문제의 정확한 원인을 자세히 설명합니다. 오류 메시지를 염두에 두고 쿼리를 주의 깊게 살펴보면 철자가 틀린 필드 이름, 누락된 'AND', 추가된 닫는 괄호 등 명백한 실수를 발견할 수 있는 경우가 많습니다. 때로는 오류 메시지가 도움이 되지 않는 경우도 있습니다. </p>
+<p>자주 발생하지만 도움이 되지 않는 메시지:</p>
+<pre class="fixed">ERROR 1064: You have an error in your SQL syntax; check the manual that corresponds to your
+MariaDB server version for the right syntax to use near ' ' at line 1
+</pre><p>빈 ' ' 오류 메시지 때문에 실망할 수 있습니다. 분명히 오류가 있는데, 어디에 있을까요? 확인해야 할 가장 좋은 곳은 쿼리 끝 부분입니다. ' ' 는 파서가 구문 토큰이 나타날 것으로 예상하면서 구문의 끝에 도달했음을 나타냅니다.</p>
+<p>' 및 )와 같이 누락된 닫는 문자가 있는지 확인하세요.</p>
+<pre class="fixed">SELECT * FROM someTable WHERE field = 'value
+</pre><p>노출된 쉼표로 표시되는 경우 불완전한 절을 찾아보세요.</p>
+<pre class="fixed">SELECT * FROM someTable WHERE field = 1 GROUP BY id,
+</pre><h3 class="anchored_heading" id="키워드-확인">키워드 확인</h3>
+<p>MariaDB는 테이블 및 필드 이름과 별칭으로 <a href="/kb/en/reserved-words/">예약어</a>도 허용합니다. 모호성을 방지하기 위해 이러한 이름은 백틱(`)으로 묶어야 합니다.</p>
+<pre class="fixed">SELECT * FROM actionTable WHERE `DELETE` = 1;
+</pre><p>구문 오류가 식별자 중 하나 근처에 표시되는 경우 <a href="/kb/en/reserved-words/">예약어 목록</a>에 나타나는지 확인하세요.</p>
+<p>SQL 구문에 대한 색상 하이라이팅 기능이 있는 텍스트 편집기를 사용하면 이러한 오류를 찾는 데 도움이 됩니다. 필드 이름을 입력했는데 SELECT 키워드와 같은 색으로 표시되면 뭔가 잘못되었다는 뜻입니다. </p>
+<p>일부 흔한 문제의 원인들:</p>
+<ul start="1"><li><strong>DESC</strong>는 "description" 필드의 일반적인 약어입니다. MariaDB <strong>ORDER</strong> 절에서는 "내림차순"을 의미합니다. 
+</li><li><strong>DATE</strong>, <strong>TIME</strong>, <strong>TIMESTAMP</strong>는 모두 일반적인 필드 이름입니다. 필드 유형이기도 합니다. 
+</li><li><strong>ORDER</strong>는 판매 애플리케이션에 나타납니다. MariaDB에서는 결과 정렬을 지정하는 데 사용됩니다.
+</li></ul>
+<p>일부 키워드는 너무 흔해서 MariaDB에서 따옴표 없이 사용할 수 있도록 특별히 허용됩니다. 
+제안(원문의 의견): 하지 마세요. 키워드가 있다면 인용하세요.</p>
+<h3 class="anchored_heading" id="버전별-구문">버전별 구문</h3>
+<p>MariaDB에 새로운 기능이 추가되면 이를 지원하기 위해 구문도 변경되어야 합니다. 대부분의 경우, 이전 구문은 최신 버전의 MariaDB에서 작동합니다. 한 가지 주목할 만한 예외는 버전 5.0에서 JOIN 키워드와 관련된 쉼표 연산자의 우선 순위가 변경된 것입니다.  이전에는 다음과 같이 작동하던 쿼리가 이제 실패할 것입니다.</p>
+<pre class="fixed">SELECT * FROM a, b JOIN c ON a.x = c.x;
+</pre><p>그러나 더 일반적인 상황은 오래된 버전에서 새로운 구문을 사용하려고 시도합니다. 웹 호스팅 회사들은 MariaDB 업그레이드가 느리기로 악명이 높기 때문에 몇 년이 지난 버전을 사용하게 될 수도 있습니다. 최근 설치한 자체 워크스테이션에서는 완벽하게 실행되는 쿼리가 제작 환경에서는 실패하면 매우 실망스러울 수 있습니다.</p>
+<p>이 쿼리는 서버에 서브쿼리가 추가된 MySQL 4.1 이전의 모든 버전에서 실패합니다.</p>
+<pre class="fixed">SELECT * FROM someTable WHERE someId IN (SELECT id FROM someLookupTable);
+</pre><p>JOIN 구문이 원래 ON 절을 허용하지 않았기 때문에 일부 초기 버전의 MySQL에서는 이 쿼리가 실패합니다.</p>
+<pre class="fixed">SELECT * FROM tableA JOIN tableB ON tableA.x = tableB.y;
+</pre><p>항상 설치된 MariaDB 버전을 확인하고 해당 버전과 관련된 매뉴얼의 섹션을 읽어 보세요. 매뉴얼에는 일반적으로 특정 구문을 사용할 수 있게 된 시기가 정확히 명시되어 있습니다.</p>
+<div class="cstm-style bluebox" style="font-size:0.6em;font-family:'Droid Sans';"><p><em>이 문서의 초기 버전은 다음에서 허가를 받아 복사한 것입니다. <a href="http://hashmysql.org/wiki/Basic_Debugging">http://hashmysql.org/wiki/Basic_Debugging</a> on 2012-10-05.</em></p>
+</div>
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/ko/basic-sql-debugging/+subscriptions/add"
+                 data-unsubscribe-url="/kb/ko/basic-sql-debugging/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/ko/exploring-early-database-models/">
+                        ← Exploring Early Database Models
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/ko/training-tutorials/">
+                        ↑ Training &amp; Tutorials ↑
+                    </a>
+                    </li>
+                
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="14384" data-comments-url="/kb/ko/basic-sql-debugging/+comments"
+         data-reply-url="/kb/ko/basic-sql-debugging/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/ko/training-tutorials/">
+                    ↑ Training &amp; Tutorials ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/ko/advanced-mariadb-articles/">
+                            
+                            Advanced MariaDB Articles
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/ko/beginner-mariadb-articles/">
+                            
+                            Beginner MariaDB Articles
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/ko/exploring-early-database-models/">
+                            
+                            Exploring Early Database Models
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>기본 SQL Debugging</span>
+                        
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    <ul class="list-inline text-center footer-nav">
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/products" title="Products">Products</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/services" title="Services">Services</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/pricing" title="Pricing">Pricing</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/resources" title="Resources">Resources</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/about-us" title="About MariaDB">About Us</a></h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/download" title="Download">Download MariaDB</a></h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row row-10">
+                
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div class="footer-copyright">
+                        <div class="text-center">
+                            <ul class="list-inline no-margin">
+                                <li>
+                                    <a href="/legal" title="Legal">Legal</a>
+                                </li>
+                                <li>
+                                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                            <p>Copyright &copy; 2024 MariaDB. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
+
+</html>

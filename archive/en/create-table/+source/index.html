@@ -323,7 +323,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/create-table/+r/136909/">136909</a></dd>
+            <dd><a href="/kb/en/create-table/+r/141258/">141258</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -332,7 +332,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-03-13 16:29">2024-03-13 16:29</span></dd>
+<span class="datetime" title="2024-07-10 11:35">2024-07-10 11:35</span></dd>
         </dl>
     </div>
     
@@ -391,7 +391,7 @@ Executing the ##CREATE TABLE## statement requires the [[grant/#table-privileges|
 
 If the ##OR REPLACE## clause is used and the table already exists, then instead of returning an error, the server will drop the existing table and replace it with the newly defined table.
 
-This syntax was originally added to make [[replication]] more robust if it has to rollback and repeat statements such as ##CREATE ... SELECT## on replicas.
+This syntax was originally added to make [[standard-replication|replication]] more robust if it has to rollback and repeat statements such as ##CREATE ... SELECT## on replicas.
 
 &lt;&lt;code&gt;&gt;
 CREATE OR REPLACE TABLE table_name (a int);
@@ -413,7 +413,7 @@ with the following exceptions:
 
 * The table is dropped first (if it existed), after that the &lt;&lt;fixed&gt;&gt;CREATE&lt;&lt;/fixed&gt;&gt; is done. Because of this, if the &lt;&lt;fixed&gt;&gt;CREATE&lt;&lt;/fixed&gt;&gt; fails, then the table will not exist anymore after the statement.  If the table was used with &lt;&lt;fixed&gt;&gt;LOCK TABLES&lt;&lt;/fixed&gt;&gt; it will be unlocked.
 * One can&#39;t use &lt;&lt;fixed&gt;&gt;OR REPLACE&lt;&lt;/fixed&gt;&gt; together with &lt;&lt;fixed&gt;&gt;IF EXISTS&lt;&lt;/fixed&gt;&gt;.
-* Slaves in replication will by default use &lt;&lt;fixed&gt;&gt;CREATE OR REPLACE&lt;&lt;/fixed&gt;&gt; when replicating &lt;&lt;fixed&gt;&gt;CREATE&lt;&lt;/fixed&gt;&gt; statements that don&#39;&#39;t use &lt;&lt;fixed&gt;&gt;IF EXISTS&lt;&lt;/fixed&gt;&gt;. This can be changed by setting the variable [[replication-and-binary-log-server-system-variables#slave_ddl_exec_mode|slave-ddl-exec-mode]] to &lt;&lt;fixed&gt;&gt;STRICT&lt;&lt;/fixed&gt;&gt;.
+* [[standard-replication|Replicas]] will by default use &lt;&lt;fixed&gt;&gt;CREATE OR REPLACE&lt;&lt;/fixed&gt;&gt; when replicating &lt;&lt;fixed&gt;&gt;CREATE&lt;&lt;/fixed&gt;&gt; statements that don&#39;&#39;t use &lt;&lt;fixed&gt;&gt;IF EXISTS&lt;&lt;/fixed&gt;&gt;. This can be changed by setting the variable [[replication-and-binary-log-server-system-variables#slave_ddl_exec_mode|slave-ddl-exec-mode]] to &lt;&lt;fixed&gt;&gt;STRICT&lt;&lt;/fixed&gt;&gt;.
 
 == CREATE TABLE IF NOT EXISTS
 
@@ -648,6 +648,7 @@ index_option:
     [ KEY_BLOCK_SIZE [=] value
   {{{|}}} index_type
   {{{|}}} WITH PARSER parser_name
+  {{{|}}} VISIBLE
   {{{|}}} COMMENT &#39;string&#39;
   {{{|}}} CLUSTERING={YES| NO} ]
   [ IGNORED | NOT IGNORED ]
@@ -665,6 +666,8 @@ reference_option:
 ##INDEX## and ##KEY## are synonyms. 
 
 Index names are optional, if not specified an automatic name will be assigned. Index name are needed to drop indexes and appear in error messages when a constraint is violated.
+
+For limits on InnoDB indexes, see [[innodb-limitations|InnoDB Limitations]].
 
 === Index Categories
 
@@ -744,9 +747,16 @@ Different index types are optimized for different kind of operations:
 
 Index columns names are listed between parenthesis. After each column, a prefix length can be specified. If no length is specified, the whole column will be indexed. ##ASC## and ##DESC## can be specified. Prior to MariaDB 10.8, this was only for compatibility with other DBMSs, but had no meaning in MariaDB. From MariaDB 10.8, individual columns in the index can now be explicitly sorted in ascending or descending order. This can be useful for optimizing certain ORDER BY cases (MDEV-13756, MDEV-26938, MDEV-26939, MDEV-26996). From MariaDB 11.4.0, not only ascending, but also descending, indexes can now be used to optimize [[min|MIN()]] and [[max|MAX()]] (MDEV-27576). 
 
+The maximum number of parts in an index is 32.
+
 ==== WITH PARSER Index Option
 
 The ##WITH PARSER## index option only applies to [[full-text-indexes|FULLTEXT]] indexes and contains the fulltext parser name. The fulltext parser must be an installed plugin.
+
+==== VISIBLE Index Option
+&lt;&lt;product mariadb from=10.5.3&gt;&gt;
+From MariaDB 10.5.3, indexes can be declared visible. This is the default and it shows up in [[show-create-table|SHOW CREATE TABLE]].
+&lt;&lt;/product&gt;&gt;
 
 ==== COMMENT Index Option
 
@@ -877,7 +887,7 @@ MyISAM uses ##MAX_ROWS## and ##AVG_ROW_LENGTH## to decide the maximum size of a 
 
 === DATA DIRECTORY/INDEX DIRECTORY
 
-##DATA DIRECTORY## and ##INDEX DIRECTORY## are supported for MyISAM and Aria, and DATA DIRECTORY is also supported by InnoDB if the [[innodb-system-variables#innodb_file_per_table|innodb_file_per_table]] server system variable is enabled, but only in CREATE TABLE, not in [[alter-table|ALTER TABLE]]. So, carefully choose a path for InnoDB tables at creation time, because it cannot be changed without dropping and re-creating the table. These options specify the paths for data files and index files, respectively. If these options are omitted, the database&#39;s directory will be used to store data files and index files. Note that these table options do not work for [[managing-mariadb-partitioning|partitioned]] tables (use the partition options instead), or if the server has been invoked with the [[mariadbd-options-full-list|--skip-symbolic-links startup option]]. To avoid the overwriting of old files with the same name that could be present in the directories, you can use [[mariadbd-options-full-list|the ##--keep_files_on_create## option]] (an error will be issued if files already exist). These options are ignored if the ##NO_DIR_IN_CREATE## [[sql-mode|SQL_MODE]] is enabled (useful for replication slaves). Also note that symbolic links cannot be used for InnoDB tables.
+##DATA DIRECTORY## and ##INDEX DIRECTORY## are supported for MyISAM and Aria, and DATA DIRECTORY is also supported by InnoDB if the [[innodb-system-variables#innodb_file_per_table|innodb_file_per_table]] server system variable is enabled, but only in CREATE TABLE, not in [[alter-table|ALTER TABLE]]. So, carefully choose a path for InnoDB tables at creation time, because it cannot be changed without dropping and re-creating the table. These options specify the paths for data files and index files, respectively. If these options are omitted, the database&#39;s directory will be used to store data files and index files. Note that these table options do not work for [[managing-mariadb-partitioning|partitioned]] tables (use the partition options instead), or if the server has been invoked with the [[mariadbd-options-full-list|--skip-symbolic-links startup option]]. To avoid the overwriting of old files with the same name that could be present in the directories, you can use [[mariadbd-options-full-list|the ##--keep_files_on_create## option]] (an error will be issued if files already exist). These options are ignored if the ##NO_DIR_IN_CREATE## [[sql-mode|SQL_MODE]] is enabled (useful for replicas). Also note that symbolic links cannot be used for InnoDB tables.
 
 ##DATA DIRECTORY## works by creating symlinks from where the table would normally have been (inside the [[server-system-variables#datadir|datadir]]) to where the option specifies. For security reasons, to avoid bypassing the privilege system, the server does not permit symlinks inside the datadir. Therefore, ##DATA DIRECTORY## cannot be used to specify a location inside the datadir. An attempt to do so will result in an error ##1210 (HY000) Incorrect arguments to DATA DIRECTORY##.
 
@@ -1146,8 +1156,9 @@ CREATE TABLE t1(
 * [[drop-table|DROP TABLE]]
 * [[character-sets-and-collations|Character Sets and Collations]]
 * [[show-create-table|SHOW CREATE TABLE]]
-* Storage engines can add their own [[engine-defined-new-tablefieldindex-attributes|attributes for columns, indexes and tables]].
-* Variable [[replication-and-binary-log-server-system-variables#slave_ddl_exec_mode|slave-ddl-exec-mode]].</textarea>
+* Storage engines can add their own [[engine-defined-new-tablefieldindex-attributes|attributes for columns, indexes and tables]]
+* Variable [[replication-and-binary-log-server-system-variables#slave_ddl_exec_mode|slave-ddl-exec-mode]]
+* [[InnoDB Limitations]]</textarea>
     
 
 

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: mysql.global_priv Table</title><link>https://mariadb.com/kb/en/mysql-global_priv-table/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/mysql-global_priv-table/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Thu, 18 Jul 2024 15:55:08 +0000</lastBuildDate><item><title>Re: mysql.global_priv Table</title><link>https://mariadb.com/kb/en/mysql-global_priv-table/+comments/6378</link><description>&lt;p&gt;Agreed. Pretty annoying. Luckily I stumbled on the code driving the `mysql`.`users` view which seems to clarify most of the json fields:&lt;/p&gt;
+&lt;pre class="fixed"&gt;SELECT
+  Host,
+  User,
+  IF(JSON_VALUE(Priv, '$.plugin') IN ('mysql_native_password', 'mysql_old_password'), IFNULL(JSON_VALUE(Priv, '$.authentication_string'), ''), '') AS Password,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;         1, 'Y', 'N') AS Select_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;         2, 'Y', 'N') AS Insert_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;         4, 'Y', 'N') AS Update_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;         8, 'Y', 'N') AS Delete_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;        16, 'Y', 'N') AS Create_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;        32, 'Y', 'N') AS Drop_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;        64, 'Y', 'N') AS Reload_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;       128, 'Y', 'N') AS Shutdown_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;       256, 'Y', 'N') AS Process_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;       512, 'Y', 'N') AS File_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;      1024, 'Y', 'N') AS Grant_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;      2048, 'Y', 'N') AS References_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;      4096, 'Y', 'N') AS Index_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;      8192, 'Y', 'N') AS Alter_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;     16384, 'Y', 'N') AS Show_db_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;     32768, 'Y', 'N') AS Super_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;     65536, 'Y', 'N') AS Create_tmp_table_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;    131072, 'Y', 'N') AS Lock_tables_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;    262144, 'Y', 'N') AS Execute_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;    524288, 'Y', 'N') AS Repl_slave_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;   1048576, 'Y', 'N') AS Repl_client_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;   2097152, 'Y', 'N') AS Create_view_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;   4194304, 'Y', 'N') AS Show_view_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;   8388608, 'Y', 'N') AS Create_routine_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;  16777216, 'Y', 'N') AS Alter_routine_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;  33554432, 'Y', 'N') AS Create_user_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp;  67108864, 'Y', 'N') AS Event_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp; 134217728, 'Y', 'N') AS Trigger_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp; 268435456, 'Y', 'N') AS Create_tablespace_priv,
+  IF(JSON_VALUE(Priv, '$.access') &amp;amp; 536870912, 'Y', 'N') AS Delete_history_priv,
+  ELT(IFNULL(JSON_VALUE(Priv, '$.ssl_type'), 0) + 1, '', 'ANY','X509', 'SPECIFIED') AS ssl_type,
+  IFNULL(JSON_VALUE(Priv, '$.ssl_cipher'), '') AS ssl_cipher,
+  IFNULL(JSON_VALUE(Priv, '$.x509_issuer'), '') AS x509_issuer,
+  IFNULL(JSON_VALUE(Priv, '$.x509_subject'), '') AS x509_subject,
+  CAST(IFNULL(JSON_VALUE(Priv, '$.max_questions'), 0) AS UNSIGNED) AS max_questions,
+  CAST(IFNULL(JSON_VALUE(Priv, '$.max_updates'), 0) AS UNSIGNED) AS max_updates,
+  CAST(IFNULL(JSON_VALUE(Priv, '$.max_connections'), 0) AS UNSIGNED) AS max_connections,
+  CAST(IFNULL(JSON_VALUE(Priv, '$.max_user_connections'), 0) AS SIGNED) AS max_user_connections,
+  IFNULL(JSON_VALUE(Priv, '$.plugin'), '') AS plugin,
+  IFNULL(JSON_VALUE(Priv, '$.authentication_string'), '') AS authentication_string,
+  'N' AS password_expired,
+  ELT(IFNULL(JSON_VALUE(Priv, '$.is_role'), 0) + 1, 'N', 'Y') AS is_role,
+  IFNULL(JSON_VALUE(Priv, '$.default_role'), '') AS default_role,
+  CAST(IFNULL(JSON_VALUE(Priv, '$.max_statement_time'), 0.0) AS DECIMAL(12,6)) AS max_statement_time
+  FROM global_priv; 
+&lt;/pre&gt;&lt;p&gt;Full set of fields (not all are required):&lt;/p&gt;
+&lt;ul start="1"&gt;&lt;li&gt;plugin
+&lt;/li&gt;&lt;li&gt;authentication_string
+&lt;/li&gt;&lt;li&gt;access (bitflag map of permissions)
+&lt;/li&gt;&lt;li&gt;ssl_type
+&lt;/li&gt;&lt;li&gt;ssl_cipher
+&lt;/li&gt;&lt;li&gt;x509_issuer
+&lt;/li&gt;&lt;li&gt;x509_subject
+&lt;/li&gt;&lt;li&gt;max_questions
+&lt;/li&gt;&lt;li&gt;max_updates
+&lt;/li&gt;&lt;li&gt;max_connections
+&lt;/li&gt;&lt;li&gt;max_user_connections
+&lt;/li&gt;&lt;li&gt;is_role
+&lt;/li&gt;&lt;li&gt;default_role
+&lt;/li&gt;&lt;li&gt;max_statement_time&lt;/li&gt;&lt;/ul&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Auto Martin</dc:creator><guid>https://mariadb.com/kb/en/mysql-global_priv-table/+comments/6378</guid></item><item><title>Re: mysql.global_priv Table</title><link>https://mariadb.com/kb/en/mysql-global_priv-table/+comments/5642</link><description>&lt;p&gt;Hello,&lt;/p&gt;
+&lt;p&gt;it would be very beneficial to describe the whole structure of JSON inside the "Priv" column. I didn't find it anywhere.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Jiří Juřica</dc:creator><guid>https://mariadb.com/kb/en/mysql-global_priv-table/+comments/5642</guid></item></channel></rss>

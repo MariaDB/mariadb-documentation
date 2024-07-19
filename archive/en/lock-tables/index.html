@@ -278,12 +278,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2010-08-16 15:31">13 years, 7 months ago</span></dd>
+<span class="datetime" title="2010-08-16 15:31">13 years, 11 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-03-17 14:34">1 year ago</span></dd>
+<span class="datetime" title="2024-07-17 13:04">1 day, 3 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -356,30 +356,6 @@
 </div>
 
     
-
-
-
-    
-    
-
-<div class="well well-small box"><div><h5>Product Versions</h5></div><div>
-
-        <ul id="product_chooser">
-            
-                <li class="mariadb_from_10_3_0">
-                    <label><input type="checkbox" data-product-class="mariadb_from_10_3_0"
-                            >MariaDB starting with 10.3.0</label>
-                </li>
-            
-                <li class="mariadb_from_10_3_0">
-                    <label><input type="checkbox" data-product-class="mariadb_from_10_3_0"
-                            >MariaDB starting with 10.3.0</label>
-                </li>
-            
-        </ul>
-    
-</div>
-</div>
 
 
 
@@ -477,6 +453,8 @@ UNLOCK TABLES
 
     <li class=""><a href="#description" title="Description">Description</a>    <ol class="toc">
 
+        <li class=""><a href="#aliases" title="Aliases">Aliases</a></li>
+
         <li class=""><a href="#waitnowait" title="WAIT/NOWAIT">WAIT/NOWAIT</a>    </ol>
 </li>
 
@@ -511,11 +489,21 @@ set of tables to be locked and locks them automatically. If you lock a table
 explicitly with <code>LOCK TABLES</code>, any tables used in triggers are also locked
 implicitly, as described in <a href="/kb/en/triggers-and-implicit-locks/">Triggers and Implicit Locks</a>.</p>
 <p><a href="/kb/en/transactions-unlock-tables/">UNLOCK TABLES</a> explicitly releases any table locks held by the
-current session.
-<br><br></p>
-<div class="mariadb_from_10_3_0 mariadb from_10_3_0 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/mariadb-1030-release-notes/">10.3.0</a></h5><h3 class="anchored_heading" id="waitnowait">WAIT/NOWAIT</h3>
+current session.</p>
+<h3 class="anchored_heading" id="aliases">Aliases</h3>
+<p>Aliases need to correspond to the aliases used in prior SQL statements in the session. For example:</p>
+<pre class="fixed"><span class="k">LOCK</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="k">AS</span> <span class="n">t1_alias1</span> <span class="k">READ</span><span class="p">;</span>
+
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t1</span><span class="p">;</span>
+<span class="n">ERROR</span> <span class="mi">1100</span> <span class="p">(</span><span class="n">HY000</span><span class="p">):</span> <span class="k">Table</span> <span class="s1">&#39;t1&#39;</span> <span class="n">was</span> <span class="k">not</span> <span class="n">locked</span> <span class="k">with</span> <span class="k">LOCK</span> <span class="n">TABLES</span>
+
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t1</span> <span class="k">AS</span> <span class="n">t1_alias2</span><span class="p">;</span>
+<span class="n">ERROR</span> <span class="mi">1100</span> <span class="p">(</span><span class="n">HY000</span><span class="p">):</span> <span class="k">Table</span> <span class="s1">&#39;t1_alias2&#39;</span> <span class="n">was</span> <span class="k">not</span> <span class="n">locked</span> <span class="k">with</span> <span class="k">LOCK</span> <span class="n">TABLES</span>
+
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">t1</span> <span class="k">AS</span> <span class="n">t1_alias1</span><span class="p">;</span>
+</pre><h3 class="anchored_heading" id="waitnowait">WAIT/NOWAIT</h3>
 <p>Set the lock wait timeout. See <a href="/kb/en/wait-and-nowait/">WAIT and NOWAIT</a>.</p>
-</div><h2 class="anchored_heading" id="limitations">Limitations</h2>
+<h2 class="anchored_heading" id="limitations">Limitations</h2>
 <ul start="1"><li><code>LOCK TABLES</code> <a href="/kb/en/mariadb-galera-cluster-known-limitations/">doesn't work when using Galera cluster</a>.   You may experience crashes or locks when used with Galera.
 </li><li><code>LOCK TABLES</code> works on XtraDB/InnoDB tables only if the <a href="/kb/en/xtradbinnodb-server-system-variables/#innodb_table_locks">innodb_table_locks</a> system variable is set to 1 (the default) and <a href="/kb/en/server-system-variables/#autocommit">autocommit</a> is set to 0 (1 is default). Please note that no error message will be returned on LOCK TABLES with innodb_table_locks = 0.
 </li><li><code>LOCK TABLES</code> <a href="/kb/en/sql-statements-that-cause-an-implicit-commit/">implicitly commits</a> the active transaction, if any. Also, starting a transaction always releases all table locks acquired with LOCK TABLES. This means that there is no way to have table locks and an active transaction at the same time. The only exceptions are the transactions in <a href="/kb/en/start-transaction/#autocommit">autocommit</a> mode. To preserve the data integrity between transactional and non-transactional tables, the <a href="/kb/en/get_lock/">GET_LOCK()</a> function can be used.

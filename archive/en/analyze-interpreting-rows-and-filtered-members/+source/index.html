@@ -323,7 +323,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/analyze-interpreting-rows-and-filtered-members/+r/135561/">135561</a></dd>
+            <dd><a href="/kb/en/analyze-interpreting-rows-and-filtered-members/+r/138867/">138867</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3645">
@@ -332,7 +332,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-02-27 11:53">2024-02-27 11:53</span></dd>
+<span class="datetime" title="2024-04-28 07:23">2024-04-28 07:23</span></dd>
         </dl>
     </div>
     
@@ -342,14 +342,18 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">This article describes how to interpret ##r_rows## and ##r_filtered## members in ANALYZE FORMAT=JSON output for cases when the table uses index-based access method.
+        <textarea id="answer_source" class="creole_source autogrow">This article describes how to interpret ##r_rows## and ##r_filtered## members in ANALYZE FORMAT=JSON when an index-based access method is used.
 
-Index-based access method may employ
-* Index Condition Pushdown
-* Rowid Filtering
-* Regular attached_condition checking
+&lt;&lt;toc&gt;&gt;
 
-Consider ANALYZE FORMAT=JSON output listing all of the above:
+== Index-based access method
+
+Index-based access method may employ some or all of the following:
+* [[index-condition-pushdown|Index Condition Pushdown]]
+* [[rowid-filtering-optimization|Rowid Filtering]]
+* attached_condition checking
+
+Consider a table access which does all three: 
 &lt;&lt;code&gt;&gt;
   &#34;table&#34;: {
     &#34;table_name&#34;: &#34;t1&#34;,
@@ -372,13 +376,12 @@ Consider ANALYZE FORMAT=JSON output listing all of the above:
   }
 &lt;&lt;/code&gt;&gt;
 
-== Access diagram
 The access is performed as follows:
-
+=== Access diagram
 {{index-read-diagram-3}}
 
-== Statistics before the fix for MDEV-18478 
-Before the fix for MDEV-18478, the counters were counted as follows:
+== Statistics values in MariaDB before 11.5
+In MariaDB versions before 11.5, the counters were counted as follows:
 
 {{index-read-stats-old}}
 
@@ -387,9 +390,9 @@ that is,
 * ##r_filtered## only counts selectivity of the ##attached_condition##.
 * selectivity of the Rowid Filter is in ##rowid_filter.r_selectivity_pct##.
 
-== Statistics after the fix for MDEV-18478
+== Statistics values in MariaDB 11.5 and later versions
 
-After the fix for MDEV-18478, the row counters are:
+Starting from MariaDB 11.5 (MDEV-18478), the row counters are:
 
 * ##r_index_rows## counts the number of enumerated index tuples, before any checks are made
 * ##r_rows## is the same as before - number of rows after index checks.

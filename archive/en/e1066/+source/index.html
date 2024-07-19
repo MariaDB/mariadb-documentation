@@ -327,7 +327,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/e1066/+r/134513/">134513</a></dd>
+            <dd><a href="/kb/en/e1066/+r/141346/">141346</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -336,7 +336,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-01-29 12:43">2024-01-29 12:43</span></dd>
+<span class="datetime" title="2024-07-17 13:14">2024-07-17 13:14</span></dd>
         </dl>
     </div>
     
@@ -354,9 +354,53 @@
 
 == Possible Causes and Solutions
 
-&lt;&lt;style class=&#34;greenbox&#34;&gt;&gt;
-This article doesn&#39;t currently contain any content. [[writing-and-editing-knowledge-base-articles/|You can help!]]
-&lt;&lt;/style&gt;&gt;</textarea>
+In order to avoid ambiguity, a table name or alias must uniquely identify an object. There are many situations where this could occur.
+
+For example,  [[handler-commands|HANDLER]] statements use unqualified table names, requiring the use of an alias in certain contexts. For example:
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE t1 (f1 INT);
+
+INSERT INTO t1 VALUES (1),(2),(3);
+
+HANDLER t1 OPEN;
+
+HANDLER t1 READ NEXT;
++------+
+| f1   |
++------+
+|    1 |
++------+
+
+HANDLER t1 READ NEXT;
++------+
+| f1   |
++------+
+|    2 |
++------+
+&lt;&lt;/sql&gt;&gt;
+
+In the previous example, the HANDLER was opened with the t1 table name. Since HANDLERs use unqualified table names, trying to access another table with this same name, even though it&#39;s in another database, will result in ambiguity. An alias needs to be used to avoid the ambiguity:
+&lt;&lt;sql&gt;&gt;
+CREATE DATABASE db_new;
+
+CREATE TABLE db_new.t1 (id INT);
+
+INSERT INTO db_new.t1 VALUES (4),(5),(6);
+
+HANDLER db_new.t1 OPEN;
+ERROR 1066 (42000): Not unique table/alias: &#39;t1&#39;
+
+HANDLER db_new.t1 OPEN AS db_new_t1;
+
+HANDLER db_new_t1 READ NEXT LIMIT 3;
++------+
+| id   |
++------+
+|    4 |
+|    5 |
+|    6 |
++------+
+&lt;&lt;/sql&gt;&gt;</textarea>
     
 
 

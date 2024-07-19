@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-maxscale-2302-limitations-and-known-issues-within-mariadb-maxscale/+r/136244/">136244</a></dd>
+            <dd><a href="/kb/en/mariadb-maxscale-2302-limitations-and-known-issues-within-mariadb-maxscale/+r/140683/">140683</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1">
@@ -436,9 +436,11 @@ transaction or change the autocommit mode using a prepared statement.
 * Compression is not included in the server handshake.
 
 * If a `KILL [CONNECTION] &lt;ID&gt;` statement is executed, MaxScale will intercept
-  it. If the ID matches a MaxScale session ID, it will be closed, similarly to
-  how MariaDB does it. If the `KILL CONNECTION USER &lt;user&gt;` form is given, all
-  connections with a matching username will be closed.
+  it. If the ID matches a MaxScale session ID, it will be closed by sending
+  modified `KILL` commands of the same type to all backend server to which the
+  session in question is connected to. This results in behavior that is similar
+  to how MariaDB does it. If the `KILL CONNECTION USER &lt;user&gt;` form is given,
+  all connections with a matching username will be closed instead.
 
 * MariaDB MaxScale does not support `KILL QUERY ID &lt;query_id&gt;` type
   statements. If a query by a query ID is to be killed, it needs to be done
@@ -447,6 +449,14 @@ transaction or change the autocommit mode using a prepared statement.
 * Any `KILL` commands executed using a prepared statement are ignored by
   MaxScale. If any are executed, it is highly likely that the wrong connection
   ends up being killed.
+
+* If a `KILL` connection kills a session that is connected to a readwritesplit
+  service that has `transaction_replay` or `delayed_retry` enabled, it is
+  possible that the query is retried even if the connection is killed. To avoid
+  this, use `KILL QUERY` instead.
+
+* A `KILL` on one service can cause a connection from another service to be
+  closed even if it uses a different protocol.
 
 * The change user command (COM_CHANGE_USER) only works with standard
   authentication.

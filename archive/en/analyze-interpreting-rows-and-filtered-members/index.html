@@ -25,11 +25,15 @@
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
     <meta property="og:site_name" content="MariaDB KnowledgeBase" />
     <meta property="fb:admins" content="514852603" />
-    <meta property="og:description" content="This article describes how to interpret r_rows and r_filtered members in ANALYZE FORMAT=JSON output for cases when the table uses index-based access method.
-Index-based access..." />
+    <meta property="og:description" content="This article describes how to interpret r_rows and r_filtered members in ANALYZE FORMAT=JSON when an index-based access method is used.
 
-    <meta name="description" content="This article describes how to interpret r_rows and r_filtered members in ANALYZE FORMAT=JSON output for cases when the table uses index-based access method.
-Index-based access..." />
+Index-based access method
+Index-based ..." />
+
+    <meta name="description" content="This article describes how to interpret r_rows and r_filtered members in ANALYZE FORMAT=JSON when an index-based access method is used.
+
+Index-based access method
+Index-based ..." />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
@@ -284,12 +288,12 @@ Index-based access..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-01-10 10:05">2 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2024-01-10 10:05">6 months, 1 week ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-02-27 11:53">3 weeks, 6 days ago</span></dd>
+<span class="datetime" title="2024-04-28 07:23">2 months, 3 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -432,13 +436,28 @@ Index-based access..." />
 
     
     <div class="answer formatted">
-        <p>This article describes how to interpret <code>r_rows</code> and <code>r_filtered</code> members in ANALYZE FORMAT=JSON output for cases when the table uses index-based access method.</p>
-<p>Index-based access method may employ</p>
-<ul start="1"><li>Index Condition Pushdown
-</li><li>Rowid Filtering
-</li><li>Regular attached_condition checking
+        <p>This article describes how to interpret <code>r_rows</code> and <code>r_filtered</code> members in ANALYZE FORMAT=JSON when an index-based access method is used.</p>
+<div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#index-based-access-method" title="Index-based access method">Index-based access method</a>    <ol class="toc">
+
+        <li class=""><a href="#access-diagram" title="Access diagram">Access diagram</a>    </ol>
+</li>
+
+    <li class=""><a href="#statistics-values-in-mariadb-before-115" title="Statistics values in MariaDB before 11.5">Statistics values in MariaDB before 11.5</a></li>
+
+    <li class=""><a href="#statistics-values-in-mariadb-115-and-later-versions" title="Statistics values in MariaDB 11.5 and later versions">Statistics values in MariaDB 11.5 and later versions</a> </ol>
+</li>
+</div>
+<h2 class="anchored_heading" id="index-based-access-method">Index-based access method</h2>
+<p>Index-based access method may employ some or all of the following:</p>
+<ul start="1"><li><a href="/kb/en/index-condition-pushdown/">Index Condition Pushdown</a>
+</li><li><a href="/kb/en/rowid-filtering-optimization/">Rowid Filtering</a>
+</li><li>attached_condition checking
 </li></ul>
-<p>Consider ANALYZE FORMAT=JSON output listing all of the above:</p>
+<p>Consider a table access which does all three: </p>
 <pre class="fixed">  &#34;table&#34;: {
     &#34;table_name&#34;: &#34;t1&#34;,
     &#34;access_type&#34;: &#34;range&#34;,
@@ -458,19 +477,19 @@ Index-based access..." />
     &#34;index_condition&#34;: &#34;cond1&#34;,
     &#34;attached_condition&#34;: &#34;cond2&#34;
   }
-</pre><h2 class="anchored_heading" id="access-diagram">Access diagram</h2>
-<p>The access is performed as follows:</p>
+</pre><p>The access is performed as follows:</p>
+<h3 class="anchored_heading" id="access-diagram">Access diagram</h3>
 <p><img src="/kb/en/analyze-interpreting-rows-and-filtered-members/+image/index-read-diagram-3" alt="index-read-diagram-3" title="index-read-diagram-3"></p>
-<h2 class="anchored_heading" id="statistics-before-the-fix-for-mdev-18478">Statistics before the fix for <a href="https://jira.mariadb.org/browse/MDEV-18478">MDEV-18478</a></h2>
-<p>Before the fix for <a href="https://jira.mariadb.org/browse/MDEV-18478">MDEV-18478</a>, the counters were counted as follows:</p>
+<h2 class="anchored_heading" id="statistics-values-in-mariadb-before-115">Statistics values in MariaDB before 11.5</h2>
+<p>In MariaDB versions before 11.5, the counters were counted as follows:</p>
 <p><img src="/kb/en/analyze-interpreting-rows-and-filtered-members/+image/index-read-stats-old" alt="index-read-stats-old" title="index-read-stats-old"></p>
 <p>that is,</p>
 <ul start="1"><li><code>r_rows</code> is counted after Index Condition Pushdown check and Rowid Filter check.
 </li><li><code>r_filtered</code> only counts selectivity of the <code>attached_condition</code>.
 </li><li>selectivity of the Rowid Filter is in <code>rowid_filter.r_selectivity_pct</code>.
 </li></ul>
-<h2 class="anchored_heading" id="statistics-after-the-fix-for-mdev-18478">Statistics after the fix for <a href="https://jira.mariadb.org/browse/MDEV-18478">MDEV-18478</a></h2>
-<p>After the fix for <a href="https://jira.mariadb.org/browse/MDEV-18478">MDEV-18478</a>, the row counters are:</p>
+<h2 class="anchored_heading" id="statistics-values-in-mariadb-115-and-later-versions">Statistics values in <a href="/kb/en/what-is-mariadb-115/">MariaDB 11.5</a> and later versions</h2>
+<p>Starting from <a href="/kb/en/what-is-mariadb-115/">MariaDB 11.5</a> (<a href="https://jira.mariadb.org/browse/MDEV-18478">MDEV-18478</a>), the row counters are:</p>
 <ul start="1"><li><code>r_index_rows</code> counts the number of enumerated index tuples, before any checks are made
 </li><li><code>r_rows</code> is the same as before - number of rows after index checks.
 </li></ul>

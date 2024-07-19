@@ -270,12 +270,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2016-06-20 16:15">7 years, 9 months ago</span></dd>
+<span class="datetime" title="2016-06-20 16:15">8 years ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-12-22 15:31">3 months ago</span></dd>
+<span class="datetime" title="2024-07-03 10:01">2 weeks, 1 day ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -425,7 +425,7 @@
             <h2 class="h3" style="font-size: 18px;">Need help tuning your MariaDB database? Ask the experts!</h2>
                             
 &nbsp;
-    <a class="btn btn-primary btn-lg" href="https://mariadb.com/contact/?utm_source=onpagepromo&utm_medium=kb&utm_campaign=tuning" style="padding: 12px 50px;margin-top: 15px;margin-bottom: 10px;" target="_blank">Contact Us</a>
+    <a class="btn btn-primary btn-lg" href="https://mariadb.com/contact/?utm_source=onpagepromo&utm_medium=kb&utm_campaign=contact-performance-tuning" style="padding: 12px 50px;margin-top: 15px;margin-bottom: 10px;" target="_blank">Contact Us</a>
         </div>
         
     </div>
@@ -455,8 +455,6 @@
     <li class=""><a href="#query-memory-allocation" title="Query Memory Allocation">Query Memory Allocation</a></li>
 
     <li class=""><a href="#mutex-bottleneck" title="Mutex Bottleneck">Mutex Bottleneck</a></li>
-
-    <li class=""><a href="#hyperthreading-and-multiple-cores-cpus" title="HyperThreading and Multiple Cores (CPUs)">HyperThreading and Multiple Cores (CPUs)</a></li>
 
     <li class=""><a href="#32-bit-os-and-mariadb" title="32-bit OS and MariaDB">32-bit OS and MariaDB</a></li>
 
@@ -591,14 +589,6 @@ Caveat: Some flavors of OS always claim to be using over 90%, even when there is
 </li><li>InnoDB's buffer_pool
 With multi-core boxes, the mutex problem is causing performance problems. In general, past 4-8 cores, MySQL gets slower, not faster. MySQL 5.5 and Percona's XtraDB made that somewhat better in InnoDB; the practical limit for cores is more like 32, and performance tends plateaus after that rather than declining. 5.6 claims to scale up to about 48 cores.
 </li></ul>
-<h2 class="anchored_heading" id="hyperthreading-and-multiple-cores-cpus">HyperThreading and Multiple Cores (CPUs)</h2>
-<p>Short answers (for older versions of MySQL and MariaDB):</p>
-<ul><li>Turn off HyperThreading
-</li><li>Turn off any cores beyond 8
-</li><li>HyperThreading is mostly a thing of the past, so this section may not apply.
-</li></ul>
-<p>HyperThreading is great for marketing, lousy for performance. It involves having two processing units sharing a single hardware cache. If both units are doing the same thing, the cache will be reasonably useful. If the units are doing different things, they will be clobbering each other's cache entries.</p>
-<p>Furthermore MySQL is not great on using multiple cores. So, if you turn off HT, the remaining cores run a little faster.</p>
 <h2 class="anchored_heading" id="32-bit-os-and-mariadb">32-bit OS and MariaDB</h2>
 <p>First, the OS (and the hardware?) may conspire to not let you use all 4GB, if that is what you have. If you have more than 4GB of RAM, the excess beyond 4GB is _totally_ inaccessable and unusable on a 32-bit OS.</p>
 <p>Secondly, the OS probably has a limit on how much RAM it will allow any process to use.</p>
@@ -688,7 +678,8 @@ Ouch -- it is out of room in the one CPU where it is willing to allocate its stu
 <p>Another possible solution: Turn numa off (if the OS has a way of doing that)</p>
 <p>Overall performance loss/gain: A few percent.</p>
 <h2 class="anchored_heading" id="huge-pages">Huge Pages</h2>
-<p>This is another hardware performance gimmick.</p>
+<div class="cstm-style bluebox"><p><a href="/kb/en/mariadb-10617-release-notes/">MariaDB 10.6.17</a> (and other releases after 19 Jan 2024) have transparent huge pages automatically disabled. See <a href="https://jira.mariadb.org/browse/MDEV-33279">MDEV-33279</a> "Disable transparent huge pages after page buffers has been allocated" for more information.</p>
+</div><p>This is another hardware performance gimmick.</p>
 <p>For a CPU to access RAM, especially mapping a 64-bit address to somewhere in, say, 128GB or 'real' RAM, the TLB is used. (TLB = Translation Lookup Buffer.) Think of the TLB as a hardware associative memory lookup table; given a 64-bit virtual address, what is the real address.</p>
 <p>Because it is an associative memory of finite size, sometimes there will be "misses" that require reaching into real RAM to resolve the lookup. This is costly, so should be avoided.</p>
 <p>Normally, RAM is 'paged' in 4KB pieces; the TLB actually maps the top (64-12) bits into a specific page. Then the bottom 12 bits of the virtual address are carried over intact.</p>

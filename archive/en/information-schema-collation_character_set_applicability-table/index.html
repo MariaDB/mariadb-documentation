@@ -290,12 +290,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2013-11-18 11:53">10 years, 4 months ago</span></dd>
+<span class="datetime" title="2013-11-18 11:53">10 years, 8 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2017-10-30 02:16">6 years, 4 months ago</span></dd>
+<span class="datetime" title="2024-06-09 20:49">1 month, 1 week ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -432,44 +432,29 @@
 <div class="cstm-style darkheader-nospace-borders"><table><tr><th>Column</th><th>Description</th></tr>
 <tr><td><code>COLLATION_NAME</code></td><td>Collation name.</td></tr>
 <tr><td><code>CHARACTER_SET_NAME</code></td><td>Name of the associated character set.</td></tr>
+<tr><td><code>FULL_COLLATION_NAME</code></td><td>Name of the associated character set/collation combination. Added in <a href="/kb/en/mariadb-10101-release-notes/">MariaDB 10.10.1</a>.</td></tr>
+<tr><td><code>ID</code></td><td>The unique identifier of this character set/collation combination. Added in <a href="/kb/en/mariadb-10101-release-notes/">MariaDB 10.10.1</a>.</td></tr>
+<tr><td><code>IS_DEFAULT</code></td><td>If the collation is the default for this character set. Added in <a href="/kb/en/mariadb-10101-release-notes/">MariaDB 10.10.1</a>.</td></tr>
 </table>
-</div><p><code>COLLATION_CHARACTER_SET_APPLICABILITY</code> is essentially a subset of the <code><a href="/kb/en/information-schema-collations-table/">COLLATIONS</a></code> table.</p>
-<pre class="fixed"><span class="k">SELECT</span> <span class="k">COLLATION_NAME</span><span class="p">,</span><span class="k">CHARACTER_SET_NAME</span> <span class="k">FROM</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">COLLATIONS</span><span class="p">;</span>
-</pre><p>and </p>
-<pre class="fixed"><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">COLLATION_CHARACTER_SET_APPLICABILITY</span><span class="p">;</span>
-</pre><p>will return identical results.</p>
+</div><p>The <code><a href="/kb/en/information-schema-collations-table/">COLLATIONS</a></code> table is table of the base <code>COLLATION_NAMES</code> in the same way that <code><a href="information-schema-character-sets-table">CHARACTER_SETS</a></code> table is table of the base <code>CHARACTER_SET_NAMES</code>. The <code>COLLATION_CHARACTER_SET_APPLICABILITY</code> table is the mapping between collations and character sets.</p>
+<p>When joining the  <code><a href="/kb/en/information-schema-tables-table/">information_schema.TABLES</a></code> table with its field <code>TABLE_COLLATIONS</code>, this should be joined to <code>FULL_COLLATION_NAME</code> in the <code>COLLATION_CHARACTER_SET_APPLICABILITY</code> table.</p>
 <p>See <a href="/kb/en/setting-character-sets-and-collations/">Setting Character Sets and Collations</a> for details on specifying the character set at the server, database, table and column levels.</p>
 <h2 class="anchored_heading" id="example">Example</h2>
-<pre class="fixed">SELECT * FROM information_schema.COLLATION_CHARACTER_SET_APPLICABILITY 
-WHERE CHARACTER_SET_NAME='utf32';
-+---------------------+--------------------+
-| COLLATION_NAME      | CHARACTER_SET_NAME |
-+---------------------+--------------------+
-| utf32_general_ci    | utf32              |
-| utf32_bin           | utf32              |
-| utf32_unicode_ci    | utf32              |
-| utf32_icelandic_ci  | utf32              |
-| utf32_latvian_ci    | utf32              |
-| utf32_romanian_ci   | utf32              |
-| utf32_slovenian_ci  | utf32              |
-| utf32_polish_ci     | utf32              |
-| utf32_estonian_ci   | utf32              |
-| utf32_spanish_ci    | utf32              |
-| utf32_swedish_ci    | utf32              |
-| utf32_turkish_ci    | utf32              |
-| utf32_czech_ci      | utf32              |
-| utf32_danish_ci     | utf32              |
-| utf32_lithuanian_ci | utf32              |
-| utf32_slovak_ci     | utf32              |
-| utf32_spanish2_ci   | utf32              |
-| utf32_roman_ci      | utf32              |
-| utf32_persian_ci    | utf32              |
-| utf32_esperanto_ci  | utf32              |
-| utf32_hungarian_ci  | utf32              |
-| utf32_sinhala_ci    | utf32              |
-| utf32_german2_ci    | utf32              |
-| utf32_croatian_ci   | utf32              |
-+---------------------+--------------------+
+<pre class="fixed">SELECT * FROM information_schema.COLLATION_CHARACTER_SET_APPLICABILITY  WHERE CHARACTER_SET_NAME='utf32' ORDER BY IS_DEFAULT DESC, ID LIMIT 10;
++--------------------+--------------------+---------------------+------+------------+
+| COLLATION_NAME     | CHARACTER_SET_NAME | FULL_COLLATION_NAME | ID   | IS_DEFAULT |
++--------------------+--------------------+---------------------+------+------------+
+| uca1400_ai_ci      | utf32              | utf32_uca1400_ai_ci | 3072 | Yes        |
+| utf32_general_ci   | utf32              | utf32_general_ci    |   60 |            |
+| utf32_bin          | utf32              | utf32_bin           |   61 |            |
+| utf32_unicode_ci   | utf32              | utf32_unicode_ci    |  160 |            |
+| utf32_icelandic_ci | utf32              | utf32_icelandic_ci  |  161 |            |
+| utf32_latvian_ci   | utf32              | utf32_latvian_ci    |  162 |            |
+| utf32_romanian_ci  | utf32              | utf32_romanian_ci   |  163 |            |
+| utf32_slovenian_ci | utf32              | utf32_slovenian_ci  |  164 |            |
+| utf32_polish_ci    | utf32              | utf32_polish_ci     |  165 |            |
+| utf32_estonian_ci  | utf32              | utf32_estonian_ci   |  166 |            |
++--------------------+--------------------+---------------------+------+------------+
 </pre>
     </div>
 
@@ -595,6 +580,15 @@ WHERE CHARACTER_SET_NAME='utf32';
                         <a href="/kb/en/information-schema-applicable_roles-table/">
                             
                             Information Schema APPLICABLE_ROLES Table
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/information-schema-catalog-table/">
+                            
+                            Information Schema CATALOG Table
                         </a>
                     </li>
                 
@@ -932,6 +926,24 @@ WHERE CHARACTER_SET_NAME='utf32';
             
                 
                     <li>
+                        <a href="/kb/en/information-schema-sequences-table/">
+                            
+                            Information Schema SEQUENCES Table
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/information-schema-slave_status-table/">
+                            
+                            Information Schema SLAVE_STATUS Table
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
                         <a href="/kb/en/information-schema-spatial_ref_sys-table/">
                             
                             Information Schema SPATIAL_REF_SYS Table
@@ -1103,6 +1115,15 @@ WHERE CHARACTER_SET_NAME='utf32';
             
                 
                     <li>
+                        <a href="/kb/en/information-schema-users-table/">
+                            
+                            Information Schema USERS Table
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
                         <a href="/kb/en/information-schema-views-table/">
                             <span class="pull-right not_primary"></span>
                             Information Schema VIEWS Table
@@ -1124,15 +1145,6 @@ WHERE CHARACTER_SET_NAME='utf32';
                         <a href="/kb/en/information-schema-wsrep_status-table/">
                             
                             Information Schema WSREP_STATUS Table
-                        </a>
-                    </li>
-                
-            
-                
-                    <li>
-                        <a href="/kb/en/information-schema-users-table/">
-                            
-                            Information Schema USERS Table
                         </a>
                     </li>
                 

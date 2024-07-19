@@ -278,12 +278,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2017-04-09 11:58">6 years, 11 months ago</span></dd>
+<span class="datetime" title="2017-04-09 11:58">7 years, 3 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-10-12 22:14">5 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2024-05-22 12:23">1 month, 3 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -429,21 +429,22 @@
 
     <li class=""><a href="#description" title="Description">Description</a></li>
 
-    <li class=""><a href="#example" title="Example">Example</a></li>
+    <li class=""><a href="#examples" title="Examples">Examples</a></li>
 
     <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
 </li>
 </div>
 <p><code>PREVIOUS VALUE FOR</code> is IBM DB2 syntax while <code>LASTVAL()</code> is PostgreSQL syntax.</p>
 <h2 class="anchored_heading" id="description">Description</h2>
-<p>Get last value in the current connection generated from a sequence.</p>
+<p>Gets the most recent value in the current connection generated from a sequence.</p>
 <ul start="1"><li>If the sequence has not yet been used by the connection, <code>PREVIOUS VALUE FOR</code> returns <code>NULL</code> (the same thing applies with a new connection which doesn't see a last value for an existing sequence).
 </li><li>If a <code>SEQUENCE</code> has been dropped and re-created then it's treated as a new <code>SEQUENCE</code> and <code>PREVIOUS VALUE FOR</code> will return <code>NULL</code>.
-</li><li><code><a href="/kb/en/flush/">FLUSH TABLES</a></code> has no effect on <code>PREVIOUS VALUE FOR</code>.
+</li><li>Returns <code>NULL</code> if the sequence is complete
+</li><li><a href="/kb/en/flush/">FLUSH TABLES</a> has no effect on <code>PREVIOUS VALUE FOR</code>.
 </li><li>Previous values for all used sequences are stored per connection until connection ends.
 </li><li><code>PREVIOUS VALUE FOR</code> requires the <a href="/kb/en/grant/">SELECT privilege</a>.
 </li></ul>
-<h2 class="anchored_heading" id="example">Example</h2>
+<h2 class="anchored_heading" id="examples">Examples</h2>
 <pre class="fixed"><span class="k">CREATE</span> <span class="n">SEQUENCE</span> <span class="n">s</span> <span class="k">START</span> <span class="k">WITH</span> <span class="mi">100</span> <span class="k">INCREMENT</span> <span class="k">BY</span> <span class="mi">10</span><span class="p">;</span>
 
 <span class="k">SELECT</span> <span class="n">PREVIOUS</span> <span class="n">VALUE</span> <span class="k">FOR</span> <span class="n">s</span><span class="p">;</span>
@@ -488,13 +489,41 @@
 +----------------------+
 <span class="p">|</span>                  <span class="m">110</span> <span class="p">|</span>
 +----------------------+
-</pre></div><h2 class="anchored_heading" id="see-also">See Also</h2>
+</pre></div><p>Returns NULL if the sequence has run out:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="n">SEQUENCE</span> <span class="n">s</span> <span class="k">MAXVALUE</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span>
+
+<span class="k">SELECT</span> <span class="n">NEXTVAL</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">LASTVAL</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+<span class="o">+</span><span class="c1">------------+------------+</span>
+<span class="o">|</span> <span class="n">NEXTVAL</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">|</span> <span class="n">LASTVAL</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">------------+------------+</span>
+<span class="o">|</span>          <span class="mi">1</span> <span class="o">|</span>          <span class="mi">1</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">------------+------------+</span>
+
+<span class="k">SELECT</span> <span class="n">NEXTVAL</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">LASTVAL</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+<span class="o">+</span><span class="c1">------------+------------+</span>
+<span class="o">|</span> <span class="n">NEXTVAL</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">|</span> <span class="n">LASTVAL</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">------------+------------+</span>
+<span class="o">|</span>          <span class="mi">2</span> <span class="o">|</span>          <span class="mi">2</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">------------+------------+</span>
+
+<span class="k">SELECT</span> <span class="n">NEXTVAL</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">LASTVAL</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+<span class="n">ERROR</span> <span class="mi">4084</span> <span class="p">(</span><span class="n">HY000</span><span class="p">):</span> <span class="n">Sequence</span> <span class="s1">&#39;test.s&#39;</span> <span class="n">has</span> <span class="n">run</span> <span class="k">out</span>
+
+<span class="k">SELECT</span> <span class="n">LASTVAL</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+<span class="o">+</span><span class="c1">------------+</span>
+<span class="o">|</span> <span class="n">LASTVAL</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">------------+</span>
+<span class="o">|</span>       <span class="k">NULL</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">------------+</span>
+</pre><h2 class="anchored_heading" id="see-also">See Also</h2>
 <ul start="1"><li><a href="/kb/en/sequence-overview/">Sequence Overview</a>
 </li><li><a href="/kb/en/create-sequence/">CREATE SEQUENCE</a>
 </li><li><a href="/kb/en/alter-sequence/">ALTER SEQUENCE</a>
 </li><li><a href="/kb/en/next-value-for-sequence_name/">NEXT VALUE FOR</a>
 </li><li><a href="/kb/en/setval/">SETVAL()</a>. Set next value for the sequence.
-</li><li><a href="/kb/en/auto_increment/">AUTO_INCREMENT</a></li></ul>
+</li><li><a href="/kb/en/auto_increment/">AUTO_INCREMENT</a>
+</li><li><a href="/kb/en/information-schema-sequences-table/">Information Schema SEQUENCES Table</a>
+</li><li><a href="/kb/en/e4084/">Error 4084: Sequence has run out</a></li></ul>
 
     </div>
 

@@ -274,12 +274,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2016-11-19 16:08">7 years, 4 months ago</span></dd>
+<span class="datetime" title="2016-11-19 16:08">7 years, 8 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-02-22 00:01">1 month ago</span></dd>
+<span class="datetime" title="2024-06-13 09:52">1 month ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -421,6 +421,19 @@
 
             <li class=""><a href="#sslrequest-packet" title="SSLRequest Packet">SSLRequest Packet</a></li>
 
+            <li class=""><a href="#zero-configuration-ssl-encryption" title="ZERO-CONFIGURATION SSL ENCRYPTION">ZERO-CONFIGURATION SSL ENCRYPTION</a>            <ol class="toc">
+
+                <li class=""><a href="#what-happens-when-ssl-validation-fails" title="What Happens When SSL Validation Fails?">What Happens When SSL Validation Fails?</a></li>
+
+                <li class=""><a href="#verifying-a-secure-connection" title="Verifying a Secure Connection:">Verifying a Secure Connection:</a></li>
+
+                <li class=""><a href="#shared-secret-for-secure-connection" title="Shared Secret for Secure Connection:">Shared Secret for Secure Connection:</a></li>
+
+                <li class=""><a href="#server-114-confirmation-details" title="Server 11.4+ Confirmation Details:">Server 11.4+ Confirmation Details:</a></li>
+
+                <li class=""><a href="#matching-the-shared-secret" title="Matching the Shared Secret:">Matching the Shared Secret:</a>            </ol>
+</li>
+
             <li class=""><a href="#handshake-response-packet" title="Handshake Response Packet">Handshake Response Packet</a>        </ol>
 </li>
 
@@ -527,6 +540,23 @@ Connection is done by many exchanges: </p>
 </li></ul>
 </li></ul>
 </div><p><br><br></p>
+<h4 class="anchored_heading" id="zero-configuration-ssl-encryption">ZERO-CONFIGURATION SSL ENCRYPTION</h4>
+<p>Automatic Encrypted Connections (<a href="/kb/en/what-is-mariadb-114/">MariaDB 11.4</a>+):</p>
+<p>Previously, failed SSL connections due to self-signed certificates prevented communication. <a href="/kb/en/what-is-mariadb-114/">MariaDB 11.4</a>+ introduces a secondary validation method that works for all servers.</p>
+<h5 class="anchored_heading" id="what-happens-when-ssl-validation-fails">What Happens When SSL Validation Fails?</h5>
+<p>Even without a valid SSL certificate, the connector can still authenticate by remembering the server's fingerprint (unique identifier). However, it needs to confirm the connection is secure.</p>
+<h5 class="anchored_heading" id="verifying-a-secure-connection">Verifying a Secure Connection:</h5>
+<p>The confirmation method depends on the connection type. When using secure MitM-proof methods, like Unix sockets, connector can automatically validate the connection. Otherwise, a shared secret is used.</p>
+<h5 class="anchored_heading" id="shared-secret-for-secure-connection">Shared Secret for Secure Connection:</h5>
+<p>The shared secret is only used if the authentication plugin password is hashable (e.g., mysql_native_password or client_ed25519) and not empty. It's calculated by hashing the user's hash password with the authentication seed and the server fingerprint.</p>
+<h5 class="anchored_heading" id="server-114-confirmation-details">Server 11.4+ Confirmation Details:</h5>
+<p>For servers running <a href="/kb/en/what-is-mariadb-114/">MariaDB 11.4</a> or later, the final confirmation packet contains:</p>
+<ul start="1"><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;1&gt;</a> encryption (actually only 0x01 = SHA256 encryption)
+</li><li><a href="/kb/en/protocol-data-types/#end-of-file-length-bytes">byte&lt;EOF&gt;</a> shared secret.
+</li></ul>
+<h5 class="anchored_heading" id="matching-the-shared-secret">Matching the Shared Secret:</h5>
+<p>If the calculated shared secret matches the received one, the SSL connection is considered valid (host validation is not needed). Otherwise, the connection must be closed for security reasons.</p>
+<p><br><br></p>
 <h4 class="anchored_heading" id="handshake-response-packet">Handshake Response Packet</h4>
 <div class="cstm-style" style="padding: 16px;background-color: #f7f7f7;border-radius: 3px;"><ul start="1"><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;4&gt;</a> client capabilities
 </li><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;4&gt;</a> max packet size
@@ -666,6 +696,7 @@ client with capabilities CLIENT_MYSQL + CONNECT_WITH_DB will have a value of 9 (
 <tr><td>MARIADB_CLIENT_STMT_BULK_OPERATIONS</td><td>1 &lt;&lt; 34</td><td>Permit bulk insert</td></tr>
 <tr><td>MARIADB_CLIENT_EXTENDED_TYPE_INFO</td><td>1 &lt;&lt; 35</td><td>Add extended metadata information</td></tr>
 <tr><td>MARIADB_CLIENT_CACHE_METADATA</td><td>1 &lt;&lt; 36</td><td>Permit skipping metadata</td></tr>
+<tr><td>MARIADB_CLIENT_BULK_UNIT_RESULTS</td><td>1 &lt;&lt; 37</td><td>when enable, indicate that Bulk command can use STMT_BULK_FLAG_SEND_UNIT_RESULTS flag that permit to return a result-set of all affected rows and auto-increment values</td></tr>
 </table>
 </div><p><br></p>
 <h3 class="anchored_heading" id="native-password-authentication">Native Password Authentication</h3>

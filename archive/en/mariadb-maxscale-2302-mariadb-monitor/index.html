@@ -294,12 +294,12 @@ MariaDB Monitor optional par..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-02-27 21:22">1 year ago</span></dd>
+<span class="datetime" title="2023-02-27 21:22">1 year, 4 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-02-27 21:22">1 year ago</span></dd>
+<span class="datetime" title="2023-02-27 21:22">1 year, 4 months ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -316,7 +316,7 @@ MariaDB Monitor optional par..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.9/Documentation/Monitors/MariaDB-Monitor.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.10/Documentation/Monitors/MariaDB-Monitor.md">GitHub</a></dd>
         
     </dl>
 
@@ -453,6 +453,7 @@ MariaDB Monitor optional par..." />
 <li><a href="#failcount">failcount</a></li>
 <li><a href="#enforce_writable_master">enforce_writable_master</a></li>
 <li><a href="#enforce_read_only_slaves">enforce_read_only_slaves</a></li>
+<li><a href="#enforce_read_only_servers">enforce_read_only_servers</a></li>
 <li><a href="#maintenance_on_low_disk_space">maintenance_on_low_disk_space</a></li>
 <li><a href="#cooperative_monitoring_locks">cooperative_monitoring_locks</a></li>
 <li><a href="#script_max_replication_lag">script_max_replication_lag</a></li>
@@ -796,12 +797,25 @@ prefers to select a writable server as primary if possible.</p>
 <h3 id="enforce_read_only_slaves"><code>enforce_read_only_slaves</code></h3>
 <p>This feature is disabled by default. If set to ON, the monitor attempts to
 enable the <em>read_only</em>-flag on any writable replica server. The flag is checked
-every monitor tick. The monitor user requires the SUPER-privilege for this
-feature to work. While the <code>read_only</code>-flag is ON, only users with the
+every monitor tick. The monitor user requires the SUPER-privilege
+(or READ_ONLY ADMIN) for this
+feature to work. While the <em>read_only</em>-flag is ON, only users with the
 SUPER-privilege (or READ_ONLY ADMIN) can write to the backend server. If
 temporary write access is required, this feature should be disabled before
-attempting to disable <em>read_only</em>. Otherwise the monitor will quickly re-enable
-it.</p>
+attempting to disable <em>read_only</em> manually. Otherwise, the monitor will quickly
+re-enable it.</p>
+<p><em>read_only</em> won't be enabled on the master server, even if it has
+lost [Master]-status due to <a href="#master_conditions">master_conditions</a> and is
+marked [Slave].</p>
+<h3 id="enforce_read_only_servers"><code>enforce_read_only_servers</code></h3>
+<p>Boolean, default: false. Works similar to
+<a href="#enforce_read_only_slaves">enforce_read_only_slaves</a> except will set
+<em>read_only</em> on any writable server that is not the primary and not in
+maintenance (a superset of the servers altered by <em>enforce_read_only_slaves</em>).</p>
+<p>The monitor user requires the SUPER-privilege
+(or READ_ONLY ADMIN) for this feature to work. If the cluster has no valid
+primary or primary candidate, <em>read_only</em> is not set on any server as it is
+unclear which servers should be altered.</p>
 <h3 id="maintenance_on_low_disk_space"><code>maintenance_on_low_disk_space</code></h3>
 <p>This feature is enabled by default. If a running server that is not the primary
 or a relay primary is out of disk space the server is set to maintenance mode.
@@ -1413,22 +1427,34 @@ not see the primary-lock taken, then it won't mark any server as [Master],
 causing writes to fail.</p>
 <p>The lock-setting defines how many locks are required for primary status. Setting
 <code>cooperative_monitoring_locks=majority_of_all</code> means that the primary monitor
-needs <em>n_servers/2 + 1</em> (rounded down) locks. For example, a cluster of 3
-servers needs 2 locks for majority, a cluster of 4 needs 3, and a cluster of 5
-needs 3. This scheme is resistant against split-brain situations in the sense
+needs <em>n_servers/2 + 1</em> (rounded down) locks. For example, a cluster of three
+servers needs two locks for majority, a cluster of four needs three, and a
+cluster of five needs three.
+This scheme is resistant against split-brain situations in the sense
 that multiple monitors cannot be primary simultaneously. However, a split may
 cause both monitors to consider themselves secondary, in which case a primary
-server won't be detected. Also, if too many servers go down, neither monitor can
-claim lock majority.</p>
+server won't be detected.</p>
+<p>Even without a network split, <code>cooperative_monitoring_locks=majority_of_all</code>
+will lead to neither monitor claiming lock majority once too many servers go
+down. This scenario is depicted in the image below. Only two out of four servers
+are running when three are needed for majority. Although both MaxScales see both
+running servers, neither is certain they have majority and the cluster stays in
+read-only mode. If the primary server is down, no failover is performed either.</p>
+<p><img src="images/coop_lock_no_majority.png"></p>
 <p>Setting <code>cooperative_monitoring_locks=majority_of_running</code> changes the way
 <em>n_servers</em> is calculated. Instead of using the total number of servers, only
 servers currently [Running] are considered. This scheme adapts to multiple
 servers going down, ensuring that claiming lock majority is always possible.
 However, it can lead to multiple monitors claiming primary status in a
 split-brain situation. As an example, consider a cluster with servers 1 to 4
-with MaxScales A and B. If A can connect to 1 and 2 but not to 3 and 4, while B
-does the opposite, both MaxScales will claim two locks out of two running
-servers. The two MaxScales will then route writes to different servers.</p>
+with MaxScales A and B, as in the image below. MaxScale A can connect to
+servers 1 and 2 (and claim their locks) but not to servers 3 and 4 due to
+a network split. MaxScale A thus assumes servers 3 and 4 are down. MaxScale B
+does the opposite, claiming servers 3 and 4 and assuming 1 and 2 are down.
+Both MaxScales claim two locks out of two available and assume that they have
+lock majority. Both MaxScales may then promote their own primaries and route
+writes to different servers.</p>
+<p><img src="images/coop_lock_split_brain.png"></p>
 <p>The recommended strategy depends on which failure scenario is more likely and/or
 more destructive. If it's unlikely that multiple servers are ever down
 simultaneously, then <em>majority_of_all</em> is likely the safer choice. On the other
@@ -1440,33 +1466,42 @@ monitor has lock majority on the cluster. If cooperative monitoring is disabled,
 the field value is <em>null</em>. Lock information for individual servers is listed in
 the server-specific field <strong>lock_held</strong>. Again, <em>null</em> indicates that locks are
 not in use or the lock status is unknown.</p>
-<p>If multiple MaxScale instances end up in a situation where none of them gets the
-needed number of servers, they try again at a random point in time. Eventually,
-one MaxScale will end up receiving all of the servers. The time it takes for
-this to occur depends on multiple factors but it is estimated that the time to
-resolve conflicts is low enough that no additional special treatment for
-conflicts is needed.</p>
+<p>If a MaxScale instance tries to acquire the locks but fails to get majority
+(perhaps another MaxScale was acquiring locks simultaneously) it will release
+any acquired locks and try again after a random number of monitor ticks. This
+prevents multiple MaxScales from fighting over the locks continuously as one
+MaxScale will eventually wait less time than the others. Conflict probability
+can be further decreased by configuring each monitor with a different
+<em>monitor_interval</em>.</p>
+<p>The flowchart below illustrates the lock handling logic.</p>
+<p><img src="images/coop_lock_flowchart.svg"></p>
 <h3 id="releasing-locks">Releasing locks</h3>
 <p>Monitor cooperation depends on the server locks. The locks are
 connection-specific. The owning connection can manually release a lock, allowing
 another connection to claim it. Also, if the owning connection closes, the
-MariaDB-server process releases the lock. How quickly a lost connection is
+MariaDB Server process releases the lock. How quickly a lost connection is
 detected affects how quickly the primary monitor status moves from one monitor
 and MaxScale to another.</p>
 <p>If the primary MaxScale or its monitor is stopped normally, the monitor
 connections are properly closed, releasing the locks. This allows the secondary
 MaxScale to quickly claim the locks. However, if the primary simply vanishes
 (broken network), the connection may just look idle. In this case, the
-MariaDB-server may take a long time before it considers the monitor connection
+MariaDB Server may take a long time before it considers the monitor connection
 lost. This time ultimately depends on TCP keepalive settings on the machines
-running MariaDB-server.</p>
-<p>On MariaDB-server 10.3.3 and later, the TCP keepalive settings can be configured
+running MariaDB Server.</p>
+<p>On MariaDB Server 10.3.3 and later, the TCP keepalive settings can be configured
 for just the server process. See
 <a href="https://mariadb.com/kb/en/server-system-variables/#tcp_keepalive_interval">Server System Variables</a>
 for information on settings <em>tcp_keepalive_interval</em>, <em>tcp_keepalive_probes</em> and
 <em>tcp_keepalive_time</em>. These settings can also be set on the operating system
 level, as described
 <a href="http://www.tldp.org/HOWTO/TCP-Keepalive-HOWTO/usingkeepalive.html">here</a>.</p>
+<p>As of MaxScale  6.4.16, 22.08.13, 23.02.10, 23.08.6 and 24.02.2, configuring
+TCP keepalive is no longer necessary as monitor sets the session <em>wait_timeout</em>
+variable when acquiring a lock. This causes the MariaDB Server to close the
+monitor connection if the connection appears idle for too long. The value of
+<em>wait_timeout</em> used depends on the monitor interval and connection timeout
+settings, and is logged at MaxScale startup.</p>
 <p>A monitor can also be ordered to manually release its locks via the module
 command <em>release-locks</em>. This is useful for manually changing the primary
 monitor. After running the release-command, the monitor will not attempt to

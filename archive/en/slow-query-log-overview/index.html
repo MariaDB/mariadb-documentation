@@ -274,12 +274,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2013-05-01 11:26">10 years, 10 months ago</span></dd>
+<span class="datetime" title="2013-05-01 11:26">11 years, 2 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-19 23:40">6 months, 1 week ago</span></dd>
+<span class="datetime" title="2024-07-02 20:01">2 weeks, 1 day ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -434,7 +434,7 @@
 
     <li class=""><a href="#logging-queries-that-dont-use-indexes" title="Logging Queries That Don&#39;t Use Indexes">Logging Queries That Don&#39;t Use Indexes</a></li>
 
-    <li class=""><a href="#logging-queries-that-examine-a-minimum-row-limit" title="Logging Queries That Examine a Minimum Row Limit">Logging Queries That Examine a Minimum Row Limit</a></li>
+    <li class=""><a href="#excluding-queries-that-examine-fewer-than-a-minimum-row-limit" title="Excluding Queries That Examine Fewer Than a Minimum Row Limit">Excluding Queries That Examine Fewer Than a Minimum Row Limit</a></li>
 
     <li class=""><a href="#logging-slow-administrative-statements" title="Logging Slow Administrative Statements">Logging Slow Administrative Statements</a></li>
 
@@ -456,7 +456,7 @@
 <p>The number of rows affected by the slow query are also recorded in the slow query log.</p>
 <h2 class="anchored_heading" id="enabling-the-slow-query-log">Enabling the Slow Query Log</h2>
 <p>The slow query log is disabled by default. </p>
-<p>To enable the slow query log, set the <a href="/kb/en/server-system-variables/#slow_query_log">slow_query_log</a> system variable to <code>1</code>. It can be changed dynamically with <a href="/kb/en/set/#global-session">SET GLOBAL</a>. For example:</p>
+<p>To enable the slow query log, set the <a href="/kb/en/server-system-variables/#slow_query_log">slow_query_log</a> system variable (or, from <a href="/kb/en/what-is-mariadb-1011/">MariaDB 10.11</a>, <a href="/kb/en/server-system-variables/#log_slow_query">log_slow_query</a>) to <code>1</code>. It can be changed dynamically with <a href="/kb/en/set/#global-session">SET GLOBAL</a>. For example:</p>
 <pre class="fixed">SET GLOBAL slow_query_log=1;
 </pre><p>It can also be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
 <pre class="fixed">[mariadb]
@@ -464,7 +464,7 @@
 slow_query_log
 </pre><h2 class="anchored_heading" id="configuring-the-slow-query-log-filename">Configuring the Slow Query Log Filename</h2>
 <p>By default, the slow query log is written to <code>${hostname}-slow.log</code> in the <a href="/kb/en/server-system-variables/#datadir">datadir</a> directory. However, this can be changed.</p>
-<p>One way to configure the slow query log filename is to set the <a href="/kb/en/server-system-variables/#slow_query_log_file">slow_query_log_file</a> system variable. It can be changed dynamically with <a href="/kb/en/set/#global-session">SET GLOBAL</a>. For example:</p>
+<p>One way to configure the slow query log filename is to set the <a href="/kb/en/server-system-variables/#slow_query_log_file">slow_query_log_file</a> system variable (or, from <a href="/kb/en/what-is-mariadb-1011/">MariaDB 10.11</a>, <a href="/kb/en/server-system-variables/#log_slow_query_file">log_slow_query_file</a>). It can be changed dynamically with <a href="/kb/en/set/#global-session">SET GLOBAL</a>. For example:</p>
 <pre class="fixed">SET GLOBAL slow_query_log_file='mariadb-slow.log';
 </pre><p>It can also be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
 <pre class="fixed">[mariadb]
@@ -477,7 +477,7 @@ slow_query_log_file=mariadb-slow.log
 ...
 slow_query_log
 slow_query_log_file=/var/log/mysql/mariadb-slow.log
-</pre><p>Another way to configure the slow query log filename is to set the <a href="/kb/en/mysqld-options/#-log-basename">log-basename</a> option, which configures MariaDB to use a common prefix for all log files (e.g. slow query log, <a href="/kb/en/general-query-log/">general query log</a>, <a href="/kb/en/error-log/">error log</a>, <a href="/kb/en/binary-log/">binary logs</a>, etc.). The slow query log filename will be built by adding <code>-slow.log</code> to this prefix. This option cannot be set dynamically. It can be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
+</pre><p>Another way to configure the slow query log filename is to set the <a href="/kb/en/mariadbd-options/#-log-basename">log-basename</a> option, which configures MariaDB to use a common prefix for all log files (e.g. slow query log, <a href="/kb/en/general-query-log/">general query log</a>, <a href="/kb/en/error-log/">error log</a>, <a href="/kb/en/binary-log/">binary logs</a>, etc.). The slow query log filename will be built by adding <code>-slow.log</code> to this prefix. This option cannot be set dynamically. It can be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
 <pre class="fixed">[mariadb]
 ...
 log-basename=mariadb
@@ -521,10 +521,10 @@ last_insert_id: 0
 ...
 </pre><p>See <a href="/kb/en/writing-logs-into-tables/">Writing logs into tables</a> for more information.</p>
 <h2 class="anchored_heading" id="disabling-the-slow-query-log-for-a-session">Disabling the Slow Query Log for a Session</h2>
-<p>A user can disable logging to the slow query log for a connection by setting the <a href="/kb/en/server-system-variables/#slow_query_log">slow_query_log</a> system variable to <code>0</code>. For example:</p>
+<p>A user can disable logging to the slow query log for a connection by setting the <a href="/kb/en/server-system-variables/#slow_query_log">slow_query_log</a> system variable (or, from <a href="/kb/en/what-is-mariadb-1011/">MariaDB 10.11</a>, <a href="/kb/en/server-system-variables/#log_slow_query">log_slow_query</a>) to <code>0</code>. For example:</p>
 <pre class="fixed">SET SESSION slow_query_log=0;
 </pre><h2 class="anchored_heading" id="disabling-the-slow-query-log-for-specific-statements">Disabling the Slow Query Log for Specific Statements</h2>
-<p>In <a href="/kb/en/mariadb-1031-release-notes/">MariaDB 10.3.1</a> and later, it is possible to disable logging to the slow query log for specific types of statements by setting the <a href="/kb/en/server-system-variables/#log_slow_disabled_statements">log_slow_disabled_statements</a> system variable. This option cannot be set dynamically. It can be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
+<p>It is possible to disable logging to the slow query log for specific types of statements by setting the <a href="/kb/en/server-system-variables/#log_slow_disabled_statements">log_slow_disabled_statements</a> system variable. This option cannot be set dynamically. It can be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
 <pre class="fixed">[mariadb]
 ...
 log_output=FILE
@@ -532,7 +532,7 @@ general_log
 general_log_file=queries.log
 log_slow_disabled_statements='admin,call,slave,sp'
 </pre><h2 class="anchored_heading" id="configuring-the-slow-query-log-time">Configuring the Slow Query Log Time</h2>
-<p>The time that defines a slow query can be configured by setting the <a href="/kb/en/server-system-variables/#long_query_time">long_query_time</a> system variable. It uses a units of seconds, with an optional milliseconds component. The default value is <code>10</code>. It can be changed dynamically with <a href="/kb/en/set/#global-session">SET GLOBAL</a>. For example:</p>
+<p>The time that defines a slow query can be configured by setting the <a href="/kb/en/server-system-variables/#long_query_time">long_query_time</a> system variable (or, from <a href="/kb/en/what-is-mariadb-1011/">MariaDB 10.11</a>, <a href="/kb/en/server-system-variables/#log_slow_query_time">log_slow_query_time</a>). It uses a units of seconds, with an optional milliseconds component. The default value is <code>10</code>. It can be changed dynamically with <a href="/kb/en/set/#global-session">SET GLOBAL</a>. For example:</p>
 <pre class="fixed">SET GLOBAL long_query_time=5.0;
 </pre><p>It can also be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
 <pre class="fixed">[mariadb]
@@ -542,8 +542,10 @@ slow_query_log
 slow_query_log_file=slow-queries.log
 long_query_time=5.0
 </pre><h2 class="anchored_heading" id="logging-queries-that-dont-use-indexes">Logging Queries That Don't Use Indexes</h2>
-<p>It can be beneficial to log queries that don't use indexes to the slow query log, since queries that don't use indexes can usually be optimized either by adding an index or by doing a slight rewrite. The slow query log can be configured to log queries that don't use indexes regardless of their execution time by setting the <a href="/kb/en/server-system-variables/#log_queries_not_using_indexes">log_queries_not_using_indexes</a> system variable.  It can be changed dynamically with <a href="/kb/en/set/#global-session">SET GLOBAL</a>. For example:</p>
-<pre class="fixed">SET GLOBAL log_queries_not_using_indexes=ON;
+<p>It can be beneficial to log queries that don't use indexes to the slow query log, since queries that don't use indexes can usually be optimized either by adding an index or by doing a slight rewrite. The slow query log can be configured to log queries that don't use indexes regardless of their execution time by adding the option "not_using_index" to <a href="/kb/en/server-system-variables/#log_slow_filter">log_slow_filter</a> or setting the <a href="/kb/en/server-system-variables/#log_queries_not_using_indexes">log_queries_not_using_indexes</a> system variable to 1.  It can be changed dynamically with <a href="/kb/en/set/#global-session">SET GLOBAL</a>.
+Some examples:</p>
+<pre class="fixed">SET @@log_slow_filter=concat(@@log_slow_filter,&#34;,not_using_index&#34;);
+SET GLOBAL log_queries_not_using_indexes=ON;
 </pre><p>It can also be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
 <pre class="fixed">[mariadb]
 ...
@@ -552,9 +554,9 @@ slow_query_log
 slow_query_log_file=slow-queries.log
 long_query_time=5.0
 log_queries_not_using_indexes=ON
-</pre><p>As a significant number of queries can run quickly even without indexes, you can use the <a href="/kb/en/server-system-variables/#min_examined_row_limit">min_examined_row_limit</a> system variable with <a href="/kb/en/server-system-variables/#log_queries_not_using_indexes">log_queries_not_using_indexes</a> to limit the logged queries to those having a material impact on the server.</p>
-<h2 class="anchored_heading" id="logging-queries-that-examine-a-minimum-row-limit">Logging Queries That Examine a Minimum Row Limit</h2>
-<p>It can be beneficial to log queries that examine a minimum number of rows. The slow query log can be configured to log queries that examine a minimum number of rows regardless of their execution time by setting the <a href="/kb/en/server-system-variables/#min_examined_row_limit">min_examined_row_limit</a> system variable. It can be changed dynamically with <a href="/kb/en/set/#global-session">SET GLOBAL</a>. For example:</p>
+</pre><p>As a significant number of queries can run quickly even without indexes, you can use the <a href="/kb/en/server-system-variables/#min_examined_row_limit">min_examined_row_limit</a> system variable (or, from <a href="/kb/en/what-is-mariadb-1011/">MariaDB 10.11</a>, <a href="/kb/en/server-system-variables/#log_slow_min_examined_row_limit">log_slow_min_examined_row_limit</a>) with <a href="/kb/en/server-system-variables/#log_queries_not_using_indexes">log_queries_not_using_indexes</a> to limit the logged queries to those having a material impact on the server.</p>
+<h2 class="anchored_heading" id="excluding-queries-that-examine-fewer-than-a-minimum-row-limit">Excluding Queries That Examine Fewer Than a Minimum Row Limit</h2>
+<p>It can be beneficial to exclude queries that examine fewer than a minimum number of rows from the log. This can be done by setting the <a href="/kb/en/server-system-variables/#min_examined_row_limit">min_examined_row_limit</a> system variable, or, from <a href="/kb/en/what-is-mariadb-1011/">MariaDB 10.11</a>, <a href="/kb/en/server-system-variables/#log_slow_min_examined_row_limit">log_slow_min_examined_row_limit</a>. It can be changed dynamically with <a href="/kb/en/set/#global-session">SET GLOBAL</a>. For example:</p>
 <pre class="fixed">SET GLOBAL min_examined_row_limit=100000;
 </pre><p>It can also be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
 <pre class="fixed">[mariadb]
@@ -565,9 +567,11 @@ slow_query_log_file=slow-queries.log
 long_query_time=5.0
 min_examined_row_limit=100000
 </pre><h2 class="anchored_heading" id="logging-slow-administrative-statements">Logging Slow Administrative Statements</h2>
-<p>By default, the Slow Query Log only logs slow non-administrative statements.  To log administrative statements, set the <a href="/kb/en/server-system-variables/#log_slow_admin_statements">log_slow_admin_statements</a> system variable.  The Slow Query Log considers the following statements administrative: <a href="/kb/en/alter-table/">ALTER TABLE</a>, <a href="/kb/en/analyze-table/">ANALYZE TABLE</a>, <a href="/kb/en/sql-commands-check-table/">CHECK TABLE</a>, <a href="/kb/en/create-index/">CREATE INDEX</a>, <a href="/kb/en/drop-index/">DROP INDEX</a>, <a href="/kb/en/optimize-table/">OPTIMIZE TABLE</a>, and <a href="/kb/en/repair-table/">REPAIR TABLE</a>.  In <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a> and later, this also includes <a href="/kb/en/alter-sequence/">ALTER SEQUENCE</a> statements.</p>
-<p>You can dynamically enable this feature using a <a href="/kb/en/set/#global-session">SET GLOBAL</a> statement.  For example: </p>
-<pre class="fixed">SET GLOBAL log_slow_admin_statements=ON;
+<p>By default, the Slow Query Log logs administrative statements.  To disable logging of administrative statements, remove "admin" from the <a href="/kb/en/server-system-variables/#log_slow_filter">log_slow_filter</a> system variable or alternatively 
+set the <a href="/kb/en/server-system-variables/#log_slow_admin_statements">log_slow_admin_statements</a> system variable to ON.  The Slow Query Log considers the following statements administrative: <a href="/kb/en/alter-table/">ALTER TABLE</a>, <a href="/kb/en/analyze-table/">ANALYZE TABLE</a>, <a href="/kb/en/sql-commands-check-table/">CHECK TABLE</a>, <a href="/kb/en/create-index/">CREATE INDEX</a>, <a href="/kb/en/drop-index/">DROP INDEX</a>, <a href="/kb/en/optimize-table/">OPTIMIZE TABLE</a>, and <a href="/kb/en/repair-table/">REPAIR TABLE</a>.  In <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a> and later, this also includes <a href="/kb/en/alter-sequence/">ALTER SEQUENCE</a> statements.</p>
+<p>You can dynamically enable this feature using a <a href="/kb/en/set/#global-session">SET GLOBAL</a> statement and setting it for just the current connection with LOCAL.  Some examples:</p>
+<pre class="fixed">SET SESSION log_slow_filter=replace(@@log_slow_filter,&#34;admin&#34;,&#34;&#34;);
+SET GLOBAL log_slow_admin_statements=ON;
 </pre><p>It can also be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
 <pre class="fixed">[mariadb]
 ...
@@ -587,7 +591,8 @@ slow_query_log
 slow_query_log_file=slow-queries.log
 long_query_time=5.0
 log_slow_filter=filesort,filesort_on_disk,tmp_table,tmp_table_on_disk
-</pre><h2 class="anchored_heading" id="throttling-the-slow-query-log">Throttling the Slow Query Log</h2>
+</pre><p>You can find all options for log_slow_filter at <a href="/kb/en/server-system-variables/#log_slow_filter">log_slow_filter system variable</a> or at <a href="/kb/en/slow-query-log-extended-statistics/#log_slow_filter">Slow Query Log Extended Statistics</a>.</p>
+<h2 class="anchored_heading" id="throttling-the-slow-query-log">Throttling the Slow Query Log</h2>
 <p>The slow query log can create a lot of I/O, so it can be beneficial to throttle it in some cases. The slow query log can be throttled by configuring the <a href="/kb/en/server-system-variables/#log_slow_rate_limit">log_slow_rate_limit</a> system variable. It can be changed dynamically with <a href="/kb/en/set/#global-session">SET GLOBAL</a>. For example:</p>
 <pre class="fixed">SET GLOBAL log_slow_rate_limit=5;
 </pre><p>It can also be set in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up the server. For example:</p>
@@ -616,8 +621,9 @@ log_slow_verbosity=query_plan,explain,engine
 <p>For queries that appear in the log that cannot be optimized in the above ways, perhaps because they are simply very large selects, due to slow hardware, or very high lock/cpu/io contention, using shard/clustering/load balancing solutions, better hardware, or stats tables may help to improve these queries.</p>
 <p>Slow query logs written to table can be viewed by querying the <a href="/kb/en/mysqlslow_log-table/">slow_log</a> table.</p>
 <h2 class="anchored_heading" id="variables-related-to-the-slow-query-log">Variables Related to the Slow Query Log</h2>
-<ul start="1"><li><a href="/kb/en/server-system-variables/#slow_query_log">slow_query_log</a> - enable/disable the slow query log.  Renamed to <a href="/kb/en/server-system-variables/#log_slow_query">log_slow_query</a> from <a href="/kb/en/mdb-10-11-0-rn/">MariaDB 10.11.0</a>.
+<ul start="1"><li><a href="/kb/en/server-system-variables/#slow_query_log">slow_query_log</a> - enable/disable the slow query log.  Renamed to <a href="/kb/en/server-system-variables/#log_slow_query">log_slow_query</a> from <a href="/kb/en/what-is-mariadb-1011/">MariaDB 10.11</a>.
 </li><li><a href="/kb/en/server-system-variables/#log_output">log_output</a> - how the output will be written
+</li><li><a href="/kb/en/server-system-variables/#log_slow_admin_statements">log_slow_admin_statements</a>. Whether to log OPTIMIZE, ANALYZE, ALTER and other administrative statements to the slow log. Deprecated from <a href="/kb/en/what-is-mariadb-110/">MariaDB 11.0</a>, use <a href="/kb/en/server-system-variables/#log_slow_filter">log_slow_filter</a> without admin.
 </li><li><a href="/kb/en/server-system-variables/#slow_query_log_file">slow_query_log_file</a> - name of the slow query log file.  Renamed to <a href="/kb/en/server-system-variables/#log_slow_query_file_name">log_slow_query_file_name</a> from <a href="/kb/en/mdb-10-11-0-rn/">MariaDB 10.11.0</a>.
 </li><li><a href="/kb/en/server-system-variables/#long_query_time">long_query_time</a> - time in seconds/microseconds defining a slow query. Renamed to  <a href="/kb/en/server-system-variables/#log_slow_query_time">log_slow_query_time</a> from <a href="/kb/en/mdb-10-11-0-rn/">MariaDB 10.11.0</a>.
 </li><li><a href="/kb/en/server-system-variables/#log_queries_not_using_indexes">log_queries_not_using_indexes</a> - whether to log queries that don't use indexes

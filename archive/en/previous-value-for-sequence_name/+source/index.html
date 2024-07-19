@@ -319,7 +319,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/previous-value-for-sequence_name/+r/130974/">130974</a></dd>
+            <dd><a href="/kb/en/previous-value-for-sequence_name/+r/139357/">139357</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-7">
@@ -328,7 +328,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-10-12 22:14">2023-10-12 22:14</span></dd>
+<span class="datetime" title="2024-05-22 12:23">2024-05-22 12:23</span></dd>
         </dl>
     </div>
     
@@ -356,15 +356,16 @@ sequence_name.currval
 
 == Description
 
-Get last value in the current connection generated from a sequence.
+Gets the most recent value in the current connection generated from a sequence.
 
 * If the sequence has not yet been used by the connection, ##PREVIOUS VALUE FOR## returns ##NULL## (the same thing applies with a new connection which doesn&#39;t see a last value for an existing sequence).
 * If a ##SEQUENCE## has been dropped and re-created then it&#39;s treated as a new ##SEQUENCE## and ##PREVIOUS VALUE FOR## will return ##NULL##.
-* ##[[flush|FLUSH TABLES]]## has no effect on ##PREVIOUS VALUE FOR##.
+* Returns ##NULL## if the sequence is complete
+* [[flush|FLUSH TABLES]] has no effect on ##PREVIOUS VALUE FOR##.
 * Previous values for all used sequences are stored per connection until connection ends.
 * ##PREVIOUS VALUE FOR## requires the [[grant|SELECT privilege]].
 
-== Example
+== Examples
 &lt;&lt;sql&gt;&gt;
 CREATE SEQUENCE s START WITH 100 INCREMENT BY 10;
 
@@ -416,13 +417,45 @@ $ .mysql -uroot test -e&#34;SELECT PREVIOUS VALUE FOR s; SELECT NEXT VALUE FOR s
 &lt;&lt;/code&gt;&gt;
 &lt;&lt;/style&gt;&gt;
 
+Returns NULL if the sequence has run out:
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE SEQUENCE s MAXVALUE=2;
+
+SELECT NEXTVAL(s), LASTVAL(s);
++------------+------------+
+| NEXTVAL(s) | LASTVAL(s) |
++------------+------------+
+|          1 |          1 |
++------------+------------+
+
+SELECT NEXTVAL(s), LASTVAL(s);
++------------+------------+
+| NEXTVAL(s) | LASTVAL(s) |
++------------+------------+
+|          2 |          2 |
++------------+------------+
+
+SELECT NEXTVAL(s), LASTVAL(s);
+ERROR 4084 (HY000): Sequence &#39;test.s&#39; has run out
+
+SELECT LASTVAL(s);
++------------+
+| LASTVAL(s) |
++------------+
+|       NULL |
++------------+
+&lt;&lt;/sql&gt;&gt;
+
+
 == See Also
 * [[sequence-overview|Sequence Overview]]
 * [[create-sequence|CREATE SEQUENCE]]
 * [[alter-sequence|ALTER SEQUENCE]]
 * [[next-value-for-sequence_name|NEXT VALUE FOR]]
 * [[setval|SETVAL()]]. Set next value for the sequence.
-* [[auto_increment|AUTO_INCREMENT]]</textarea>
+* [[auto_increment|AUTO_INCREMENT]]
+* [[information-schema-sequences-table/|Information Schema SEQUENCES Table]]
+* [[e4084|Error 4084: Sequence has run out]]</textarea>
     
 
 

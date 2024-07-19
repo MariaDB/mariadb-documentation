@@ -203,7 +203,7 @@
     
 
     
-    » <a class="crumb" href="/kb/en/release-notes-mariadb-11-3-series/">Release Notes - MariaDB 11.3 Series</a>
+    » <a class="crumb" href="/kb/en/release-notes-mariadb-11-3-rolling-releases/">Release Notes - MariaDB 11.3 Rolling Releases</a>
     
 
 
@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-11-3-2-release-notes/+r/137059/">137059</a></dd>
+            <dd><a href="/kb/en/mariadb-11-3-2-release-notes/+r/140186/">140186</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-03-20 07:23">2024-03-20 07:23</span></dd>
+<span class="datetime" title="2024-06-05 11:03">2024-06-05 11:03</span></dd>
         </dl>
     </div>
     
@@ -346,7 +346,20 @@ Note that the Debian packages have compatibility problems with PHP and NodeJS. W
 * run this as root: ##sed -i -e &#39;/character-set-collations/d&#39; /etc/mysql/mariadb.conf.d/50-server.cnf##
 &lt;&lt;/style&gt;&gt;
 
-MariaDB 11.3 is a current short-term series of MariaDB. It is an evolution of MariaDB 11.2 with several entirely new features. It will be the final 11.3 release - see [[https://mariadb.org/adjusting-release-model/|Adjusting the MariaDB Server release model]].
+&lt;&lt;style class=&#34;redbox&#34;&gt;&gt;
+Note that upgrading from earlier versions will leave all users, including root and other users with ##ALL PRIVILEGES ON *.*##, and ##ALL PRIVILEGES ON db.*##, without the [[grant/#database-privileges|SHOW CREATE ROUTINE]] privilege. While the users with read privileges on ##mysql.proc## will be have the effective privileges of ##SHOW CREATE ROUTINE##, they are unable to ##GRANT## them.
+
+To gain the privileges back on a global user, e.g. ##root@localhost##:
+# Start server with [[server-system-variables/#skip_grant_tables|skip-grant-tables]] as a configuration option
+# Run ##[[mariadb-client|mariadb client]]##
+# Execute ##[[flush|FLUSH PRIVILEGES]]##
+# Execute ##[[grant|GRANT ALL ON *.* TO ##root@localhost## WITH GRANT OPTION]]##
+# Remove the ##skip-grant-tables## option from the configuration file.
+
+To re-gain a database level privileges, using a user with ##SHOW CREATE ROUTINE## on ##*.*##  execute ##[[grant|GRANT ALL ON db.* TO user]## optionally ##WITH GRANT OPTION]]##.
+&lt;&lt;/style&gt;&gt;
+
+MariaDB 11.3.2 is a previous stable rolling release of MariaDB. It is an evolution of MariaDB 11.2 with several entirely new features. It is a rolling release — one is expected to upgrade to 11.4.2, there will be no 11.3.3 — see [[https://mariadb.org/adjusting-release-model/|Adjusting the MariaDB Server release model]].
 
 MariaDB 11.3.2 is a **//[[release-criteria|Stable (GA)]]//** release.
 
@@ -394,6 +407,7 @@ Thanks, and enjoy MariaDB!
 * mariabackup fails when ##innodb_max_dirty_pages_pct## contains a fraction (is not an integer) (MDEV-20286)
 * Missing required privilege ##CONNECTION ADMIN## (MDEV-33006)
 * If tables are frequently created, renamed, dropped, a backup cannot be restored (MDEV-32939)
+* [[backup-lock|BACKUP LOCKS]] on table to be accessible to those with [[grant/#database-privileges|database LOCK TABLES]] privileges (MDEV-28367)
 
 === JSON
 * Wrong function name in ##ER_JSON_PATH_NO_WILDCARD## error message for ##JSON_REPLACE## (MDEV-24541)
@@ -492,7 +506,6 @@ Thanks, and enjoy MariaDB!
 * It is now possible to create [[partitioning-tables|partitions]] on tables that contain [[geometry-types/|GEOMETRY types]] (MDEV-19177)
 * New [[old-mode|OLD_MODE]] value, ##NO_NULL_COLLATION_IDS##, a compatibility setting to support connectors (in particular MySQL Connector/NET) that give an exception when collation ids returned by [[show-collation|SHOW COLLATION]] are NULL. It is automatically set when a MySQL Connector/NET connection is determined.
 * Upgrade [[heidisql|HeidiSQL]] to 12.6.
-* ##BACKUP LOCKS## on table to be accessible to those with database ##LOCK TABLES## privileges (MDEV-28367)
 * Using two temporary tables in ##OPTIMIZE TABLE## lead to crash (MDEV-31523)
 * ##REGEXP_REPLACE## treats empty strings different than ##REPLACE## in ORACLE mode (MDEV-29095)
 * ##CREATE UNIQUE INDEX## fails with &#34;ERROR 1286 (42000): Unknown storage engine &#39;partition&#39;&#34; (MDEV-21618)

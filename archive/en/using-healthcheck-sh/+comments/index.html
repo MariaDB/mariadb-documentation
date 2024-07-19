@@ -266,12 +266,127 @@ Comments - Using Healthcheck.sh
                 </label>
             </div>
         </div>
+        <a name="comment_6749"></a>
+        <div class="comment approved" style="margin-left: 0px">
+            <div class="info">
+                
+
+<span class="datetime" title="2024-06-11 07:19">1 month, 1 week ago</span>
+                
+<span class="user" id="user-15352">
+<a href="/kb/user/id/15352" title="Mark Michaelis">Mark Michaelis</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6749">Using Healthcheck.sh With Custom Port (Docker)</a>
+                
+            </div><div class="comment_text">
+                <p>I had issues using <code>healthcheck.sh</code> as suggested by Bren X., because I set up MariaDB with a custom port 3307 directly within the MariaDB configuration, such as:</p>
+<pre>
+[mariadb]
+port = 3307
+</pre>
+<p>This custom port collides with the default <code>healthcheck.sh</code> in Docker, that uses a file <code>/var/lib/mysql/.my-healthcheck.cnf</code> generated similar to this:</p>
+<pre>
+[mariadb-client]
+port=3306
+socket=/run/mysqld/mysqld.sock
+user=healthcheck
+password=...
+protocol=tcp
+</pre>
+<p>This file is passed as <code>--defaults-extra-file</code> to the MariaDB client.</p>
+<p>Overriding this file is not an option, as it contains a generated password.</p>
+<p>What works, but is undocumented here, is, that <code>healthcheck.sh</code> also accepts parameters <code>--defaults-file</code> and <code>--defaults-extra-file</code>. By experiment, as the MariaDB client documentation is not that clear to me, it works passing <code>--defaults-file</code> with reference to a file like this:</p>
+<pre>
+[mariadb-client]
+port=3307
+</pre>
+<p>It will override the port from the extra-file.</p>
+<p>Now, extending the <code>test</code> section as given by Bren X., this extended <code>healthcheck.sh</code> call would work for a file mounted to, for example, <code>/etc/mysql/conf.d/custom-client.cnf</code>:</p>
+<pre>
+test:
+  [
+    "CMD",
+    "healthcheck.sh",
+    "--su-mysql",
+    "--defaults-file=/etc/mysql/conf.d/custom-client.cnf"
+    "--connect",
+    "--innodb_initialized"
+  ]
+</pre>
+<p>There may be better options, like just sticking to the default port 3306 internally and use Docker to map it to 3307 to the outside. But at least, this approach works, and of course could also be used to pass other parameters to the MariaDB client.</p>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/using-healthcheck-sh/+comments/6749/flag"
+                       data-flag-url="/kb/en/using-healthcheck-sh/+comments/6749/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <a name="comment_6761"></a>
+        <div class="comment approved" style="margin-left: 10px">
+            <div class="info">
+                
+
+<span class="datetime" title="2024-06-16 23:25">1 month ago</span>
+                
+<span class="user" id="user-13052">
+<a href="/kb/user/id/13052" title="Daniel Black">Daniel Black</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6761">Re: Using Healthcheck.sh With Custom Port (Docker)</a>
+                
+            </div><div class="comment_text">
+                <p>The .my-healthcheck.cnf is generated from the configuration at initialization. If you remove the .my-healthcheck.sh and have MARIADB_AUTO_UPGRADE=1 then the .my-healthcheck.cnf will be regenerated with the currently configured port.</p>
+<p>The healtcheck user/password will be regenerated in the server also with this option.</p>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/using-healthcheck-sh/+comments/6761/flag"
+                       data-flag-url="/kb/en/using-healthcheck-sh/+comments/6761/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        
+    
+
+    
+
+    
         <a name="comment_6578"></a>
         <div class="comment approved" style="margin-left: 0px">
             <div class="info">
                 
 
-<span class="datetime" title="2024-01-20 19:41">2 months ago</span>
+<span class="datetime" title="2024-01-20 19:41">5 months, 4 weeks ago</span>
                 
 <span class="user" id="user-14815">
 <a href="/kb/user/id/14815" title="Bren X.">Bren X.</a>

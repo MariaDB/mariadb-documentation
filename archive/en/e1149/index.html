@@ -286,12 +286,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-01-29 21:14">1 month, 3 weeks ago</span></dd>
+<span class="datetime" title="2024-01-29 21:14">5 months, 2 weeks ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-01-29 21:19">1 month, 3 weeks ago</span></dd>
+<span class="datetime" title="2024-05-01 11:25">2 months, 2 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -430,12 +430,105 @@
 <h3>Contents</h3>
  <ol class="toc">
 
-    <li class=""><a href="#possible-causes-and-solutions" title="Possible Causes and Solutions">Possible Causes and Solutions</a> </ol>
+    <li class=""><a href="#possible-causes-and-solutions" title="Possible Causes and Solutions">Possible Causes and Solutions</a>    <ol class="toc">
+
+        <li class=""><a href="#delimiters" title="Delimiters">Delimiters</a></li>
+
+        <li class=""><a href="#delimiters-in-stored-programs" title="Delimiters in Stored Programs">Delimiters in Stored Programs</a></li>
+
+        <li class=""><a href="#reserved-words" title="Reserved Words">Reserved Words</a></li>
+
+        <li class=""><a href="#syntax-doesnt-match-sql_mode" title="Syntax Doesn&#39;t Match SQL_MODE">Syntax Doesn&#39;t Match SQL_MODE</a>        <ol class="toc">
+
+            <li class=""><a href="#oracle-mode" title="Oracle Mode">Oracle Mode</a>        </ol>
+    </ol>
+ </ol>
 </li>
 </div>
 <h2 class="anchored_heading" id="possible-causes-and-solutions">Possible Causes and Solutions</h2>
-<div class="cstm-style greenbox"><p>This article doesn't currently contain any content. <a href="/kb/en/writing-and-editing-knowledge-base-articles/">You can help!</a></p>
-</div>
+<p>This is one of the most common errors to see. It's caused by an SQL syntax error. The error message will give you a clue as to where the error could be, as MariaDB displays the text following where it picked up an error. There are a huge number of possible causes (and in most cases they're simple typos), but here are a few common ones;</p>
+<h3 class="anchored_heading" id="delimiters">Delimiters</h3>
+<p>Delimiters need to be present at the end of each statement. See <a href="/kb/en/delimiters/">Delimiters</a>.
+For example:</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="mi">1</span>
+<span class="k">SELECT</span> <span class="mi">2</span><span class="p">;</span>
+<span class="n">ERROR</span> <span class="mi">1064</span> <span class="p">(</span><span class="mi">42000</span><span class="p">):</span> <span class="n">You</span> <span class="n">have</span> <span class="n">an</span> <span class="n">error</span> <span class="k">in</span> <span class="n">your</span> <span class="k">SQL</span> <span class="n">syntax</span><span class="p">;</span> <span class="k">check</span> <span class="n">the</span> <span class="n">manual</span> <span class="n">that</span> <span class="n">corresponds</span> 
+  <span class="k">to</span> <span class="n">your</span> <span class="n">MariaDB</span> <span class="n">server</span> <span class="k">version</span> <span class="k">for</span> <span class="n">the</span> <span class="k">right</span> <span class="n">syntax</span> <span class="k">to</span> <span class="n">use</span> <span class="n">near</span> <span class="s1">&#39;SELECT 2&#39;</span> <span class="k">at</span> <span class="n">line</span> <span class="mi">2</span>
+</pre><p>Here, there was no delimiter separating the first and the second line. MariaDB picked up the error at the start of the second line, pointing one to the end of the first line. The correct syntax is:</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="mi">1</span><span class="p">;</span>
+<span class="k">SELECT</span> <span class="mi">2</span><span class="p">;</span>
+</pre><h3 class="anchored_heading" id="delimiters-in-stored-programs">Delimiters in Stored Programs</h3>
+<p>When creating <a href="/kb/en/stored-programs-and-views/">stored programs</a> from the command-line, it is likely you will need to differentiate between the regular delimiter and a delimiter inside a <a href="/kb/en/begin-end/">BEGIN END</a> block. See <a href="/kb/en/delimiters/">Delimiters</a>.</p>
+<p>For example, take the following, seemingly-valid declaration:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">FUNCTION</span> <span class="n">FortyTwo</span><span class="p">()</span> <span class="k">RETURNS</span> <span class="n">TINYINT</span> <span class="k">DETERMINISTIC</span>
+<span class="k">BEGIN</span>
+  <span class="k">DECLARE</span> <span class="n">x</span> <span class="n">TINYINT</span><span class="p">;</span>
+  <span class="k">SET</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">42</span><span class="p">;</span>
+  <span class="k">RETURN</span> <span class="n">x</span><span class="p">;</span>
+<span class="k">END</span><span class="p">;</span>
+</pre><p>Attempting to run will result in an error:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">FUNCTION</span> <span class="n">FortyTwo</span><span class="p">()</span> <span class="k">RETURNS</span> <span class="n">TINYINT</span> <span class="k">DETERMINISTIC</span>
+    <span class="o">-&gt;</span> <span class="k">BEGIN</span>
+    <span class="o">-&gt;</span>   <span class="k">DECLARE</span> <span class="n">x</span> <span class="n">TINYINT</span><span class="p">;</span>
+<span class="n">ERROR</span> <span class="mi">1064</span> <span class="p">(</span><span class="mi">42000</span><span class="p">):</span> <span class="n">You</span> <span class="n">have</span> <span class="n">an</span> <span class="n">error</span> <span class="k">in</span> <span class="n">your</span> <span class="k">SQL</span> <span class="n">syntax</span><span class="p">;</span> <span class="k">check</span> <span class="n">the</span> <span class="n">manual</span> <span class="n">that</span> <span class="n">corresponds</span> 
+  <span class="k">to</span> <span class="n">your</span> <span class="n">MariaDB</span> <span class="n">server</span> <span class="k">version</span> <span class="k">for</span> <span class="n">the</span> <span class="k">right</span> <span class="n">syntax</span> <span class="k">to</span> <span class="n">use</span> <span class="n">near</span> <span class="s1">&#39;&#39;</span> <span class="k">at</span> <span class="n">line</span> <span class="mi">3</span>
+</pre><p>The error was picked up at the end of the <code>DECLARE x TINYINT;</code> line, guiding one to the delimiter found there. The solution is to specify a distinct delimiter for the duration of the process, using the DELIMITER command, for example:</p>
+<pre class="fixed"><span class="k">DELIMITER</span> <span class="o">//</span>
+
+<span class="k">CREATE</span> <span class="k">FUNCTION</span> <span class="n">FortyTwo</span><span class="p">()</span> <span class="k">RETURNS</span> <span class="n">TINYINT</span> <span class="k">DETERMINISTIC</span>
+<span class="k">BEGIN</span>
+  <span class="k">DECLARE</span> <span class="n">x</span> <span class="n">TINYINT</span><span class="p">;</span>
+  <span class="k">SET</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">42</span><span class="p">;</span>
+  <span class="k">RETURN</span> <span class="n">x</span><span class="p">;</span>
+<span class="k">END</span> 
+
+<span class="o">//</span>
+
+<span class="k">DELIMITER</span> <span class="p">;</span>
+</pre><h3 class="anchored_heading" id="reserved-words">Reserved Words</h3>
+<p><a href="/kb/en/reserved-words/">Reserved words</a> cannot be used as <a href="/kb/en/identifier-names/">identifiers</a> unless they are quoted. For example:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">accessible</span><span class="p">(</span><span class="n">id</span> <span class="nb">INT</span><span class="p">);</span>
+<span class="n">ERROR</span> <span class="mi">1064</span> <span class="p">(</span><span class="mi">42000</span><span class="p">):</span> <span class="n">You</span> <span class="n">have</span> <span class="n">an</span> <span class="n">error</span> <span class="k">in</span> <span class="n">your</span> <span class="k">SQL</span> <span class="n">syntax</span><span class="p">;</span> <span class="k">check</span> <span class="n">the</span> <span class="n">manual</span> <span class="n">that</span> <span class="n">corresponds</span> 
+  <span class="k">to</span> <span class="n">your</span> <span class="n">MariaDB</span> <span class="n">server</span> <span class="k">version</span> <span class="k">for</span> <span class="n">the</span> <span class="k">right</span> <span class="n">syntax</span> <span class="k">to</span> <span class="n">use</span> <span class="n">near</span> <span class="s1">&#39;accessible(id INT)&#39;</span> <span class="k">at</span> <span class="n">line</span> <span class="mi">1</span>
+</pre><p>The error was picked up after the <code>accessible</code> identifier, leading one to suspect that it's causing the problem. And indeed, it's a <a href="/kb/en/reserved-words/">reserved word</a>. There are a number of possible solutions.</p>
+<p>Use a new, non-reserved, identifier:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">accessible_status</span><span class="p">(</span><span class="n">id</span> <span class="nb">INT</span><span class="p">);</span>
+</pre><p>or quote the identifier:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="o">`</span><span class="n">accessible</span><span class="o">`</span><span class="p">(</span><span class="n">id</span> <span class="nb">INT</span><span class="p">);</span>
+</pre><p>or <a href="/kb/en/identifier-qualifiers/">fully qualify</a> the identifier:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test</span><span class="p">.</span><span class="n">accessible</span><span class="p">(</span><span class="n">id</span> <span class="nb">INT</span><span class="p">);</span>
+</pre><h3 class="anchored_heading" id="syntax-doesnt-match-sql_mode">Syntax Doesn't Match SQL_MODE</h3>
+<p>Some syntax may be valid in a particular <a href="/kb/en/sql-mode/">SQL_MODE</a>, but not in others. There are too many to list here, but the <a href="/kb/en/sql-mode/">SQL_MODE</a> page provides a full list.
+For example:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="ss">&quot;t&quot;</span> <span class="p">(</span><span class="n">id</span> <span class="nb">INT</span><span class="p">);</span>
+<span class="n">ERROR</span> <span class="mi">1064</span> <span class="p">(</span><span class="mi">42000</span><span class="p">):</span> <span class="n">You</span> <span class="n">have</span> <span class="n">an</span> <span class="n">error</span> <span class="k">in</span> <span class="n">your</span> <span class="k">SQL</span> <span class="n">syntax</span><span class="p">;</span> <span class="k">check</span> <span class="n">the</span> <span class="n">manual</span> <span class="n">that</span> <span class="n">corresponds</span> 
+  <span class="k">to</span> <span class="n">your</span> <span class="n">MariaDB</span> <span class="n">server</span> <span class="k">version</span> <span class="k">for</span> <span class="n">the</span> <span class="k">right</span> <span class="n">syntax</span> <span class="k">to</span> <span class="n">use</span> <span class="n">near</span> <span class="s1">&#39;&quot;t&quot; (id INT)&#39;</span> <span class="k">at</span> <span class="n">line</span> <span class="mi">1</span>
+</pre><p>The error message directs one to the identifier <code>t</code>. Double quotes cannot be used to <a href="/kb/en/identifier-names/#quote-character">quote identifiers</a> unless ANSI_MODE is set, which in this case it isn't:</p>
+<pre class="fixed"><span class="k">select</span> <span class="o">@@</span><span class="n">sql_mode</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">-------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="o">@@</span><span class="n">sql_mode</span>                                                                                <span class="o">|</span>
+<span class="o">+</span><span class="c1">-------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="n">STRICT_TRANS_TABLES</span><span class="p">,</span><span class="n">ERROR_FOR_DIVISION_BY_ZERO</span><span class="p">,</span><span class="n">NO_AUTO_CREATE_USER</span><span class="p">,</span><span class="n">NO_ENGINE_SUBSTITUTION</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">-------------------------------------------------------------------------------------------+</span>
+</pre><p>Either quote with the standard quote character, the backtick, or set the appropriate SQL_MODE:</p>
+<pre class="fixed"><span class="k">SET</span> <span class="o">@@</span><span class="n">SQL_MODE</span> <span class="o">=</span> <span class="n">CONCAT</span><span class="p">(</span><span class="o">@@</span><span class="n">SQL_MODE</span><span class="p">,</span> <span class="s1">&#39;,ANSI_QUOTES&#39;</span><span class="p">);</span>
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="ss">&quot;t&quot;</span> <span class="p">(</span><span class="n">id</span> <span class="nb">INT</span><span class="p">);</span>
+</pre><h4 class="anchored_heading" id="oracle-mode">Oracle Mode</h4>
+<p><a href="/kb/en/sql_modeoracle/">Oracle mode</a> in particular has a large number of differences to the default <a href="/kb/en/sql-mode/">SQL_MODE</a>, for example:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">t</span> <span class="p">(</span><span class="n">id</span> <span class="n">VARCHAR2</span><span class="p">(</span><span class="mi">10</span><span class="p">));</span>
+<span class="n">ERROR</span> <span class="mi">1064</span> <span class="p">(</span><span class="mi">42000</span><span class="p">):</span> <span class="n">You</span> <span class="n">have</span> <span class="n">an</span> <span class="n">error</span> <span class="k">in</span> <span class="n">your</span> <span class="k">SQL</span> <span class="n">syntax</span><span class="p">;</span> <span class="k">check</span> <span class="n">the</span> <span class="n">manual</span> <span class="n">that</span> <span class="n">corresponds</span> 
+  <span class="k">to</span> <span class="n">your</span> <span class="n">MariaDB</span> <span class="n">server</span> <span class="k">version</span> <span class="k">for</span> <span class="n">the</span> <span class="k">right</span> <span class="n">syntax</span> <span class="k">to</span> <span class="n">use</span> <span class="n">near</span> <span class="s1">&#39;(10))&#39;</span> <span class="k">at</span> <span class="n">line</span> <span class="mi">1</span>
+</pre><p>The error is identified just after the VARCHAR2 type is specified, and this type is not valid in the default mode:</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="o">@@</span><span class="n">sql_mode</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">--------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="o">@@</span><span class="n">sql_mode</span>                                                         <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="n">STRICT_TRANS_TABLES</span><span class="p">,</span><span class="n">ERROR_FOR_DIVISION_BY_ZERO</span><span class="p">,</span><span class="n">NO_AUTO_CREATE_USER</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------------------------------------------------------+</span>
+<span class="k">SET</span> <span class="n">SQL_MODE</span><span class="o">=</span><span class="s1">&#39;ORACLE&#39;</span><span class="p">;</span>
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">t</span> <span class="p">(</span><span class="n">id</span> <span class="n">VARCHAR2</span><span class="p">(</span><span class="mi">10</span><span class="p">));</span>
+</pre><p>See <a href="/kb/en/sql_modeoracle/">Oracle mode</a> for a full list of syntax differences.</p>
+
     </div>
 
 

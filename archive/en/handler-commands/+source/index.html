@@ -319,7 +319,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/handler-commands/+r/115774/">115774</a></dd>
+            <dd><a href="/kb/en/handler-commands/+r/141347/">141347</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -328,7 +328,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-05-04 11:59">2022-05-04 11:59</span></dd>
+<span class="datetime" title="2024-07-17 13:15">2024-07-17 13:15</span></dd>
         </dl>
     </div>
     
@@ -357,9 +357,9 @@ HANDLER tbl_name CLOSE
 The ##HANDLER## statement provides direct access to table
 storage engine interfaces for key lookups and key or table scans. It is available for at least [[aria-formerly-known-as-maria|Aria]], [[memory-storage-engine|Memory]], [[myisam-storage-engine|MyISAM]] and [[xtradb-and-innodb|InnoDB]] tables (and should work with most &#39;normal&#39; storage engines, but not with system tables, [[merge|MERGE]] or [[views]]).
 
-##HANDLER ... OPEN## opens a table, allowing it to be accessible to subsequent ##HANDLER ... READ## statements. The table can either be opened using an alias (which must then be used by ##HANDLER ... READ##, or a table name.
+##HANDLER ... OPEN## opens a table, allowing it to be accessible to subsequent ##HANDLER ... READ## statements. The table can either be opened using an alias, or a table name. If opened with an alias, references to this table by further HANDLER statements must use this alias, and not the table name. If opened with a table name qualified by database name, further references to this table must use the unqualified table name. For example, if a table is opened with ##db1.t1##, further references must use ##t1##. 
 
-The table object is only closed when ##HANDLER ... CLOSE## is called by the session, and is not shared by other sessions.
+The table object is only closed when ##HANDLER ... CLOSE## is called by the session, or the session closes, and is not shared by other sessions.
 
 [[prepared-statements|Prepared statements]] work with ##HANDLER READ##, which gives a much higher performance (50% speedup) as there is no parsing and all data is transformed in binary (without conversions to text, as with the normal protocol).
 
@@ -432,15 +432,61 @@ You may also find rows committed since the scan originally started.
 * If you do an ALTER TABLE for a table that is used by some other connection with HANDLER, the ALTER TABLE will wait for the HANDLER to be closed.
 * For HASH keys, you must use all key parts when searching for a row.
 * For HASH keys, you can&#39;t do a key scan of all values. You can only find all rows with the same key value.
-* While each HANDLER READ command is atomic, if you do a scan in many steps, then some engines may give you error 1020 if the table changed between the commands. Please refer to the [[handler-handler|specific engine handler page]] if this happens.
+* While each HANDLER READ command is atomic, if you do a scan in many steps, then some engines may give you [[e1020|error 1020]] if the table changed between the commands. Please refer to the [[handler-handler|specific engine handler page]] if this happens.
 
 == Error Codes
 
-* Error 1031 (ER_ILLEGAL_HA) Table storage engine for &#39;t1&#39; doesn&#39;t have this option
+* [[e1031|Error 1031]] (ER_ILLEGAL_HA) Table storage engine for &#39;t1&#39; doesn&#39;t have this option
 ** If you get this for HANDLER OPEN it means the storage engine doesn&#39;t support HANDLER calls.
 ** If you get this for HANDLER READ it means you are trying to use an incomplete HASH key.
-* Error 1020 (ER_CHECKREAD) Record has changed since last read in table &#39;...&#39;
+* [[e1020|Error 1020]] (ER_CHECKREAD) Record has changed since last read in table &#39;...&#39;
 ** This means that the table changed between two reads and the handler can&#39;t handle this case for the given scan.
+
+== Examples
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE t1 (f1 INT);
+
+INSERT INTO t1 VALUES (1),(2),(3);
+
+HANDLER t1 OPEN;
+
+HANDLER t1 READ NEXT;
++------+
+| f1   |
++------+
+|    1 |
++------+
+
+HANDLER t1 READ NEXT;
++------+
+| f1   |
++------+
+|    2 |
++------+
+&lt;&lt;/sql&gt;&gt;
+
+In the previous example, the HANDLER was opened with the t1 table name. Since HANDLERs use unqualified table names, trying to access another table with this same name, even though it&#39;s in another database, will result in ambiguity. An alias needs to be used to avoid the ambiguity, resulting in [[e1066|Error 1066: Not unique table/alias]]:
+&lt;&lt;sql&gt;&gt;
+CREATE DATABASE db_new;
+
+CREATE TABLE db_new.t1 (id INT);
+
+INSERT INTO db_new.t1 VALUES (4),(5),(6);
+
+HANDLER db_new.t1 OPEN;
+ERROR 1066 (42000): Not unique table/alias: &#39;t1&#39;
+
+HANDLER db_new.t1 OPEN AS db_new_t1;
+
+HANDLER db_new_t1 READ NEXT LIMIT 3;
++------+
+| id   |
++------+
+|    4 |
+|    5 |
+|    6 |
++------+
+&lt;&lt;/sql&gt;&gt;
  
 == See Also
 

@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/systemd/+r/132947/">132947</a></dd>
+            <dd><a href="/kb/en/systemd/+r/141237/">141237</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3083">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-11-30 22:30">2023-11-30 22:30</span></dd>
+<span class="datetime" title="2024-07-08 16:39">2024-07-08 16:39</span></dd>
         </dl>
     </div>
     
@@ -352,7 +352,7 @@ The service name is ##mariadb.service##.
 
 When installing MariaDB server rpm / dep package, it will automatically run the [[mariadb-install-db]] script, that creates the initial databases and users.
 
-When MariaDB is started with the ##systemd## unit file, it directly starts the ##[[mariadbd-options|mariadbd]]## process as the ##mysql## user. Unlike with ##[[sysvinit|sysVinit]]##, the ##[[mariadbd-options|mariadbd]]## process is not started with ##[[mysqld_safe]]##. As a consequence, options will not be read from the ##[mysqld_safe]## [[configuring-mariadb-with-option-files/#option-groups|option group]] from [[configuring-mariadb-with-option-files|option files]].
+When MariaDB is started with the ##systemd## unit file, it directly starts the ##[[mariadbd-options|mariadbd]]## process as the ##mysql## user. Unlike with ##[[sysvinit|sysVinit]]##, the ##[[mariadbd-options|mariadbd]]## process is not started with ##[[mariadbd-safe]]##. As a consequence, options will not be read from the ##[mariadbd-safe]## [[configuring-mariadb-with-option-files/#option-groups|option group]] from [[configuring-mariadb-with-option-files|option files]].
 
 &lt;&lt;toc&gt;&gt;
 
@@ -523,7 +523,7 @@ sudo systemctl daemon-reload
 
 === Useful Systemd Options
 
-Useful ##systemd## options are listed below. If an option is equivalent to a common ##[[mysqld_safe]]## option, then that is also listed. Use ##systemctl edit mariadb.service## to create the systemd option under a ##[Service]## section header.
+Useful ##systemd## options are listed below. If an option is equivalent to a common ##[[mariadbd-safe]]## option, then that is also listed. Use ##systemctl edit mariadb.service## to create the systemd option under a ##[Service]## section header.
 
 &lt;&lt;style class=&#34;darkheader-nospace-borders&#34;&gt;&gt;
 |=mysqld_safe option|=systemd option|=Comments|
@@ -587,7 +587,7 @@ Note that [[https://lists.freedesktop.org/archives/systemd-devel/2017-December/0
 
 === Configuring the Open Files Limit
 
-When using ##systemd##, rather than setting the open files limit by setting the ##[[mysqld_safe/#mysqld_safe-options|open-files-limit]]## option for ##mysqld_safe## or the ##[[server-system-variables#open_files_limit|open_files_limit]]## system variable, the limit can be changed by configuring the ##[[https://www.freedesktop.org/software/systemd/man/systemd.exec.html#LimitCPU=|LimitNOFILE]]## option for the MariaDB ##systemd## service. The default is set to ##LimitNOFILE=16364## in ##mariadb.service##.
+When using ##systemd##, rather than setting the open files limit by setting the ##[[mariadbd-safe/#mariadbd-safe-options|open-files-limit]]## option for ##mariadbd-safe## or the ##[[server-system-variables#open_files_limit|open_files_limit]]## system variable, the limit can be changed by configuring the ##[[https://www.freedesktop.org/software/systemd/man/systemd.exec.html#LimitCPU=|LimitNOFILE]]## option for the MariaDB ##systemd## service. The default is set to ##LimitNOFILE=16364## in ##mariadb.service##.
 
 For example, you can reconfigure the MariaDB ##systemd## service to have a larger limit for open files by executing the following commands:
 
@@ -622,7 +622,7 @@ LimitNOFILE=1048576
 
 === Configuring the Core File Size
 
-When using ##systemd##, if you would like to [[enabling-core-dumps|enable core dumps]], rather than setting the core file size by setting the ##[[mysqld_safe/#mysqld_safe-options|core-file-size]]## option for ##mysqld_safe##, the limit can be changed by configuring the ##[[https://www.freedesktop.org/software/systemd/man/systemd.exec.html#LimitCPU=|LimitCORE]]## option for the MariaDB ##systemd## service. For example, you can reconfigure the MariaDB ##systemd## service to have an infinite size for core files by executing the following commands:
+When using ##systemd##, if you would like to [[enabling-core-dumps|enable core dumps]], rather than setting the core file size by setting the ##[[mariadbd-safe/#mariadbd-safe-options|core-file-size]]## option for ##mariadbd-safe##, the limit can be changed by configuring the ##[[https://www.freedesktop.org/software/systemd/man/systemd.exec.html#LimitCPU=|LimitCORE]]## option for the MariaDB ##systemd## service. For example, you can reconfigure the MariaDB ##systemd## service to have an infinite size for core files by executing the following commands:
 
 &lt;&lt;code&gt;&gt;
 sudo systemctl edit mariadb.service
@@ -951,11 +951,11 @@ Jan 25 18:08:32 ip-172-30-0-249.us-west-2.compute.internal systemd[1]: Unit mari
 Jan 25 18:08:32 ip-172-30-0-249.us-west-2.compute.internal systemd[1]: mariadb.service failed.
 &lt;&lt;/code&gt;&gt;
 
-== Converting mysqld_safe Options to Systemd Options
+== Converting mariadbd-safe Options to Systemd Options
 
-##mariadb-service-convert## is a script included in many MariaDB packages that is used by the package manager to convert ##[[mysqld_safe/#mysqld_safe-options|mysqld_safe]]## options to ##systemd## options. It reads any explicit settings in the ##[mysqld_safe]## [[configuring-mariadb-with-option-files/#option-groups|option group]] from [[configuring-mariadb-with-option-files|option files]], and its output is directed to ##/etc/systemd/system/mariadb.service.d/migrated-from-my.cnf-settings.conf##. This helps to keep the configuration the same when upgrading from a version of MariaDB that does not use ##systemd## to one that does.
+##mariadb-service-convert## is a script included in many MariaDB packages that is used by the package manager to convert ##[[mariadbd-safe/#mariadbd-safe-options|mariadbd-safe]]## options to ##systemd## options. It reads any explicit settings in the ##[mariadbd-safe]## [[configuring-mariadb-with-option-files/#option-groups|option group]] from [[configuring-mariadb-with-option-files|option files]], and its output is directed to ##/etc/systemd/system/mariadb.service.d/migrated-from-my.cnf-settings.conf##. This helps to keep the configuration the same when upgrading from a version of MariaDB that does not use ##systemd## to one that does.
 
-Implicitly high defaults of ##[[mysqld_safe/#mysqld_safe-options|open-files-limit]]## may be missed by the conversion script and require explicit configuration. See [[#configuring-the-open-files-limit|Configuring the Open Files Limit]].</textarea>
+Implicitly high defaults of ##[[mariadbd-safe/#mariadbd-safe-options|open-files-limit]]## may be missed by the conversion script and require explicit configuration. See [[#configuring-the-open-files-limit|Configuring the Open Files Limit]].</textarea>
     
 
 

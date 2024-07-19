@@ -282,12 +282,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-06-14 02:27">9 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2023-06-14 02:27">1 year, 1 month ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-03-13 04:21">1 week, 5 days ago</span></dd>
+<span class="datetime" title="2024-06-16 23:42">1 month ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -421,8 +421,37 @@
     <div class="answer formatted">
         <p>The healthcheck.sh script is part of the Docker Official Images of MariaDB Server. The script is part of the <a href="https://github.com/MariaDB/mariadb-docker/blob/master/healthcheck.sh">repository of the Docker Official Image of MariaDB Server</a>.</p>
 <p>The script processes a number of argument and tests, together, in strict order. Arguments pertaining to a test must occur before the test name. If a test fails, no further processing is performed. Both arguments and tests begin with a double-hyphen.</p>
-<p>By default, (since 2023-06-27), official images will create healthcheck@localhost, healthcheck@127.0.0.1, healthcheck@::1 users with a random password and USAGE privileges. <code><a href="/kb/en/mariadb-server-docker-official-image-environment-variables/#mariadb_healthcheck_grants">MARIADB_HEALTHCHECK_GRANTS</a></code> can be used for <code>--replication</code> where additional grants are required. This is stored in .my-healthcheck.cnf in the datadir of the container and passed as the <code>--defaults-extra-file</code> to the healthcheck.sh script if it exists. The <code>.my-healthcheck.cnf</code> also sets <code>protocol=tcp</code> for the <code>mariadb</code> so <code>--connect</code> is effectively there on all tests.</p>
+<p>By default, (since 2023-06-27), official images will create healthcheck@localhost, <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0b636e6a677f6368636e68604b3a393c253b253b253a">[email&#160;protected]</a>, healthcheck@::1 users with a random password and USAGE privileges. <code><a href="/kb/en/mariadb-server-docker-official-image-environment-variables/#mariadb_healthcheck_grants">MARIADB_HEALTHCHECK_GRANTS</a></code> can be used for <code>--replication</code> where additional grants are required. This is stored in .my-healthcheck.cnf in the datadir of the container and passed as the <code>--defaults-extra-file</code> to the healthcheck.sh script if it exists. The <code>.my-healthcheck.cnf</code> also sets <code>protocol=tcp</code> for the <code>mariadb</code> so <code>--connect</code> is effectively there on all tests.</p>
+<p>The <code><a href="/kb/en/mariadb-server-docker-official-image-environment-variables/#mariadb_auto_upgrade">MARIADB_AUTO_UPGRADE=1</a> will regenerate the .my-healthcheck.cnf file if missing and recreate the healthcheck users of the database with a new random password. The current port configuration of the MariaDB container is written into this file.</code></p>
 <p>The <code><a href="/kb/en/mariadb-server-docker-official-image-environment-variables/#mariadb_mysql_localhost_user-mariadb_mysql_localhost_grants">MARIADB_MYSQL_LOCALHOST_USER=1, MARIADB_MYSQL_LOCALHOST_GRANTS</a></code> environment variables can also be used, but with the creation of the healthcheck user, these are backwards compatible. </p>
+<h1 class="anchored_heading" id="compose-file-example">Compose File Example</h1>
+<p>An example of a compose file that uses the healthcheck.sh to determine a healthy service as a depedency before starting a wordpress service:</p>
+<pre class="fixed">version: &#34;3&#34;
+services:
+  mariadb:
+    image: mariadb:lts
+    environment:
+      - MARIADB_DATABASE=testdb
+      - MARIADB_USER=testuser
+      - MARIADB_PASSWORD=password
+      - MARIADB_RANDOM_ROOT_PASSWORD=1
+    healthcheck:
+      test: [&#34;CMD&#34;, &#34;healthcheck.sh&#34;, &#34;--connect&#34;, &#34;--innodb_initialized&#34;]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  wordpress:
+    image: wordpress
+    environment:
+      - WORDPRESS_DB_HOST=mariadb
+      - WORDPRESS_DB_NAME=testdb
+      - WORDPRESS_DB_USER=testuser
+      - WORDPRESS_DB_PASSWORD=password
+    depends_on:
+      mariadb:
+        condition: service_healthy
+</pre><div style="margin-left:2em"></div>
 <h1 class="anchored_heading" id="tests">Tests</h1>
 <h2 class="anchored_heading" id="-connect">--connect</h2>
 <p>This is active when a external user can connect to the TCP port of MariaDB Server. This strictly tests just the TCP connection and not if any authentication works.</p>
@@ -733,7 +762,7 @@
                     <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
                         
                             <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
-                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
                             <script>
                                 <!--//--><![CDATA[// ><!--
                                 MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);

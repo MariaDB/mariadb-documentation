@@ -262,12 +262,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-12-08 12:35">3 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2023-12-08 12:35">7 months, 1 week ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-12-11 06:37">3 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2024-07-03 10:59">2 weeks, 1 day ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -402,15 +402,35 @@
         <p>Profiling the memory usage can be useful for finding out why a program appears to use more memory than it should. It is especially helpful for analyzing OOM situations or other cases where the memory grows linearly and causes problems.</p>
 <p>To profile the memory usage of a program, there are multiple options. The following sections describe the methods that are available.</p>
 <p>If a problem in memory usage is identified and it appears to be due to a bug, please open a new bug report on the <a href="https://jira.mariadb.org/">MariaDB Jira</a> under the correct project and include the relevant memory profiling output in it. Refer to <a href="/kb/en/reporting-bugs/#contents-of-a-good-bug-report">How to Write a Good Bug Report</a> for more details.</p>
+<h2 class="anchored_heading" id="known-issues-that-can-cause-extended-memory-usage">Known issues that can cause extended memory usage</h2>
+<h3 class="anchored_heading" id="transparent-huge-pages-thp">Transparent huge pages (THP)</h3>
+<p>Transparent huge pages (THP), which is enabled by default in many newer Linux distributions, can cause out-of-memory-issues for MariaDB as THP is not suitable for databases. This is described at <a href="https://jira.mariadb.org/browse/MDEV-33279">MDEV-33279</a>.</p>
+<p><a href="/kb/en/mariadb-10617-release-notes/">MariaDB 10.6.17</a> and all other MariaDB server releases after 2024-01-19 have THP disabled.</p>
+<h3 class="anchored_heading" id="system-malloc-is-not-good-if-there-are-a-lot-of-allocations-of-different-size">System malloc is not good if there are a lot of allocations of different size.</h3>
+<p>If <a href="/kb/en/server-status-variables/#memory_used">Memory_used</a> and <a href="/kb/en/information-schema-processlist-table/">information_schema.processlist</a> do not show an increase in memory, but the process still increases in size, then a likely problem is the system memory allocation library (malloc). Replacing malloc with <a href="/kb/en/using-mariadb-with-tcmalloc-or-jemalloc/">tcmalloc or jemalloc</a> should fix the issue in this case.</p>
+<h2 class="anchored_heading" id="profiling-with-the-mariadb-server">Profiling with the MariaDB server</h2>
+<p>Recent MariaDB versions have a global variable <a href="/kb/en/server-status-variables/#memory_used">Memory_used</a> that shows how much memory the MariaDB server has allocated. By monitoring this variable one can find out if
+if the MariaDB allocated memory grows.</p>
+<p>One can also check memory usage per user with the <a href="/kb/en/information-schema-processlist-table/">information_schema.processlist</a>:</p>
+<pre class="fixed"><span class="k">select</span> <span class="n">id</span><span class="p">,</span> <span class="n">MEMORY_USED</span><span class="p">,</span> <span class="n">MAX_MEMORY_USED</span> <span class="k">from</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">processlist</span><span class="p">;</span>
+</pre><p>This shows the current memory used per connection and the maximum memory they have
+used since the user connected.</p>
+<p>The <a href="/kb/en/performance-schema/">Performance Schema</a> can also be used to find out who is allocated memory and for what.</p>
+<p>Note that one can also set the <a href="/kb/en/server-system-variables/#max_session_mem_used">max_session_mem_used</a> variable to restrict a user's memory usage.</p>
 <h2 class="anchored_heading" id="bpf-compiler-collection-bcc">BPF Compiler Collection (bcc)</h2>
 <p>The <a href="https://github.com/iovisor/bcc">BPF Compiler Collection (bcc)</a> toolkit comes with the <code>memleak</code> program that traces outstanding memory allocations. This is a very convenient way of debugging high memory usage as it'll immediately show where the memory is allocated at.</p>
-<p>The tool will print output once every five seconds with the stacktraces that have the most open allocations. To help analyze excessive memory usage, collect the output of the <code>memleak</code> program for at least 60 seconds. Use <code>Ctrl+C</code> to interrupt the collection of the traces.</p>
+<p>By default the tool will print output once every five seconds with the stacktraces that have the most open allocations. <code>Ctrl+C</code> can be used to interrupt the collection of the traces.</p>
+<p>The profiling interval and the profiling duration can be passed as arguments to <code>memleak</code>. The first argument is how often a sample is taken and the second argument is how long to sample for. To help analyze excessive memory usage, collect the output of the <code>memleak</code> program for at least 60 seconds. The longer the profiling can be left on, the more accurate the information will be.</p>
+<p>The overhead of the profiling can be large enough that it affects production workloads negatively. To reduce the overhead, the sampling frequency of memory allocations can be lowered using the <code>--sample-rate</code> option:</p>
+<pre class="fixed">  -s SAMPLE_RATE, --sample-rate SAMPLE_RATE
+                        sample every N-th allocation to decrease the overhead
+</pre><p>For example, <code>-s 10</code> will sample only 10% of memory allocations which may miss out memory leaks from individual allocations but the longer the system is left running, the more likely it is that a leaking memory allocation is sampled. This means that even with a lower sampling rate, the source of the memory leak will eventually be found.</p>
 <h3 class="anchored_heading" id="rhel-centos-rocky-linux-and-fedora">RHEL, CentOS, Rocky Linux and Fedora</h3>
-<p>On RHEL based systems, the package is named <code>bcc-tools</code>. After installing it, use the following command to profile the memory usage:</p>
-<pre class="fixed">sudo /usr/share/bcc/tools/memleak -p $(pidof mariadbd) | tee memleak.log
+<p>On RHEL based systems, the package is named <code>bcc-tools</code>. After installing it, use the following command to profile the memory usage 5 times per second over a window of 60 seconds:</p>
+<pre class="fixed">sudo /usr/share/bcc/tools/memleak -p $(pidof mariadbd) 5 60 | tee memleak.log
 </pre><h3 class="anchored_heading" id="ubuntu-and-debian">Ubuntu and Debian</h3>
-<p>On Ubuntu/Debian the package is named <code>bpfcc-tools</code>. After installing it, use the following command to profile the memory usage:</p>
-<pre class="fixed">sudo memleak-bpfcc -p $(pidof mariadbd) | tee memleak.log
+<p>On Ubuntu/Debian the package is named <code>bpfcc-tools</code>. After installing it, use the following command to profile the memory usage 5 times per second over a window of 60 seconds:</p>
+<pre class="fixed">sudo memleak-bpfcc -p $(pidof mariadbd) 5 60 | tee memleak.log
 </pre><h2 class="anchored_heading" id="jemalloc-heap-profiling">Jemalloc Heap Profiling</h2>
 <p>Jemalloc is an alternative to the default glibc memory allocator. It is capable of analyzing the heap memory usage of a process which allows it to be used to detect all sorts of memory usage problems with a lower overhead compared to tools like Valgrind. Unlike the ASAN and LSAN sanitizers, it is capable of detecting cases where memory doesn't actually leak but keeps growing with no upper limit (e.g. items get appended to a list but are never removed).</p>
 <h3 class="anchored_heading" id="ubuntu-and-debian">Ubuntu and Debian</h3>
@@ -446,9 +466,9 @@ chown mysql:mysql /var/lib/mysql/jeprof/
 <pre class="fixed">sudo apt -y install google-perftools
 </pre><h3 class="anchored_heading" id="service-file-configuration">Service file configuration</h3>
 <p>Once tcmalloc is installed, edit  the systemd service file with <code>systemctl edit mariadb.service</code> and add the following lines into it.</p>
-<p><strong>Note:</strong> Make sure to use the correct path to the tcmalloc library in <code>LD_PRELOAD</code>. The following example uses the Debian location of the library. The file is usually located in <code>/usr/lib64/libtcmalloc_and_profiler.so.4.5.3</code> on RHEL systems. The version number of the library can also change which might require other adjustments to the library path.</p>
-<pre class="fixed">[Service]
-Environment=LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_and_profiler.so.4.5.3
+<div class="cstm-style redbox"><p><strong>Note:</strong> Make sure to use the correct <strong>path</strong> and <strong>library name</strong> to the tcmalloc library in <code>LD_PRELOAD</code>. The following example uses the Debian location of the library. The file is usually located in <code>/usr/lib64/libtcmalloc_and_profiler.so.4</code> on RHEL systems. The version number of the library can also change which might require other adjustments to the library path.</p>
+</div><pre class="fixed">[Service]
+Environment=LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_and_profiler.so.4
 Environment=HEAPPROFILE=/var/lib/mysql/pprof/mariadbd.prof
 Environment=HEAPCHECK=normal
 Environment=HEAP_CHECK_AFTER_DESTRUCTORS=true
@@ -456,11 +476,17 @@ Environment=HEAP_CHECK_AFTER_DESTRUCTORS=true
 <pre class="fixed">mkdir /var/lib/mysql/pprof/
 chown mysql:mysql /var/lib/mysql/pprof/
 </pre><p>And finally restart MariaDB with <code>systemctl restart mariadb.service</code>.</p>
+<h3 class="anchored_heading" id="configuring-heap-dump-frequency">Configuring Heap Dump Frequency</h3>
+<p>The heap profiling is configured using environment variables. The details can be found in the <em>Modifying Runtime Behavior</em> section of the gperftools documentation: <a href="https://gperftools.github.io/gperftools/heapprofile.html">https://gperftools.github.io/gperftools/heapprofile.html</a></p>
+<p>By default, tcmalloc dumps the heap profile every time 1GiB of memory has been allocated (<code>HEAP_PROFILE_ALLOCATION_INTERVAL</code>) or whenever the high-water memory usage mark increases by 100MiB (<code>HEAP_PROFILE_INUSE_INTERVAL</code>). If there's no activity, no memory dumps will be generated.</p>
+<p>To trigger a memory dump based on a time interval, set the <code>HEAP_PROFILE_TIME_INTERVAL</code> environment variable to the number of seconds between each dump. For example, with <code>Environment=HEAP_PROFILE_TIME_INTERVAL=3600</code> there will be one heap dump per hour.</p>
 <h3 class="anchored_heading" id="report-generation">Report generation</h3>
 <p>Depending on which OS you are using, the report generation program is named either <code>pprof</code> (RHEL) or <code>google-pprof</code> (Debian/Ubuntu).</p>
 <p>It is important to pick the latest <code>.heap</code> file to analyze. The following command generates the <code>heap-report.pdf</code> from the latest heap dump. The file will show the breakdown of the memory usage.</p>
 <pre class="fixed">pprof --pdf /usr/sbin/mariadbd $(ls /var/lib/mysql/pprof/*.heap|sort -V|tail -n 1) &gt; heap-report.pdf
-</pre>
+</pre><h2 class="anchored_heading" id="see-also">See also</h2>
+<ul start="1"><li><a href="/kb/en/using-mariadb-with-tcmalloc-or-jemalloc/">Using MariaDB with tcmalloc or jemalloc</a></li></ul>
+
     </div>
 
 

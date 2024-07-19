@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/about-mariadb-connector-j/+r/135632/">135632</a></dd>
+            <dd><a href="/kb/en/about-mariadb-connector-j/+r/141355/">141355</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-03-01 09:29">2024-03-01 09:29</span></dd>
+<span class="datetime" title="2024-07-17 14:57">2024-07-17 14:57</span></dd>
         </dl>
     </div>
     
@@ -345,13 +345,15 @@ licensed.
 &lt;&lt;style class=&#34;centered&#34;&gt;&gt;
 &lt;&lt;style2 class=&#34;underheader graybox&#34;&gt;&gt;
 |= &lt;&lt;entity&gt;&gt;nbsp&lt;&lt;/entity&gt;&gt;Date&lt;&lt;entity&gt;&gt;nbsp&lt;&lt;/entity&gt;&gt; |= &lt;&lt;entity&gt;&gt;nbsp&lt;&lt;/entity&gt;&gt;Release&lt;&lt;entity&gt;&gt;nbsp&lt;&lt;/entity&gt;&gt; |= &lt;&lt;entity&gt;&gt;nbsp&lt;&lt;/entity&gt;&gt;Status&lt;&lt;entity&gt;&gt;nbsp&lt;&lt;/entity&gt;&gt; |= &lt;&lt;entity&gt;&gt;nbsp&lt;&lt;/entity&gt;&gt;Min. Java Compat.&lt;&lt;entity&gt;&gt;nbsp&lt;&lt;/entity&gt;&gt; |= &lt;&lt;entity&gt;&gt;nbsp&lt;&lt;/entity&gt;&gt;Release Notes&lt;&lt;entity&gt;&gt;nbsp&lt;&lt;/entity&gt;&gt; |= &lt;&lt;entity&gt;&gt;nbsp&lt;&lt;/entity&gt;&gt;Changelog&lt;&lt;entity&gt;&gt;nbsp&lt;&lt;/entity&gt;&gt;
+| 17 Jul 2024 | 3.4.1 | Stable (GA) | Java 8 | [[mariadb-connector-j-3-4-1-release-notes|Release Notes]] | [[mariadb-connector-j-3-4-1-changelog|Changelog]]
+| 17 May 2024 | 3.4.0 | Stable (GA) | Java 8 | [[mariadb-connector-j-3-4-0-release-notes|Release Notes]] | [[mariadb-connector-j-3-4-0-changelog|Changelog]]
+| | | | | | |
+| | | | | | |
 | 20 Feb 2024 | 3.3.3 | Stable (GA) | Java 8 | [[mariadb-connector-j-3-3-3-release-notes|Release Notes]] | [[mariadb-connector-j-3-3-3-changelog|Changelog]]
 | 19 Dec 2023 | 3.3.2 | Stable (GA) | Java 8 | [[mariadb-connector-j-3-3-2-release-notes|Release Notes]] | [[mariadb-connector-j-3-3-2-changelog|Changelog]]
 | | | | | | |
-| 25 Aug 2023 | 3.2.0 | Stable (GA) | Java 8 | [[mariadb-connector-j-3-2-0-release-notes|Release Notes]] | [[mariadb-connector-j-3-2-0-changelog|Changelog]]
 | | | | | | |
-| 20 Feb 2024 | 2.7.12 | Stable (GA) | Java 8 | [[mariadb-connector-j-2-7-12-release-notes|Release Notes]] | [[mariadb-connector-j-2-7-12-changelog|Changelog]]
-| 08 Nov 2023 | 2.7.11 | Stable (GA) | Java 8 | [[mariadb-connector-j-2-7-11-release-notes|Release Notes]] | [[mariadb-connector-j-2-7-11-changelog|Changelog]]
+| 25 Aug 2023 | 3.2.0 | Stable (GA) | Java 8 | [[mariadb-connector-j-3-2-0-release-notes|Release Notes]] | [[mariadb-connector-j-3-2-0-changelog|Changelog]]
 &lt;&lt;/style2&gt;&gt;
 [[mariadb-connector-j-releases|see all releases]]
 &lt;&lt;/style&gt;&gt;
@@ -379,8 +381,7 @@ To determine which MariaDB Connector/J release series would be best to use for e
 
 &lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
 |= Java Version(s) |= Recommended MariaDB Connector/J Release Series |= JDBC Version
-| Java 21, Java 17, Java 11, Java 8 | MariaDB Connector/J 3.3  | JDBC 4.2 |
-| Java 17, Java 11, Java 8 | MariaDB Connector/J 3.0  | JDBC 4.2 |
+| Java 21, Java 17, Java 11, Java 8 | MariaDB Connector/J 3.4  | JDBC 4.2 |
 | Java 11, Java 8 | MariaDB Connector/J 2.7  | JDBC 4.2 |
 &lt;&lt;/style&gt;&gt;
 
@@ -481,7 +482,7 @@ jdbc:mariadb:[replication:|loadbalance:|sequential:]//&lt;hostDescription&gt;[,&
 
  HostDescription:
 &lt;&lt;code&gt;&gt;
-&lt;host&gt;[:&lt;portnumber&gt;]  or address=(host=&lt;host&gt;)[(port=&lt;portnumber&gt;)][(type=(master|slave))]
+&lt;host&gt;[:&lt;portnumber&gt;]  or address=(host=&lt;host&gt;|localSocket=&lt;socket&gt;|pipe=&lt;namedpipe&gt;)[(port=&lt;portnumber&gt;)][(type=(master|slave))][(sslMode=disable|trust|verify-ca|verify-full)]
 &lt;&lt;/code&gt;&gt;
 
 Some notes about this:
@@ -491,6 +492,8 @@ Some notes about this:
 * The default type is ##master##.
 * If the failover and load-balancing mode is set to ##replication##, then the connector assumes that the first host is master, and the others are slaves by default, if their types are not explicitly mentioned.
 * //aurora// failover prefix is available on 2.x version. 
+*  A detailed host description option supersedes a global option description
+* sslMode, pipe and localSocket are available since 3.4.1 version
 
 Examples: 
 * ##localhost:3306##
@@ -498,18 +501,39 @@ Examples:
 * ##somehost.com:3306##
 * ##address=(host=localhost)(port=3306)(type=master)##
 
+
+The  ##jdbc:mariadb:sequential:address=(localSocket=/socket)(sslMode=disable),10.0.0.1:3306/DB?sslMode=verify-full## connection string will permit to connect to local unix socket if available, or to host 10.0.0.1 using SSL if not.
+
 === Failover and Load-Balancing Modes
 
 &lt;&lt;product connector/j from=&#34;1.2.0&#34;&gt;&gt;
 Failover and Load-Balancing Modes were introduced in [[mariadb-connector-j-120-release-notes|MariaDB Connector/J 1.2.0.]]
 &lt;&lt;/product&gt;&gt; 
-&lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
-|= Mode |= Description
-| ##sequential## |This mode supports connection failover in a multi-master environment, such as MariaDB Galera Cluster. This mode does **not** support load-balancing reads on slaves. The connector will try to connect to hosts in the order in which they were declared in the connection URL, so the first available host is used for all queries.\\For example, let&#39;s say that the connection URL is the following: ##jdbc:mariadb:sequential:host1,host2,host3/testdb##\\When the connector tries to connect, it will always try host1 first. If that host is not available, then it will try host2. etc. When a host fails, the connector will try to reconnect to hosts in the same order.\\This mode has been available since [[mariadb-connector-j-130-release-notes|MariaDB Connector/J 1.3.0]]|
-| ##loadbalance## | This mode supports connection load-balancing in a multi-master environment, such as MariaDB Galera Cluster. This mode does **not** support load-balancing reads on slaves. The connector performs load-balancing for all queries by randomly picking a host from the connection URL for each connection, so queries will be load-balanced as a result of the connections getting randomly distributed across all hosts. \\Before 2.4.2, this option was named `failover` - alias still exist for compatibility - .\\This mode has been available since [[mariadb-connector-j-120-release-notes|MariaDB Connector/J 1.2.0]]|
-| ##replication## | This mode supports connection failover in a master-slave environment, such as a MariaDB Replication cluster. The mode supports environments with one or more masters. This mode does support load-balancing reads on slaves if the connection is set to read-only before executing the read. The connector performs load-balancing by randomly picking a slave from the connection URL to execute read queries for a connection.\\This mode has been available since [[mariadb-connector-j-120-release-notes|MariaDB Connector/J 1.2.0]]|
-| //aurora// | This mode supports connection failover in an Amazon Aurora cluster. This mode does support load-balancing reads on slave instances if the connection is set to read-only before executing the read. The connector performs load-balancing by randomly picking a slave instance to execute read queries for a connection.\\This mode has been available since [[mariadb-connector-j-120-release-notes|MariaDB Connector/J 1.2.0]] and **not supported anymore since 3.0 version**|
-&lt;&lt;/style&gt;&gt;
+
+
+==== ##sequential##
+* **Description:** This mode supports connection failover in a multi-master environment, such as MariaDB Galera Cluster. This mode does **not** support load-balancing reads on slaves. The connector will try to connect to hosts in the order in which they were declared in the connection URL, so the first available host is used for all queries.\\For example, let&#39;s say that the connection URL is the following: ##jdbc:mariadb:sequential:host1,host2,host3/testdb##\\When the connector tries to connect, it will always try host1 first. If that host is not available, then it will try host2. etc. When a host fails, the connector will try to reconnect to hosts in the same order.
+* **Introduced:** 1.3.0
+
+----
+
+==== ##loadbalance##
+* **Description:** This mode supports connection load-balancing in a multi-master environment, such as MariaDB Galera Cluster. This mode does **not** support load-balancing reads on slaves. The connector performs load-balancing for all queries by randomly picking a host from the connection URL for each connection, so queries will be load-balanced as a result of the connections getting randomly distributed across all hosts. \\Before 2.4.2, this option was named `failover` - alias still exist for compatibility -
+* **Introduced:** 1.2.0
+
+----
+
+==== ##replication##
+* **Description:** This mode supports connection failover in a master-slave environment, such as a MariaDB Replication cluster. The mode supports environments with one or more masters. This mode does support load-balancing reads on slaves if the connection is set to read-only before executing the read. The connector performs load-balancing by randomly picking a slave from the connection URL to execute read queries for a connection
+* **Introduced:** 1.2.0
+
+----
+
+==== ##aurora##
+* **Description:** This mode supports connection failover in an Amazon Aurora cluster. This mode does support load-balancing reads on slave instances if the connection is set to read-only before executing the read. The connector performs load-balancing by randomly picking a slave instance to execute read queries for a connection
+* **Introduced:** 1.2.0 and **not supported anymore since 3.0 version**
+
+----
 
 &lt;&lt;style class=&#34;redbox&#34;&gt;&gt;
 driver 3.0 is a complete rewrite of the connector. Specific support for aurora has not been implemented in 3.0, since it relies on pipelining. Aurora is not compatible with pipelining.
@@ -525,63 +549,196 @@ General remark: Unknown options are accepted and silently ignored.
 The following options are currently supported.
 
 ==== Essential Parameters
-&lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
-|= Parameter |= Description
-|##user##|Database user name. \\//since 1.0.0//|
-|##password##|Password of database user.\\//since 1.0.0//|
-|##connectTimeout##| The connect timeout value, in milliseconds, or zero for no timeout.\\//Default: 30 000. Since 1.1.8//|
-|##useServerPrepStmts##|PrepareStatement are prepared on the server side before executing. The applications that repeatedly use the same queries have value to activate this option, but the general case is to use the direct command (text protocol).//Default: false (was true before 1.6.0). Since 1.3.0//|
-|##allowLocalInfile##| Permit loading data from file. see [[#load-data-infile|LOAD DATA LOCAL INFILE]]. Having this option enable can impact batch performance. Disabling it can permit some batch improvement\\//Default: true. Since 1.2.1//|
-|##useMysqlMetadata##| [[https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/DatabaseMetaData.html#getDatabaseProductName()|databaseMetaData.getDatabaseProductName()]] return &#34;MariaDB&#34; or &#34;MySQL&#34; according to server type (since 2.4.0). This option permit to force returning &#34;MySQL&#34; even if server is MariaDB to permit compatibility with frameworks that doesn&#39;t support MariaDB.\\//Default: false. Since 2.4.1//|
-|##restrictedAuth##| permits to restrict authentication plugins (comma separated). For example, the following connection string only allows the mysql_native_password and client_ed25519 client authentication plugins:`jdbc:mariadb://HOST/DATABASE?restrictedAuth=mysql_native_password,client_ed25519`. If not set, permit all authentication plugins.\\//Default: null. Since 3.0.0 // |
-|##timezone##| permits to force session timezone in case of client having a different timezone compare to server. The option `timezone` can have 3 types of value: * &#39;disabled&#39; (default) : connector doesn&#39;t change time_zone. *  &#39;auto&#39;: client will use client default timezone. * &#39;&lt;a timezone&gt;&#39;: connector will set connection variable to value. see [[https://mariadb.com/kb/en/about-mariadb-connector-j/#timezone-consideration|timezone consideration]] to know more\\//Default: &#39;disabled&#39;. Since 3.0.0//|
-&lt;&lt;/style&gt;&gt;
 
-\\
+==== ##user##
+* **Description:** User name.
+* **Data Type:** ##string##
+* **Default Value:** ##null##
+* **Introduced:** 1.0.0
 
+----
+
+==== ##password##
+* **Description:** password
+* **Data Type:** ##string##
+* **Default Value:** ##null##
+* **Introduced:** 1.0.0
+
+----
+
+==== ##connectTimeout##
+* **Description:** The connect timeout value, in milliseconds, or zero for no timeout
+* **Data Type:** ##integer##
+* **Default Value:** ##30 000##
+* **Introduced:** 1.1.8
+
+----
+
+==== ##useServerPrepStmts##
+* **Description:** Text (default) is a globaly a safe default behavior, always working without issue. Binary protocol (useServerPrepStmts=true) has usually good benefits, but that depends: \\if missing cache, it will have an overhead of preparing before execution. \\If hitting cache, this perform better, but difference usually isn&#39;t huge, because most of the queries have simple execution plan. \\This is totally depending on queries, but to have some order of difference, here is some realistic differences : missing cache : 50% performance loss / hitting cache: 5-10% performance gain (because simple execution plan).\\\\
+Another thing to consider : Since MariaDB 10.6 Server with MDEV-19237, server now permits to avoid resending metadata when they haven’t changed when enabling useServerPrepStmts option (This concerns SQL commands that return a result-set). This avoids useless information transiting on the network and parsing those metadata, and that permit huge gain (around 10-30% depending on query, metadata can be huge compare to resultset data). So, if you use a MariaDB server version 10.6, and application doesn&#39;t execute completly differents queries, binary protocol (option &#39;useServerPrepStmts&#39;) is recommended.
+* **Data Type:** ##boolean##
+* **Default Value:** ##false##
+* **Introduced:** 1.3.0
+
+----
+
+==== ##allowLocalInfile##
+* **Description:** Permit loading data from file. see [[#load-data-infile|LOAD DATA LOCAL INFILE]]. Having this option enable can impact batch performance. Disabling it can permit some batch improvement
+* **Data Type:** ##boolean##
+* **Default Value:** ##true##
+* **Introduced:** 1.2.1
+
+----
 
 ==== TLS Parameters
 more information on [[https://mariadb.com/kb/en/mariadb/using-tlsssl-with-mariadb-java-connector/|Using TLS/SSL with MariaDB java connector]]
  
-&lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
-|= Parameter |= Description
-|##sslMode##| Enables SSL/TLS in a specific mode.\\\\The following values are supported: \\* disable: Do not use SSL/TLS (default)\\* trust: Only use SSL/TLS for encryption. Do not perform certificate or hostname verification. This mode is not safe for production applications.\\* verify-ca: Use SSL/TLS for encryption and perform certificates verification, but do not perform hostname verification.\\* verify-full: Use SSL/TLS for encryption, certificate verification, and hostname verification. \\\\This option replaces the deprecated options: disableSslHostnameVerification, trustServerCertificate, useSsl\\//Default: disable. Since 3.0.0//|
-|##useSsl##|*deprecated since 3.0.0, use sslMode instead*\\ Force [[https://mariadb.com/kb/en/mariadb/secure-connections-overview/secure-connections-overview|SSL/TLS on  connection]](useSSL can be used as alias).\\//Default: false. Since 1.1.0//|
-|##trustServerCertificate##|*deprecated since 3.0.0, use sslMode instead*\\When using SSL/TLS, do not check server&#39;s certificate.\\//Default: false. Since 1.1.1//|
-|##serverSslCert##|Permits providing server&#39;s certificate in DER form, or server&#39;s CA certificate. The server will be added to trustStor. This permits a self-signed certificate to be trusted.\\Can be used in one of 3 forms : \\* serverSslCert=/path/to/cert.pem (full path to certificate)\\* serverSslCert=classpath:relative/cert.pem (relative to current classpath)\\* or as verbatim DER-encoded certificate string &#34;------BEGIN CERTIFICATE-----&#34; .\\//since 1.1.3//|
-|##keyStore##|File path of the keyStore file that contain client private key store and associate certificates (similar to java System property &#34;javax.net.ssl.keyStore&#34;, but ensure that only the private key&#39;s entries are used).(legacy alias clientCertificateKeyStoreUrl).\\//Since 1.3.4//|
-|##keyStorePassword##|Password for the client certificate keyStore  (similar to java System property &#34;javax.net.ssl.keyStorePassword&#34;).(legacy alias clientCertificateKeyStorePassword)\\//Since 1.3.4//|
-|##enabledSslCipherSuites##|Force TLS/SSL cipher (comma separated list).\\ Example : &#34;TLS_DHE_RSA_WITH_AES_256_GCM_SHA384, TLS_DHE_DSS_WITH_AES_256_GCM_SHA384&#34;\\//Default: use JRE ciphers. Since 1.5.0//|
-|##disableSslHostnameVerification##|*deprecated since 3.0.0, use sslMode instead*\\When using ssl, the driver checks the hostname against the server&#39;s identity as presented in the server&#39;s certificate (checking alternative names or the certificate CN) to prevent man-in-the-middle attacks. This option permits deactivating this validation. Hostname verification is disabled when the trustServerCertificate option is set\\//Default: false. Since 2.1.0//|
-|##keyStoreType## | Indicate key store type (JKS/PKCS12). default is null, then using java default type.\\//Since 2.4.0//|
-|##enabledSslProtocolSuites##|Force TLS/SSL protocol to a specific set of TLS versions (comma separated list). \\Example : &#34;TLSv1,TLSv1.1,TLSv1.2&#34;\\(Alias &#34;enabledSSLProtocolSuites&#34; works too)\\//Default: java default. Since 1.5.0//|
+==== ##sslMode##
+* **Description:** Enables SSL/TLS in a specific mode. \\this option replaces the deprecated options: disableSslHostnameVerification, trustServerCertificate, useSsl
+* **Data Type:** ##string##
+* **Default Value:** ##disable##
+* **Valid Values:** 
+** disable: Do not use SSL/TLS (alias &#39;false&#39;)
+** trust: Only use SSL/TLS for encryption. Do not perform certificate or hostname verification. This mode is not safe for production applications.
+** verify-ca: Use SSL/TLS for encryption and perform certificates verification, but do not perform hostname verification.
+** verify-full: Use SSL/TLS for encryption, certificate verification, and hostname verification (alias &#39;true&#39;)
+* **Introduced:** 3.0.0
 
-&lt;&lt;/style&gt;&gt;
+----
 
-\\
+==== ##serverSslCert##
+* **Description:** |Permits providing server&#39;s certificate in DER form, or server&#39;s CA certificate. The server will be added to trustStore. This permits a self-signed certificate to be trusted.\\Can be used in one of 3 forms : \\* serverSslCert=/path/to/cert.pem (full path to certificate)\\* serverSslCert=classpath:relative/cert.pem (relative to current classpath)\\* or as verbatim DER-encoded certificate string &#34;------BEGIN CERTIFICATE-----&#34; 
+* **Data Type:** ##boolean##
+* **Default Value:** ##false##
+* **Introduced:** 1.1.0
+
+----
+
+==== ##keyStore##
+* **Description:** File path of the keyStore file that contain client private key store and associate certificates (similar to java System property &#34;javax.net.ssl.keyStore&#34;, but ensure that only the private key&#39;s entries are used).
+* **Data Type:** ##string##
+* **Default Value:** ##null##
+* **Alias:** clientCertificateKeyStoreUrl
+* **Introduced:** 1.1.1
+
+----
+==== ##keyStorePassword##
+* **Description:** Password for the client certificate keyStore  (similar to java System property &#34;javax.net.ssl.keyStorePassword&#34;)
+* **Data Type:** ##string##
+* **Default Value:** ##null##
+* **Alias:** clientCertificateKeyStorePassword
+* **Introduced:** 1.3.4
+
+----
+==== ##enabledSslCipherSuites##
+* **Description:** Force TLS/SSL cipher (comma separated list).\\ Example : &#34;TLS_DHE_RSA_WITH_AES_256_GCM_SHA384, TLS_DHE_DSS_WITH_AES_256_GCM_SHA384&#34;
+* **Data Type:** ##string##
+* **Default Value:** ##use JRE ciphers##
+* **Introduced:** 1.5.0
+
+----
+==== ##enabledSslProtocolSuites##
+* **Description:** Force TLS/SSL protocol to a specific set of TLS versions (comma separated list). \\Example : &#34;TLSv1,TLSv1.1,TLSv1.2
+* **Data Type:** ##string##
+* **Default Value:** ##use JRE default##
+* **Alias:** enabledSSLProtocolSuites
+* **Introduced:** 1.5.0
+
+----
+
+==== ##disableSslHostnameVerification##
+* **Description:** *deprecated, use sslMode instead*\\When using ssl, the driver checks the hostname against the server&#39;s identity as presented in the server&#39;s certificate (checking alternative names or the certificate CN) to prevent man-in-the-middle attacks. This option permits deactivating this validation. Hostname verification is disabled when the trustServerCertificate option is set
+* **Data Type:** ##boolean##
+* **Default Value:** ##false##
+* **Introduced:** 2.1.0
+* **Deprecated:** 3.0.0
+
+----
+
+
+==== ##useSsl##
+* **Description:** *deprecated, use sslMode instead*\\ Force [[https://mariadb.com/kb/en/mariadb/secure-connections-overview/secure-connections-overview|SSL/TLS on  connection]](useSSL can be used as alias).
+* **Data Type:** ##boolean##
+* **Default Value:** ##false##
+* **Introduced:** 1.1.0
+* **Deprecated:** 3.0.0
+
+----
+==== ##trustServerCertificate##
+* **Description:** *deprecated, use sslMode instead*\\ When using SSL/TLS, do not check server&#39;s certificate
+* **Data Type:** ##boolean##
+* **Default Value:** ##false##
+* **Introduced:** 1.1.1
+* **Deprecated:** 3.0.0
+----
 
 ==== Pool Parameters
 
 See the [[pool-datasource-implementation/|pool documentation]] for pool configuration.
 
-&lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
-|= Parameter |= Description
-|##pool##|Use pool. This option is useful only if not using a DataSource object, but only a connection object. \\//Default: false. since 2.2.0//|
-|##poolName##|Pool name that permits identifying threads.\\default: auto-generated as MariaDb-pool-&lt;pool-index&gt;//since 2.2.0//|
-|##maxPoolSize##| The maximum number of physical connections that the pool should contain. \\//Default: 8. since 2.2.0//|
-|##minPoolSize##| When connections are removed due to not being used for longer than than &#34;maxIdleTime&#34;, connections are closed and removed from the pool. &#34;minPoolSize&#34; indicates the number of physical connections the pool should keep available at all times. Should be less or equal to maxPoolSize.\\//Default: maxPoolSize value. Since 2.2.0//|
-|##poolValidMinDelay##| When asking a connection to pool, the pool will validate the connection state. &#34;poolValidMinDelay&#34; permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked.\\//Default: 1000 (in milliseconds). Since 2.2.0//|
-|##maxIdleTime##|The maximum amount of time in seconds that a connection can stay in the pool when not used. This value must always be below @wait_timeout value - 45s \\//Default: 600 in seconds (=10 minutes), minimum value is 60 seconds. Since 2.2.0//|
-|##useResetConnection##|When a connection is closed() (given back to pool), the pool resets the connection state. Setting this option, the prepare command will be deleted, session variables changed will be reset, and user variables will be destroyed when the server permits it (&gt;= MariaDB 10.2.4, &gt;= MySQL 5.7.3), permitting saving memory on the server if the application make extensive use of variables. Must not be used with the useServerPrepStmts option\\//Default: false. Since 2.2.0//|
-|##registerJmxPool##| Register JMX monitoring pools.\\//Default: true. Since 2.2.0//|
-&lt;&lt;/style&gt;&gt;
+----
+==== ##pool##
+* **Description:** Use pool. This option is useful only if not using a DataSource object, but only a connection object
+* **Data Type:** ##boolean##
+* **Default Value:** ##false##
+* **Introduced:** 2.2.0
 
-\\
+----
+==== ##poolName##
+* **Description:** Pool name that permits identifying threads.\\default: auto-generated as MariaDb-pool-&lt;pool-index&gt;
+* **Data Type:** ##string##
+* **Default Value:** ##MariaDB-pool##
+* **Introduced:** 2.2.0
+
+----
+==== ##maxPoolSize##
+* **Description:** The maximum number of physical connections that the pool should contain
+* **Data Type:** ##integer##
+* **Default Value:** ##8##
+* **Introduced:** 2.2.0
+
+----
+==== ##minPoolSize##
+* **Description:** When connections are removed due to not being used for longer than than &#34;maxIdleTime&#34;, connections are closed and removed from the pool. &#34;minPoolSize&#34; indicates the number of physical connections the pool should keep available at all times. Should be less or equal to maxPoolSize.
+* **Data Type:** ##integer##
+* **Default Value:** ##maxPoolSize value##
+* **Introduced:** 2.2.0
+
+----
+==== ##poolValidMinDelay##
+* **Description:** When asking a connection to pool, the pool will validate the connection state. &#34;poolValidMinDelay&#34; permits disabling this validation if the connection has been borrowed recently avoiding useless verifications in case of frequent reuse of connections. 0 means validation is done each time the connection is asked. In milleseconds.
+* **Data Type:** ##integer##
+* **Default Value:** ##1000##
+* **Introduced:** 2.2.0
+
+----
+==== ##maxIdleTime##
+* **Description:** The maximum amount of time in seconds that a connection can stay in the pool when not used. This value must always be below @wait_timeout value - 45s
+* **Data Type:** ##integer##
+* **Default Value:** ##600## minimum value is 60 seconds
+* **Introduced:** 2.2.0
+----
+==== ##useResetConnection##
+* **Description:** When a connection is closed() (given back to pool), the pool resets the connection state. Setting this option, the prepare command will be deleted, session variables changed will be reset, and user variables will be destroyed when the server permits it (&gt;= MariaDB 10.2.4, &gt;= MySQL 5.7.3), permitting saving memory on the server if the application make extensive use of variables
+* **Data Type:** ##boolean##
+* **Default Value:** ##false##
+* **Introduced:** 2.2.0
+
+----
+==== ##registerJmxPool##
+* **Description:** Register JMX monitoring pools
+* **Data Type:** ##boolean##
+* **Default Value:** ##true##
+* **Introduced:** 2.2.0
+
 
 ==== Infrequently Used Parameters
 
 &lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
 |= Parameter |= Description
+|##useMysqlMetadata##| [[https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/DatabaseMetaData.html#getDatabaseProductName()|databaseMetaData.getDatabaseProductName()]] return &#34;MariaDB&#34; or &#34;MySQL&#34; according to server type (since 2.4.0). This option permit to force returning &#34;MySQL&#34; even if server is MariaDB to permit compatibility with frameworks that doesn&#39;t support MariaDB.\\//Default: false. Since 2.4.1//|
+|##restrictedAuth##| permits to restrict authentication plugins (comma separated). For example, the following connection string only allows the mysql_native_password and client_ed25519 client authentication plugins:`jdbc:mariadb://HOST/DATABASE?restrictedAuth=mysql_native_password,client_ed25519`. If not set, permit all authentication plugins.\\//Default: null. Since 3.0.0 // |
  |##maxQuerySizeToLog##|Only the first characters corresponding to this options size will be displayed in logs\\//Default: 1024. Since 1.5.0//|
 | ##allowMultiQueries## | permit multi-queries like {{{insert into ab (i) values (1); insert into ab (i) values (2)}}}. //Default: false. Since 1.0.0//|
 | ##dumpQueriesOnException## |If set to &#39;true&#39;, an exception is thrown during query execution containing a query string.\\//Default: false. Since 1.1.0//|
@@ -622,7 +779,8 @@ See the [[pool-datasource-implementation/|pool documentation]] for pool configur
 | ##transactionReplaySize## |Sets the number of statements that should be saved in the transaction cache when transactionReplay is enabled..\\//Default: 64. Since 3.0.0//|
 | ##useBulkStmts## |Use dedicated COM_STMT_BULK_EXECUTE protocol for batch insert when possible. (batch without Statement.RETURN_GENERATED_KEYS and streams) to have faster batch. (significant only on &gt;= MariaDB 10.2.7) \\//Default: true since 3.0.0 (was false since version &gt;= 2.3.0)//|
 | ##useCatalogTerm## |&#34;schema&#34; and &#34;database&#34; are server synonymous. Connector historically get/set database using Connection.setCatalog()/getCatalog(), setSchema()/getSchema() being no-op. Setting option useCatalogTerm to &#34;schema&#34; will change that behavior to use Schema in place of Catalog. Affected changes : database change will be done with either Connection.setCatalog()/getCatalog() or Connection.setSchema()/getSchema(), 2: DatabaseMetadata methods that use catalog or schema filtering, 3: ResultsetMetadata getCatalogName/getSchemaName \\//Default: &#39;CATALOG&#39; since 3.2.0//|
-| ##returnMultiValuesGeneratedIds## | for connector 2.x compatibility only, getGeneratedKeys() will then returns all ids of multi-value inserts \\//Default: false since 3.3.2//|
+| ##returnMultiValuesGeneratedIds## | for connector 2.x compatibility only, getGeneratedKeys() will then returns all ids of multi-value inserts. This is not compatible with galera servers \\//Default: false since 3.3.2//|
+| ##pinGlobalTxToPhysicalConnection## | When set, commands with a specific XID will reuse previous connection used for this XID. \\//Default: false since 3.4.1//|
 &lt;&lt;/style&gt;&gt;
 
 \\
@@ -703,28 +861,40 @@ dependencies {
 
 === Timezone consideration
 
-The simple solution is always having client and server sharing the same timezone.
+==== The Ideal Scenario
+The simplest approach to avoid time zone headaches is for the client and server to operate in the same time zone.
 
-If that&#39;s not the case, some options permit to correct that behavior. In 2.x version, there was 2 options `useLegacyDatetimeCode` and `serverTimezone` that control timezone difference. Those options are now removed in 3.x version, since they didn&#39;t comply well with [[time-zones/#time-zone-effects-on-functions|time function]].
+==== Java Connector Timezone Options
+There are 3 options that control timestamps behavior in the java connector:
+* connectionTimeZone: (LOCAL | SERVER | &lt;user-defined time zone&gt;) - This option defines the connection&#39;s time zone. LOCAL retrieves the JVM&#39;s default time zone, SERVER fetches the server&#39;s global time zone upon connection creation, and &lt;user-defined time zone&gt; allows specifying a server time zone without requesting it during connection establishment.
+* forceConnectionTimeZoneToSession: (true | false) - This setting dictates whether the connector enforces the connection time zone for the session.
+* preserveInstants: (true | false) - This option controls whether the connector converts Timestamp values to the connection&#39;s time zone. 
 
-Since 3.0.0, a new option &#39;timezone&#39; permit to handle time_zone differences.
+==== Recommendation
+By default, the connector adopts the JVM&#39;s default time zone. If the client and server reside in different time zones, it&#39;s recommended to configure the connection time zone to match the JVM&#39;s default by setting forceConnectionTimeZoneToSession to true.
+This ensures proper operation of time functions.
 
-The option `timezone` can have 3 types of value:
-* &#39;disabled&#39; (default) : connector doesn&#39;t change time_zone.
-* &#39;auto&#39; : connector will set time_zone connection variable to java default timezone
-* &#39;&lt;a timezone&gt;&#39;: connector will set connection variable to value. Compare to Auto, this avoids having some additional exchange with server at connection creation, This value MUST correspond to java default timezone. 
+(This isn’t the default behavior because there is a server Requirements to set tzinfo depending on the JVM&#39;s time zones)
 
-The solution is to explicitly set timezone either to &#39;auto&#39; or to explicit timezone.
+==== TIMESTAMP vs. DATETIME: Know the Difference
+Just like Java&#39;s Instant and LocalDateTime, server-side TIMESTAMP and DATETIME fields serve distinct purposes. One represents a specific point in time (a moment), while the other doesn&#39;t.
+* TIMESTAMP: This represents an exact moment on the timeline, expressed using the connection&#39;s time zone. When stored, it gets converted to UTC (Coordinated Universal Time) for consistency. Upon retrieval, it&#39;s converted back to the connection&#39;s time zone for display.
+* DATETIME: This combines date and time-of-day information but doesn&#39;t represent a specific moment.
 
-example :
-* jdbc:mariadb://localhost/?timezone=+5:00
-* jdbc:mariadb://localhost/?timezone=auto
-* jdbc:mariadb://localhost/?timezone=America/New_York
+===== The Misuse of DATETIME:
+Due to its wider range, DATETIME is sometimes mistakenly used to store a specific point in time. While this might work if the client and server share the same time zone, it creates problems when they differ.
 
-The recommended value is setting timezone to &#39;auto&#39;. Connector will then time_zone connection variable to `timezone` value at connection creation. This permits safe use of server  [[time-zones/#time-zone-effects-on-functions|time function]].
-If the client uses the IANA timezone, the server might have to load time zone information. See [[mariadb-tzinfo-to-sql]] and [[time-zones]], those are not filled by default.
+======A (Discouraged) Workaround:
+While using DATETIME instead of TIMESTAMP is generally discouraged, a specific combination of settings (&#34;preserveInstants=true&amp;connectionTimeZone=SERVER&#34;) can force all Java Timestamp exchanges to be converted to the connection&#39;s time zone during storage and retrieval. However, this approach is not recommended for long-term solutions.
 
-This corresponds to thebehavior of the MySQL connector with options &#34;connectionTimeZone&#34; set with option &#34;forceConnectionTimeZoneToSession&#34; set to true. 
+==== Compatibility with Older Connectors (Pre-3.4):
+
+The MariaDB Connector/J versions before 3.4 offered a single &#34;timezone&#34; option. While this functionality remains compatible, it&#39;s now separated into two distinct settings: connectionTimeZone and forceConnectionTimeZoneToSession. Here&#39;s a breakdown of how the old option translates to the new ones:
+&#34;timezone=America/Los_Angeles&#34; is equivalent to &#34;connectionTimeZone=America/Los_Angeles&amp;forceConnectionTimeZone=true
+
+To mimic the behavior of the &#34;useLegacyDatetimeCode=false&#34; option from MariaDB 2.x, you can set the following combination: “connectionTimeZone=SERVER&amp;preserveInstants=true”
+
+Note: Unlike the MySQL Connector, the MariaDB Connector/J defaults connectionTimeZone to LOCAL (JVM&#39;s default) instead of SERVER.
 
 
 === &#34;LOAD DATA INFILE&#34; 
