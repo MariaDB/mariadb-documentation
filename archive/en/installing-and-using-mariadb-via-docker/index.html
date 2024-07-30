@@ -287,7 +287,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-05-29 19:38">1 year, 2 months ago</span></dd>
+<span class="datetime" title="2024-07-29 12:13">11 hours, 49 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -517,7 +517,7 @@ Cannot connect to the Docker daemon at unix:<em>/var/run/docker.sock. Is the doc
 <p>10.2 and 10.5 are also valid target versions:</p>
 <pre class="fixed wrap">docker run --name mariadbtest -e MYSQL_ROOT_PASSWORD=mypass -p 3306:3306 -d docker.io/library/mariadb:10.2
 </pre><pre class="fixed wrap">docker run --name mariadbtest -e MYSQL_ROOT_PASSWORD=mypass -p 3306:3306  -d docker.io/library/mariadb:10.5
-</pre><p>Optionally, after the image name, we can specify some <a href="/kb/en/mysqld-options/">options for mysqld</a>. For example:</p>
+</pre><p>Optionally, after the image name, we can specify some <a href="/kb/en/mariadbd-options/">options for mariadbd</a>. For example:</p>
 <pre class="fixed wrap">docker run --name mariadbtest -e MYSQL_ROOT_PASSWORD=mypass -p 3306:3306 -d mariadb:10.3 --log-bin --binlog-format=MIXED
 </pre><p>Docker will respond with the container's id. But, just to be sure that the container has been created and is running, we can get a list of running containers in this way:</p>
 <pre class="fixed">docker ps
@@ -531,7 +531,7 @@ Cannot connect to the Docker daemon at unix:<em>/var/run/docker.sock. Is the doc
 <pre class="fixed">docker stop mariadbtest
 </pre><p>The container will not be destroyed by this command. The data will still live inside the container, even if MariaDB is not running. To restart the container and see our data, we can issue:</p>
 <pre class="fixed">docker start mariadbtest
-</pre><p>With <code>docker stop</code>, the container will be gracefully terminated: a <code>SIGTERM</code> signal will be sent to the <code>mysqld</code> process, and Docker will wait for the process to shutdown before returning the control to the shell. However, it is also possible to set a timeout, after which the process will be immediately killed with a <code>SIGKILL</code>. Or it is possible to immediately kill the process, with no timeout.</p>
+</pre><p>With <code>docker stop</code>, the container will be gracefully terminated: a <code>SIGTERM</code> signal will be sent to the <code>mariadbd</code> process, and Docker will wait for the process to shutdown before returning the control to the shell. However, it is also possible to set a timeout, after which the process will be immediately killed with a <code>SIGKILL</code>. Or it is possible to immediately kill the process, with no timeout.</p>
 <pre class="fixed">docker stop --time=30 mariadbtest
 docker kill mariadbtest
 </pre><p>In case we want to destroy a container, perhaps because the image does not suit our needs, we can stop it and then run:</p>
@@ -560,12 +560,12 @@ docker unpause node1 node2 node3
 <h3 class="anchored_heading" id="troubleshooting-a-container">Troubleshooting a Container</h3>
 <p>If the container doesn't start, or is not working properly, we can investigate with the following command:</p>
 <pre class="fixed">docker logs mariadbtest
-</pre><p>This command shows what the daemon sent to the stdout since the last attempt of starting - the text that we typically see when we invoke <code>mysqld</code> from the command line.</p>
+</pre><p>This command shows what the daemon sent to the stdout since the last attempt of starting - the text that we typically see when we invoke <code>mariadbd</code> from the command line.</p>
 <p>On some systems, commands such as <code>docker stop mariadbtest</code> and <code>docker restart mariadbtest</code> may fail with a permissions error. This can be caused by AppArmor, and even <code>sudo</code> won't allow you to execute the command. In this case, you will need to find out which profile is causing the problem and correct it, or disable it. <strong>Disabling AppArmor altogether is not recommended, especially in production.</strong></p>
 <p>To check which operations were prevented by AppArmor, see <a href="https://gitlab.com/apparmor/apparmor/-/wikis/AppArmor_Failures">AppArmor Failures</a> in AppArmor documentation.</p>
-<p>To disable a profile, create a symlink with the profile name (in this example, <code>mysqld</code>) to <code>etc/apparmor.d/disable</code>, and then reload profiles:</p>
-<pre class="fixed">ln -s /etc/apparmor.d/usr.sbin.mysqld /etc/apparmor.d/disable/
-sudo apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld
+<p>To disable a profile, create a symlink with the profile name (in this example, <code>mariadbd</code>) to <code>etc/apparmor.d/disable</code>, and then reload profiles:</p>
+<pre class="fixed">ln -s /etc/apparmor.d/usr.sbin.mariadbd /etc/apparmor.d/disable/
+sudo apparmor_parser -R /etc/apparmor.d/usr.sbin.mariadbd
 </pre><p>For more information, see <a href="https://gitlab.com/apparmor/apparmor/-/wikis/Policy_Layout">Policy Layout</a> in AppArmor documentation.</p>
 <p>After disabling the profile, you may need to run:</p>
 <pre class="fixed">sudo service docker restart
