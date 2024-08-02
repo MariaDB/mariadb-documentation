@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-07-31 19:28">4 hours, 34 minutes ago</span></dd>
+<span class="datetime" title="2024-08-01 09:47">14 hours, 15 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -489,6 +489,7 @@
 </div>
 <p>The status variables listed on this page relate to encrypting data during transfer with the Transport Layer Security (TLS) protocol.  Often, the term Secure Socket Layer (SSL) is used interchangeably with TLS, although strictly speaking, the SSL protocol is a predecessor to TLS and is no longer considered secure. </p>
 <p>For compatibility reasons, the TLS status variables in MariaDB still use the <code>Ssl_</code> prefix, but MariaDB only supports its more secure successors. For more information on SSL/TLS in MariaDB, see <a href="/kb/en/secure-connections-overview/">Secure Connections Overview</a>.</p>
+<p>Some of these status values are not under the control of the server, but are reporting back settings of the underlying SSL library used by the server.</p>
 <h2 class="anchored_heading" id="variables">Variables</h2>
 <h4 class="anchored_heading" id="ssl_accept_renegotiates"><code>Ssl_accept_renegotiates</code></h4>
 <ul start="1"><li><strong>Description:</strong> Number of negotiations needed to establish the TLS connection. The global value can be flushed by <code><a href="/kb/en/flush/">FLUSH STATUS</a></code>.
@@ -516,6 +517,7 @@
 <hr>
 <h4 class="anchored_heading" id="ssl_cipher_list"><code>Ssl_cipher_list</code></h4>
 <ul start="1"><li><strong>Description:</strong> List of the available TLS ciphers.
+This is not necessarily the list of ciphers the MariaDB server can actually accept, but rather the list of ciphers supported by the underlying SSL library in general. E.g. some of these may not be compatible with the servers SSL certificate and so can't be used to connect to that server.
 </li><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Data Type:</strong> <code>string</code>
 </li></ul>
@@ -563,14 +565,14 @@
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="ssl_server_not_after"><code>Ssl_server_not_after</code></h4>
-<ul start="1"><li><strong>Description:</strong> Last valid date for the TLS certificate. 
+<ul start="1"><li><strong>Description:</strong> Last valid date for the server TLS certificate. 
 </li><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Data Type:</strong> <code>numeric</code>
 </li><li><strong>Introduced:</strong> <code><a href="/kb/en/what-is-mariadb-100/">MariaDB 10.0</a></code>
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="ssl_server_not_before"><code>Ssl_server_not_before</code></h4>
-<ul start="1"><li><strong>Description:</strong> First valid date for the TLS certificate. 
+<ul start="1"><li><strong>Description:</strong> First valid date for the server TLS certificate. 
 </li><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Data Type:</strong> <code>numeric</code>
 </li><li><strong>Introduced:</strong> <code><a href="/kb/en/what-is-mariadb-100/">MariaDB 10.0</a></code>
@@ -626,6 +628,7 @@
 <hr>
 <h4 class="anchored_heading" id="ssl_verify_depth"><code>Ssl_verify_depth</code></h4>
 <ul start="1"><li><strong>Description:</strong> TLS verification depth.
+How many levels within the certificate signing chain the verification should cover. This is not set by the server itself but by the OpenSSL configuration, and will typically show a very large number like 18446744073709551615, basically meaning "always verify the full signing chain up to the root CA"
 </li><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Data Type:</strong> <code>numeric</code>
 </li></ul>
@@ -633,20 +636,17 @@
 <h4 class="anchored_heading" id="ssl_verify_mode"><code>Ssl_verify_mode</code></h4>
 <ul start="1"><li><strong>Description:</strong> TLS verification mode. 
 </li></ul>
-<div class="cstm-style darkheader-nospace-borders"><table><tr><th>Value</th><th>Description</th></tr>
-<tr><td>SSL_VERIFY_NONE 0x00</td><td>No SSL certificate verification is performed.</td></tr>
-<tr><td>SSL_VERIFY_PEER 0x01</td><td>Request a client certificate and verify it against the CA certificate on the server side. If no client certificate is presented, the session may connect. If an invalid client certificate is presented, the connection is rejected.</td></tr>
-<tr><td>SSL_VERIFY_FAIL_IF_NO_PEER_CERT 0x02</td><td>Verify the client certificate. Fail the connection if no client certificate is provided.</td></tr>
-<tr><td>SSL_VERIFY_CA 0x03</td><td>Verify the client certificate; the client also verifies the server certificate against the CA.</td></tr>
-<tr><td>SSL_VERIFY_CLIENT_ONCE 0x04</td><td>Verify the client certificate during the initial handshake, but not in subsequent renegotiations.</td></tr>
-<tr><td>SSL_VERIFY_VERIFY_IDENTITY 0x05</td><td>Verify the client certificate against the CA. The client also verifies the server certificate against the CA, both requiring that the host name or IP address in the certificates match the actual host name or IP address of the presenter.</td></tr>
-</table>
-</div><ul start="1"><li><strong>Scope:</strong> Global, Session
+<p>The OpenSSL verification mode flags in effect on the server side.</p>
+<p>The value so far is always 5 when OpenSSL encryption is in effect, and 0 when not using encryption, or when the server is compiled against WolfSSL.</p>
+<p>The value 5 is a combination of the <code>SSL_VERIFY_PEER</code> and <code>SSL_VERIFY_CLIENT_ONCE</code> flags, meaning that the client may send a certificate of its own connect, but will not be asked to send one again later for the duration of the encrypted connection.</p>
+<p>The <code>SSL_VERIFY_FAIL_IF_NO_PEER_CERT</code> is not used at this point to enforce that the client sends a certificate if the database user was created with <code>REQUIRE X509</code>, <code>REQUIRE ISSUER</code> or <code>REQUIRE SUBJECT</code>, whether a client certificate was indeed sent, and whether it fits additional <code>REQUIRE</code> conditions, is checked by the server itself at a later state.</p>
+<p>See also <a href="https://docs.openssl.org/master/man3/SSL_CTX_set_verify/#notes">https://docs.openssl.org/master/man3/SSL_CTX_set_verify/#notes</a> for a description of the OpenSSL verify mode flags.</p>
+<ul start="1"><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Data Type:</strong> <code>numeric</code>
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="ssl_version"><code>Ssl_version</code></h4>
-<ul start="1"><li><strong>Description:</strong> TLS version in use.
+<ul start="1"><li><strong>Description:</strong> TLS version in use by the current session, possible values are <code>TLSv1.0</code>, <code>TLSv1.1</code>, <code>TLSv1.2</code> and <code>TLSv1.3</code>
 </li><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Data Type:</strong> <code>string</code>
 </li></ul>

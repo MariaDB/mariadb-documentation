@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/ssltls-status-variables/+r/141553/">141553</a></dd>
+            <dd><a href="/kb/en/ssltls-status-variables/+r/141574/">141574</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-07-31 19:28">2024-07-31 19:28</span></dd>
+<span class="datetime" title="2024-08-01 09:47">2024-08-01 09:47</span></dd>
         </dl>
     </div>
     
@@ -339,6 +339,8 @@
 The status variables listed on this page relate to encrypting data during transfer with the Transport Layer Security (TLS) protocol.  Often, the term Secure Socket Layer (SSL) is used interchangeably with TLS, although strictly speaking, the SSL protocol is a predecessor to TLS and is no longer considered secure. 
 
 For compatibility reasons, the TLS status variables in MariaDB still use the ##Ssl_## prefix, but MariaDB only supports its more secure successors. For more information on SSL/TLS in MariaDB, see [[secure-connections-overview|Secure Connections Overview]].
+
+Some of these status values are not under the control of the server, but are reporting back settings of the underlying SSL library used by the server.
 
 ==Variables
 
@@ -368,6 +370,7 @@ For compatibility reasons, the TLS status variables in MariaDB still use the ##S
 
 ==== ##Ssl_cipher_list##
 * **Description:** List of the available TLS ciphers.
+This is not necessarily the list of ciphers the MariaDB server can actually accept, but rather the list of ciphers supported by the underlying SSL library in general. E.g. some of these may not be compatible with the servers SSL certificate and so can&#39;t be used to connect to that server.
 * **Scope:** Global, Session
 * **Data Type:** ##string##
 ----
@@ -415,14 +418,14 @@ For compatibility reasons, the TLS status variables in MariaDB still use the ##S
 ----
 
 ==== ##Ssl_server_not_after##
-* **Description:** Last valid date for the TLS certificate. 
+* **Description:** Last valid date for the server TLS certificate. 
 * **Scope:** Global, Session
 * **Data Type:** ##numeric##
 * **Introduced:** ##MariaDB 10.0##
 ----
 
 ==== ##Ssl_server_not_before##
-* **Description:** First valid date for the TLS certificate. 
+* **Description:** First valid date for the server TLS certificate. 
 * **Scope:** Global, Session
 * **Data Type:** ##numeric##
 * **Introduced:** ##MariaDB 10.0##
@@ -478,6 +481,7 @@ For compatibility reasons, the TLS status variables in MariaDB still use the ##S
 
 ==== ##Ssl_verify_depth##
 * **Description:** TLS verification depth.
+How many levels within the certificate signing chain the verification should cover. This is not set by the server itself but by the OpenSSL configuration, and will typically show a very large number like 18446744073709551615, basically meaning &#34;always verify the full signing chain up to the root CA&#34;
 * **Scope:** Global, Session
 * **Data Type:** ##numeric##
 ----
@@ -485,22 +489,22 @@ For compatibility reasons, the TLS status variables in MariaDB still use the ##S
 ==== ##Ssl_verify_mode##
 * **Description:** TLS verification mode. 
 
-&lt;&lt;style class=&#34;darkheader-nospace-borders&#34;&gt;&gt;
-|= Value |= Description
-| SSL_VERIFY_NONE 0x00 | No SSL certificate verification is performed.
-| SSL_VERIFY_PEER 0x01 | Request a client certificate and verify it against the CA certificate on the server side. If no client certificate is presented, the session may connect. If an invalid client certificate is presented, the connection is rejected.
-| SSL_VERIFY_FAIL_IF_NO_PEER_CERT 0x02 | Verify the client certificate. Fail the connection if no client certificate is provided.
-| SSL_VERIFY_CA 0x03 | Verify the client certificate; the client also verifies the server certificate against the CA.
-| SSL_VERIFY_CLIENT_ONCE 0x04 | Verify the client certificate during the initial handshake, but not in subsequent renegotiations.
-| SSL_VERIFY_VERIFY_IDENTITY 0x05 | Verify the client certificate against the CA. The client also verifies the server certificate against the CA, both requiring that the host name or IP address in the certificates match the actual host name or IP address of the presenter.
-&lt;&lt;/style&gt;&gt;
+The OpenSSL verification mode flags in effect on the server side.
+
+The value so far is always 5 when OpenSSL encryption is in effect, and 0 when not using encryption, or when the server is compiled against WolfSSL.
+
+The value 5 is a combination of the ##SSL_VERIFY_PEER## and ##SSL_VERIFY_CLIENT_ONCE## flags, meaning that the client may send a certificate of its own connect, but will not be asked to send one again later for the duration of the encrypted connection.
+
+The ##SSL_VERIFY_FAIL_IF_NO_PEER_CERT## is not used at this point to enforce that the client sends a certificate if the database user was created with ##REQUIRE X509##, ##REQUIRE ISSUER## or ##REQUIRE SUBJECT##, whether a client certificate was indeed sent, and whether it fits additional ##REQUIRE## conditions, is checked by the server itself at a later state.
+
+See also https://docs.openssl.org/master/man3/SSL_CTX_set_verify/#notes for a description of the OpenSSL verify mode flags.
 
 * **Scope:** Global, Session
 * **Data Type:** ##numeric##
 ----
 
 ==== ##Ssl_version##
-* **Description:** TLS version in use.
+* **Description:** TLS version in use by the current session, possible values are ##TLSv1.0##, ##TLSv1.1##, ##TLSv1.2## and ##TLSv1.3##
 * **Scope:** Global, Session
 * **Data Type:** ##string##
 ----

@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-install-db/+r/141071/">141071</a></dd>
+            <dd><a href="/kb/en/mariadb-install-db/+r/141572/">141572</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-06-26 18:03">2024-06-26 18:03</span></dd>
+<span class="datetime" title="2024-08-01 09:32">2024-08-01 09:32</span></dd>
         </dl>
     </div>
     
@@ -347,7 +347,7 @@ Prior to MariaDB 10.5, the client was called ##mysql_install_db##. It can still 
 
 MariaDB uses these tables to manage [[grant/#privilege-levels|privileges]], [[roles|roles]], and [[plugins]]. It also uses them to provide the data for the [[help-command|help]] command in the [[mariadb-command-line-client|mariadb]] client.
 
-##mariadb-install-db## works by starting MariaDB Server&#39;s ##mysqld## process in [[mysqld-options/#-bootstrap|--bootstrap]] mode and sending commands to create the [[system-tables|system tables]] and their content.
+##mariadb-install-db## works by starting MariaDB Server&#39;s ##mariadbd## process in [[mariadbd-options/#-bootstrap|--bootstrap]] mode and sending commands to create the [[system-tables|system tables]] and their content.
 
 == Using mariadb-install-db
 
@@ -357,10 +357,10 @@ To invoke ##mariadb-install-db##, use the following syntax:
 $ mariadb-install-db [options]
 &lt;&lt;/code&gt;&gt;
 
-Because the MariaDB server, ##mysqld##, needs to access the data directory
+Because the MariaDB server, ##mariadbd##, needs to access the data directory
 when it runs later, you should either run ##mariadb-install-db## from the same
-account that will be used for running ##mysqld## or run it as root and use the
-##--user## option to indicate the user name that ##mysqld## will run
+account that will be used for running ##mariadbd## or run it as root and use the
+##--user## option to indicate the user name that ##mariadbd## will run
 as. It might be necessary to specify other options such as
 ##--basedir## or ##--datadir## if
 ##mariadb-install-db## does not use the correct locations for the installation
@@ -400,7 +400,7 @@ $ scripts/mariadb-install-db --user=mysql \
 |  ##--skip-name-resolve## | Uses IP addresses rather than host names when creating grant table entries. This option can be useful if your DNS does not work.
 |  ##--skip-test-db## | Don&#39;t install the test database
 |  ##--srcdir=path## | For internal use. The path to the MariaDB source directory. This option uses the compiled binaries and support files within the source tree, useful for if you don&#39;t want to install MariaDB yet and just want to create the system tables. The directory under which ##mariadb-install-db## looks for support files such as the error message file and the file for populating the help tables.
-|  ##--user=user_name## | The login user name to use for running ##mysqld##. Files and directories created by ##mysqld## will be owned by this user. You must be ##root## to use this option. By default, ##mysqld## runs using your current login name and files and directories that it creates will be owned by you.
+|  ##--user=user_name## | The login user name to use for running ##mariadbd##. Files and directories created by ##mariadbd## will be owned by this user. You must be ##root## to use this option. By default, ##mariadbd## runs using your current login name and files and directories that it creates will be owned by you.
 |  ##--verbose## |  Verbose mode. Print more information about what the program does.
 |  ##--windows## | For internal use. This option is used for creating Windows distributions.
 &lt;&lt;/style&gt;&gt;
@@ -560,12 +560,12 @@ Since ##mariadb-install-db## sets ##--auth-root-authentication-method=normal## b
 If ##mariadb-install-db## fails, you should examine the [[error-log|error log]] in the
 data directory, which is the directory specified with ##--datadir## option. This should provide a clue about what went wrong.
 
-=== Testing With mysqld
+=== Testing With mariadbd
 
-You can also test that this is not a general fault of MariaDB Server by trying to start the ##mysqld## process. The [[mysqld-options/#-skip-grant-tables|-skip-grant-tables]] option will tell it to ignore the [[system-tables|system tables]]. Enabling the [[general-query-log|general query log]] can help you determine what queries are being run on the server. For example:
+You can also test that this is not a general fault of MariaDB Server by trying to start the ##mariadbd## process. The [[mariadbd-options/#-skip-grant-tables|-skip-grant-tables]] option will tell it to ignore the [[system-tables|system tables]]. Enabling the [[general-query-log|general query log]] can help you determine what queries are being run on the server. For example:
 
 &lt;&lt;code&gt;&gt;
-mysqld --skip-grant-tables --general-log
+mariadbd --skip-grant-tables --general-log
 &lt;&lt;/code&gt;&gt;
 
 At this point, you can use the [[mariadb-command-line-client|mariadb]] client to connect to the  [[the-mysql-database-tables|mysql]] database and look at the [[system-tables|system tables]]. For example:
@@ -577,14 +577,14 @@ MariaDB [mysql]&gt; show tables
 
 == Using a Server Compiled With --disable-grant-options
 
-The following only apply in the exceptional case that you are using a mysqld server which is configured with the &lt;&lt;code&gt;&gt;--disable-grant-options&lt;&lt;/code&gt;&gt; option:
+The following only apply in the exceptional case that you are using a mariadbd server which is configured with the &lt;&lt;code&gt;&gt;--disable-grant-options&lt;&lt;/code&gt;&gt; option:
 
-##mariadb-install-db## needs to invoke ##mysqld## with the
+##mariadb-install-db## needs to invoke ##mariadbd## with the
 &lt;&lt;code&gt;&gt;--bootstrap&lt;&lt;/code&gt;&gt; and &lt;&lt;code&gt;&gt;--skip-grant-tables&lt;&lt;/code&gt;&gt; options.
 A MariaDB configured with the &lt;&lt;code&gt;&gt;--disable-grant-options&lt;&lt;/code&gt;&gt;
 option has &lt;&lt;code&gt;&gt;--bootstrap&lt;&lt;/code&gt;&gt; and &lt;&lt;code&gt;&gt;--skip-grant-tables&lt;&lt;/code&gt;&gt;
 disabled. To handle this case, set the ##MYSQLD_BOOTSTRAP## environment
-variable to the full path name of a mysqld server that is configured without &lt;&lt;code&gt;&gt;--disable-grant-options&lt;&lt;/code&gt;&gt;. ##mariadb-install-db## will use that server.
+variable to the full path name of a mariadbd server that is configured without &lt;&lt;code&gt;&gt;--disable-grant-options&lt;&lt;/code&gt;&gt;. ##mariadb-install-db## will use that server.
 
 == The test and test_% Databases
 
