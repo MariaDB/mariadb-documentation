@@ -331,7 +331,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/buildbot-setup-for-virtual-machines-debian-7-wheezy/+r/22912/">22912</a></dd>
+            <dd><a href="/kb/en/buildbot-setup-for-virtual-machines-debian-7-wheezy/+r/141586/">141586</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -340,7 +340,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2013-12-05 21:31">2013-12-05 21:31</span></dd>
+<span class="datetime" title="2024-08-05 01:05">2024-08-05 01:05</span></dd>
         </dl>
     </div>
     
@@ -348,204 +348,6 @@
 
     
 
-    
-        
-        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
-== Base install
-
-&lt;&lt;code lang=bash inline=false&gt;&gt;
-qemu-img create -f qcow2 /kvm/vms/vm-wheezy-amd64-serial.qcow2 10G
-qemu-img create -f qcow2 /kvm/vms/vm-wheezy-i386-serial.qcow2 10G
-&lt;&lt;/code&gt;&gt;
-
-Start each VM booting from the server install iso one at a time and perform
-the following install steps:
-
-&lt;&lt;code lang=bash inline=false&gt;&gt;
-kvm -m 1024 -hda /kvm/vms/vm-wheezy-amd64-serial.qcow2 -cdrom /kvm/iso/debian-testing-amd64-CD-1.iso -redir tcp:2269::22 -boot d -smp 2 -cpu qemu64 -net nic,model=virtio -net user
-kvm -m 1024 -hda /kvm/vms/vm-wheezy-i386-serial.qcow2  -cdrom /kvm/iso/debian-testing-i386-CD-1.iso  -redir tcp:2270::22 -boot d -smp 2 -cpu qemu64 -net nic,model=virtio -net user
-&lt;&lt;/code&gt;&gt;
-
-Once running you can connect to the VNC server from your local host with:
-
-&lt;&lt;code lang=bash inline=false&gt;&gt;
-vncviewer -via ${remote-host} localhost
-&lt;&lt;/code&gt;&gt;
-
-Replace ${remote-host} with the host the vm is running on.
-
-**Note:** When you activate the install, vncviewer may disconnect with a complaint about the rect being too large. This is fine. Debian has just resized the vnc screen. Simply reconnect.
-
-Install, picking default options mostly, with the following notes:
-* Set the hostname to debian7-wheezy-amd64 or debian7-wheezy-i386
-* When partitioning disks, choose &#34;Guided - use entire disk&#34; (we do not want LVM)
-** Partitioning Scheme: All files one partition
-* No additional CDs
-* Set up network mirror
-* Software Selection Screen
-** Uncheck &#34;Debian desktop environment&#34;
-** Uncheck &#34;Print server&#34;
-** Keep &#34;SSH server&#34; and &#34;Standard system utilities&#34;
-
-When the install is finished the installer will attempt to reboot and then fail. This is OK, just kill the kvm process on the host server.
-
-Now that the VM is installed, it&#39;s time to configure it.
-If you have the memory you can do the following simultaneously:
-
-&lt;&lt;code lang=bash inline=false&gt;&gt;
-kvm -m 1024 -hda /kvm/vms/vm-wheezy-amd64-serial.qcow2 -redir tcp:2269::22 -boot c -smp 2 -cpu qemu64 -net nic,model=virtio -net user -nographic
-kvm -m 1024 -hda /kvm/vms/vm-wheezy-i386-serial.qcow2 -redir tcp:2270::22 -boot c -smp 2 -cpu qemu64 -net nic,model=virtio -net user -nographic
-
-ssh -p 2269 localhost
-# edit /boot/grub/menu.lst and visudo, see below
-
-ssh -p 2270 localhost
-# edit /boot/grub/menu.lst and visudo, see below
-
-ssh -t -p 2269 localhost &#34;mkdir -v .ssh&#34;
-ssh -t -p 2270 localhost &#34;mkdir -v .ssh&#34;
-
-scp -P 2269 /kvm/vms/authorized_keys localhost:.ssh/
-scp -P 2270 /kvm/vms/authorized_keys localhost:.ssh/
-
-echo $&#39;Buildbot\n\n\n\n\ny&#39; | ssh -p 2269 localhost &#39;chmod -vR go-rwx .ssh; sudo adduser --disabled-password buildbot; sudo addgroup buildbot sudo; sudo mkdir ~buildbot/.ssh; sudo cp -vi .ssh/authorized_keys ~buildbot/.ssh/; sudo chown -vR buildbot:buildbot ~buildbot/.ssh; sudo chmod -vR go-rwx ~buildbot/.ssh&#39;
-echo $&#39;Buildbot\n\n\n\n\ny&#39; | ssh -p 2270 localhost &#39;chmod -vR go-rwx .ssh; sudo adduser --disabled-password buildbot; sudo addgroup buildbot sudo; sudo mkdir ~buildbot/.ssh; sudo cp -vi .ssh/authorized_keys ~buildbot/.ssh/; sudo chown -vR buildbot:buildbot ~buildbot/.ssh; sudo chmod -vR go-rwx ~buildbot/.ssh&#39;
-
-scp -P 2269 /kvm/vms/ttyS0.conf buildbot@localhost:
-scp -P 2270 /kvm/vms/ttyS0.conf buildbot@localhost:
-
-ssh -p 2269 buildbot@localhost &#39;sudo cp -vi ttyS0.conf /etc/init/; rm -v ttyS0.conf; sudo shutdown -h now&#39;
-ssh -p 2270 buildbot@localhost &#39;sudo cp -vi ttyS0.conf /etc/init/; rm -v ttyS0.conf; sudo shutdown -h now&#39;
-&lt;&lt;/code&gt;&gt;
- 
-Enabling passwordless sudo:
- 
-&lt;&lt;code lang=bash inline=false&gt;&gt;
-su -
-vi /etc/apt/sources.list #comment out the deb cdrom line
-apt-get update
-apt-get install sudo vim tree
-update-alternatives --config editor # select vim.basic
-visudo # comment out existing %sudo line and add: %sudo ALL=NOPASSWD: ALL
-usermod -a -G sudo ${username}
-&lt;&lt;/code&gt;&gt;
-
-Editing /boot/grub/menu.lst:
-
-&lt;&lt;code lang=bash inline=false&gt;&gt;
-vi /etc/default/grub
-
-# Add/edit these entries:
-    GRUB_CMDLINE_LINUX_DEFAULT=&#34;console=tty0 console=ttyS0,115200n8&#34;
-    GRUB_TERMINAL=&#34;serial&#34;
-    GRUB_SERIAL_COMMAND=&#34;serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1&#34;
-
-update-grub
-# exit back to the host server
-&lt;&lt;/code&gt;&gt;
-
-== VMs for building .debs
-
-&lt;&lt;code lang=bash inline=false&gt;&gt;
-for i in &#39;/kvm/vms/vm-wheezy-amd64-serial.qcow2 2269 qemu64&#39; &#39;/kvm/vms/vm-wheezy-i386-serial.qcow2 2270 qemu64&#39; ; do \
-  set $i; \
-  runvm --user=buildbot --logfile=kernel_$2.log --base-image=$1 --port=$2 --cpu=$3 &#34;$(echo $1 | sed -e &#39;s/serial/build/&#39;)&#34; \
-    &#34;= scp -P $2 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no /kvm/boost_1_49_0.tar.gz buildbot@localhost:/dev/shm/&#34; \
-    &#34;sudo DEBIAN_FRONTEND=noninteractive apt-get update&#34; \
-    &#34;sudo DEBIAN_FRONTEND=noninteractive apt-get -y build-dep mysql-server-5.5&#34; \
-    &#34;sudo DEBIAN_FRONTEND=noninteractive apt-get install -y devscripts hardening-wrapper fakeroot doxygen texlive-latex-base ghostscript libevent-dev libssl-dev zlib1g-dev libpam0g-dev libreadline-gplv2-dev autoconf automake automake1.9 dpatch ghostscript-x libfontenc1 libjpeg62 libltdl-dev libltdl7 libmail-sendmail-perl libxfont1 lmodern texlive-latex-base-doc ttf-dejavu ttf-dejavu-extra libaio-dev xfonts-encodings xfonts-utils libxml2-dev unixodbc-dev&#34; \
-    &#34;cd /usr/local/src;sudo tar zxf /dev/shm/boost_1_49_0.tar.gz;cd /usr/local/include/;sudo ln -vs ../src/boost_1_49_0/boost .&#34; ; \
-done
-
-&lt;&lt;/code&gt;&gt;
-
-== VMs for install testing.
-
-See [[buildbot-setup-for-virtual-machines-general-principles|Buildbot Setup for Virtual Machines - General Principles]] for how to obtain ##my.seed## and ##sources.append##.
-
-&lt;&lt;code lang=bash inline=false&gt;&gt;
-for i in &#39;/kvm/vms/vm-wheezy-amd64-serial.qcow2 2269 qemu64&#39; &#39;/kvm/vms/vm-wheezy-i386-serial.qcow2 2270 qemu64&#39; ; do \
-  set $i; \
-  runvm --user=buildbot --logfile=kernel_$2.log --base-image=$1 --port=$2 --cpu=$3 &#34;$(echo $1 | sed -e &#39;s/serial/install/&#39;)&#34; \
-    &#34;sudo DEBIAN_FRONTEND=noninteractive apt-get update&#34; \
-    &#34;sudo DEBIAN_FRONTEND=noninteractive apt-get install -y patch libaio1 debconf-utils unixodbc libxml2&#34; \
-    &#34;= scp -P $2 /kvm/vms/my.seed /kvm/vms/sources.append buildbot@localhost:/tmp/&#34; \
-    &#34;sudo debconf-set-selections /tmp/my.seed&#34; \
-    &#34;sudo sh -c &#39;cat /tmp/sources.append &gt;&gt; /etc/apt/sources.list&#39;&#34;; \
-done
-&lt;&lt;/code&gt;&gt;
-
-== VMs for MySQL upgrade testing
-
-2013-12-05 recreated the upgrade VMs, this time based off of the serial VM (which is better, maintenance-wise).
-&lt;&lt;code lang=bash inline=false&gt;&gt;
-for i in &#39;/kvm/vms/vm-wheezy-amd64-serial.qcow2 2269 qemu64&#39; &#39;/kvm/vms/vm-wheezy-i386-serial.qcow2 2270 qemu64&#39; ; do \
-  set $i; \
-  runvm --user=buildbot --logfile=kernel_$2.log --base-image=$1 --port=$2 --cpu=$3 &#34;$(echo $1 | sed -e &#39;s/serial/upgrade/&#39;)&#34; \
-    &#34;sudo DEBIAN_FRONTEND=noninteractive apt-get update&#34; \
-    &#34;sudo DEBIAN_FRONTEND=noninteractive apt-get install -y patch libaio1 debconf-utils unixodbc libxml2&#34; \
-    &#34;= scp -P $2 /kvm/vms/my.seed /kvm/vms/sources.append buildbot@localhost:/tmp/&#34; \
-    &#34;sudo debconf-set-selections /tmp/my.seed&#34; \
-    &#34;sudo sh -c &#39;cat /tmp/sources.append &gt;&gt; /etc/apt/sources.list&#39;&#34; \
-    &#39;sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libaio1 mysql-server-5.5&#39; \
-    &#39;mysql -uroot -prootpass -e &#34;create database mytest; use mytest; create table t(a int primary key); insert into t values (1); select * from t&#34;&#39; ;\
-done
-&lt;&lt;/code&gt;&gt;
-
-This was how the original upgrade VMs were created:
-&lt;&lt;code lang=bash inline=false&gt;&gt;
-for i in &#39;/kvm/vms/vm-wheezy-amd64-install.qcow2 2269 qemu64&#39; &#39;/kvm/vms/vm-wheezy-i386-install.qcow2 2270 qemu64&#39; ; do \
-  set $i; \
-  runvm --user=buildbot --logfile=kernel_$2.log --base-image=$1 --port=$2 --cpu=$3 &#34;$(echo $1 | sed -e &#39;s/install/upgrade/&#39;)&#34; \
-    &#39;sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libaio1 mysql-server-5.5&#39; \
-    &#39;mysql -uroot -prootpass -e &#34;create database mytest; use mytest; create table t(a int primary key); insert into t values (1); select * from t&#34;&#39; ;\
-done
-&lt;&lt;/code&gt;&gt;
-
-== VMs for MariaDB upgrade testing
-
- //The steps below are based on the Natty steps on [[installing-vm-images-for-testing-deb-upgrade-between-versions|Installing VM images for testing .deb upgrade between versions]].//
-
-&lt;&lt;code lang=bash inline=false&gt;&gt;
-for i in &#39;/kvm/vms/vm-wheezy-amd64-serial.qcow2 2269 qemu64&#39; &#39;/kvm/vms/vm-wheezy-i386-serial.qcow2 2270 qemu64&#39; ; do \
-  set $i; \
-  runvm --user=buildbot --logfile=kernel_$2.log --base-image=$1 --port=$2 --cpu=$3 &#34;$(echo $1 | sed -e &#39;s/serial/upgrade2/&#39;)&#34; \
-    &#34;= scp -P $2 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no /kvm/vms/mariadb-wheezy.list buildbot@localhost:/tmp/tmp.list&#34; \
-    &#39;sudo mv -vi /tmp/tmp.list /etc/apt/sources.list.d/&#39; \
-    &#39;sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 1BB943DB&#39; \
-    &#39;sudo apt-get update&#39; \
-    &#39;sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-unauthenticated mariadb-server mariadb-server-5.5 mariadb-client mariadb-client-5.5 mariadb-test libmariadbclient-dev&#39; \
-    &#39;sudo apt-get -f install&#39; \
-    &#39;sudo mysqladmin -u root password &#34;rootpass&#34;&#39; \
-    &#39;sudo /etc/init.d/mysql restart&#39; \
-    &#39;mysql -uroot -prootpass -e &#34;create database mytest; use mytest; create table t(a int primary key); insert into t values (1); select * from t&#34;&#39; \
-    &#39;sudo rm -v /etc/apt/sources.list.d/tmp.list&#39; \
-    &#39;sudo apt-get update&#39; \
-    &#39;sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libaio1&#39; \
-    &#39;sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y&#39;; \
-done
-&lt;&lt;/code&gt;&gt;
-
-== Add Key to known_hosts
-
-Do the following on each build host server to add the VMs to known_hosts.
-
-&lt;&lt;code lang=bash inline=false&gt;&gt;
-# wheezy-amd64
-cp -avi /kvm/vms/vm-wheezy-amd64-install.qcow2 /kvm/vms/vm-wheezy-amd64-test.qcow2
-kvm -m 1024 -hda /kvm/vms/vm-wheezy-amd64-test.qcow2 -redir tcp:2269::22 -boot c -smp 2 -cpu qemu64 -net nic,model=virtio -net user -nographic
-sudo su - buildbot
-ssh -p 2269 buildbot@localhost sudo shutdown -h now
-rm -v /kvm/vms/vm-wheezy-amd64-test.qcow2
-
-# wheezy-i386
-cp -avi /kvm/vms/vm-wheezy-i386-install.qcow2 /kvm/vms/vm-wheezy-i386-test.qcow2
-kvm -m 1024 -hda /kvm/vms/vm-wheezy-i386-test.qcow2 -redir tcp:2270::22 -boot c -smp 2 -cpu qemu64 -net nic,model=virtio -net user -nographic
-sudo su - buildbot
-ssh -p 2270 buildbot@localhost sudo shutdown -h now
-rm -v /kvm/vms/vm-wheezy-i386-test.qcow2
-&lt;&lt;/code&gt;&gt;
-</textarea>
     
 
 
