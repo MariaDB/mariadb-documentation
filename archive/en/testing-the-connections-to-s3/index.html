@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2020-10-19 16:23">3 years, 10 months ago</span></dd>
+<span class="datetime" title="2024-08-21 10:15">13 hours, 47 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -448,7 +448,9 @@
         <li class="mariadb_from_10_5"><a href="#using-mysql-test-run-to-test-the-connection-and-the-s3-storage-engine" title="Using mysql-test-run to Test the Connection and the S3 Storage Engine">Using mysql-test-run to Test the Connection and the S3 Storage Engine</a>    </ol>
 </li>
 
-    <li class="mariadb_from_10_5"><a href="#what-to-do-next" title="What to Do Next">What to Do Next</a></li>
+    <li class="mariadb_from_10_5"><a href="#create-a-trace-of-the-s3-connection-to-see-what-goes-wrong" title="Create a trace of the S3 connection to see what goes wrong">Create a trace of the S3 connection to see what goes wrong</a></li>
+
+    <li class="mariadb_from_10_5"><a href="#what-to-do-when-you-have-got-things-to-work" title="What to do when you have got things to work">What to do when you have got things to work</a></li>
 
     <li class="mariadb_from_10_5"><a href="#see-also" title="See Also">See Also</a> </ol>
 </li>
@@ -519,7 +521,17 @@ s3.discovery                             [ pass ]   7851
 s3.select                                [ pass ]   1325
 s3.unsupported                           [ pass ]    363
 </pre><p>Note that there may be more tests in your output as we are constantly adding more tests to S3 when needed.</p>
-<h2 class="anchored_heading" id="what-to-do-next">What to Do Next</h2>
+<h2 class="anchored_heading" id="create-a-trace-of-the-s3-connection-to-see-what-goes-wrong">Create a trace of the S3 connection to see what goes wrong</h2>
+<p>One can use the <code>s3_debug</code> variable to get a trace of the S3 engines interaction with the S3 storage.  The trace is sent to the error log.</p>
+<p>Here follows one example on can use to get a trace if <code>ALTER TABLE .. ENGINE=S3</code> fails:</p>
+<pre class="fixed"><span class="n">use</span> <span class="n">test</span><span class="p">;</span>
+<span class="k">create</span> <span class="k">table</span> <span class="n">s3_test</span> <span class="p">(</span><span class="n">a</span> <span class="nb">int</span><span class="p">)</span> <span class="n">engine</span><span class="o">=</span><span class="n">aria</span> <span class="n">row_format</span><span class="o">=</span><span class="n">page</span> <span class="n">transactional</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+<span class="k">insert</span> <span class="k">into</span> <span class="n">s3_test</span> <span class="k">values</span> <span class="p">(</span><span class="mi">1</span><span class="p">),(</span><span class="mi">2</span><span class="p">);</span>
+<span class="k">set</span> <span class="o">@@</span><span class="k">global</span><span class="p">.</span><span class="n">s3_debug</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">s3_test</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">S3</span><span class="p">;</span>
+<span class="k">set</span> <span class="o">@@</span><span class="k">global</span><span class="p">.</span><span class="n">s3_debug</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+</pre><p>If you have problems deciper the trace, you can always create a ticket on <a href="https://jira.mariadb.org/">MariaDB Jira</a>  and explain the problem you have, including any errors. Don't forget to include the trace!</p>
+<h2 class="anchored_heading" id="what-to-do-when-you-have-got-things-to-work">What to do when you have got things to work</h2>
 <p>When you got the connection to work, you should add the options to your global my.cnf file.
 Now you can start testing S3 from your <a href="/kb/en/mysql-command-line-client/">mysql command client</a> by converting some existing table to S3 with <a href="/kb/en/using-the-s3-storage-engine/">ALTER TABLE ... ENGINE=S3</a>.</p>
 <h2 class="anchored_heading" id="see-also">See Also</h2>

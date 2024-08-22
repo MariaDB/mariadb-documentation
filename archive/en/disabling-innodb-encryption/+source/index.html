@@ -327,7 +327,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/disabling-innodb-encryption/+r/135867/">135867</a></dd>
+            <dd><a href="/kb/en/disabling-innodb-encryption/+r/141920/">141920</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5454">
@@ -336,7 +336,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2020-11-03 14:25">2020-11-03 14:25</span></dd>
+<span class="datetime" title="2024-08-21 06:51">2024-08-21 06:51</span></dd>
         </dl>
     </div>
     
@@ -431,7 +431,7 @@ WHERE NAME=&#39;db1/tab1&#39;;
 Once you have removed encryption from all the tables, your InnoDB deployment is unencrypted.  Be sure to also remove encryption from the [[#disabling-encryption-for-the-redo-log|Redo Log]] as well as [[aria-encryption|Aria]] and any other storage engines that support encryption before removing the encryption key management settings from your configuration file. 
 
 &lt;&lt;style class=&#34;greenbox&#34;&gt;&gt;
-InnoDB does not permit manual encryption changes to tables in the [[innodb-system-tablespaces|system]] tablespace using [[alter-table|ALTER TABLE]]. Encryption of the [[innodb-system-tablespaces|system]] tablespace can only be configured by setting the value of the [[innodb-system-variables#innodb_encrypt_tables|innodb_encrypt_tables]] system variable. This means that when you want to encrypt or decrypt the [[innodb-system-tablespaces|system]] tablespace, you must also set a non-zero value for the [[innodb-system-variables#innodb_encryption_threads|innodb_encryption_threads]] system variable, and you must also set the [[innodb-system-variables#innodb_encryption_rotate_key_age|innodb_system_rotate_key_age]] system variable to ##1## to ensure that the system tablespace is properly encrypted or decrypted by the background threads. See MDEV-14398 for more information.
+InnoDB does not permit manual encryption changes to tables in the [[innodb-system-tablespaces|system]] tablespace using [[alter-table|ALTER TABLE]]. Encryption of the [[innodb-system-tablespaces|system]] tablespace can only be configured by setting the value of the [[innodb-system-variables#innodb_encrypt_tables|innodb_encrypt_tables]] system variable. This means that when you want to encrypt or decrypt the [[innodb-system-tablespaces|system]] tablespace, you must also set a non-zero value for the [[innodb-system-variables#innodb_encryption_threads|innodb_encryption_threads]] system variable, and you must also set the [[innodb-system-variables#innodb_encryption_rotate_key_age|innodb_encryption_rotate_key_age]] system variable to ##1## to ensure that the system tablespace is properly encrypted or decrypted by the background threads. See MDEV-14398 for more information.
 &lt;&lt;/style&gt;&gt;
 
 === Disabling Encryption for Temporary Tablespaces
@@ -442,24 +442,9 @@ The [[innodb-system-variables#innodb_encrypt_temporary_tables|innodb_encrypt_tem
 
 InnoDB uses the [[innodb-redo-log|Redo Log]] in crash recovery. By default, these events are written to file in an unencrypted state. In removing data-at-rest encryption for InnoDB, be sure to also disable encryption for the Redo Log before removing encryption key settings.  Otherwise the Redo Log can become inaccessible without the encryption keys.
 
-First, check the value of the [[innodb-system-variables#innodb_fast_shutdown|innodb_fast_shutdown]] system variable with the [[show-variables|SHOW VARIABLES]] statement. For example:
+First, set the [[innodb-system-variables#innodb_encrypt_log|innodb_encrypt_log]] system variable to ##OFF## in a server [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]]. Once this is done, [[starting-and-stopping-mariadb-starting-and-stopping-mariadb|restart]] the MariaDB Server. When the Server comes back online, it begins writing unencrypted data to the Redo Log.
 
-&lt;&lt;sql&gt;&gt;
-SHOW VARIABLES LIKE &#39;innodb_fast_shutdown&#39;;
-+----------------------+-------+
-| Variable_name        | Value |
-+----------------------+-------+
-| innodb_fast_shutdown |     2 |
-+----------------------+-------+
-&lt;&lt;/sql&gt;&gt;
-
-When the value is set to ##2##, InnoDB performs an unclean shutdown, so it will need the [[innodb-redo-log|Redo Log]] at the next server startup. Ensure that the variable is set to ##0##, ##1##, or ##3##. For performance reasons, ##1## is usually the best option. It can be changed dynamically with [[set/#global-session|SET GLOBAL]]. For example:
-
-&lt;&lt;sql&gt;&gt;
-SET GLOBAL innodb_fast_shutdown = 1;
-&lt;&lt;/sql&gt;&gt;
-
-Then, set the [[innodb-system-variables#innodb_encrypt_log|innodb_encrypt_log]] system variable to ##OFF## in a server [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]]. Once this is done, [[starting-and-stopping-mariadb-starting-and-stopping-mariadb|restart]] the MariaDB Server. When the Server comes back online, it begins writing unencrypted data to the Redo Log.
+After the server has been successfully restarted with encryption disabled, you may remove the [[encryption-key-management|key management and encryption plugin]] that had been used. If you try to disable encryption for the Redo Log and remove the plugin in a single step, InnoDB will be unable to decrypt the log in order to remove the encryption.
 
 === See Also
 * [[enabling-innodb-encryption|Enabling InnoDB encryption]]</textarea>
