@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-system-variables/+r/141263/">141263</a></dd>
+            <dd><a href="/kb/en/innodb-system-variables/+r/141954/">141954</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-07-10 12:41">2024-07-10 12:41</span></dd>
+<span class="datetime" title="2024-08-21 18:22">2024-08-21 18:22</span></dd>
         </dl>
     </div>
     
@@ -455,6 +455,15 @@ Also see the [[full-list-of-mariadb-options-system-and-status-variables|Full lis
 * **Range:** ##2097152## to ##4294967295##
 * **Deprecated:** MariaDB 10.0
 * **Removed:** MariaDB 10.2.2
+----
+
+==== ##innodb_alter_copy_bulk##
+* **Description:** Allow bulk insert operation for copy alter operation.
+* **Scope:** Global
+* **Dynamic:** Yes
+* **Data Type:** ##boolean##
+* **Default Value:** ##ON##
+* **Introduced:** MariaDB 10.11.9, MariaDB 11.1.6, MariaDB 11.2.5, MariaDB 11.4.3, MariaDB 11.5.2, MariaDB 11.6.1
 ----
 
 ==== ##innodb_api_bk_commit_interval##
@@ -2090,15 +2099,29 @@ add/drop/reorder of columns.
 * **Removed:** MariaDB 10.6.0
 ----
 
-==== ##innodb_log_write_ahead_size##
-* **Description:** [[innodb-redo-log|InnoDB redo log]] write ahead unit size to avoid read-on-write. Should match the OS cache block IO size. Removed in MariaDB 10.8, and instead on Linux and Windows, the physical block size of the underlying storage is detected and used.
-* **Commandline:** &lt;&lt;code&gt;&gt;--innodb-log-write-ahead-size=#&lt;&lt;/code&gt;&gt;
+==== ##innodb_log_spin_wait_delay##
+* **Description:** Delay between log buffer spin lock polls (0 to use a blocking latch). Specifically, enables a spin lock that will execute that many MY_RELAX_CPU() operations (such as the x86 PAUSE instruction) between successive attempts of acquiring the spin lock.  On some hardware with certain workloads (observed on write intensive workloads on NUMA systems), the default setting results in a significant amount of time being spent in native_queued_spin_lock_slowpath() in the Linux kernel, plus context switching between user and kernel address space, in which case changing from the default (for example, setting to ##50##), may result in a performance improvement.
+* **Commandline:** &lt;&lt;code&gt;&gt;--innodb-log-spin-wait-delay=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##
-* **Default Value:** ##8192##
-* **Range:** ##512## to [[#innodb_page_size|innodb_page_size]]
+* **Default Value:** ##0##
+* **Range:** ##0## to ##6000##
+* **Introduced:** MariaDB 10.11.8, MariaDB 11.0.6, MariaDB 11.1.5, MariaDB 11.2.4, MariaDB 11.4.2, MariaDB 11.5.1
+----
+
+==== ##innodb_log_write_ahead_size##
+* **Description:** [[innodb-redo-log|InnoDB redo log]] write ahead unit size to avoid read-on-write. Should match the OS cache block IO size. Removed in MariaDB 10.8, and instead on Linux and Windows, the physical block size of the underlying storage is detected and used. Reintroduced in MariaDB 10.11.9 and later versions. On Linux and Windows, the default or the specified innodb_log_write_ahead_size will be automatically adjusted to not be less than the physical block size (if it can be determined).
+* **Commandline:** &lt;&lt;code&gt;&gt;--innodb-log-write-ahead-size=#&lt;&lt;/code&gt;&gt;
+* **Scope:** Global
+* **Dynamic:** No (&gt;= MariaDB 10.11.9), Yes (&lt;= MariaDB 10.7)
+* **Data Type:** ##numeric##
+* **Default Value:** ##512## (&gt;= MariaDB 10.11.9), ##8192## (&lt;= MariaDB 10.7)
+* **Range:** 
+** ##512## to ##4096## (&gt;= MariaDB 10.11.9)
+** ##512## to [[#innodb_page_size|innodb_page_size]] (&lt;= MariaDB 10.7)
 * **Removed:** MariaDB 10.8
+* **Re-introduced:** MariaDB 10.11.9, MariaDB 11.1.6, MariaDB 11.2.5, MariaDB 11.4.3, MariaDB 11.5.2 
 ----
 
 ==== ##innodb_lru_flush_size##
@@ -2637,9 +2660,9 @@ add/drop/reorder of columns.
 * **Range:** ##65536## to ##67108864##
 ----
 
-==== ##innodb_spin_wait_delay##
+==== ##innodb_log_spin_wait_delay##
 * **Description:** Maximum delay (not strictly corresponding to a time unit) between spin lock polls. Default changed from ##6## to ##4## in MariaDB 10.3.5, as this was verified to give the best throughput by OLTP update index and read-write benchmarks on Intel Broadwell (2/20/40) and ARM (1/46/46).
-* **Commandline:** &lt;&lt;code&gt;&gt;--innodb-spin-wait-delay=#&lt;&lt;/code&gt;&gt;
+* **Commandline:** &lt;&lt;code&gt;&gt;--innodb-log-spin-wait-delay=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
 * **Data Type:** ##numeric##

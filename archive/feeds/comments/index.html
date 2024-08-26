@@ -1,5 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments</title><link>https://mariadb.com/kb/feeds/comments/</link><description></description><atom:link href="https://mariadb.com/kb/feeds/comments/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Mon, 19 Aug 2024 06:45:28 +0000</lastBuildDate><item><title>Re: Authentication Plugin - ed25519</title><link>https://mariadb.com/kb/en/authentication-plugin-ed25519/+comments/6859</link><description>&lt;p&gt;This is something PHP need to implement - unfortunately they don't yet: &lt;a href="https://github.com/php/php-src/issues/14258"&gt;https://github.com/php/php-src/issues/14258&lt;/a&gt;&lt;/p&gt;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments</title><link>https://mariadb.com/kb/feeds/comments/</link><description></description><atom:link href="https://mariadb.com/kb/feeds/comments/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Mon, 26 Aug 2024 08:05:01 +0000</lastBuildDate><item><title>Re: Hashicorp Key Management Plugin</title><link>https://mariadb.com/kb/en/hashicorp-key-management-plugin/+comments/6863</link><description>&lt;p&gt;I think yes. Because it is mentioned here &lt;a href="https://mariadb.com/products/enterprise/"&gt;https://mariadb.com/products/enterprise/&lt;/a&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Arun Abraham</dc:creator><guid>https://mariadb.com/kb/en/hashicorp-key-management-plugin/+comments/6863</guid></item><item><title>Re: Stored Aggregate Functions cannot short circuit the aggregate cursor</title><link>https://mariadb.com/kb/en/stored-aggregate-functions/+comments/6862</link><description>&lt;p&gt;In attempting to short circuit some custom aggregate functions I discovered that custom aggregate functions must loop through entire cursor set to avoid erroneous results.&lt;/p&gt;
+&lt;p&gt;Here are 2 examples of trivial aggregate functions that return the "first" item in the aggregate cursor. &lt;/p&gt;
+&lt;p&gt;The first one (aggFirst_int) returns results as expected, storing the first item in the list, then looping through the cursor until the NOT FOUND HANDLER returns the result.&lt;/p&gt;
+&lt;p&gt;The second example does the same, but does not loop through the cursor until the NOT FOUND HANDLER is triggered, and returns the result immediately.&lt;/p&gt;
+&lt;pre class="unknown_macro"&gt;&amp;lt;&amp;lt;&lt;span class="macro_name"&gt;CODE&lt;/span&gt;&lt;span class="macro_arg_string"&gt;&lt;/span&gt;&amp;gt;&amp;gt;
+&lt;span class="macro_body"&gt;DELIMITER //
+
+CREATE OR REPLACE DEFINER=`root`@`localhost` AGGREGATE FUNCTION `aggFirst_int`(`reqInt` INT) RETURNS int(11)
+BEGIN
+	DECLARE CONTINUE HANDLER FOR NOT FOUND
+ 		RETURN @iRet;
+	FETCH GROUP NEXT ROW;
+	SET @iRet = reqInt;
+ 	WHILE TRUE DO	
+		FETCH GROUP NEXT ROW;
+	END WHILE;
+	RETURN -1;
+END //
+
+CREATE OR REPLACE DEFINER=`root`@`localhost` AGGREGATE FUNCTION `aggFirst_int2`(`reqInt` INT) RETURNS int(11)
+BEGIN
+	DECLARE CONTINUE HANDLER FOR NOT FOUND
+ 		RETURN @iRet;
+	FETCH GROUP NEXT ROW;
+	SET @iRet = reqInt;
+	RETURN @iRet;
+END //
+
+DELIMITER ;
+
+SELECT MAX(fInt), MIN(fInt), COUNT(fInt), aggFirst_int(fInt), aggFirst_int2(fInt), fChar
+	FROM (SELECT "a" AS fChar, 1 AS fInt
+		UNION SELECT "b", 4 
+		UNION SELECT "b", 2 
+		UNION SELECT "c", 3) AS t
+	GROUP BY fChar;
+
+&lt;/span&gt;&amp;lt;&amp;lt;/CODE&amp;gt;&amp;gt;&lt;/pre&gt;&lt;p&gt;This produced the following results:&lt;/p&gt;
+&lt;pre class="unknown_macro"&gt;&amp;lt;&amp;lt;&lt;span class="macro_name"&gt;CODE&lt;/span&gt;&lt;span class="macro_arg_string"&gt;&lt;/span&gt;&amp;gt;&amp;gt;
+&lt;span class="macro_body"&gt;MAX(fInt), MIN(fInt), COUNT(fInt), aggFirst_int(fInt), aggFirst_int2(fInt), fChar
+1, 	1, 	1, 	1, 	4, 	a
+4, 	2, 	2, 	2, 	3, 	b
+3, 	3, 	1, 	3, 	3, 	c
+&lt;/span&gt;&amp;lt;&amp;lt;/CODE&amp;gt;&amp;gt;&lt;/pre&gt;&lt;p&gt;The built in aggregate functions all return the expected results, as does aggFirst_int(), but aggFirst_int2() returns results that were clearly processed from other rows.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Al Gee</dc:creator><guid>https://mariadb.com/kb/en/stored-aggregate-functions/+comments/6862</guid></item><item><title>ODBC driver not working with SSL enabled</title><link>https://mariadb.com/kb/en/getting-help-with-mariadb/+comments/6861</link><description>&lt;p&gt;"I've set up SSL on the MariaDB server (version 10.11 on AlmaLinux), and it works as expected when connecting with the MariaDB client. However, when using the Windows ODBC driver (version 3.2.2), I encounter a 'no cipher match' error. Any ideas on how to resolve this? The exact error message is as follows:"
+---------------------------
+Connection test
+---------------------------
+Connection failed: [HY000] [ma-3.2.2]TLS/SSL error: no cipher match. Error 0x80090331(SEC_E_ALGORITHM_MISMATCH)&lt;/p&gt;
+&lt;p&gt;Connection String:&lt;/p&gt;
+&lt;p&gt;DRIVER={MariaDB ODBC 3.2 Driver};TCPIP=1;SERVER=x.x.x.x;UID=xxx;PWD=&lt;strong&gt;*&lt;/strong&gt;&lt;strong&gt;*&lt;/strong&gt;&lt;strong&gt;*&lt;/strong&gt;&lt;strong&gt;&lt;strong&gt;;PORT=3306;SSLKEY=C:\xxxxx\client-key.pem;SSLCERT=C:\xxxxx\client-cert.pem;SSLCA=C:\xxxxx\ca-cert.pem;NULLISCURRENT=1;PSCACHESIZE=250;MAXCACHEKEY=2112;PCALLBACK=1
+---------------------------
+OK   
+---------------------------&lt;/strong&gt;&lt;/strong&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">KEN CHAN</dc:creator><guid>https://mariadb.com/kb/en/getting-help-with-mariadb/+comments/6861</guid></item><item><title>Re: Upgrading Between Minor Versions with Galera Cluster</title><link>https://mariadb.com/kb/en/upgrading-between-minor-versions-with-galera-cluster/+comments/6860</link><description>&lt;div style="margin-left:2em"&gt;&lt;p&gt; However, this can cause issues if you restart a non-upgraded node in a cluster where the rest of the nodes have been upgraded.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;What is meant by upgrading the rest of the nodes? Doesn't upgrading a node require restarting?&lt;/p&gt;
+&lt;p&gt;When exactly do nodes (or the whole cluster) switch to the new wsrep protocol version? When all known nodes of a cluster have upgraded the wsrep provider? Or when all nodes that are online have upgraded the wsrep provider? Or sth else?&lt;/p&gt;
+&lt;p&gt;Thanks!&lt;/p&gt;
+&lt;p&gt;/fn&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Manuel Dejonghe</dc:creator><guid>https://mariadb.com/kb/en/upgrading-between-minor-versions-with-galera-cluster/+comments/6860</guid></item><item><title>Re: Authentication Plugin - ed25519</title><link>https://mariadb.com/kb/en/authentication-plugin-ed25519/+comments/6859</link><description>&lt;p&gt;This is something PHP need to implement - unfortunately they don't yet: &lt;a href="https://github.com/php/php-src/issues/14258"&gt;https://github.com/php/php-src/issues/14258&lt;/a&gt;&lt;/p&gt;
 </description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-ed25519/+comments/6859</guid></item><item><title>Re: Authentication Plugin - ed25519</title><link>https://mariadb.com/kb/en/authentication-plugin-ed25519/+comments/6858</link><description>&lt;p&gt;Does mariadb officially support "ed25519 Authentication Plugin" in the php language? If you plan to support it, please let me know the schedule.&lt;/p&gt;
 </description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">선수 박</dc:creator><guid>https://mariadb.com/kb/en/authentication-plugin-ed25519/+comments/6858</guid></item><item><title>Re: Full Backup and Restore with Mariabackup</title><link>https://mariadb.com/kb/en/full-backup-and-restore-with-mariabackup/+comments/6855</link><description>&lt;p&gt;Is it really necessary to stop the MariaDB Server process before restoring files into the &lt;em&gt;datadir&lt;/em&gt;, even if that directory is not empty (expecting to only add new files inside it, and not override any existing file of course)?&lt;/p&gt;
 &lt;p&gt;I mean, the MariaDB Server process seems to scan the &lt;em&gt;datadir&lt;/em&gt; contents only on start.&lt;br&gt;If new files are copied into it while the process is running, they don’t seem to be taken in account before the process is restarted.&lt;/p&gt;
@@ -218,27 +279,4 @@ What could be the reason?&lt;/p&gt;
 </description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Dave Gosselin</dc:creator><guid>https://mariadb.com/kb/en/unable-to-start-mariadb-service-after-reboot/+comments/6806</guid></item><item><title>Re: JSON_OBJECTAGG</title><link>https://mariadb.com/kb/en/json_objectagg/+comments/6805</link><description>&lt;p&gt;Repeated JSON Keys are valid and allowed in spec. It's just that most parsers of JSON will replace the previous key with the last one noted. In Javascript itself, you can parse as a array of [key, value] called "entries", but the default parser (JSON.parse) won't give you this.&lt;/p&gt;
 </description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Carlos Lopez</dc:creator><guid>https://mariadb.com/kb/en/json_objectagg/+comments/6805</guid></item><item><title>Re: unreleased-11-6</title><link>https://mariadb.com/kb/en/unreleased-11-6/+comments/6804</link><description>&lt;p&gt;Note that the home page has a link to this page. But 11.6.0 was released. Readers might easily click and be confused. I suggest to remove this and similar templates as soon as they become obsolete.&lt;/p&gt;
 </description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Federico Razzoli</dc:creator><guid>https://mariadb.com/kb/en/unreleased-11-6/+comments/6804</guid></item><item><title>Re: about mariadb data type</title><link>https://mariadb.com/kb/en/about-mariadb-data-type/+comments/6803</link><description>&lt;p&gt;On the &lt;a href="/kb/en/data-types/"&gt;Data Types&lt;/a&gt; page in the documentation?&lt;/p&gt;
-</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/about-mariadb-data-type/+comments/6803</guid></item><item><title>Re: Cannot reset password for the root user in MariaDB (Mac keeps changing it on restart)</title><link>https://mariadb.com/kb/en/community-questions-cannot-reset-password-for-the-root-user-in-mariadb-mac-/+comments/6802</link><description>&lt;p&gt;I can't help with Mac specifically, but take a look at &lt;a href="/kb/en/troubleshooting-connection-issues/#authentication-problems"&gt;Troubleshooting Connection Issues&lt;/a&gt;, in particular &lt;a href="/kb/en/authentication-from-mariadb-10-4/"&gt;Authentication from MariaDB 10.4&lt;/a&gt;. &lt;/p&gt;
-&lt;p&gt;Note that if you're using any of the &lt;a href="https://mariadb.org/about/#maintenance-policy"&gt;currently maintained versions&lt;/a&gt; (&lt;a href="/kb/en/what-is-mariadb-105/"&gt;MariaDB 10.5&lt;/a&gt;+), the name of the binaries will be mariadb*, not mysql*&lt;/p&gt;
-&lt;p&gt;If you're still having problems, provide the version you're using, and, when you first install and have access, the contents of the &lt;a href="/kb/en/mysqlglobal_priv-table/"&gt;global_priv table&lt;/a&gt;:&lt;/p&gt;
-&lt;pre class="fixed"&gt;SELECT CONCAT(user, '@', host, ' =&amp;gt; ', JSON_DETAILED(priv)) FROM mysql.global_priv;
-&lt;/pre&gt;&lt;p&gt;Further reading:&lt;/p&gt;
-&lt;ul start="1"&gt;&lt;li&gt;&lt;a href="/kb/en/mariadb-secure-installation/"&gt;mariadb-secure-installation&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;
-</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/community-questions-cannot-reset-password-for-the-root-user-in-mariadb-mac-/+comments/6802</guid></item><item><title>Re: Best way to make our automation script wait until the database has been imported before proceeding to next step</title><link>https://mariadb.com/kb/en/mariadb-containers-best-way-to-make-our-automation-script-wait-until-the-da/+comments/6801</link><description>&lt;p&gt;Like &lt;a href="/kb/en/using-healthcheck-sh/"&gt;using-healthcheck-sh&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;The initialization from /docker-entrypoint-initdb.d occurs while mariadbd is running under --skip-networking, so will return healthy once its finished.&lt;/p&gt;
-&lt;p&gt;Use &lt;a href="https://docs.docker.com/compose/compose-file/05-services/#healthcheck"&gt;https://docs.docker.com/compose/compose-file/05-services/#healthcheck&lt;/a&gt;
-(and the meanings on &lt;a href="https://docs.docker.com/reference/dockerfile/#healthcheck"&gt;https://docs.docker.com/reference/dockerfile/#healthcheck&lt;/a&gt;).&lt;/p&gt;
-&lt;p&gt;The start_period covers the estimated startup time.&lt;/p&gt;
-&lt;p&gt;Then for the services depending on mariadb (service name):&lt;/p&gt;
-&lt;pre class="fixed"&gt;    depends_on:
-      mariadb:
-        condition: service_healthy
-&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/mariadb-containers-best-way-to-make-our-automation-script-wait-until-the-da/+comments/6801</guid></item><item><title>Re: Reuse connections to avoid port starvation</title><link>https://mariadb.com/kb/en/reuse-connections-to-avoid-port-starvation/+comments/6800</link><description>&lt;p&gt;There are a bunch of sysctl kernel parameters that will aid in a speedy reuse of ports&lt;/p&gt;
-&lt;p&gt;net.ipv4.tcp_tw_recycle=1
-net.ipv4.tcp_tw_reuse=1
-net.ipv4.tcp_fin_timeout=20 (default is 60)&lt;/p&gt;
-&lt;p&gt;Notes about this will confuse NAT if if that plays a role in your connections.&lt;/p&gt;
-&lt;p&gt;There is a bit of discussion around this on &lt;a href="https://stackoverflow.com/questions/410616/increasing-the-maximum-number-of-tcp-ip-connections-in-linux"&gt;https://stackoverflow.com/questions/410616/increasing-the-maximum-number-of-tcp-ip-connections-in-linux&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;Own research recommented.&lt;/p&gt;
-</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/reuse-connections-to-avoid-port-starvation/+comments/6800</guid></item><item><title>Re: MInus use</title><link>https://mariadb.com/kb/es/minus-use/+comments/6799</link><description>&lt;p&gt;Are you looking for the &lt;a href="https://mariadb.com/kb/en/subtraction-operator-"&gt;subtraction operator&lt;/a&gt; or the &lt;a href="https://mariadb.com/kb/en/minus/"&gt;synonym for EXCEPT&lt;/a&gt;? Both those pages have examples.&lt;/p&gt;
-</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/es/minus-use/+comments/6799</guid></item></channel></rss>
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ian Gilfillan</dc:creator><guid>https://mariadb.com/kb/en/about-mariadb-data-type/+comments/6803</guid></item></channel></rss>

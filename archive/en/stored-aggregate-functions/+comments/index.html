@@ -258,9 +258,89 @@ Comments - Stored Aggregate Functions
                 </label>
             </div>
         </div>
+        <a name="comment_6862"></a>
+        <div class="comment approved" style="margin-left: 0px">
+            <div class="info">
+                
+
+<span class="datetime" title="2024-08-22 23:04">3 days, 3 hours ago</span>
+                
+<span class="user" id="user-15656">
+<a href="/kb/user/id/15656" title="Al Gee">Al Gee</a>
+</span>
+            </div>
+            <div class="title">
+                <a href="#comment_6862">Re: Stored Aggregate Functions cannot short circuit the aggregate cursor</a>
+                
+            </div><div class="comment_text">
+                <p>In attempting to short circuit some custom aggregate functions I discovered that custom aggregate functions must loop through entire cursor set to avoid erroneous results.</p>
+<p>Here are 2 examples of trivial aggregate functions that return the "first" item in the aggregate cursor. </p>
+<p>The first one (aggFirst_int) returns results as expected, storing the first item in the list, then looping through the cursor until the NOT FOUND HANDLER returns the result.</p>
+<p>The second example does the same, but does not loop through the cursor until the NOT FOUND HANDLER is triggered, and returns the result immediately.</p>
+<pre class="unknown_macro">&lt;&lt;<span class="macro_name">CODE</span><span class="macro_arg_string"></span>&gt;&gt;
+<span class="macro_body">DELIMITER //
+
+CREATE OR REPLACE DEFINER=`root`@`localhost` AGGREGATE FUNCTION `aggFirst_int`(`reqInt` INT) RETURNS int(11)
+BEGIN
+	DECLARE CONTINUE HANDLER FOR NOT FOUND
+ 		RETURN @iRet;
+	FETCH GROUP NEXT ROW;
+	SET @iRet = reqInt;
+ 	WHILE TRUE DO	
+		FETCH GROUP NEXT ROW;
+	END WHILE;
+	RETURN -1;
+END //
+
+CREATE OR REPLACE DEFINER=`root`@`localhost` AGGREGATE FUNCTION `aggFirst_int2`(`reqInt` INT) RETURNS int(11)
+BEGIN
+	DECLARE CONTINUE HANDLER FOR NOT FOUND
+ 		RETURN @iRet;
+	FETCH GROUP NEXT ROW;
+	SET @iRet = reqInt;
+	RETURN @iRet;
+END //
+
+DELIMITER ;
+
+SELECT MAX(fInt), MIN(fInt), COUNT(fInt), aggFirst_int(fInt), aggFirst_int2(fInt), fChar
+	FROM (SELECT "a" AS fChar, 1 AS fInt
+		UNION SELECT "b", 4 
+		UNION SELECT "b", 2 
+		UNION SELECT "c", 3) AS t
+	GROUP BY fChar;
+
+</span>&lt;&lt;/CODE&gt;&gt;</pre><p>This produced the following results:</p>
+<pre class="unknown_macro">&lt;&lt;<span class="macro_name">CODE</span><span class="macro_arg_string"></span>&gt;&gt;
+<span class="macro_body">MAX(fInt), MIN(fInt), COUNT(fInt), aggFirst_int(fInt), aggFirst_int2(fInt), fChar
+1, 	1, 	1, 	1, 	4, 	a
+4, 	2, 	2, 	2, 	3, 	b
+3, 	3, 	1, 	3, 	3, 	c
+</span>&lt;&lt;/CODE&gt;&gt;</pre><p>The built in aggregate functions all return the expected results, as does aggFirst_int(), but aggFirst_int2() returns results that were clearly processed from other rows.</p>
+
+            </div>
+            <div class="comment_actions hidden-print">
+                
+                
+                &nbsp;
+
+                <div class="pull-right">
+                    
+                    <a class="flag btn btn-mini" href="/kb/en/stored-aggregate-functions/+comments/6862/flag"
+                       data-flag-url="/kb/en/stored-aggregate-functions/+comments/6862/flag"
+                            title="Flag as Spam/Inappropriate">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        </a>
+                    
+                    
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
         
-            <div class="no_comments" style="clear: left">No comments</div>
-        
+    
+
     
 
 </div>
