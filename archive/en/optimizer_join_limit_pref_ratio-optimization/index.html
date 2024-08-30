@@ -27,13 +27,11 @@
     <meta property="fb:admins" content="514852603" />
     <meta property="og:description" content="
 Basics
-The optimization is introduced in MDEV-34720.
-This optimization makes the join optimizer to specifically consider a join order that can short-cut its execution based o..." />
+Off (0) by default, when enabling this optimization, MariaDB will consider a join order that may shorten query execution time based on the ORDER BY ... LIMIT n clause...." />
 
     <meta name="description" content="
 Basics
-The optimization is introduced in MDEV-34720.
-This optimization makes the join optimizer to specifically consider a join order that can short-cut its execution based o..." />
+Off (0) by default, when enabling this optimization, MariaDB will consider a join order that may shorten query execution time based on the ORDER BY ... LIMIT n clause...." />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
@@ -280,12 +278,12 @@ This optimization makes the join optimizer to specifically consider a join order
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-08-28 18:41">5 hours, 21 minutes ago</span></dd>
+<span class="datetime" title="2024-08-28 18:41">1 day, 5 hours ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-08-28 19:28">4 hours, 34 minutes ago</span></dd>
+<span class="datetime" title="2024-08-29 14:40">9 hours, 23 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -427,7 +425,7 @@ This optimization makes the join optimizer to specifically consider a join order
 
         <li class=""><a href="#problem-setting" title="Problem setting">Problem setting</a>        <ol class="toc">
 
-            <li class=""><a href="#plans-with-limit-short-cut-are-difficult-to-estimate" title="Plans with LIMIT short-cut are difficult to estimate">Plans with LIMIT short-cut are difficult to estimate</a>        </ol>
+            <li class=""><a href="#plans-with-limit-shortcuts-are-difficult-to-estimate" title="Plans with LIMIT shortcuts are difficult to estimate">Plans with LIMIT shortcuts are difficult to estimate</a>        </ol>
 </li>
 
         <li class=""><a href="#providing-guidelines-to-the-optimizer" title="Providing guidelines to the optimizer">Providing guidelines to the optimizer</a></li>
@@ -437,13 +435,11 @@ This optimization makes the join optimizer to specifically consider a join order
 </li>
 </div>
 <h2 class="anchored_heading" id="basics">Basics</h2>
-<p>The optimization is introduced in <a href="https://jira.mariadb.org/browse/MDEV-34720">MDEV-34720</a>.</p>
-<p>This optimization makes the join optimizer to specifically consider a join order that can short-cut its execution based on <code>ORDER BY ... LIMIT n</code> clause. For small values of <code>n</code>, using such join order can cause speedups.</p>
-<p>The optimization is not enabled by default. 
-One needs to set <code>optimizer_join_limit_pref_ratio</code> to enable it. The default value of 0 means disable, suggested value when enabling is 100.</p>
+<p>Off (0) by default, when enabling this optimization, MariaDB will consider a join order that may shorten query execution time based on the <code>ORDER BY ... LIMIT n</code> clause. For small values of <code>n</code>, this may improve performance.</p>
+<p>Set the value of <code>optimizer_join_limit_pref_ratio</code> to 100 to enable this option, or set to 0 (the default value) to disable it.</p>
 <h2 class="anchored_heading" id="detailed-description">Detailed description</h2>
 <h3 class="anchored_heading" id="problem-setting">Problem setting</h3>
-<p>MariaDB optimizer picks the join order without taking into account the possibility to short-cut join execution due to ORDER BY ... LIMIT.</p>
+<p>By default, the MariaDB optimizer picks a join order without considering the ORDER BY ... LIMIT clause, when present.</p>
 <p>For example, consider a query looking at latest 10 orders together with customers who made them:</p>
 <pre class="fixed"><span class="k">select</span> <span class="o">*</span>
 <span class="k">from</span>
@@ -468,13 +464,10 @@ One needs to set <code>optimizer_join_limit_pref_ratio</code> to enable it. The 
 |    1 | SIMPLE      | orders   | index | customer_name | order_date | 4       | NULL                 | 10   | Using where |
 |    1 | SIMPLE      | customer | ref   | name          | name       | 103     | orders.customer_name | 1    |             |
 +------+-------------+----------+-------+---------------+------------+---------+----------------------+------+-------------+
-</pre><p>The <code>customer-&gt;orders</code> plan computes a join between all customers and orders, saves its result into a temporary table and then uses filesort to get the 10 most recent orders. It doesn't benefit much from the fact that just 10 orders are needed. </p>
-<p>The <code>orders-&gt;customers</code> plan uses an index to read rows in the ORDER BY order. It can stop execution as soon as it has found 10 <code>order-and-customer</code> combinations.  This is much faster than computing the entire join. Let's call this *LIMIT short-cutting*.  </p>
-<p>Does MariaDB optimizer take *LIMIT short-cutting* into account when choosing which join order to use? No. </p>
-<p>(It does take <code>Using temporary</code> into account which increases the cost of <code>customer-&gt;orders</code> plan but not the LIMIT short-cutting).</p>
-<h4 class="anchored_heading" id="plans-with-limit-short-cut-are-difficult-to-estimate">Plans with LIMIT short-cut are difficult to estimate</h4>
-<p>The reason is that it is although LIMIT short cutting is beneficial, it is fundamentally difficult to produce a reliable estimate for it.</p>
-<p>Let's take example from the previous section but search only for orders that were shipped by air:</p>
+</pre><p>The <code>customer-&gt;orders</code> plan computes a join between all customers and orders, saves that result into a temporary table, and then uses filesort to get the 10 most recent orders. This query plan doesn't benefit from the fact that just 10 orders are needed. </p>
+<p>However, in contrast, the <code>orders-&gt;customers</code> plan uses an index to read rows in the ORDER BY order. The query can stop execution once it finds 10 <code>order-and-customer</code> combinations.  This is much faster than computing the entire join.  Under this plan, and when this new optimization, we can leverage ORDER BY ... LIMIT to stop early, when we have the 10 combinations.</p>
+<h4 class="anchored_heading" id="plans-with-limit-shortcuts-are-difficult-to-estimate">Plans with LIMIT shortcuts are difficult to estimate</h4>
+<p>It is fundamentally difficult to produce a reliable estimate for ORDER BY ... LIMIT shortcuts.  Let's take an example from the previous section to see why.  This query searches for orders that were shipped by air:</p>
 <pre class="fixed"><span class="k">select</span> <span class="o">*</span>
 <span class="k">from</span>
   <span class="n">customer</span><span class="p">,</span><span class="k">order</span>
@@ -484,18 +477,18 @@ One needs to set <code>optimizer_join_limit_pref_ratio</code> to enable it. The 
 <span class="k">order</span> <span class="k">by</span>
   <span class="k">order</span><span class="p">.</span><span class="nb">date</span> <span class="k">desc</span>
 <span class="k">limit</span> <span class="mi">10</span>
-</pre><p>Suppose, we know that 50% of orders are shipped by air. 
+</pre><p>Suppose we know beforehand that 50% of orders are shipped by air. 
 Assuming there's no correlation between date and shipping method, <code>orders-&gt;customer</code> plan will need to scan 20 orders before we find 10 that are shipped by air.
-But if there is correlation, we may need to scan up to <code>(total_orders*0.5 + 10)</code>  before we 
-find first 10 orders that are shipped by air. Scanning about 50% of all orders can be much more expensive.</p>
-<p>The situation gets worse if the query has constructs whose selectivity is not known. Suppose the WHERE condition was</p>
+But if there is correlation, then we may need to scan up to <code>(total_orders*0.5 + 10)</code>  before we 
+find first 10 orders that are shipped by air. Scanning about 50% of all orders can be expensive.</p>
+<p>This situation worsens when the query has constructs whose selectivity is not known. For example, suppose the WHERE condition was</p>
 <pre class="fixed">  <span class="k">order</span><span class="p">.</span><span class="n">shipping_method</span><span class="o">=</span><span class="s1">&#39;%Airplane%&#39;</span>
 </pre><p>in this case, we can't reliably say whether we will be able to stop after scanning #LIMIT rows or we will need to enumerate all rows before we find #LIMIT matches.</p>
 <h3 class="anchored_heading" id="providing-guidelines-to-the-optimizer">Providing guidelines to the optimizer</h3>
-<p>Due to these inherent risks described above, the optimization is not enabled by default.</p>
-<p>However if one is running mostly OLTP workload so that their WHERE conditions have suitable
-indexes or not very selective, then ORDER BY LIMIT queries will typically find matching rows
-quickly.  In this case it makes sense to give the following guidance to the optimizer:</p>
+<p>The optimization is not enabled by default due to the challenges around cost estimation.</p>
+<p>When running a mostly OLTP workload such that query WHERE conditions have suitable
+indexes or are not very selective, then any ORDER BY ... LIMIT queries will typically find matching rows
+quickly.  In this case, it makes sense to give the following guidance to the optimizer:</p>
 <pre class="fixed">Consider the query plan using LIMIT short-cutting and prefer it if it promises at least X times speedup.
 </pre><p>The value of <code>X</code> is given to the optimizer via <code>optimizer_join_limit_pref_ratio</code> setting.
 Higher values carry less risk. The recommended value is 100: prefer the LIMIT join order if it 
