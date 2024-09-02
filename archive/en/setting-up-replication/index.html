@@ -275,7 +275,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-04-27 22:08">2 years, 4 months ago</span></dd>
+<span class="datetime" title="2024-09-01 23:53">12 hours, 39 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -455,7 +455,7 @@
 <h3>Contents</h3>
  <ol class="toc">
 
-    <li class=""><a href="#setting-up-a-replication-slave-with-mariabackup" title="Setting up a Replication Slave with Mariabackup">Setting up a Replication Slave with Mariabackup</a></li>
+    <li class=""><a href="#setting-up-a-replication-replica-with-mariadb-backup" title="Setting up a Replication Replica with MariaDB-Backup">Setting up a Replication Replica with MariaDB-Backup</a></li>
 
     <li class=""><a href="#versions" title="Versions">Versions</a></li>
 
@@ -468,7 +468,7 @@
 
     <li class=""><a href="#settings-to-check" title="Settings to Check">Settings to Check</a></li>
 
-    <li class=""><a href="#configuring-the-slave" title="Configuring the Slave">Configuring the Slave</a></li>
+    <li class=""><a href="#configuring-the-replica" title="Configuring the Replica">Configuring the Replica</a></li>
 
     <li class=""><a href="#getting-the-masters-binary-log-co-ordinates" title="Getting the Master&#39;s Binary Log Co-ordinates">Getting the Master&#39;s Binary Log Co-ordinates</a></li>
 
@@ -477,17 +477,17 @@
         <li class=""><a href="#use-global-transaction-id-gtid" title="Use Global Transaction Id (GTID)">Use Global Transaction Id (GTID)</a>    </ol>
 </li>
 
-    <li class=""><a href="#replicating-from-mysql-master-to-mariadb-slave" title="Replicating from MySQL Master to MariaDB Slave">Replicating from MySQL Master to MariaDB Slave</a></li>
+    <li class=""><a href="#replicating-from-mysql-master-to-mariadb-replica" title="Replicating from MySQL Master to MariaDB Replica">Replicating from MySQL Master to MariaDB Replica</a></li>
 
     <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
 </li>
 </div><p>
-Getting <a href="/kb/en/replication/">replication</a> working involves steps on both the master server/s and steps on the slave server/s.</p>
+Getting <a href="/kb/en/replication/">replication</a> working involves steps on both the master server/s and steps on the replica server/s.</p>
 <div class="cstm-style bluebox"><p><a href="/kb/en/what-is-mariadb-100/">MariaDB 10.0</a> introduced replication with <a href="/kb/en/global-transaction-id/">global transaction IDs</a>. These have a number of benefits, and it is generally recommended to use this feature from <a href="/kb/en/what-is-mariadb-100/">MariaDB 10.0</a>.</p>
-</div><h2 class="anchored_heading" id="setting-up-a-replication-slave-with-mariabackup">Setting up a Replication Slave with Mariabackup</h2>
-<p>If you would like to use <a href="/kb/en/mariabackup/">Mariabackup</a> to set up a replication slave, then you might find the information at <a href="/kb/en/setting-up-a-replication-slave-with-mariabackup/">Setting up a Replication Slave with Mariabackup</a> helpful.</p>
+</div><h2 class="anchored_heading" id="setting-up-a-replication-replica-with-mariadb-backup">Setting up a Replication Replica with MariaDB-Backup</h2>
+<p>If you would like to use <a href="/kb/en/mariabackup/">Mariabackup</a> to set up a replication slave, then you might find the information at <a href="/kb/en/setting-up-a-replication-slave-with-mariabackup/">Setting up a Replication Replica with MariaDB-Backup</a> helpful.</p>
 <h2 class="anchored_heading" id="versions">Versions</h2>
-<p>In general, when replicating across different versions of MariaDB, it is best that the master is an older version than the slave. MariaDB versions are usually backward compatible, while of course older versions cannot always be forward compatible. See also  <a href="#replicating-from-mysql-master-to-mariadb-slave">Replicating from MySQL Master to MariaDB Slave</a>.</p>
+<p>In general, when replicating across different versions of MariaDB, it is best that the master is an older version than the slave. MariaDB versions are usually backward compatible, while of course older versions cannot always be forward compatible. See also  <a href="#replicating-from-mysql-master-to-mariadb-slave">Replicating from MySQL Master to MariaDB Replica</a>.</p>
 <h2 class="anchored_heading" id="configuring-the-master">Configuring the Master</h2>
 <ul><li>Enable binary logging if it's not already enabled. See <a href="/kb/en/activating-the-binary-log/">Activating the Binary Log</a> and <a href="/kb/en/binary-log-formats/">Binary log formats</a> for details.
 </li><li>Give the master a unique <a href="/kb/en/replication-and-binary-log-system-variables/#server_id">server_id</a>. All slaves must also be given a server_id. This can be a number from 1 to 2<sup>32</sup>-1, and must be unique for each server in the replicating group.
@@ -502,7 +502,7 @@ server_id=1
 log-basename=master1
 binlog-format=mixed
 </pre><p>The server id is a unique number for each MariaDB/MySQL server in your network.
-<a href="/kb/en/binary-log-formats/">binlog-format</a> specifies how your statements are logged. This mainly affects the size of the <a href="/kb/en/binary-log/">binary log</a> that is sent between the Master and the Slaves.</p>
+<a href="/kb/en/binary-log-formats/">binlog-format</a> specifies how your statements are logged. This mainly affects the size of the <a href="/kb/en/binary-log/">binary log</a> that is sent between the Master and the Replicas.</p>
 <p>Then execute the following SQL with the <a href="/kb/en/mysql-command-line-client/"><code>mysql</code></a> command line client:</p>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">USER</span> <span class="s1">&#39;replication_user&#39;</span><span class="o">@</span><span class="s1">&#39;%&#39;</span> <span class="n">IDENTIFIED</span> <span class="k">BY</span> <span class="s1">&#39;bigs3cret&#39;</span><span class="p">;</span>
 <span class="k">GRANT</span> <span class="n">REPLICATION</span> <span class="n">SLAVE</span> <span class="k">ON</span> <span class="o">*</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;replication_user&#39;</span><span class="o">@</span><span class="s1">&#39;%&#39;</span><span class="p">;</span>
@@ -516,8 +516,8 @@ server_id=1
 <ul start="1"><li><a href="/kb/en/server-system-variables/#skip_networking">skip-networking</a>. If <code>skip-networking=1</code>, the server will limit connections to localhost only, and prevent all remote slaves from connecting.
 </li><li><a href="/kb/en/server-system-variables/#bind_address">bind-address</a>. Similarly, if the address the server listens for TCP/IP connections is 127.0.0.1 (localhost), remote slaves connections will fail.
 </li></ul>
-<h2 class="anchored_heading" id="configuring-the-slave">Configuring the Slave</h2>
-<ul><li>Give the slave a unique <a href="/kb/en/replication-and-binary-log-server-system-variables/#server_id">server_id</a>. All servers, whether masters or slaves, are given a server_id. This can be a number from 1 to 2<sup>32</sup>-1, and must be unique for each server in the replicating group. The server will need to be restarted in order for a change in this option to take effect.
+<h2 class="anchored_heading" id="configuring-the-replica">Configuring the Replica</h2>
+<ul><li>Give the slave a unique <a href="/kb/en/replication-and-binary-log-server-system-variables/#server_id">server_id</a>. All servers, whether masters or replicas, are given a server_id. This can be a number from 1 to 2<sup>32</sup>-1, and must be unique for each server in the replicating group. The server will need to be restarted in order for a change in this option to take effect.
 </li></ul>
 <h2 class="anchored_heading" id="getting-the-masters-binary-log-co-ordinates">Getting the Master's Binary Log Co-ordinates</h2>
 <p>Now you need prevent any changes to the data while you view the binary log position. You'll use this to tell the slave at exactly which point it should start replicating from.</p>
@@ -562,8 +562,8 @@ server_id=1
 </li></ul>
 <pre class="fixed">Slave_IO_Running: Yes
 Slave_SQL_Running: Yes
-</pre><h2 class="anchored_heading" id="replicating-from-mysql-master-to-mariadb-slave">Replicating from MySQL Master to MariaDB Slave</h2>
-<ul start="1"><li>Replicating from MySQL 5.5 to <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a>+ should just work. When using a <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>+ as a slave, it may be necessary to set <a href="/kb/en/replication-and-binary-log-server-system-variables/#binlog_checksum">binlog_checksum</a> to NONE. 
+</pre><h2 class="anchored_heading" id="replicating-from-mysql-master-to-mariadb-replica">Replicating from MySQL Master to MariaDB Replica</h2>
+<ul start="1"><li>Replicating from MySQL 5.5 to <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a>+ should just work. When using a <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>+ as a replica, it may be necessary to set <a href="/kb/en/replication-and-binary-log-server-system-variables/#binlog_checksum">binlog_checksum</a> to NONE. 
 </li><li>Replicating from MySQL 5.6 without GTID to MariaDB 10+ should work.
 </li><li>Replication from MySQL 5.6 with GTID, binlog_rows_query_log_events and ignorable events works starting from <a href="/kb/en/mariadb-10022-release-notes/">MariaDB 10.0.22</a> and <a href="/kb/en/mariadb-1018-release-notes/">MariaDB 10.1.8</a>. In this case MariaDB will remove the MySQL GTIDs and other unneeded events and instead adds its own GTIDs.
 </li></ul>
