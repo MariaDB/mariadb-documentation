@@ -319,7 +319,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/semi-join-materialization-strategy/+r/115614/">115614</a></dd>
+            <dd><a href="/kb/en/semi-join-materialization-strategy/+r/142432/">142432</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-115">
@@ -328,7 +328,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-04-26 23:30">2022-04-26 23:30</span></dd>
+<span class="datetime" title="2024-09-06 12:36">2024-09-06 12:36</span></dd>
         </dl>
     </div>
     
@@ -393,15 +393,15 @@ Here, you can see:
 
 * There are still two ##SELECT##s (look for columns with &lt;&lt;code&gt;&gt;id=1&lt;&lt;/code&gt;&gt; and &lt;&lt;code&gt;&gt;id=2&lt;&lt;/code&gt;&gt;)
 * The second select (with ##id=2##) has &lt;&lt;code&gt;&gt;select_type=MATERIALIZED&lt;&lt;/code&gt;&gt;. This means it will be executed and its results will be stored in a temporary table with a unique key over all columns. The unique key is there to prevent the table from containing any duplicate records.
-* The first select received the table name &lt;&lt;code&gt;&gt;&amp;lt;subquery2&amp;gt;&lt;&lt;/code&gt;&gt;.  This is the table that we got as a result of the materialization of the select with ##id=2##.
+* The first select received the table name &lt;&lt;code&gt;&gt;subquery2&lt;&lt;/code&gt;&gt;.  This is the table that we got as a result of the materialization of the select with ##id=2##.
 
 The optimizer chose to do a full scan over the materialized table, so this is an example of a use of the Materialization-Scan strategy.
 
 As for execution costs, we&#39;re going to read 15 rows from table City, write 15 rows to materialized table, read them back (the optimizer assumes there won&#39;t be any duplicates), and then do 15 eq_ref accesses to table Country.  In total, we&#39;ll do 45 reads and 15 writes.
 
-By comparison, if you run the ##EXPLAIN## in MySQL, you&#39;ll get this:
+By comparison, if you run the ##EXPLAIN## with semi-join optimizations disabled, you&#39;ll get this:
 &lt;&lt;code lang=&#39;sql&#39; wrap=true&gt;&gt;
-MySQL [world]&gt; explain select * from Country where Country.code IN 
+MariaDB [world]&gt; explain select * from Country where Country.code IN 
   (select City.Country from City where  City.Population &gt; 7*1000*1000);
 +----+--------------------+---------+-------+--------------------+------------+---------+------+------+------------------------------------+
 | id | select_type        | table   | type  | possible_keys      | key        | key_len | ref  | rows | Extra                              |
@@ -437,10 +437,10 @@ The ##EXPLAIN## output is similar to the one which used Materialization-scan, ex
 
 This means that the optimizer is planning to do index lookups into the materialized table. In other words, we&#39;re going to use the Materialization-lookup strategy.
 
-In MySQL (or with &lt;&lt;code&gt;&gt;optimizer_switch=&#39;semijoin=off,materialization=off&#39;&lt;&lt;/code&gt;&gt;), one will get this ##EXPLAIN##:
+With &lt;&lt;code&gt;&gt;optimizer_switch=&#39;semijoin=off,materialization=off&#39;&lt;&lt;/code&gt;&gt;), one will get this ##EXPLAIN##:
 
 &lt;&lt;code lang=&#39;sql&#39; wrap=true&gt;&gt;
-MySQL [world]&gt; explain select * from Country where Country.code IN 
+MariaDB [world]&gt; explain select * from Country where Country.code IN 
   (select City.Country from City where  City.Population &gt; 1*1000*1000) ;
 +----+--------------------+---------+----------------+--------------------+---------+---------+------+------+-------------+
 | id | select_type        | table   | type           | possible_keys      | key     | key_len | ref  | rows | Extra       |
@@ -452,7 +452,7 @@ MySQL [world]&gt; explain select * from Country where Country.code IN
 
 One can see that both plans will do a full scan on the ##Country## table. For the second step, MariaDB will fill the materialized table (238 rows read from table City and written to the temporary table) and then do a unique key lookup for each record in table ##Country##, which works out to 238 unique key lookups. In total, the second step will cost ##(239+238) = 477## reads and ##238## temp.table writes.
 
-MySQL&#39;s plan for the second step is to read 18 rows using an index on ##City.Country## for each record it receives for table ##Country##. This works out to a cost of ##(18*239) = 4302## reads.  Had there been fewer subquery invocations, this plan would have been better than the one with Materialization.  By the way, MariaDB has an option to use such a query plan, too (see [[firstmatch-strategy|FirstMatch Strategy]]), but it did not choose it.
+Execution of the latter (##DEPENDENT SUBQUERY##) plan reads 18 rows using an index on ##City.Country## for each record it receives for table ##Country##. This works out to a cost of ##(18*239) = 4302## reads.  Had there been fewer subquery invocations, this plan would have been better than the one with Materialization.  By the way, MariaDB has an option to use such a query plan, too (see [[firstmatch-strategy|FirstMatch Strategy]]), but it did not choose it.
 
 == Subqueries with grouping
 
