@@ -460,7 +460,13 @@ MariaDB Monitor optional par..." />
 </ul>
 </li>
 <li><a href="#cluster-manipulation-operations">Cluster manipulation operations</a><ul>
-<li><a href="#operation-details">Operation details</a></li>
+<li><a href="#operation-details">Operation details</a><ul>
+<li><a href="#failover">Failover</a></li>
+<li><a href="#switchover">Switchover</a></li>
+<li><a href="#rejoin">Rejoin</a></li>
+<li><a href="#reset-replication">Reset Replication</a></li>
+</ul>
+</li>
 <li><a href="#manual-activation">Manual activation</a><ul>
 <li><a href="#queued-switchover">Queued switchover</a></li>
 </ul>
@@ -861,11 +867,11 @@ see <a href="./node:mariadb-maxscale-2302-common-monitor-parameters#script">gene
 <h2 id="cluster-manipulation-operations">Cluster manipulation operations</h2>
 <p>Starting with MaxScale 2.2.1, MariaDB Monitor supports replication cluster
 modification. The operations implemented are:
-- <em>failover</em>, which replaces a failed primary with a replica
-- <em>switchover</em>, which swaps a running primary with a replica
-- <em>async-switchover</em>, which schedules a switchover and returns
-- <em>rejoin</em>, which directs servers to replicate from the primary
-- <em>reset-replication</em> (added in MaxScale 2.3.0), which deletes binary logs and
+- <a href="#failover">failover</a>, which replaces a failed primary with a replica
+- <a href="#switchover">switchover</a>, which swaps a running primary with a replica
+- <a href="#queued-switchover">async-switchover</a>, which schedules a switchover and returns
+- <a href="#rejoin">rejoin</a>, which directs servers to replicate from the primary
+- <a href="#reset-replication">reset-replication</a> (added in MaxScale 2.3.0), which deletes binary logs and
 resets gtid:s</p>
 <p>See <a href="#operation-details">operation details</a> for more information on the
 implementation of the commands.</p>
@@ -913,6 +919,11 @@ section <a href="#manual-activation">Manual activation</a> for more details.</p>
 <p>See <a href="#limitations-and-requirements">Limitations and requirements</a> for
 information on possible issues with failover and switchover.</p>
 <h3 id="operation-details">Operation details</h3>
+<h4 id="failover">Failover</h4>
+<div><pre><span></span>call command mariadbmon failover MONITOR
+</pre></div>
+
+
 <p><strong>Failover</strong> replaces a failed primary with a running replica. It does the
 following:</p>
 <ol>
@@ -946,6 +957,11 @@ later.</li>
 </ol>
 <p>Failover is considered successful if steps 1 to 3 succeed, as the cluster then
 has at least a valid primary server.</p>
+<h4 id="switchover">Switchover</h4>
+<div><pre><span></span>call command mariadbmon switchover MONITOR [NEW_PRIMARY] [OLD_PRIMARY]
+</pre></div>
+
+
 <p><strong>Switchover</strong> swaps a running primary with a running replica. It does the
 following:</p>
 <ol>
@@ -966,6 +982,11 @@ redirect the demoted old primary.</li>
 </ol>
 <p>Similar to failover, switchover is considered successful if the new primary was
 successfully promoted.</p>
+<h4 id="rejoin">Rejoin</h4>
+<div><pre><span></span>call command mariadbmon rejoin MONITOR OLD_PRIMARY
+</pre></div>
+
+
 <p><strong>Rejoin</strong> joins a standalone server to the cluster or redirects a replica
 replicating from a server other than the primary. A standalone server is joined
 by:</p>
@@ -977,6 +998,11 @@ by:</p>
 </ol>
 <p>A server which is replicating from the wrong primary is redirected simply with
 STOP SLAVE, RESET SLAVE, CHANGE MASTER TO and START SLAVE commands.</p>
+<h4 id="reset-replication">Reset Replication</h4>
+<div><pre><span></span>maxctrl call command mariadbmon reset-replication MONITOR [NEW_PRIMARY]
+</pre></div>
+
+
 <p><strong>Reset-replication</strong> (added in MaxScale 2.3.0) deletes binary logs and resets
 gtid:s. This destructive command is meant for situations where the gtid:s in the
 cluster are out of sync while the actual data is known to be in sync. The
@@ -1440,7 +1466,7 @@ down. This scenario is depicted in the image below. Only two out of four servers
 are running when three are needed for majority. Although both MaxScales see both
 running servers, neither is certain they have majority and the cluster stays in
 read-only mode. If the primary server is down, no failover is performed either.</p>
-<p><img src="images/coop_lock_no_majority.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.11/Documentation/Monitors/images/coop_lock_no_majority.png"></p>
 <p>Setting <code>cooperative_monitoring_locks=majority_of_running</code> changes the way
 <em>n_servers</em> is calculated. Instead of using the total number of servers, only
 servers currently [Running] are considered. This scheme adapts to multiple
@@ -1454,7 +1480,7 @@ does the opposite, claiming servers 3 and 4 and assuming 1 and 2 are down.
 Both MaxScales claim two locks out of two available and assume that they have
 lock majority. Both MaxScales may then promote their own primaries and route
 writes to different servers.</p>
-<p><img src="images/coop_lock_split_brain.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.11/Documentation/Monitors/images/coop_lock_split_brain.png"></p>
 <p>The recommended strategy depends on which failure scenario is more likely and/or
 more destructive. If it's unlikely that multiple servers are ever down
 simultaneously, then <em>majority_of_all</em> is likely the safer choice. On the other
@@ -1474,7 +1500,7 @@ MaxScale will eventually wait less time than the others. Conflict probability
 can be further decreased by configuring each monitor with a different
 <em>monitor_interval</em>.</p>
 <p>The flowchart below illustrates the lock handling logic.</p>
-<p><img src="images/coop_lock_flowchart.svg"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.11/Documentation/Monitors/images/coop_lock_flowchart.svg"></p>
 <h3 id="releasing-locks">Releasing locks</h3>
 <p>Monitor cooperation depends on the server locks. The locks are
 connection-specific. The owning connection can manually release a lock, allowing

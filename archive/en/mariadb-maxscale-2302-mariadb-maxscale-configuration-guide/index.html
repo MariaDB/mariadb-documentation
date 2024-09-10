@@ -2298,6 +2298,19 @@ required if <code>config_sync_cluster</code> is configured.</p>
 </pre></div>
 
 
+<p>The <code>mysql.maxscale_config</code> table can be pre-created in which case the <code>CREATE</code>
+grant is not needed by the user configured in <code>config_sync_user</code>. The following
+SQL is used to create the table.</p>
+<div><pre><span></span>CREATE TABLE IF NOT EXISTS mysql.maxscale_config(
+  cluster VARCHAR(256) PRIMARY KEY,
+  version BIGINT NOT NULL,
+  config JSON NOT NULL,
+  origin VARCHAR(254) NOT NULL,
+  nodes JSON NOT NULL
+) ENGINE=InnoDB;
+</pre></div>
+
+
 <p>If the database where the table is created is changed with <code>config_sync_db</code>, the
 grants must be adjusted to target that database instead.</p>
 <h3 id="config_sync_password"><code>config_sync_password</code></h3>
@@ -3214,6 +3227,11 @@ read the header and perform authentication as if the connection originated from
 this address instead of MaxScale's IP address. With this feature, the user
 accounts on the backend server can be simplified to only contain the actual
 client hosts and not the MaxScale host.</p>
+<p><strong>NOTE</strong>: If you use a cloud load balancer like AWS ELB that supports the proxy
+protocol in front of a MaxScale, you need to configure
+<a href="#proxy_protocol_networks">proxy_protocol_networks</a> in MaxScale. This also needs
+to be done whenever one MaxScale may connect to another Maxscale and the
+connecting MaxScale has <code>proxy_protocol</code> enabled.</p>
 <p>PROXY protocol will be supported by MariaDB 10.3, which this feature has been
 tested with. To use it, enable the PROXY protocol in MaxScale for every
 compatible server and configure the MariaDB servers themselves to accept the
@@ -3746,7 +3764,7 @@ run MariaDB MaxScale without a monitor module. In this case an external
 monitoring system must the status of each server via MaxCtrl or the REST
 API. <strong>Only do this if you know what you are doing.</strong></p>
 <h2 id="filter-modules">Filter Modules</h2>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.10/Documentation/Getting-Started/images/image_10.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.11/Documentation/Getting-Started/images/filter_example.png"></p>
 <p>Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
 explanation of each filter's functionality can be found in its documentation.</p>
