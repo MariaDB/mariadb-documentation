@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/optimizer_join_limit_pref_ratio-optimization/+r/142143/">142143</a></dd>
+            <dd><a href="/kb/en/optimizer_join_limit_pref_ratio-optimization/+r/143133/">143133</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3645">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-08-29 14:40">2024-08-29 14:40</span></dd>
+<span class="datetime" title="2024-09-10 09:25">2024-09-10 09:25</span></dd>
         </dl>
     </div>
     
@@ -340,7 +340,7 @@
 
 Off (0) by default, when enabling this optimization, MariaDB will consider a join order that may shorten query execution time based on the ##ORDER BY ... LIMIT n## clause. For small values of ##n##, this may improve performance.
 
-Set the value of ##optimizer_join_limit_pref_ratio## to 100 to enable this option, or set to 0 (the default value) to disable it.
+Set the value of ##optimizer_join_limit_pref_ratio## to a non-zero value to enable this option (higher values are more conservative, recommended value is 100), or set to 0 (the default value) to disable it.
 
 == Detailed description
 
@@ -388,7 +388,7 @@ However, in contrast, the ##orders-&gt;customers## plan uses an index to read ro
 
 ==== Plans with LIMIT shortcuts are difficult to estimate
 
-It is fundamentally difficult to produce a reliable estimate for ORDER BY ... LIMIT shortcuts.  Let&#39;s take an example from the previous section to see why.  This query searches for orders that were shipped by air:
+It is fundamentally difficult to produce a reliable estimate for ORDER BY ... LIMIT shortcuts.  Let&#39;s take an example from the previous section to see why.  This query searches for last 10 orders that were shipped by air:
 
 &lt;&lt;sql&gt;&gt;
 select *
@@ -404,8 +404,7 @@ limit 10
 
 Suppose we know beforehand that 50% of orders are shipped by air. 
 Assuming there&#39;s no correlation between date and shipping method, ##orders-&gt;customer## plan will need to scan 20 orders before we find 10 that are shipped by air.
-But if there is correlation, then we may need to scan up to ##(total_orders*0.5 + 10)##  before we 
-find first 10 orders that are shipped by air. Scanning about 50% of all orders can be expensive.
+But if there is correlation, then we may need to scan up to ##(total_orders*0.5 + 10)##  before we find first 10 orders that are shipped by air. Scanning about 50% of all orders can be expensive.
 
 This situation worsens when the query has constructs whose selectivity is not known. For example, suppose the WHERE condition was
 
@@ -417,13 +416,14 @@ in this case, we can&#39;t reliably say whether we will be able to stop after sc
 
 === Providing guidelines to the optimizer
 
-The optimization is not enabled by default due to the challenges around cost estimation.
+Due to these challenges, the optimization is not enabled by default.
 
 When running a mostly OLTP workload such that query WHERE conditions have suitable
 indexes or are not very selective, then any ORDER BY ... LIMIT queries will typically find matching rows
 quickly.  In this case, it makes sense to give the following guidance to the optimizer:
 &lt;&lt;code&gt;&gt;
-Consider the query plan using LIMIT short-cutting and prefer it if it promises at least X times speedup.
+Do consider the query plan using LIMIT short-cutting 
+and prefer it if it promises at least X times speedup.
 &lt;&lt;/code&gt;&gt;
 
 The value of ##X## is given to the optimizer via ##optimizer_join_limit_pref_ratio## setting.

@@ -278,12 +278,12 @@ Off (0) by default, when enabling this optimization, MariaDB will consider a joi
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-08-28 18:41">1 week, 4 days ago</span></dd>
+<span class="datetime" title="2024-08-28 18:41">1 week, 6 days ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-08-29 14:40">1 week, 3 days ago</span></dd>
+<span class="datetime" title="2024-09-10 09:25">14 hours, 37 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -436,7 +436,7 @@ Off (0) by default, when enabling this optimization, MariaDB will consider a joi
 </div>
 <h2 class="anchored_heading" id="basics">Basics</h2>
 <p>Off (0) by default, when enabling this optimization, MariaDB will consider a join order that may shorten query execution time based on the <code>ORDER BY ... LIMIT n</code> clause. For small values of <code>n</code>, this may improve performance.</p>
-<p>Set the value of <code>optimizer_join_limit_pref_ratio</code> to 100 to enable this option, or set to 0 (the default value) to disable it.</p>
+<p>Set the value of <code>optimizer_join_limit_pref_ratio</code> to a non-zero value to enable this option (higher values are more conservative, recommended value is 100), or set to 0 (the default value) to disable it.</p>
 <h2 class="anchored_heading" id="detailed-description">Detailed description</h2>
 <h3 class="anchored_heading" id="problem-setting">Problem setting</h3>
 <p>By default, the MariaDB optimizer picks a join order without considering the ORDER BY ... LIMIT clause, when present.</p>
@@ -467,7 +467,7 @@ Off (0) by default, when enabling this optimization, MariaDB will consider a joi
 </pre><p>The <code>customer-&gt;orders</code> plan computes a join between all customers and orders, saves that result into a temporary table, and then uses filesort to get the 10 most recent orders. This query plan doesn't benefit from the fact that just 10 orders are needed. </p>
 <p>However, in contrast, the <code>orders-&gt;customers</code> plan uses an index to read rows in the ORDER BY order. The query can stop execution once it finds 10 <code>order-and-customer</code> combinations.  This is much faster than computing the entire join.  Under this plan, and when this new optimization, we can leverage ORDER BY ... LIMIT to stop early, when we have the 10 combinations.</p>
 <h4 class="anchored_heading" id="plans-with-limit-shortcuts-are-difficult-to-estimate">Plans with LIMIT shortcuts are difficult to estimate</h4>
-<p>It is fundamentally difficult to produce a reliable estimate for ORDER BY ... LIMIT shortcuts.  Let's take an example from the previous section to see why.  This query searches for orders that were shipped by air:</p>
+<p>It is fundamentally difficult to produce a reliable estimate for ORDER BY ... LIMIT shortcuts.  Let's take an example from the previous section to see why.  This query searches for last 10 orders that were shipped by air:</p>
 <pre class="fixed"><span class="k">select</span> <span class="o">*</span>
 <span class="k">from</span>
   <span class="n">customer</span><span class="p">,</span><span class="k">order</span>
@@ -479,17 +479,17 @@ Off (0) by default, when enabling this optimization, MariaDB will consider a joi
 <span class="k">limit</span> <span class="mi">10</span>
 </pre><p>Suppose we know beforehand that 50% of orders are shipped by air. 
 Assuming there's no correlation between date and shipping method, <code>orders-&gt;customer</code> plan will need to scan 20 orders before we find 10 that are shipped by air.
-But if there is correlation, then we may need to scan up to <code>(total_orders*0.5 + 10)</code>  before we 
-find first 10 orders that are shipped by air. Scanning about 50% of all orders can be expensive.</p>
+But if there is correlation, then we may need to scan up to <code>(total_orders*0.5 + 10)</code>  before we find first 10 orders that are shipped by air. Scanning about 50% of all orders can be expensive.</p>
 <p>This situation worsens when the query has constructs whose selectivity is not known. For example, suppose the WHERE condition was</p>
 <pre class="fixed">  <span class="k">order</span><span class="p">.</span><span class="n">shipping_method</span><span class="o">=</span><span class="s1">&#39;%Airplane%&#39;</span>
 </pre><p>in this case, we can't reliably say whether we will be able to stop after scanning #LIMIT rows or we will need to enumerate all rows before we find #LIMIT matches.</p>
 <h3 class="anchored_heading" id="providing-guidelines-to-the-optimizer">Providing guidelines to the optimizer</h3>
-<p>The optimization is not enabled by default due to the challenges around cost estimation.</p>
+<p>Due to these challenges, the optimization is not enabled by default.</p>
 <p>When running a mostly OLTP workload such that query WHERE conditions have suitable
 indexes or are not very selective, then any ORDER BY ... LIMIT queries will typically find matching rows
 quickly.  In this case, it makes sense to give the following guidance to the optimizer:</p>
-<pre class="fixed">Consider the query plan using LIMIT short-cutting and prefer it if it promises at least X times speedup.
+<pre class="fixed">Do consider the query plan using LIMIT short-cutting 
+and prefer it if it promises at least X times speedup.
 </pre><p>The value of <code>X</code> is given to the optimizer via <code>optimizer_join_limit_pref_ratio</code> setting.
 Higher values carry less risk. The recommended value is 100: prefer the LIMIT join order if it 
 promises at least 100x speedup.</p>
