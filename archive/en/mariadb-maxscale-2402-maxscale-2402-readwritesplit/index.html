@@ -276,12 +276,12 @@ param..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-03-01 19:51">6 months, 1 week ago</span></dd>
+<span class="datetime" title="2024-03-01 19:51">6 months, 2 weeks ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-03-01 19:51">6 months, 1 week ago</span></dd>
+<span class="datetime" title="2024-03-01 19:51">6 months, 2 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -633,6 +633,11 @@ disqualified from routing because of replication lag, a warning is logged. Simil
 when the server has caught up enough to be a valid routing target, another warning
 is logged. These messages are only logged when a query is being routed and the
 replication state changes.</p>
+<p>Starting with MaxScale versions 23.08.7, 24.02.3 and 24.08.1, readwritesplit
+will discard connections to any servers that have excessive replication lag. The
+connection will be discarded if a server is lagging behind by more than twice
+the amount of <code>max_replication_lag</code> and the server is behind by more than 300
+seconds (<code>replication lag &gt; MAX(300, 2 * max_replication_lag)</code>).</p>
 <h3 id="use_sql_variables_in"><code>use_sql_variables_in</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#enumerations">enum</a></li>
@@ -1328,7 +1333,8 @@ MaxScale 2.5.0.</p>
 server-side status variables. By tracking the latest GTID that each statement
 generates, readwritesplit can then perform a synchronization operation with the
 help of the <code>MASTER_GTID_WAIT</code> function.</p>
-<p>If the replica has not caught up to the primary within the configured time, it will
+<p>If the replica has not caught up to the primary within the configured time, as
+specified by <a href="#causal_reads_timeout">causal_reads_timeout</a>, it will
 be retried on the primary.</p>
 <p>The exception to this rule is the <code>fast</code> mode which does not do any
 synchronization at all. This can be done as any reads that would go to
