@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-06-13 09:52">3 months ago</span></dd>
+<span class="datetime" title="2024-09-19 17:36">6 hours, 26 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -454,7 +454,9 @@
 
             <li class=""><a href="#auth_gssapi_client-plugin" title="auth_gssapi_client Plugin">auth_gssapi_client Plugin</a></li>
 
-            <li class=""><a href="#client_ed25519-plugin" title="client_ed25519 Plugin">client_ed25519 Plugin</a>        </ol>
+            <li class=""><a href="#client_ed25519-plugin" title="client_ed25519 Plugin">client_ed25519 Plugin</a></li>
+
+            <li class=""><a href="#parsec-plugin" title="parsec Plugin">parsec Plugin</a>        </ol>
 </li>
 
         <li class=""><a href="#capabilities" title="Capabilities">Capabilities</a></li>
@@ -496,7 +498,7 @@ Connection is done by many exchanges: </p>
 <div class="cstm-style" style="padding: 16px;background-color: #f7f7f7;border-radius: 3px;"><ul start="1"><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;1&gt;</a>   protocol version
 </li><li><a href="/kb/en/protocol-data-types/#null-terminated-strings">string&lt;NUL&gt;</a> server version (MariaDB server version for 10.X versions is by default prefixed by "5.5.5-". <a href="/kb/en/what-is-mariadb-110/">MariaDB 11.0</a> and later versions do not have a "5.5.5-" default prefix)
 </li><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;4&gt;</a>   connection id
-</li><li><a href="/kb/en/protocol-data-types/#fixed-length-strings">string&lt;8&gt;</a>    scramble 1st part (authentication seed)
+</li><li><a href="/kb/en/protocol-data-types/#fixed-length-strings">string&lt;8&gt;</a>    authentication plugin data (1st part)
 </li><li><a href="/kb/en/protocol-data-types/#fixed-length-strings">string&lt;1&gt;</a>   <em>reserved byte</em>
 </li><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;2&gt;</a> server capabilities (1st part)
 </li><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;1&gt;</a> server default collation
@@ -516,7 +518,7 @@ Connection is done by many exchanges: </p>
 <ul start="1"><li><a href="/kb/en/protocol-data-types/#fixed-length-integers">int&lt;4&gt;</a> server capabilities  3rd part . MariaDB specific flags /* <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> or later */
 </li></ul>
 </li><li>if (server_capabilities &amp; CLIENT_SECURE_CONNECTION)
-<ul start="1"><li><a href="/kb/en/protocol-data-types/#fixed-length-strings">string&lt;n&gt;</a>  scramble 2nd part . Length = max(12, plugin data length - 9)
+<ul start="1"><li><a href="/kb/en/protocol-data-types/#fixed-length-strings">string&lt;n&gt;</a>  authentication plugin data 2nd part . Length = max(12, plugin data length - 9)
 </li><li><a href="/kb/en/protocol-data-types/#fixed-length-strings">string&lt;1&gt;</a>  <em>reserved byte</em>
 </li></ul>
 </li><li>if (server_capabilities &amp; PLUGIN_AUTH) 
@@ -660,6 +662,26 @@ It has been Implemented in the server since <a href="/kb/en/mariadb-10122-releas
 </li></ul>
 </div><p>Client response :</p>
 <div class="cstm-style" style="padding: 16px;background-color: #f7f7f7;border-radius: 3px;"><ul start="1"><li><a href="/kb/en/protocol-data-types/#end-of-file-length-bytes">byte&lt;EOF&gt;</a>  ed25519 encrypted password
+</li></ul>
+</div><p><br><br></p>
+<h4 class="anchored_heading" id="parsec-plugin">parsec Plugin</h4>
+<p>authentication plugin data format : </p>
+<div class="cstm-style" style="padding: 16px;background-color: #f7f7f7;border-radius: 3px;"><ul start="1"><li><a href="/kb/en/protocol-data-types/#null-terminated-strings">string&lt;32&gt;</a> server nonce
+</li></ul>
+</div><p>Client has to send an empty packet to request "ext-salt".</p>
+<p>Format of ext-salt is </p>
+<div class="cstm-style" style="padding: 16px;background-color: #f7f7f7;border-radius: 3px;"><ul start="1"><li><a href="/kb/en/protocol-data-types/#fixed-length-strings">string&lt;1&gt;</a> 'P' (denotes KDF algorithm = PBKDF2)
+</li><li><a href="/kb/en/protocol-data-types/#fixed-length-bytes">byte&lt;1&gt;</a>  iteration factor. number of iterations correspond to 1024 &lt;&lt; iteration factor (0x0 means 1024, 0x1 means 2048, etc.)
+</li><li><a href="/kb/en/protocol-data-types/#end-of-file-length-bytes">byte&lt;EOF&gt;</a>  salt
+</li></ul>
+</div><p>client must then :</p>
+<ul start="1"><li>generate derived key = hash password with PBKDF2 ( sha512 digest) with iteration number and salt from ext-salt.
+</li><li>generate a client 32 bytes nonce
+</li><li>generate the signature with ed25519 of an array concatenation of server nonce + client nonce with the generated derived key as private key.
+</li></ul>
+<p>Client response :</p>
+<div class="cstm-style" style="padding: 16px;background-color: #f7f7f7;border-radius: 3px;"><ul start="1"><li><a href="/kb/en/protocol-data-types/#fixed-length-bytes">byte&lt;32&gt;</a> client nonce
+</li><li><a href="/kb/en/protocol-data-types/#fixed-length-bytes">byte&lt;64&gt;</a> signature
 </li></ul>
 </div><p><br><br></p>
 <h3 class="anchored_heading" id="capabilities">Capabilities</h3>

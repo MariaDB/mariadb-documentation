@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/connection/+r/140296/">140296</a></dd>
+            <dd><a href="/kb/en/connection/+r/143415/">143415</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-16">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-06-13 09:52">2024-06-13 09:52</span></dd>
+<span class="datetime" title="2024-09-19 17:36">2024-09-19 17:36</span></dd>
         </dl>
     </div>
     
@@ -365,7 +365,7 @@ Connection is done by many exchanges:
 * [[protocol-data-types/#fixed-length-integers|int&lt;1&gt;]]   protocol version
 * [[protocol-data-types/#null-terminated-strings|string&lt;NUL&gt;]] server version (MariaDB server version for 10.X versions is by default prefixed by &#34;5.5.5-&#34;. MariaDB 11.0 and later versions do not have a &#34;5.5.5-&#34; default prefix)
 * [[protocol-data-types/#fixed-length-integers|int&lt;4&gt;]]   connection id
-* [[protocol-data-types/#fixed-length-strings|string&lt;8&gt;]]    scramble 1st part (authentication seed)
+* [[protocol-data-types/#fixed-length-strings|string&lt;8&gt;]]    authentication plugin data (1st part)
 * [[protocol-data-types/#fixed-length-strings|string&lt;1&gt;]]   //reserved byte
 * [[protocol-data-types/#fixed-length-integers|int&lt;2&gt;]] server capabilities (1st part)
 * [[protocol-data-types/#fixed-length-integers|int&lt;1&gt;]] server default collation
@@ -381,7 +381,7 @@ Connection is done by many exchanges:
 * else
 ** [[protocol-data-types/#fixed-length-integers|int&lt;4&gt;]] server capabilities  3rd part . MariaDB specific flags /* MariaDB 10.2 or later */
 * if (server_capabilities &amp; CLIENT_SECURE_CONNECTION)
-** [[protocol-data-types/#fixed-length-strings|string&lt;n&gt;]]  scramble 2nd part . Length = max(12, plugin data length - 9)
+** [[protocol-data-types/#fixed-length-strings|string&lt;n&gt;]]  authentication plugin data 2nd part . Length = max(12, plugin data length - 9)
 ** [[protocol-data-types/#fixed-length-strings|string&lt;1&gt;]]  //reserved byte
 * if (server_capabilities &amp; PLUGIN_AUTH) 
 ** [[protocol-data-types/#null-terminated-strings|string&lt;NUL&gt;]] authentication plugin name
@@ -580,6 +580,35 @@ authentication plugin data format :
 Client response :
 &lt;&lt;style style=&#34;padding: 16px;background-color: #f7f7f7;border-radius: 3px;&#34;&gt;&gt;
 * [[protocol-data-types/#end-of-file-length-bytes|byte&lt;EOF&gt;]]  ed25519 encrypted password
+&lt;&lt;/style&gt;&gt;
+
+\\\\
+==== parsec Plugin
+
+authentication plugin data format : 
+&lt;&lt;style style=&#34;padding: 16px;background-color: #f7f7f7;border-radius: 3px;&#34;&gt;&gt;
+* [[protocol-data-types/#null-terminated-strings|string&lt;32&gt;]] server nonce
+&lt;&lt;/style&gt;&gt;
+
+Client has to send an empty packet to request &#34;ext-salt&#34;.
+
+Format of ext-salt is 
+&lt;&lt;style style=&#34;padding: 16px;background-color: #f7f7f7;border-radius: 3px;&#34;&gt;&gt;
+* [[protocol-data-types/#fixed-length-strings|string&lt;1&gt;]] &#39;P&#39; (denotes KDF algorithm = PBKDF2)
+* [[protocol-data-types/#fixed-length-bytes|byte&lt;1&gt;]]  iteration factor. number of iterations correspond to 1024 &lt;&lt; iteration factor (0x0 means 1024, 0x1 means 2048, etc.)
+* [[protocol-data-types/#end-of-file-length-bytes|byte&lt;EOF&gt;]]  salt
+&lt;&lt;/style&gt;&gt;
+
+
+client must then :
+* generate derived key = hash password with PBKDF2 ( sha512 digest) with iteration number and salt from ext-salt.
+* generate a client 32 bytes nonce
+* generate the signature with ed25519 of an array concatenation of server nonce + client nonce with the generated derived key as private key.
+
+Client response :
+&lt;&lt;style style=&#34;padding: 16px;background-color: #f7f7f7;border-radius: 3px;&#34;&gt;&gt;
+* [[protocol-data-types/#fixed-length-bytes|byte&lt;32&gt;]] client nonce
+* [[protocol-data-types/#fixed-length-bytes|byte&lt;64&gt;]] signature
 &lt;&lt;/style&gt;&gt;
 
 \\\\
