@@ -283,7 +283,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-20 14:03">1 year ago</span></dd>
+<span class="datetime" title="2024-09-23 11:19">12 hours, 43 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -437,12 +437,23 @@
         <p>When the user creates a temporary table using the <a href="/kb/en/create-table/">CREATE TEMPORARY TABLE</a> statement and the engine is set as InnoDB, MariaDB creates a temporary tablespace file. When the table is not compressed, MariaDB writes to a shared temporary tablespace as defined by the <a href="/kb/en/innodb-system-variables/#innodb_temp_data_file_path">innodb_temp_data_file_path</a> system variable. MariaDB does not allow the creation of ROW_FORMAT=COMPRESSED temporary tables. All temporary tables will be uncompressed. MariaDB deletes temporary tablespaces when the server shuts down gracefully and is recreated when it starts again.  It cannot be placed on a raw device.</p>
 <p>Internal temporary tablespaces, (that is, temporary tables that cannot be kept in memory) use either Aria or MyISAM, depending on the <a href="/kb/en/aria-system-variables/#aria_used_for_temp_tables">aria_used_for_temp_tables</a> system variable.  You can set the default storage engine for user-created temporary tables using the <a href="/kb/en/server-system-variables/#default_tmp_storage_engine">default_tmp_storage_engine</a> system variable.</p>
 <p>Prior to <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>, temporary tablespaces existed as part of the InnoDB <a href="/kb/en/innodb-system-tablespaces/">system</a> tablespace or were file-per-table depending on the configuration of the <a href="/kb/en/innodb-system-variables/#innodb_file_per_table">innodb_file_per_table</a> system variable.</p>
+<h2 class="anchored_heading" id="syntax-for-the-value-of-the-innodb_temp_data_file_path-variable">Syntax for the value of the innodb_temp_data_file_path variable</h2>
+<p>The options for <a href="/kb/en/innodb-system-variables/#innodb_temp_data_file_path">innodb_temp_data_file_path</a> is one path or a set of paths, separated by ';'.</p>
+<p>The syntax for each path is:</p>
+<pre class="fixed">path:size[:autoextend][:max:size][:autoshrink]
+</pre><p><code>size</code> can have extensions 'G' (Gigabytes), 'M' (Megabytes) or 'K' (Kilobytes). If no extension is given, then megabytes is assumed.</p>
+<ul start="1"><li>The first <code>size</code> argument is the initial size of the temporary table space.
+</li><li><code>autoextend</code> means that the file size will automatically increase if needed. 
+</li><li><code>max</code> can be used to limit the total size of the temporary file if <code>autoextend</code> is used.
+</li><li><code>autoshrink</code> means that the file will shrink to original size when possible.
+</li></ul>
+<p>Only the last path can have the  <code>autoextend</code> , <code>max</code> and <code>autoshrink</code> options.</p>
 <h2 class="anchored_heading" id="sizing-temporary-tablespaces">Sizing Temporary Tablespaces</h2>
 <p>In order to size temporary tablespaces, use the <a href="/kb/en/innodb-system-variables/#innodb_temp_data_file_path">innodb_temp_data_file_path</a> system variable. This system variable can be specified as a command-line argument to <a href="/kb/en/mysqld-options/">mysqld</a> or it can be specified in a relevant server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>. For example:</p>
 <pre class="fixed">[mariadb]
 ...
 innodb_temp_data_file_path=ibtmp1:32M:autoextend
-</pre><p>This system variable's syntax is the same as the <a href="/kb/en/innodb-system-variables/#innodb_data-_file_path">innodb_data_file_path</a> system variable.  That is, a file name, size and option.  By default, it writes a 12MB autoextending file to <code>ibtmp1</code> in the data directory.</p>
+</pre><p>This system variable's syntax is the same as the <a href="/kb/en/innodb-system-variables/#innodb_data_file_path">innodb_data_file_path</a> system variable.  That is, a file name, size and option.  By default, it writes a 12MB autoextending file to <code>ibtmp1</code> in the data directory.</p>
 <p>To increase the size of the temporary tablespace, you can add a path to an additional tablespace file to the value of the the <a href="/kb/en/innodb-system-variables/#innodb_temp_data_file_path">innodb_temp_data_file_path</a> system variable. Providing additional paths allows you to spread the temporary tablespace between multiple tablespace files. The last file can have the <code>autoextend</code> attribute, which ensures that you won't run out of space. For example:</p>
 <pre class="fixed">[mariadb]
 ...

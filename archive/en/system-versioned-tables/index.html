@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-03-12 10:45">6 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2024-09-23 13:42">10 hours, 21 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -344,6 +344,11 @@
 
         <ul id="product_chooser">
             
+                <li class="mariadb_from_11_7">
+                    <label><input type="checkbox" data-product-class="mariadb_from_11_7"
+                            >MariaDB starting with 11.7</label>
+                </li>
+            
                 <li class="mariadb_from_10_5_0">
                     <label><input type="checkbox" data-product-class="mariadb_from_10_5_0"
                             >MariaDB starting with 10.5.0</label>
@@ -352,6 +357,11 @@
                 <li class="mariadb_from_10_9_1">
                     <label><input type="checkbox" data-product-class="mariadb_from_10_9_1"
                             >MariaDB starting with 10.9.1</label>
+                </li>
+            
+                <li class="mariadb_from_11_7">
+                    <label><input type="checkbox" data-product-class="mariadb_from_11_7"
+                            >MariaDB starting with 11.7</label>
                 </li>
             
                 <li class="mariadb_from_10_5_0">
@@ -571,7 +581,24 @@ Create Table: CREATE TABLE `t` (
   `te` timestamp(6) GENERATED ALWAYS AS ROW END,
   PERIOD FOR SYSTEM_TIME (`ts`, `te`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 WITH SYSTEM VERSIONING
-</pre><h3 class="anchored_heading" id="inserting-data">Inserting Data</h3>
+</pre><div class="mariadb_from_11_7 mariadb from_11_7 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-117/">11.7</a></h5><p>From <a href="/kb/en/what-is-mariadb-117/">MariaDB 11.7</a>, it is possible to convert a versioned table from implicit to explicit row_start/row_end columns. Note that in order to do any ALTER on a system versioned table, <a href="#system_versioning_alter_history">system_versioning_alter_history</a> must be set to <code>KEEP</code>.</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">x</span> <span class="nb">INT</span><span class="p">)</span> <span class="k">WITH</span> <span class="k">SYSTEM</span> <span class="n">VERSIONING</span><span class="p">;</span>
+
+<span class="k">SET</span> <span class="n">system_versioning_alter_history</span> <span class="o">=</span> <span class="n">keep</span><span class="p">;</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="k">ADD</span> <span class="k">COLUMN</span> <span class="n">rs</span> <span class="k">TIMESTAMP</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span> <span class="k">AS</span> <span class="k">ROW</span> <span class="k">START</span><span class="p">,</span> 
+  <span class="k">ADD</span> <span class="k">COLUMN</span> <span class="n">re</span> <span class="k">TIMESTAMP</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span> <span class="k">AS</span> <span class="k">ROW</span> <span class="k">END</span><span class="p">,</span> <span class="k">ADD</span> <span class="n">PERIOD</span> <span class="k">FOR</span> <span class="n">SYSTEM_TIME</span> <span class="p">(</span><span class="n">rs</span><span class="p">,</span><span class="n">re</span><span class="p">)</span>
+
+</pre><p>Prior to <a href="/kb/en/what-is-mariadb-117/">MariaDB 11.7</a>, this would result in a duplicate row error:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="p">(</span><span class="n">x</span> <span class="nb">INT</span><span class="p">)</span> <span class="k">WITH</span> <span class="k">SYSTEM</span> <span class="n">VERSIONING</span><span class="p">;</span>
+
+<span class="k">SET</span> <span class="n">system_versioning_alter_history</span> <span class="o">=</span> <span class="n">keep</span><span class="p">;</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="k">ADD</span> <span class="k">COLUMN</span> <span class="n">rs</span> <span class="k">TIMESTAMP</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span> <span class="k">AS</span> <span class="k">ROW</span> <span class="k">START</span><span class="p">,</span> 
+  <span class="k">ADD</span> <span class="k">COLUMN</span> <span class="n">re</span> <span class="k">TIMESTAMP</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span> <span class="k">AS</span> <span class="k">ROW</span> <span class="k">END</span><span class="p">,</span> <span class="k">ADD</span> <span class="n">PERIOD</span> <span class="k">FOR</span> <span class="n">SYSTEM_TIME</span> <span class="p">(</span><span class="n">rs</span><span class="p">,</span><span class="n">re</span><span class="p">);</span>
+
+<span class="n">ERROR</span> <span class="mi">4134</span> <span class="p">(</span><span class="n">HY000</span><span class="p">):</span> <span class="n">Duplicate</span> <span class="k">ROW</span> <span class="k">START</span> <span class="k">column</span> <span class="o">`</span><span class="n">rs</span><span class="o">`</span>
+</pre></div><h3 class="anchored_heading" id="inserting-data">Inserting Data</h3>
 <p>When data is inserted into a system-versioned table, it is given a <em>row_start</em> value of the current timestamp, and a <em>row_end</em> value of <a href="/kb/en/from_unixtime/">FROM_UNIXTIME</a>(2147483647.999999). The current timestamp can be adjusted by setting the <a href="/kb/en/server-system-variables/#timestamp">timestamp system variable</a>, for example:</p>
 <pre class="fixed"><span class="k">SELECT</span> <span class="n">NOW</span><span class="p">();</span>
 <span class="o">+</span><span class="c1">---------------------+</span>
