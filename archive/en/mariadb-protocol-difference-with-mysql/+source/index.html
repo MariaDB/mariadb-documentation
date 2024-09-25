@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-protocol-difference-with-mysql/+r/143432/">143432</a></dd>
+            <dd><a href="/kb/en/mariadb-protocol-difference-with-mysql/+r/143583/">143583</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3114">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-09-20 16:51">2024-09-20 16:51</span></dd>
+<span class="datetime" title="2024-09-24 19:29">2024-09-24 19:29</span></dd>
         </dl>
     </div>
     
@@ -334,14 +334,36 @@
 
 === MariaDB Capabilities Extension
 
-MariaDB/MySQL servers can advertise feature support using capabilities. To expand the capabilities beyond the original 4 bytes, MariaDB utilizes 4 unused bytes in the [[connection/#initial-handshake-packet|Initial handshake packet]]. In order to avoid incompatibility in the futur, those 4 bytes have to be read only if capability CLIENT_MYSQL is not SET (server being then MariaDB).
+MariaDB/MySQL servers can advertise feature support using capabilities. To expand the capabilities beyond the original 4 bytes, MariaDB utilizes 4 bytes, unused by MySQL, in the [[connection/#initial-handshake-packet|Initial handshake packet]] (server capabilities 3rd part). In order to avoid incompatibility in the future, those 4 bytes have to be read only if capability CLIENT_MYSQL is not SET (server being then MariaDB).
 
 Enhanced Capabilities
 * MARIADB_CLIENT_CACHE_METADATA: Enables clients to cache metadata and avoid repeated network transmissions.
 * MARIADB_CLIENT_EXTENDED_TYPE_INFO: Provides more detailed column metadata information for specific data types.
-* MARIADB_CLIENT_STMT_BULK_OPERATIONS: Introduces a dedicated command, COM_STMT_BULK_EXECUTE, for efficient batch execution of statements.
+* MARIADB_CLIENT_STMT_BULK_OPERATIONS: Introduces a dedicated command, [[com_stmt_bulk_execute|COM_STMT_BULK_EXECUTE]], for efficient batch execution of statements.
 * MARIADB_CLIENT_BULK_UNIT_RESULTS: Allows for individual result sets for each bulk operation.
 
+See [[connection/#capabilities|Connection Capabilities]].
+
+=== Pipelining Prepare Execute
+
+Connectors usually follow a two-step process for prepared statements:
+
+* Prepare: Send a  [[com_stmt_prepare/|COM_STMT_PREPARE]] command to the server, receiving a statement ID in response.
+* Execute: Send a [[com_stmt_execute/|COM_STMT_EXECUTE]] command, using the statement ID obtained in the previous step.
+
+When the MARIADB_CLIENT_STMT_BULK_OPERATIONS capability is enabled, connectors can pipeline those 2 commands: 
+
+* Send a  [[com_stmt_prepare/|COM_STMT_PREPARE]] then a [[com_stmt_execute/|COM_STMT_EXECUTE]] with statement ID -1 commands to the server.
+* Read the prepare and execute responses
+
+
+If the  [[com_stmt_prepare/|COM_STMT_PREPARE]] command returns an error (ERR_Packet), the subsequent [[com_stmt_execute/|COM_STMT_EXECUTE]] with statement ID -1 will also fail and return an error.
+
+By eliminating the round trip for the separate COM_STMT_EXECUTE command, this approach improve performance for the first execution.
+
+Traditionnally, connector sent [[com_stmt_prepare/|COM_STMT_PREPARE]], wait for results, then execute [[com_stmt_execute/|COM_STMT_EXECUTE]]  with statement_id received from prepare result. 
+ 
+This description has been done for [[com_stmt_execute/|COM_STMT_EXECUTE]], but [[com_stmt_bulk_execute/|COM_STMT_BULK_EXECUTE]] works exactly the same way. 
 
 === Prepare statement skipping metadata
 
@@ -415,34 +437,36 @@ MariaDB 11.4.1 introduces  [[https://mariadb.org/mission-impossible-zero-configu
 === Initial session tracking
 
 MySQL and MariaDB support session tracking with CLIENT_SESSION_TRACK capability set. 
-On difference is that since mariadb 11.5.1, connection ending OK_Packet list all the current variables of tracked variable. 
+On difference is that since MariaDB 11.5.1, connection ending OK_Packet list all the current variables of tracked variable. 
 
-===== Collations
+=== Collations
 
-Connector doesn&#39;t care of collations, but normally wants to ensure charset in connection exchanges. 
+Connector doesn&#39;t care of collations, but normally wants to ensure charset in connection exchanges.
+
 The only good solution is to use &lt;&lt;sql&gt;&gt;SET NAMES utf8mb4&lt;&lt;/sql&gt;&gt; or &lt;&lt;sql&gt;&gt;SET NAMES utf8mb4 COLLATE someUtf8mb4collation&lt;&lt;/sql&gt;&gt;
 
-Connector can check if charset of initial variable &#39;character_set_connection&#39; correspond to expected value, then permitting to skipping this SET NAMES command.
+If supporting session tracking, connector can check if charset of initial tracked variable &#39;character_set_connection&#39; correspond to expected value, then permitting to skipping this SET NAMES command.
 
 
 === MySQL features not supported
 
 * X protocol is not supported
 
-Not supported features and assocate capabilities.
-* CLIENT_OPTIONAL_RESULTSET_METADATA: permit to set no METADATA at all for a connection. See [[#prepare-statement-skipping-metadata|Prepare statement skipping metadata]&#39;s mariadb implementation choice
-* CLIENT_QUERY_ATTRIBUTES add some metadata attributes
+Not supported features and associate capabilities:
+* CLIENT_OPTIONAL_RESULTSET_METADATA: permit to set no METADATA at all for a connection. See [[#prepare-statement-skipping-metadata|Prepare statement skipping metadata]]&#39;s MariaDB implementation choice.
+* CLIENT_QUERY_ATTRIBUTES adds some metadata attributes
 * CLIENT_ZSTD_COMPRESSION_ALGORITHM permit to have a zstd compression 
 * MULTI_FACTOR_AUTHENTICATION Multifactor Authentication capability.
 
 
-=== TIPS 
+=== TIPS
+
 ==== Identifying MariaDB server. 
 MariaDB connectors use specific criteria to determine if a server is a MariaDB instance during the initial handshake process. 
 
 The two key indicators used are:
 
-* Missing CLIENT_MYSQL Capability: MariaDB versions starting from 10.2 do not set the CLIENT_MYSQL capability flag in the initial handshake packet.
+* Missing CLIENT_MYSQL Capability: MariaDB 10.2 and newer versions do not set the CLIENT_MYSQL capability flag in the initial handshake packet.
 * Server Version String: The server&#39;s version string is examined for the presence of the word &#34;mariadb&#34; (ignoring case sensitivity). 
 
 The reason is some features like using COM_RESET_CONNECTION has no capability, and depends on MySQL or MariaDB server version. 

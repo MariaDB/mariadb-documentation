@@ -274,12 +274,12 @@ MariaDB/MySQL server..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-09-20 15:56">2 days, 9 hours ago</span></dd>
+<span class="datetime" title="2024-09-20 15:56">4 days, 8 hours ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-09-20 16:51">2 days, 8 hours ago</span></dd>
+<span class="datetime" title="2024-09-24 19:29">4 hours, 39 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -413,13 +413,27 @@ MariaDB/MySQL server..." />
     <div class="answer formatted">
         <p>Here is a list of the difference between MariaDB and MySQL in term of protocol, in order help community drivers maintainers</p>
 <h3 class="anchored_heading" id="mariadb-capabilities-extension">MariaDB Capabilities Extension</h3>
-<p>MariaDB/MySQL servers can advertise feature support using capabilities. To expand the capabilities beyond the original 4 bytes, MariaDB utilizes 4 unused bytes in the <a href="/kb/en/connection/#initial-handshake-packet">Initial handshake packet</a>. In order to avoid incompatibility in the futur, those 4 bytes have to be read only if capability CLIENT_MYSQL is not SET (server being then MariaDB).</p>
+<p>MariaDB/MySQL servers can advertise feature support using capabilities. To expand the capabilities beyond the original 4 bytes, MariaDB utilizes 4 bytes, unused by MySQL, in the <a href="/kb/en/connection/#initial-handshake-packet">Initial handshake packet</a> (server capabilities 3rd part). In order to avoid incompatibility in the future, those 4 bytes have to be read only if capability CLIENT_MYSQL is not SET (server being then MariaDB).</p>
 <p>Enhanced Capabilities</p>
 <ul start="1"><li>MARIADB_CLIENT_CACHE_METADATA: Enables clients to cache metadata and avoid repeated network transmissions.
 </li><li>MARIADB_CLIENT_EXTENDED_TYPE_INFO: Provides more detailed column metadata information for specific data types.
-</li><li>MARIADB_CLIENT_STMT_BULK_OPERATIONS: Introduces a dedicated command, COM_STMT_BULK_EXECUTE, for efficient batch execution of statements.
+</li><li>MARIADB_CLIENT_STMT_BULK_OPERATIONS: Introduces a dedicated command, <a href="/kb/en/com_stmt_bulk_execute/">COM_STMT_BULK_EXECUTE</a>, for efficient batch execution of statements.
 </li><li>MARIADB_CLIENT_BULK_UNIT_RESULTS: Allows for individual result sets for each bulk operation.
 </li></ul>
+<p>See <a href="/kb/en/connection/#capabilities">Connection Capabilities</a>.</p>
+<h3 class="anchored_heading" id="pipelining-prepare-execute">Pipelining Prepare Execute</h3>
+<p>Connectors usually follow a two-step process for prepared statements:</p>
+<ul start="1"><li>Prepare: Send a  <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a> command to the server, receiving a statement ID in response.
+</li><li>Execute: Send a <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a> command, using the statement ID obtained in the previous step.
+</li></ul>
+<p>When the MARIADB_CLIENT_STMT_BULK_OPERATIONS capability is enabled, connectors can pipeline those 2 commands: </p>
+<ul start="1"><li>Send a  <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a> then a <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a> with statement ID -1 commands to the server.
+</li><li>Read the prepare and execute responses
+</li></ul>
+<p>If the  <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a> command returns an error (ERR_Packet), the subsequent <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a> with statement ID -1 will also fail and return an error.</p>
+<p>By eliminating the round trip for the separate COM_STMT_EXECUTE command, this approach improve performance for the first execution.</p>
+<p>Traditionnally, connector sent <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a>, wait for results, then execute <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a>  with statement_id received from prepare result. </p>
+<p>This description has been done for <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a>, but <a href="/kb/en/com_stmt_bulk_execute/">COM_STMT_BULK_EXECUTE</a> works exactly the same way. </p>
 <h3 class="anchored_heading" id="prepare-statement-skipping-metadata">Prepare statement skipping metadata</h3>
 <p>Prepared statement metadata, which typically remains unchanged except during table alterations, can be cached by clients when the MARIADB_CLIENT_CACHE_METADATA capability is enabled, server won't then send them again, unless they changes. This significantly improves the performance of subsequent executions, especially for large metadata sets.</p>
 <p>When MARIADB_CLIENT_CACHE_METADATA  capability is set, Resultset <a href="/kb/en/result-set-packets/#column-count-packet">Column count packet</a> format indicate if metadata follows or are skipped:</p>
@@ -472,19 +486,19 @@ MariaDB/MySQL server..." />
 </li></ul>
 <h3 class="anchored_heading" id="initial-session-tracking">Initial session tracking</h3>
 <p>MySQL and MariaDB support session tracking with CLIENT_SESSION_TRACK capability set. 
-On difference is that since <a href="/kb/en/mariadb-11-5-1-release-notes/">mariadb 11.5.1</a>, connection ending OK_Packet list all the current variables of tracked variable. </p>
-<h5 class="anchored_heading" id="collations">Collations</h5>
-<p>Connector doesn't care of collations, but normally wants to ensure charset in connection exchanges. 
-The only good solution is to use <code class="fixed" style="white-space:pre-wrap"><span class="k">SET</span> <span class="k">NAMES</span> <span class="n">utf8mb4</span>
+On difference is that since <a href="/kb/en/mariadb-11-5-1-release-notes/">MariaDB 11.5.1</a>, connection ending OK_Packet list all the current variables of tracked variable. </p>
+<h3 class="anchored_heading" id="collations">Collations</h3>
+<p>Connector doesn't care of collations, but normally wants to ensure charset in connection exchanges.</p>
+<p>The only good solution is to use <code class="fixed" style="white-space:pre-wrap"><span class="k">SET</span> <span class="k">NAMES</span> <span class="n">utf8mb4</span>
 </code> or <code class="fixed" style="white-space:pre-wrap"><span class="k">SET</span> <span class="k">NAMES</span> <span class="n">utf8mb4</span> <span class="k">COLLATE</span> <span class="n">someUtf8mb4collation</span>
 </code></p>
-<p>Connector can check if charset of initial variable 'character_set_connection' correspond to expected value, then permitting to skipping this SET NAMES command.</p>
+<p>If supporting session tracking, connector can check if charset of initial tracked variable 'character_set_connection' correspond to expected value, then permitting to skipping this SET NAMES command.</p>
 <h3 class="anchored_heading" id="mysql-features-not-supported">MySQL features not supported</h3>
 <ul start="1"><li>X protocol is not supported
 </li></ul>
-<p>Not supported features and assocate capabilities.</p>
-<ul start="1"><li>CLIENT_OPTIONAL_RESULTSET_METADATA: permit to set no METADATA at all for a connection. See [[#prepare-statement-skipping-metadata|Prepare statement skipping metadata]'s mariadb implementation choice
-</li><li>CLIENT_QUERY_ATTRIBUTES add some metadata attributes
+<p>Not supported features and associate capabilities:</p>
+<ul start="1"><li>CLIENT_OPTIONAL_RESULTSET_METADATA: permit to set no METADATA at all for a connection. See <a href="#prepare-statement-skipping-metadata">Prepare statement skipping metadata</a>'s MariaDB implementation choice.
+</li><li>CLIENT_QUERY_ATTRIBUTES adds some metadata attributes
 </li><li>CLIENT_ZSTD_COMPRESSION_ALGORITHM permit to have a zstd compression 
 </li><li>MULTI_FACTOR_AUTHENTICATION Multifactor Authentication capability.
 </li></ul>
@@ -492,7 +506,7 @@ The only good solution is to use <code class="fixed" style="white-space:pre-wrap
 <h4 class="anchored_heading" id="identifying-mariadb-server">Identifying MariaDB server.</h4>
 <p>MariaDB connectors use specific criteria to determine if a server is a MariaDB instance during the initial handshake process. </p>
 <p>The two key indicators used are:</p>
-<ul start="1"><li>Missing CLIENT_MYSQL Capability: MariaDB versions starting from 10.2 do not set the CLIENT_MYSQL capability flag in the initial handshake packet.
+<ul start="1"><li>Missing CLIENT_MYSQL Capability: <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> and newer versions do not set the CLIENT_MYSQL capability flag in the initial handshake packet.
 </li><li>Server Version String: The server's version string is examined for the presence of the word "mariadb" (ignoring case sensitivity). 
 </li></ul>
 <p>The reason is some features like using COM_RESET_CONNECTION has no capability, and depends on MySQL or MariaDB server version. </p>
