@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-protocol-difference-with-mysql/+r/143583/">143583</a></dd>
+            <dd><a href="/kb/en/mariadb-protocol-difference-with-mysql/+r/143620/">143620</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3114">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-09-24 19:29">2024-09-24 19:29</span></dd>
+<span class="datetime" title="2024-09-25 07:22">2024-09-25 07:22</span></dd>
         </dl>
     </div>
     
@@ -343,27 +343,6 @@ Enhanced Capabilities
 * MARIADB_CLIENT_BULK_UNIT_RESULTS: Allows for individual result sets for each bulk operation.
 
 See [[connection/#capabilities|Connection Capabilities]].
-
-=== Pipelining Prepare Execute
-
-Connectors usually follow a two-step process for prepared statements:
-
-* Prepare: Send a  [[com_stmt_prepare/|COM_STMT_PREPARE]] command to the server, receiving a statement ID in response.
-* Execute: Send a [[com_stmt_execute/|COM_STMT_EXECUTE]] command, using the statement ID obtained in the previous step.
-
-When the MARIADB_CLIENT_STMT_BULK_OPERATIONS capability is enabled, connectors can pipeline those 2 commands: 
-
-* Send a  [[com_stmt_prepare/|COM_STMT_PREPARE]] then a [[com_stmt_execute/|COM_STMT_EXECUTE]] with statement ID -1 commands to the server.
-* Read the prepare and execute responses
-
-
-If the  [[com_stmt_prepare/|COM_STMT_PREPARE]] command returns an error (ERR_Packet), the subsequent [[com_stmt_execute/|COM_STMT_EXECUTE]] with statement ID -1 will also fail and return an error.
-
-By eliminating the round trip for the separate COM_STMT_EXECUTE command, this approach improve performance for the first execution.
-
-Traditionnally, connector sent [[com_stmt_prepare/|COM_STMT_PREPARE]], wait for results, then execute [[com_stmt_execute/|COM_STMT_EXECUTE]]  with statement_id received from prepare result. 
- 
-This description has been done for [[com_stmt_execute/|COM_STMT_EXECUTE]], but [[com_stmt_bulk_execute/|COM_STMT_BULK_EXECUTE]] works exactly the same way. 
 
 === Prepare statement skipping metadata
 
@@ -470,6 +449,28 @@ The two key indicators used are:
 * Server Version String: The server&#39;s version string is examined for the presence of the word &#34;mariadb&#34; (ignoring case sensitivity). 
 
 The reason is some features like using COM_RESET_CONNECTION has no capability, and depends on MySQL or MariaDB server version. 
+
+==== Pipelining Prepare Execute
+
+Connectors usually follow a two-step process for prepared statements:
+
+* Prepare: Send a  [[com_stmt_prepare/|COM_STMT_PREPARE]] command to the server, receiving a statement ID in response.
+* Execute: Send a [[com_stmt_execute/|COM_STMT_EXECUTE]] command, using the statement ID obtained in the previous step.
+
+
+When the server support MARIADB_CLIENT_STMT_BULK_OPERATIONS capability, a specific statement ID value of -1 (or 0xffffffff in hexadecimal) can be used to indicate that the previously prepared statement could be reused. This enables connectors to pipeline the preparation and execution steps into a single request:
+
+* Send a  [[com_stmt_prepare/|COM_STMT_PREPARE]] then a [[com_stmt_execute/|COM_STMT_EXECUTE]] with statement ID -1 (0xffffffff) commands to the server.
+* Read the prepare and execute responses
+
+
+If the  [[com_stmt_prepare/|COM_STMT_PREPARE]] command returns an error (ERR_Packet), the subsequent [[com_stmt_execute/|COM_STMT_EXECUTE]] with statement ID -1 will also fail and return an error.
+
+By eliminating the round trip for the separate COM_STMT_EXECUTE command, this approach improve performance for the first execution.
+
+Traditionnally, connector sent [[com_stmt_prepare/|COM_STMT_PREPARE]], wait for results, then execute [[com_stmt_execute/|COM_STMT_EXECUTE]]  with statement_id received from prepare result. 
+ 
+This description has been done for [[com_stmt_execute/|COM_STMT_EXECUTE]], but [[com_stmt_bulk_execute/|COM_STMT_BULK_EXECUTE]] works exactly the same way. 
 
 ==== Query timeout
 

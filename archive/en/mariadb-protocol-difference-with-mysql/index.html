@@ -25,13 +25,9 @@
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
     <meta property="og:site_name" content="MariaDB KnowledgeBase" />
     <meta property="fb:admins" content="514852603" />
-    <meta property="og:description" content="Here is a list of the difference between MariaDB and MySQL in term of protocol, in order help community drivers maintainers
-MariaDB Capabilities Extension
-MariaDB/MySQL server..." />
+    <meta property="og:description" content="correct" />
 
-    <meta name="description" content="Here is a list of the difference between MariaDB and MySQL in term of protocol, in order help community drivers maintainers
-MariaDB Capabilities Extension
-MariaDB/MySQL server..." />
+    <meta name="description" content="correct" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
@@ -274,12 +270,12 @@ MariaDB/MySQL server..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-09-20 15:56">4 days, 8 hours ago</span></dd>
+<span class="datetime" title="2024-09-20 15:56">5 days, 8 hours ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-09-24 19:29">4 hours, 39 minutes ago</span></dd>
+<span class="datetime" title="2024-09-25 07:22">16 hours, 40 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -421,19 +417,6 @@ MariaDB/MySQL server..." />
 </li><li>MARIADB_CLIENT_BULK_UNIT_RESULTS: Allows for individual result sets for each bulk operation.
 </li></ul>
 <p>See <a href="/kb/en/connection/#capabilities">Connection Capabilities</a>.</p>
-<h3 class="anchored_heading" id="pipelining-prepare-execute">Pipelining Prepare Execute</h3>
-<p>Connectors usually follow a two-step process for prepared statements:</p>
-<ul start="1"><li>Prepare: Send a  <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a> command to the server, receiving a statement ID in response.
-</li><li>Execute: Send a <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a> command, using the statement ID obtained in the previous step.
-</li></ul>
-<p>When the MARIADB_CLIENT_STMT_BULK_OPERATIONS capability is enabled, connectors can pipeline those 2 commands: </p>
-<ul start="1"><li>Send a  <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a> then a <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a> with statement ID -1 commands to the server.
-</li><li>Read the prepare and execute responses
-</li></ul>
-<p>If the  <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a> command returns an error (ERR_Packet), the subsequent <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a> with statement ID -1 will also fail and return an error.</p>
-<p>By eliminating the round trip for the separate COM_STMT_EXECUTE command, this approach improve performance for the first execution.</p>
-<p>Traditionnally, connector sent <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a>, wait for results, then execute <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a>  with statement_id received from prepare result. </p>
-<p>This description has been done for <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a>, but <a href="/kb/en/com_stmt_bulk_execute/">COM_STMT_BULK_EXECUTE</a> works exactly the same way. </p>
 <h3 class="anchored_heading" id="prepare-statement-skipping-metadata">Prepare statement skipping metadata</h3>
 <p>Prepared statement metadata, which typically remains unchanged except during table alterations, can be cached by clients when the MARIADB_CLIENT_CACHE_METADATA capability is enabled, server won't then send them again, unless they changes. This significantly improves the performance of subsequent executions, especially for large metadata sets.</p>
 <p>When MARIADB_CLIENT_CACHE_METADATA  capability is set, Resultset <a href="/kb/en/result-set-packets/#column-count-packet">Column count packet</a> format indicate if metadata follows or are skipped:</p>
@@ -510,6 +493,19 @@ On difference is that since <a href="/kb/en/mariadb-11-5-1-release-notes/">Maria
 </li><li>Server Version String: The server's version string is examined for the presence of the word "mariadb" (ignoring case sensitivity). 
 </li></ul>
 <p>The reason is some features like using COM_RESET_CONNECTION has no capability, and depends on MySQL or MariaDB server version. </p>
+<h4 class="anchored_heading" id="pipelining-prepare-execute">Pipelining Prepare Execute</h4>
+<p>Connectors usually follow a two-step process for prepared statements:</p>
+<ul start="1"><li>Prepare: Send a  <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a> command to the server, receiving a statement ID in response.
+</li><li>Execute: Send a <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a> command, using the statement ID obtained in the previous step.
+</li></ul>
+<p>When the server support MARIADB_CLIENT_STMT_BULK_OPERATIONS capability, a specific statement ID value of -1 (or 0xffffffff in hexadecimal) can be used to indicate that the previously prepared statement could be reused. This enables connectors to pipeline the preparation and execution steps into a single request:</p>
+<ul start="1"><li>Send a  <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a> then a <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a> with statement ID -1 (0xffffffff) commands to the server.
+</li><li>Read the prepare and execute responses
+</li></ul>
+<p>If the  <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a> command returns an error (ERR_Packet), the subsequent <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a> with statement ID -1 will also fail and return an error.</p>
+<p>By eliminating the round trip for the separate COM_STMT_EXECUTE command, this approach improve performance for the first execution.</p>
+<p>Traditionnally, connector sent <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a>, wait for results, then execute <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a>  with statement_id received from prepare result. </p>
+<p>This description has been done for <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a>, but <a href="/kb/en/com_stmt_bulk_execute/">COM_STMT_BULK_EXECUTE</a> works exactly the same way. </p>
 <h4 class="anchored_heading" id="query-timeout">Query timeout</h4>
 <p>Since <a href="/kb/en/mariadb-1012-release-notes/">MariaDB 10.1.2</a> (so all supported server have it), setting a timeout for all commands can be set using <code class="fixed" style="white-space:pre-wrap"><span class="k">SET</span> <span class="n">max_statement_time</span><span class="o">=</span><span class="n">XXX</span>
 </code> with XXX in seconds.</p>
