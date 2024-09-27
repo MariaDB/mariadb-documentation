@@ -274,12 +274,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-07-29 13:28">1 month, 3 weeks ago</span></dd>
+<span class="datetime" title="2024-07-29 13:28">1 month, 4 weeks ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-07-29 16:43">1 month, 3 weeks ago</span></dd>
+<span class="datetime" title="2024-09-26 09:04">15 hours, 3 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -463,9 +463,13 @@
 
             <li class="mariadb_from_11_6"><a href="#mhnsw_cache_size" title="mhnsw_cache_size">mhnsw_cache_size</a></li>
 
+            <li class="mariadb_from_11_6"><a href="#mhnsw_distance_function" title="mhnsw_distance_function">mhnsw_distance_function</a></li>
+
             <li class="mariadb_from_11_6"><a href="#mhnsw_limit_multiplier" title="mhnsw_limit_multiplier">mhnsw_limit_multiplier</a></li>
 
-            <li class="mariadb_from_11_6"><a href="#mhnsw_max_edges_per_node" title="mhnsw_max_edges_per_node">mhnsw_max_edges_per_node</a>        </ol>
+            <li class="mariadb_from_11_6"><a href="#mhnsw_max_edges_per_node" title="mhnsw_max_edges_per_node">mhnsw_max_edges_per_node</a></li>
+
+            <li class="mariadb_from_11_6"><a href="#mhnsw_min_limit" title="mhnsw_min_limit">mhnsw_min_limit</a>        </ol>
     </ol>
  </ol>
 </li>
@@ -484,8 +488,19 @@ This page documents system variables related to <a href="/kb/en/vectors/">Vector
 </li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-11-6-0-release-notes/">MariaDB 11.6.0</a>
 </li></ul>
 <hr>
+<h4 class="anchored_heading" id="mhnsw_distance_function"><code>mhnsw_distance_function</code></h4>
+<ul start="1"><li><strong>Description:</strong> Distance function to build the vector index for.
+</li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--mhnsw-distance-function=val</code>
+</li><li><strong>Scope:</strong> Global, Session
+</li><li><strong>Dynamic:</strong> Yes
+</li><li><strong>Data Type:</strong> <code>enum</code>
+</li><li><strong>Default Value:</strong> <code>euclidean</code>
+</li><li><strong>Valid Values:</strong> <code>euclidean</code>, <code>cosine</code>
+</li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-11-7-0-release-notes/">MariaDB 11.7.0</a>
+</li></ul>
+<hr>
 <h4 class="anchored_heading" id="mhnsw_limit_multiplier"><code>mhnsw_limit_multiplier</code></h4>
-<ul start="1"><li><strong>Description:</strong> Defines the number of result candidates to look for in the vector index for ORDER BY ... LIMIT N queries. Specified in term of LIMIT (1 means look for exactly N candidates, 2 means look for 2*N, etc). Larger values means the search will be slower, but the result will be closer to perfect. If there is no LIMIT clause, the index isn't used. Can be set per SELECT query based on the desired accuracy of the required results.
+<ul start="1"><li><strong>Description:</strong> Defines the number of result candidates to look for in the vector index for ORDER BY ... LIMIT N queries. Specified in term of LIMIT (1 means look for exactly N candidates, 2 means look for 2*N, etc). Larger values means the search will be slower, but the result will be closer to perfect. If there is no LIMIT clause, the index isn't used. Can be set per SELECT query based on the desired accuracy of the required results. Only present in <a href="/kb/en/mariadb-11-6-0-release-notes/">MariaDB 11.6.0</a> Preview.
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--mhnsw-limit-multiplier=#</code>
 </li><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Dynamic:</strong> Yes
@@ -493,6 +508,7 @@ This page documents system variables related to <a href="/kb/en/vectors/">Vector
 </li><li><strong>Default Value:</strong> <code>2.000000</code>
 </li><li><strong>Range:</strong> <code>1</code> to <code>100</code>
 </li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-11-6-0-release-notes/">MariaDB 11.6.0</a>
+</li><li><strong>Removed:</strong> <a href="/kb/en/mariadb-11-7-0-release-notes/">MariaDB 11.7.0</a>
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="mhnsw_max_edges_per_node"><code>mhnsw_max_edges_per_node</code></h4>
@@ -501,9 +517,20 @@ This page documents system variables related to <a href="/kb/en/vectors/">Vector
 </li><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Dynamic:</strong> Yes
 </li><li><strong>Data Type:</strong> <code>int unsigned</code>
-</li><li><strong>Default Value:</strong> <code>5</code>
-</li><li><strong>Range:</strong> <code>2</code> to <code>200</code>
+</li><li><strong>Default Value:</strong> <code>6</code> (<code>5</code> in <a href="/kb/en/mariadb-1060-release-notes/">MariaDB 10.6.0</a> Preview)
+</li><li><strong>Range:</strong> <code>3</code> to <code>200</code> (<code>2</code> to <code>200</code> in <a href="/kb/en/mariadb-1060-release-notes/">MariaDB 10.6.0</a> Preview)
 </li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-11-6-0-release-notes/">MariaDB 11.6.0</a>
+</li></ul>
+<hr>
+<h4 class="anchored_heading" id="mhnsw_min_limit"><code>mhnsw_min_limit</code></h4>
+<ul start="1"><li><strong>Description:</strong> Defines the minimal number of result candidates to look for in the vector index for ORDER BY ... LIMIT N queries. The search will never search for less rows than that, even if LIMIT is smaller. This notably improves the search quality at low LIMIT values, at the expense of search time
+</li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--mhnsw-min-limit=#</code>
+</li><li><strong>Scope:</strong> Global, Session
+</li><li><strong>Dynamic:</strong> Yes
+</li><li><strong>Data Type:</strong> <code>int unsigned</code>
+</li><li><strong>Default Value:</strong> <code>20</code>
+</li><li><strong>Range:</strong> <code>1</code> to <code>65535</code>
+</li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-11-7-0-release-notes/">MariaDB 11.7.0</a>
 </li></ul>
 <hr>
 
