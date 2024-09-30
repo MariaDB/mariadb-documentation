@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/system-versioned-tables/+r/136516/">136516</a></dd>
+            <dd><a href="/kb/en/system-versioned-tables/+r/143509/">143509</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-27">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-03-12 10:45">2024-03-12 10:45</span></dd>
+<span class="datetime" title="2024-09-23 13:42">2024-09-23 13:42</span></dd>
         </dl>
     </div>
     
@@ -423,6 +423,31 @@ Create Table: CREATE TABLE `t` (
   PERIOD FOR SYSTEM_TIME (`ts`, `te`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 WITH SYSTEM VERSIONING
 &lt;&lt;/code&gt;&gt;
+
+&lt;&lt;product mariadb from=&#34;11.7&#34;&gt;&gt;
+From MariaDB 11.7, it is possible to convert a versioned table from implicit to explicit row_start/row_end columns. Note that in order to do any ALTER on a system versioned table, [[#system_versioning_alter_history|system_versioning_alter_history]] must be set to ##KEEP##.
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (x INT) WITH SYSTEM VERSIONING;
+
+SET system_versioning_alter_history = keep;
+
+ALTER TABLE t1 ADD COLUMN rs TIMESTAMP(6) AS ROW START, 
+  ADD COLUMN re TIMESTAMP(6) AS ROW END, ADD PERIOD FOR SYSTEM_TIME (rs,re)
+
+&lt;&lt;/sql&gt;&gt;
+
+Prior to MariaDB 11.7, this would result in a duplicate row error:
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE t1 (x INT) WITH SYSTEM VERSIONING;
+
+SET system_versioning_alter_history = keep;
+
+ALTER TABLE t1 ADD COLUMN rs TIMESTAMP(6) AS ROW START, 
+  ADD COLUMN re TIMESTAMP(6) AS ROW END, ADD PERIOD FOR SYSTEM_TIME (rs,re);
+
+ERROR 4134 (HY000): Duplicate ROW START column `rs`
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/product&gt;&gt;
 
 === Inserting Data
 When data is inserted into a system-versioned table, it is given a //row_start// value of the current timestamp, and a //row_end// value of [[from_unixtime|FROM_UNIXTIME]](2147483647.999999). The current timestamp can be adjusted by setting the [[server-system-variables#timestamp|timestamp system variable]], for example:
