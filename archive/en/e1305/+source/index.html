@@ -327,7 +327,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/e1305/+r/136159/">136159</a></dd>
+            <dd><a href="/kb/en/e1305/+r/143695/">143695</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -336,7 +336,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-03-11 15:08">2024-03-11 15:08</span></dd>
+<span class="datetime" title="2024-10-01 08:14">2024-10-01 08:14</span></dd>
         </dl>
     </div>
     
@@ -354,9 +354,65 @@
 
 == Possible Causes and Solutions
 
-&lt;&lt;style class=&#34;greenbox&#34;&gt;&gt;
-This article doesn&#39;t currently contain any content. [[writing-and-editing-knowledge-base-articles/|You can help!]]
-&lt;&lt;/style&gt;&gt;</textarea>
+This error is returned when what is being called called does not exist. For example:
+
+&lt;&lt;sql&gt;&gt;
+CALL Reset_animal_count();
+ERROR 1305 (42000): PROCEDURE test.Reset_animal_count does not exist
+
+SELECT Reset_animal_count();
+ERROR 1305 (42000): FUNCTION test.Reset_animal_count does not exist
+&lt;&lt;/sql&gt;&gt;
+
+There are a number of possible causes:
+* The [[stored-procedures|stored procedure]] or [[stored-functions|stored function]] has not yet been created. See  [[create-procedure|CREATE PROCEDURE]] or [[create-function|CREATE FUNCTION]]. For example:
+&lt;&lt;sql&gt;&gt;
+DELIMITER //
+CREATE PROCEDURE Reset_animal_count()                      
+    MODIFIES SQL DATA
+    UPDATE animal_count SET animals = 0;
+ //
+Query OK, 0 rows affected (0.032 sec)
+
+DELIMITER ;
+
+CALL Reset_animal_count();
+Query OK, 0 rows affected (0.001 sec)
+&lt;&lt;/sql&gt;&gt;
+* There was a typo in the name. Check also that the case is correct. See [[identifier-case-sensitivity|Identifier Case-sensitivity]]. For example:
+&lt;&lt;sql&gt;&gt;
+CALL reset_animal_count();
+ERROR 1305 (42000): PROCEDURE test.Reset_animal_count does not exist
+
+CALL Reset_animal_count();
+Query OK, 0 rows affected (0.001 sec)
+&lt;&lt;/sql&gt;&gt;
+* The database specified is not the same as the the database containing the stored procedure or function. For example:
+&lt;&lt;sql&gt;&gt;
+use test2
+CALL Reset_animal_count();
+ERROR 1305 (42000): PROCEDURE test2.Reset_animal_count does not exist
+&lt;&lt;/sql&gt;&gt;
+Either change the default (current) database with the [[use-database|USE statement]], or specify the database in the call, for example:
+&lt;&lt;sql&gt;&gt;
+CALL test.Reset_animal_count(); 
+Query OK, 0 rows affected (0.001 sec)
+&lt;&lt;/sql&gt;&gt;
+or
+&lt;&lt;sql&gt;&gt;
+use test
+CALL Reset_animal_count();
+Query OK, 0 rows affected (0.001 sec)
+&lt;&lt;/sql&gt;&gt;
+
+* One is trying to access a stored procedure instead of a stored function, or vice-versa. For example:
+&lt;&lt;sql&gt;&gt;
+SELECT Reset_animal_count();
+ERROR 1305 (42000): FUNCTION test.Reset_animal_count does not exist
+
+CALL Reset_animal_count();  
+Query OK, 0 rows affected (0.001 sec)
+&lt;&lt;/sql&gt;&gt;</textarea>
     
 
 

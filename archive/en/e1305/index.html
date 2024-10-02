@@ -291,7 +291,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-03-11 15:08">6 months, 3 weeks ago</span></dd>
+<span class="datetime" title="2024-10-01 08:14">15 hours, 52 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -434,8 +434,53 @@
 </li>
 </div>
 <h2 class="anchored_heading" id="possible-causes-and-solutions">Possible Causes and Solutions</h2>
-<div class="cstm-style greenbox"><p>This article doesn't currently contain any content. <a href="/kb/en/writing-and-editing-knowledge-base-articles/">You can help!</a></p>
-</div>
+<p>This error is returned when what is being called called does not exist. For example:</p>
+<pre class="fixed"><span class="k">CALL</span> <span class="n">Reset_animal_count</span><span class="p">();</span>
+<span class="n">ERROR</span> <span class="mi">1305</span> <span class="p">(</span><span class="mi">42000</span><span class="p">):</span> <span class="k">PROCEDURE</span> <span class="n">test</span><span class="p">.</span><span class="n">Reset_animal_count</span> <span class="n">does</span> <span class="k">not</span> <span class="n">exist</span>
+
+<span class="k">SELECT</span> <span class="n">Reset_animal_count</span><span class="p">();</span>
+<span class="n">ERROR</span> <span class="mi">1305</span> <span class="p">(</span><span class="mi">42000</span><span class="p">):</span> <span class="k">FUNCTION</span> <span class="n">test</span><span class="p">.</span><span class="n">Reset_animal_count</span> <span class="n">does</span> <span class="k">not</span> <span class="n">exist</span>
+</pre><p>There are a number of possible causes:</p>
+<ul start="1"><li>The <a href="/kb/en/stored-procedures/">stored procedure</a> or <a href="/kb/en/stored-functions/">stored function</a> has not yet been created. See  <a href="/kb/en/create-procedure/">CREATE PROCEDURE</a> or <a href="/kb/en/create-function/">CREATE FUNCTION</a>. For example:
+</li></ul>
+<pre class="fixed"><span class="k">DELIMITER</span> <span class="o">//</span>
+<span class="k">CREATE</span> <span class="k">PROCEDURE</span> <span class="n">Reset_animal_count</span><span class="p">()</span>                      
+    <span class="k">MODIFIES</span> <span class="k">SQL</span> <span class="k">DATA</span>
+    <span class="k">UPDATE</span> <span class="n">animal_count</span> <span class="k">SET</span> <span class="n">animals</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+ <span class="o">//</span>
+<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">0</span> <span class="k">rows</span> <span class="n">affected</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">032</span> <span class="n">sec</span><span class="p">)</span>
+
+<span class="k">DELIMITER</span> <span class="p">;</span>
+
+<span class="k">CALL</span> <span class="n">Reset_animal_count</span><span class="p">();</span>
+<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">0</span> <span class="k">rows</span> <span class="n">affected</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span> <span class="n">sec</span><span class="p">)</span>
+</pre><ul start="1"><li>There was a typo in the name. Check also that the case is correct. See <a href="/kb/en/identifier-case-sensitivity/">Identifier Case-sensitivity</a>. For example:
+</li></ul>
+<pre class="fixed"><span class="k">CALL</span> <span class="n">reset_animal_count</span><span class="p">();</span>
+<span class="n">ERROR</span> <span class="mi">1305</span> <span class="p">(</span><span class="mi">42000</span><span class="p">):</span> <span class="k">PROCEDURE</span> <span class="n">test</span><span class="p">.</span><span class="n">Reset_animal_count</span> <span class="n">does</span> <span class="k">not</span> <span class="n">exist</span>
+
+<span class="k">CALL</span> <span class="n">Reset_animal_count</span><span class="p">();</span>
+<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">0</span> <span class="k">rows</span> <span class="n">affected</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span> <span class="n">sec</span><span class="p">)</span>
+</pre><ul start="1"><li>The database specified is not the same as the the database containing the stored procedure or function. For example:
+</li></ul>
+<pre class="fixed"><span class="n">use</span> <span class="n">test2</span>
+<span class="k">CALL</span> <span class="n">Reset_animal_count</span><span class="p">();</span>
+<span class="n">ERROR</span> <span class="mi">1305</span> <span class="p">(</span><span class="mi">42000</span><span class="p">):</span> <span class="k">PROCEDURE</span> <span class="n">test2</span><span class="p">.</span><span class="n">Reset_animal_count</span> <span class="n">does</span> <span class="k">not</span> <span class="n">exist</span>
+</pre><p>Either change the default (current) database with the <a href="/kb/en/use-database/">USE statement</a>, or specify the database in the call, for example:</p>
+<pre class="fixed"><span class="k">CALL</span> <span class="n">test</span><span class="p">.</span><span class="n">Reset_animal_count</span><span class="p">();</span> 
+<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">0</span> <span class="k">rows</span> <span class="n">affected</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span> <span class="n">sec</span><span class="p">)</span>
+</pre><p>or</p>
+<pre class="fixed"><span class="n">use</span> <span class="n">test</span>
+<span class="k">CALL</span> <span class="n">Reset_animal_count</span><span class="p">();</span>
+<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">0</span> <span class="k">rows</span> <span class="n">affected</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span> <span class="n">sec</span><span class="p">)</span>
+</pre><ul start="1"><li>One is trying to access a stored procedure instead of a stored function, or vice-versa. For example:
+</li></ul>
+<pre class="fixed"><span class="k">SELECT</span> <span class="n">Reset_animal_count</span><span class="p">();</span>
+<span class="n">ERROR</span> <span class="mi">1305</span> <span class="p">(</span><span class="mi">42000</span><span class="p">):</span> <span class="k">FUNCTION</span> <span class="n">test</span><span class="p">.</span><span class="n">Reset_animal_count</span> <span class="n">does</span> <span class="k">not</span> <span class="n">exist</span>
+
+<span class="k">CALL</span> <span class="n">Reset_animal_count</span><span class="p">();</span>  
+<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">0</span> <span class="k">rows</span> <span class="n">affected</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span> <span class="n">sec</span><span class="p">)</span>
+</pre>
     </div>
 
 
