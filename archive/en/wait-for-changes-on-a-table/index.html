@@ -261,12 +261,12 @@ I am making an Android app that should connect to a db and update the informatio
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-05-31 07:00">4 months ago</span></dd>
+<span class="datetime" title="2024-05-31 07:00">4 months, 1 week ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-05-31 07:00">4 months ago</span></dd>
+<span class="datetime" title="2024-10-01 11:30">5 days, 21 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>question</dd>
@@ -402,6 +402,45 @@ I am making an Android app that should connect to a db and update the informatio
     </div>
 
 
+
+    
+        <h2>Answer
+            <span class="answer_comment">Answered by 
+<span class="user" id="user-3062">
+<a href="/kb/user/id/3062" title="Markus Mäkelä">Markus Mäkelä</a>
+</span> in <a href="#comment_6732">this comment</a>.</span></h2>
+    
+    <div class="answer formatted">
+        <p>Like is mentioned in <a href="https://jira.mariadb.org/browse/MDEV-16590">MDEV-16590</a>, this can be emulated in SQL. Here's a quick little prototype of a pair of stored procedures and a table that can be used to send and wait for signals. Adding signal IDs and versions for notify_one/notify_all should be possible.</p>
+<pre class="fixed">delimiter $$ ;
+CREATE OR REPLACE PROCEDURE wait_for_signal(IN timeout INT)
+BEGIN
+    INSERT INTO signal_waiters VALUES (CONNECTION_ID());
+    EXECUTE IMMEDIATE CONCAT('SELECT ''wait_for_signal'', SLEEP (', timeout, ')');
+    DELETE FROM signal_waiters WHERE id = CONNECTION_ID();
+END $$
+
+CREATE OR REPLACE PROCEDURE send_signal()
+BEGIN
+    START TRANSACTION;
+    FOR rec IN (SELECT id FROM signal_waiters FOR UPDATE)
+    DO
+      EXECUTE IMMEDIATE CONCAT('KILL QUERY ', rec.id);
+      DELETE FROM signal_waiters WHERE id = rec.id;
+    END FOR;
+    COMMIT;
+END $$
+delimiter ; $$
+
+CREATE OR REPLACE TABLE signal_waiters(id BIGINT PRIMARY KEY);
+
+-- To wait for a signal
+CALL wait_for_signal(10);
+
+-- To send a signal
+CALL send_signal();
+</pre>
+    </div>
 
 
         

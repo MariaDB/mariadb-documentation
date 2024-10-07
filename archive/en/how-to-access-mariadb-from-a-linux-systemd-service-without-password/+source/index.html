@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/how-to-access-mariadb-from-a-linux-systemd-service-without-password/+r/139013/">139013</a></dd>
+            <dd><a href="/kb/en/how-to-access-mariadb-from-a-linux-systemd-service-without-password/+r/143735/">143735</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-15149">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-04-21 15:25">2024-04-21 15:25</span></dd>
+<span class="datetime" title="2024-10-01 11:34">2024-10-01 11:34</span></dd>
         </dl>
     </div>
     
@@ -375,6 +375,29 @@ Thanks in advance
 Matthias</textarea>
     
 
+    
+        
+            <h2>Answer</h2>
+        
+        <textarea id="answer_source" class="creole_source autogrow">The systemd service has [[https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#ProtectHome=|ProtectHome=yes]] by default making the /root/.my.cnf file inaccessible to the systemd service.
+
+While disabling with ProtectHome=false may seem like the easy option, consider the alternative:
+
+&lt;&lt;code&gt;&gt;
+ALTER USER root@localhost IDENTIFIED VIA unix_socket
+&lt;&lt;/code&gt;&gt;
+
+Ref: [[authentication-plugin-unix-socket/#security|unix socket authentication]].
+
+With this the /root/.my.cnf file is no longer needed, and the root unix user is the only one that can access the root@localhost MariaDB user account.
+
+If your systemd service runs under a different user, say xyzservice, then;
+
+&lt;&lt;code&gt;&gt;
+CREATE USER xyservice@localhost IDENTIFIED VIA unix_socket
+&lt;&lt;/code&gt;&gt;
+
+And then provide the sufficient [[grant|grants]] to that user based on what the service needs.</textarea>
     
 
 
