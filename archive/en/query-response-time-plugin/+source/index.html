@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/query-response-time-plugin/+r/141550/">141550</a></dd>
+            <dd><a href="/kb/en/query-response-time-plugin/+r/143814/">143814</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1517">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-07-31 09:04">2024-07-31 09:04</span></dd>
+<span class="datetime" title="2024-10-07 21:21">2024-10-07 21:21</span></dd>
         </dl>
     </div>
     
@@ -334,7 +334,7 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">The ##query_response_time## plugin creates the [[information-schema-query_response_time-table|QUERY_RESPONSE_TIME]] table in the [[information-schema|INFORMATION_SCHEMA]] database. The plugin also adds the [[show-query_response_time|SHOW QUERY_RESPONSE_TIME]] and [[flush/|FLUSH  QUERY_RESPONSE_TIME]] statements.
+        <textarea id="answer_source" class="creole_source autogrow">The ##query_response_time## plugin creates the [[information-schema-query_response_time-table|QUERY_RESPONSE_TIME]] table in the [[information-schema|INFORMATION_SCHEMA]] database. The plugin also adds the [[show-query_response_time|SHOW QUERY_RESPONSE_TIME]] and [[#flushing-plugin-data|FLUSH  QUERY_RESPONSE_TIME*]] statements.
 
 The [[slow-query-log|slow query log]] provides exact information about queries that take a long time to execute. However, sometimes there are a large number of queries that each take a very short amount of time to execute. This feature provides a tool for analyzing that information by counting and displaying the number of queries according to the the length of time they took to execute. 
 
@@ -344,12 +344,17 @@ This feature is based on Percona&#39;s [[http://www.percona.com/doc/percona-serv
 
 == Installing the Plugin
 
-This shared library actually consists of two different plugins:
+This shared library actually consists of a number of different plugins. Prior to MariaDB 11.5:
 
 * ##QUERY_RESPONSE_TIME## - An INFORMATION_SCHEMA plugin that exposes statistics.
 * ##QUERY_RESPONSE_TIME_AUDIT## - audit plugin, collects statistics.
 
 Both plugins need to be installed to get meaningful statistics.
+
+From MariaDB 11.5, there are the following additional plugins:
+* ##QUERY_RESPONSE_TIME_READ##
+* ##QUERY_RESPONSE_TIME_READ_WRITE##
+* ##QUERY_RESPONSE_TIME_WRITE##
 
 Although the plugin&#39;s shared library is distributed with MariaDB by default, the plugins are not actually installed by MariaDB by default. There are two methods that can be used to install the plugins with MariaDB.
 
@@ -518,6 +523,8 @@ Setting the [[#query_response_time_flush|query_response_time_flush]] system vari
 SET GLOBAL query_response_time_flush=1;
 &lt;&lt;/sql&gt;&gt;
 
+From MariaDB 11.5, it is possible to specify flushing read and/or write statements with the ##FLUSH QUERY_RESPONSE_TIME_READ##, ##FLUSH QUERY_RESPONSE_TIME_WRITE## and ##FLUSH QUERY_RESPONSE_TIME_READ_WRITE## statements.
+
 == Versions
 
 &lt;&lt;style class=&#34;darkheader-nospace-borders&#34; &gt;&gt;
@@ -558,8 +565,18 @@ SET GLOBAL query_response_time_flush=1;
 * **Range:** ##0## to ##31536000##
 ----
 
+=== ##query_response_time_session_stats##
+* **Description:** Controls query response time statistics collection for the current session: ON - enable, OFF - disable, GLOBAL (default) - use [[#query_response_time_stats|query_response_time_stats]] value.
+* **Commandline:** &lt;&lt;code&gt;&gt;query-response-time-session-stats=val]&lt;&lt;/code&gt;&gt;
+* **Scope:** Global, Session
+* **Dynamic:** Yes
+* **Data Type:** ##enum##
+* **Default Value:** ##GLOBAL##
+* **Valid Values:** ##GLOBAL##, ##ON##, ##OFF##
+----
+
 === ##query_response_time_stats##
-* **Description:** Enable or disable query response time statistics collecting
+* **Description:** Enable or disable query response time statistics collecting.
 * **Commandline:** &lt;&lt;code&gt;&gt;query-response-time-stats[={0|1}]&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
