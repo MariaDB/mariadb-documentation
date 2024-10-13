@@ -319,7 +319,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/xa-transactions/+r/141025/">141025</a></dd>
+            <dd><a href="/kb/en/xa-transactions/+r/143833/">143833</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-982">
@@ -328,7 +328,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-06-26 12:52">2024-06-26 12:52</span></dd>
+<span class="datetime" title="2024-10-11 12:04">2024-10-11 12:04</span></dd>
         </dl>
     </div>
     
@@ -396,20 +396,6 @@ xid: gtrid [, bqual [, formatID ]]
 
 The interface to XA transactions is a set of SQL statements starting with ##XA##. Each statement changes a transaction&#39;s state, determining which actions it can perform. A transaction which does not exist is in the ##NON-EXISTING## state.
 
-##XA START## (or ##BEGIN##) starts a transaction and defines its ##xid## (a transaction identifier). The ##JOIN## or ##RESUME## keywords have no effect. The new transaction will be in ##ACTIVE## state.
-
-The ##xid## can have 3 components, though only the first one is mandatory. ##gtrid## is a quoted string representing a global transaction identifier. ##bqual## is a quoted string representing a local transaction identifier. ##formatID## is an unsigned integer indicating the format used for the first two components; if not specified, defaults to 1. MariaDB does not interpret in any way these components, and only uses them to identify a transaction. ##xid##s of transactions in effect must be unique.
-
-##XA END## declares that the specified ##ACTIVE## transaction is finished and it changes its state to ##IDLE##. ##SUSPEND [FOR MIGRATE]## has no effect.
-
-##XA PREPARE## prepares an ##IDLE## transaction for commit, changing its state to ##PREPARED##. This is the first commit.
-
-##XA COMMIT## definitely commits and terminates a transaction which has already been ##PREPARED##. If the ##ONE PHASE## clause is specified, this statements performs a 1-phase commit on an ##IDLE## transaction.
-
-##XA ROLLBACK## rolls back and terminates an ##IDLE## or ##PREPARED## transaction.
-
-##XA RECOVER## shows information about all ##PREPARED## transactions.
-
 When trying to execute an operation which is not allowed for the transaction&#39;s current state, an error is produced:
 
 &lt;&lt;code lang=sql wrap=true&gt;&gt;
@@ -420,7 +406,75 @@ XA COMMIT &#39;test2&#39;;
 ERROR 1399 (XAE07): XAER_RMFAIL: The command cannot be executed when global transaction is in the  NON-EXISTING state
 &lt;&lt;/code&gt;&gt;
 
-== XA RECOVER
+=== XA START
+
+&lt;&lt;code wrap=true&gt;&gt;
+XA {START|BEGIN} xid [JOIN|RESUME]
+&lt;&lt;/code&gt;&gt;
+
+##XA START## (or ##BEGIN##) starts a transaction and defines its ##xid## (a transaction identifier). The new transaction will be in ##ACTIVE## state.
+
+The ##xid## can have 3 components, though only the first one is mandatory. ##gtrid## is a quoted string representing a global transaction identifier. ##bqual## is a quoted string representing a local transaction identifier. ##formatID## is an unsigned integer indicating the format used for the first two components; if not specified, defaults to 1. MariaDB does not interpret in any way these components, and only uses them to identify a transaction. ##xid##s of transactions in effect must be unique.
+
+Using the ##JOIN## or ##RESUME## keywords will currently cause an error to be returned.
+
+&lt;&lt;sql&gt;&gt;
+MariaDB [test]&gt; XA START &#39;test&#39; RESUME;
+ERROR 1398 (XAE05): XAER_INVAL: Invalid arguments (or unsupported command)
+MariaDB [test]&gt; XA START &#39;test&#39; JOIN;
+ERROR 1398 (XAE05): XAER_INVAL: Invalid arguments (or unsupported command)
+&lt;&lt;/sql&gt;&gt;
+
+An exception to this is that ##XA START xid RESUME## will resume the transaction if the {{{xid}}} is the same as the previous {{{xid}}} used in ##XA END xid##. This simply undoes the ##XA END## and moves it from the ##IDLE## state back into ##ACTIVE##.
+
+&lt;&lt;sql&gt;&gt;
+XA START &#39;test&#39;;
+INSERT INTO t VALUES (1,2);
+XA END &#39;test&#39;;
+XA START &#39;test&#39; RESUME; -- This reverts the XA END and continues the transaction
+INSERT INTO t VALUES (3,4);
+XA END &#39;test&#39;;
+XA PREPARE &#39;test&#39;;
+XA COMMIT &#39;test&#39;;
+&lt;&lt;/sql&gt;&gt;
+
+=== XA END
+
+&lt;&lt;code wrap=true&gt;&gt;
+XA END xid [SUSPEND [FOR MIGRATE]]
+&lt;&lt;/code&gt;&gt;
+
+##XA END## declares that the specified ##ACTIVE## transaction is finished and it changes its state to ##IDLE##. ##SUSPEND [FOR MIGRATE]## has no effect.
+
+=== XA PREPARE
+
+&lt;&lt;code wrap=true&gt;&gt;
+XA PREPARE xid
+&lt;&lt;/code&gt;&gt;
+
+##XA PREPARE## prepares an ##IDLE## transaction for commit, changing its state to ##PREPARED##. This is the first commit.
+
+=== XA COMMIT
+
+&lt;&lt;code wrap=true&gt;&gt;
+XA COMMIT xid [ONE PHASE]
+&lt;&lt;/code&gt;&gt;
+
+##XA COMMIT## definitely commits and terminates a transaction which has already been ##PREPARED##. If the ##ONE PHASE## clause is specified, this statements performs a 1-phase commit on an ##IDLE## transaction.
+
+=== XA ROLLBACK
+
+&lt;&lt;code wrap=true&gt;&gt;
+XA ROLLBACK xid
+&lt;&lt;/code&gt;&gt;
+
+##XA ROLLBACK## rolls back and terminates an ##IDLE## or ##PREPARED## transaction.
+
+=== XA RECOVER
+
+&lt;&lt;code wrap=true&gt;&gt;
+XA RECOVER [FORMAT=[&#39;RAW&#39;|&#39;SQL&#39;]]
+&lt;&lt;/code&gt;&gt;
 
 The ##XA RECOVER## statement shows information about all transactions which are in the ##PREPARED## state. It does not matter which connection created the transaction: if it has been ##PREPARED##, it appears. But this does not mean that a connection can commit or rollback a transaction which was started by another connection. Note that transactions using a 1-phase commit are never in the ##PREPARED## state, so they cannot be shown by ##XA RECOVER##.
 
