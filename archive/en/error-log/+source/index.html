@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/error-log/+r/131804/">131804</a></dd>
+            <dd><a href="/kb/en/error-log/+r/143871/">143871</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-10-31 18:42">2023-10-31 18:42</span></dd>
+<span class="datetime" title="2024-10-14 15:35">2024-10-14 15:35</span></dd>
         </dl>
     </div>
     
@@ -383,7 +383,7 @@ The [[mysqld-options/#-log-basename|log-basename]] cannot be an absolute path. T
 
 === Writing the Error Log to Stderr on Unix
 
-On Unix, if the [[server-system-variables#log_error|log_error]] system variable is not set, then errors are written to ##stderr##, which usually means that the log messages are output to the terminal that started ##mysqld##.
+On Unix, if the [[server-system-variables#log_error|log_error]] system variable is not set, then errors are written to ##stderr##, which usually means that the log messages are output to the terminal that started ##mariadbd##.
 
 If the [[server-system-variables#log_error|log_error]] system variable was set in an [[configuring-mariadb-with-option-files|option file]] or on the command-line, then it can still be unset by specifying ##--skip-log-error##.
 
@@ -391,9 +391,9 @@ If the [[server-system-variables#log_error|log_error]] system variable was set i
 
 On Unix, the error log can also be redirected to the [[https://linux.die.net/man/8/rsyslogd|syslog]]. How this is done depends on how you [[starting-and-stopping-mariadb-starting-and-stopping-mariadb|start]] MariaDB.
 
-==== Syslog with mysqld_safe
+==== Syslog with mariadbd-safe
 
-If you [[starting-and-stopping-mariadb-starting-and-stopping-mariadb|start]] MariaDB with [[mysqld_safe|mysqld_safe]], then the error log can be redirected to the syslog. See [[mysqld_safe/#configuring-mariadb-to-write-the-error-log-to-syslog|mysqld_safe: Configuring MariaDB to Write the Error Log to Syslog]] for more information.
+If you [[starting-and-stopping-mariadb-starting-and-stopping-mariadb|start]] MariaDB with [[mariadbd-safe]], then the error log can be redirected to the syslog. See [[mariadbd-safe/#configuring-mariadb-to-write-the-error-log-to-syslog|mariadbd-safe: Configuring MariaDB to Write the Error Log to Syslog]] for more information.
 
 ==== Syslog with Systemd
 
@@ -409,15 +409,19 @@ On Windows, if the [[mysqld-options/#-console|console]] option is specified, and
 
 On Windows, error log messages are also written to the Windows Event Viewer. You can find MariaDB&#39;s error log messages by browsing **Windows Logs**, and then selecting **Application** or **Application Log**, depending on the Windows version.
 
-In MariaDB 10.3 and before, you can find MariaDB&#39;s error log messages by searching for the **Source** ##MySQL##.
-
-In MariaDB 10.4 and later, you can find MariaDB&#39;s error log messages by searching for the **Source** ##MariaDB##. 
+You can find MariaDB&#39;s error log messages by searching for the **Source** ##MariaDB## (prior to MariaDB 10.4, this was ##MySQL##). 
 
 == Finding the Error Log
 
 To find where the error log is stored, one can find the options used for the error log with:
 &lt;&lt;code&gt;&gt;
 mariadbd --print-defaults
+&lt;&lt;/code&gt;&gt;
+
+or (from MariaDB 10.11)
+
+&lt;&lt;code&gt;&gt;
+my_print_defaults --mariadbd | grep log-error
 &lt;&lt;/code&gt;&gt;
 
 or
@@ -658,15 +662,30 @@ MariaDB does not support the [[https://dev.mysql.com/doc/refman/5.7/en/server-sy
 
 == Format
 
-The format consists of the date (yyyy-mm-dd) and time, the thread ID, followed by the type of error (Note, Warning or Error) and the error message, for example:
+The error log begins with a line indicating where the data is being read from, for example:
 &lt;&lt;code&gt;&gt;
-2016-06-15 16:53:33 139651251140544 [Note] InnoDB: 
-  The InnoDB memory heap is disabled
+240919 22:58:50 mysqld_safe Starting mariadbd daemon with databases from /home/ian/sandboxes/msb_11_7_0/data&lt;&lt;/code&gt;&gt;
+
+Then, each item (note, warning or error) consists of a single line, containing the date (yyyy-mm-dd) and time, the thread ID, followed by the type of error (Note, Warning or Error) and the error message, for example:
+&lt;&lt;code&gt;&gt;
+2016-06-15 16:53:33 139651251140544 [Note] InnoDB: The InnoDB memory heap is disabled
 &lt;&lt;/code&gt;&gt;
 
 Until MariaDB 10.1.4, the format only consisted of the date (yymmdd) and time, followed by the type of error (Note, Warning or Error) and the error message, for example:
 &lt;&lt;code&gt;&gt;
 160615 16:53:08 [Note] InnoDB: The InnoDB memory heap is disabled
+&lt;&lt;/code&gt;&gt;
+
+The first item will always contain the source revision, a unique server id (from MariaDB 10.5.26, MariaDB 10.6.19, MariaDB 10.11.9, MariaDB 11.1.6, MariaDB 11.2.5, MariaDB 11.4.3, MariaDB 11.5.2, MariaDB 11.6.1) and the process_id, for example:
+&lt;&lt;code&gt;&gt;
+2024-09-19 22:58:50 0 [Note] Starting MariaDB 11.7.0-preview-MariaDB source revision 
+  7391f7143b462b29ecdaee049c5ebdfd1aefa6d7 server_uid UdJQ5BCzAQiTopMoCz3yYsfU1lA= 
+  as process 2307166
+&lt;&lt;/code&gt;&gt;
+or 
+&lt;&lt;code&gt;&gt;
+2024-05-18 16:05:33 0 [Note] Starting MariaDB 10.11.8-MariaDB source revision 
+  3a069644682e336e445039e48baae9693f9a08ee as process 50774
 &lt;&lt;/code&gt;&gt;
 
 
@@ -702,7 +721,7 @@ lc_messages=en_US
 See [[setting-the-language-for-error-messages|Setting the Language for Error Messages]] for more 
 information.
 
-== See also
+== See Also
 * [[sql_error_log-plugin|sql error log plugin]]</textarea>
     
 

@@ -305,7 +305,7 @@ table_references:
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2018-01-18 16:26">6 years, 8 months ago</span></dd>
+<span class="datetime" title="2024-10-14 11:29">12 hours, 33 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -462,10 +462,18 @@ table_reference:
     table_factor
   | join_table
 
-table_factor:
+table_factor (&lt;= MariaDB 11.6):
     tbl_name [PARTITION (partition_list)]
         [query_system_time_period_specification] [[AS] alias] [index_hint_list]
   | table_subquery [query_system_time_period_specification] [AS] alias
+  | ( table_references )
+  | { ON table_reference LEFT OUTER JOIN table_reference
+        ON conditional_expr }
+
+table_factor (&gt;= MariaDB 11.7):
+    tbl_name [PARTITION (partition_list)]
+        [query_system_time_period_specification] [[AS] alias] [index_hint_list]
+  | table_subquery [query_system_time_period_specification] [AS] alias [(column_name_list)] 
   | ( table_references )
   | { ON table_reference LEFT OUTER JOIN table_reference
         ON conditional_expr }
@@ -523,8 +531,22 @@ they are not equivalent. <code class="fixed" style="white-space:pre-wrap">INNER 
 <p>In general, parentheses can be ignored in join expressions containing only
 inner join operations. MariaDB also supports nested joins (see
 <a href="http://dev.mysql.com/doc/refman/5.1/en/nested-join-optimization.html">http://dev.mysql.com/doc/refman/5.1/en/nested-join-optimization.html</a>).</p>
+<h3 class="anchored_heading" id="subqueries">Subqueries</h3>
+<p>A table subquery is specified as a parenthesized query and must contain a following derived table name (specified as <em>alias</em> in the above syntax specification).
+From <a href="/kb/en/what-is-mariadb-117/">MariaDB 11.7</a> onwards, we can optionally specify a list of column names in parenthesis. </p>
+<pre class="fixed">    <span class="k">select</span> <span class="n">ic1</span><span class="p">,</span> <span class="n">ic2</span><span class="p">,</span> <span class="n">ic3</span> <span class="k">from</span>
+      <span class="p">(</span>
+        <span class="k">select</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">c3</span> <span class="k">from</span> <span class="n">t1</span> <span class="k">group</span> <span class="k">by</span> <span class="n">c1</span>
+      <span class="p">)</span> <span class="n">dt2</span> <span class="p">(</span><span class="n">ic1</span><span class="p">,</span> <span class="n">ic2</span><span class="p">,</span> <span class="n">ic3</span><span class="p">)</span>
+    <span class="k">join</span> <span class="n">t2</span> <span class="k">on</span> <span class="n">t2</span><span class="p">.</span><span class="n">c1</span> <span class="o">=</span> <span class="n">dt2</span><span class="p">.</span><span class="n">ic1</span>
+    <span class="k">where</span> <span class="n">c2</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="k">group</span> <span class="k">by</span> <span class="n">ic1</span>
+</pre><p>Here, the table subquery for t1 will be materialized and named dt2, with column names ic1, ic2, ic3. These column names are used outside the subquery.</p>
+<p>See also <a href="/kb/en/subqueries-in-a-from-clause-derived-tables/#correlation-column-list">Subqueries in a FROM Clause (Derived Tables)#Correlation Column List</a>.</p>
+<h3 class="anchored_heading" id="system-versioned-tabled">System-Versioned Tabled</h3>
 <p>See <a href="/kb/en/system-versioned-tables/">System-versioned tables</a> for more information
 about <code>FOR SYSTEM_TIME</code> syntax.</p>
+<h3 class="anchored_heading" id="index-hints">Index Hints</h3>
 <p>Index hints can be specified to affect how the MariaDB optimizer makes
 use of indexes. For more information, see <a href="/kb/en/how-to-force-query-plans/">How to force query plans</a>.</p>
 <h2 class="anchored_heading" id="examples">Examples</h2>

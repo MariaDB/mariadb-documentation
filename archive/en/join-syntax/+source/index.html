@@ -331,7 +331,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/join-syntax/+r/64786/">64786</a></dd>
+            <dd><a href="/kb/en/join-syntax/+r/143840/">143840</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -340,7 +340,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2018-01-18 16:26">2018-01-18 16:26</span></dd>
+<span class="datetime" title="2024-10-14 11:29">2024-10-14 11:29</span></dd>
         </dl>
     </div>
     
@@ -364,10 +364,18 @@ table_reference:
     table_factor
   | join_table
 
-table_factor:
+table_factor (&lt;= MariaDB 11.6):
     tbl_name [PARTITION (partition_list)]
         [query_system_time_period_specification] [[AS] alias] [index_hint_list]
   | table_subquery [query_system_time_period_specification] [AS] alias
+  | ( table_references )
+  | { ON table_reference LEFT OUTER JOIN table_reference
+        ON conditional_expr }
+
+table_factor (&gt;= MariaDB 11.7):
+    tbl_name [PARTITION (partition_list)]
+        [query_system_time_period_specification] [[AS] alias] [index_hint_list]
+  | table_subquery [query_system_time_period_specification] [AS] alias [(column_name_list)] 
   | ( table_references )
   | { ON table_reference LEFT OUTER JOIN table_reference
         ON conditional_expr }
@@ -440,9 +448,29 @@ In general, parentheses can be ignored in join expressions containing only
 inner join operations. MariaDB also supports nested joins (see
 http://dev.mysql.com/doc/refman/5.1/en/nested-join-optimization.html).
 
+=== Subqueries
+A table subquery is specified as a parenthesized query and must contain a following derived table name (specified as //alias// in the above syntax specification).
+From MariaDB 11.7 onwards, we can optionally specify a list of column names in parenthesis. 
+
+&lt;&lt;sql&gt;&gt;
+    select ic1, ic2, ic3 from
+      (
+        select c1, c2, c3 from t1 group by c1
+      ) dt2 (ic1, ic2, ic3)
+    join t2 on t2.c1 = dt2.ic1
+    where c2 &gt; 0
+    group by ic1
+&lt;&lt;/sql&gt;&gt;
+
+Here, the table subquery for t1 will be materialized and named dt2, with column names ic1, ic2, ic3. These column names are used outside the subquery.
+
+See also [[subqueries-in-a-from-clause-derived-tables/#correlation-column-list|Subqueries in a FROM Clause (Derived Tables)#Correlation Column List]].
+
+=== System-Versioned Tabled
 See [[system-versioned-tables|System-versioned tables]] for more information
 about ##FOR SYSTEM_TIME## syntax.
 
+=== Index Hints
 Index hints can be specified to affect how the MariaDB optimizer makes
 use of indexes. For more information, see [[how-to-force-query-plans|How to force query plans]].
 
