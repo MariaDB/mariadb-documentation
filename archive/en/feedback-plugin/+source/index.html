@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/feedback-plugin/+r/141010/">141010</a></dd>
+            <dd><a href="/kb/en/feedback-plugin/+r/143885/">143885</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-27">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-06-26 11:52">2024-06-26 11:52</span></dd>
+<span class="datetime" title="2024-10-15 07:58">2024-10-15 07:58</span></dd>
         </dl>
     </div>
     
@@ -341,19 +341,51 @@ configuration and usage information to [[http://mariadb.org/|MariaDB.org]] or to
 See the [[http://mariadb.org/feedback_plugin/|MariaDB User Feedback]] page on MariaDB.org to see collected MariaDB usage statistics.
 &lt;&lt;/style&gt;&gt;
 
+&lt;&lt;toc&gt;&gt;
+
 The ##feedback## plugin exists in all MariaDB versions.
 
-MariaDB is distributed with this plugin included, but it is not enabled by default.
+MariaDB is usually distributed with this plugin included, but it is not enabled by default.
 On Windows, this plugin is part of the server and has a special checkbox in the installer window. Either
 way, you need to explicitly install and enable it in order for feedback data to be sent. 
 
-&lt;&lt;toc&gt;&gt;
+== Verifying the Plugin&#39;s Status
+
+To verify whether the ##feedback## plugin is installed and enabled, execute the
+[[show-plugins|SHOW PLUGINS]] statement or query the [[plugins-table-information-schema|information_schema.plugins]] table.
+
+Usually, the plugin is installed in MariaDB by default:
+&lt;&lt;sql&gt;&gt;
+SELECT plugin_status FROM information_schema.plugins 
+  WHERE plugin_name = &#39;feedback&#39;;
++---------------+
+| plugin_status |
++---------------+
+| DISABLED      |
++---------------+
+&lt;&lt;/sql&gt;&gt;
+
+See [[feedback-plugin/#enabling-the-plugin|Enabling the Plugin]].
+
+If that ##SELECT## returns no rows, then you still need to [[#installing-the-plugin|install the plugin]].
+
+When the plugin is installed and enabled, you will see:
+
+&lt;&lt;sql&gt;&gt;
+SELECT plugin_status FROM information_schema.plugins 
+  WHERE plugin_name = &#39;feedback&#39;;
++---------------+
+| plugin_status |
++---------------+
+| ACTIVE        |
++---------------+
+&lt;&lt;/sql&gt;&gt;
 
 == Installing the Plugin
 
-Although the plugin&#39;s shared library is distributed with MariaDB by default, the plugin is not actually installed by MariaDB by default. There are two methods that can be used to install the plugin with MariaDB.
+In some releases, the plugin&#39;s shared library is distributed with MariaDB by default, but the plugin is not actually installed by MariaDB. There are two methods that can be used to install the plugin with MariaDB.
 
-The first method can be used to install the plugin without restarting the server. You can install the plugin dynamically by executing ##[[install-soname|INSTALL SONAME]]## or ##[[install-plugin|INSTALL PLUGIN]]##. For example:
+The first method can be used to install the plugin without restarting the server. You can install the plugin dynamically by executing [[install-soname|INSTALL SONAME]] or [[install-plugin|INSTALL PLUGIN]]. For example:
 
 &lt;&lt;sql&gt;&gt;
 INSTALL SONAME &#39;feedback&#39;;
@@ -369,7 +401,7 @@ plugin_load_add = feedback
 
 == Uninstalling the Plugin
 
-You can uninstall the plugin dynamically by executing ##[[uninstall-soname|UNINSTALL SONAME]]## or ##[[uninstall-plugin|UNINSTALL PLUGIN]]##. For example:
+You can uninstall the plugin dynamically by executing [[uninstall-soname|UNINSTALL SONAME]] or [[uninstall-plugin|UNINSTALL PLUGIN]]. For example:
 
 &lt;&lt;sql&gt;&gt;
 UNINSTALL SONAME &#39;feedback&#39;;
@@ -390,32 +422,6 @@ feedback=ON
 In Windows, the plugin can also be enabled during a new [[installing-mariadb-msi-packages-on-windows|MSI]] installation. The MSI GUI installation provides the &#34;Enable feedback plugin&#34; checkbox to enable the plugin. The MSI command-line installation provides the FEEDBACK=1 command-line option to enable the plugin.
 
 See the next section for how to verify the plugin is installed and active and (if needed) install the plugin.
-
-== Verifying the Plugin&#39;s Status
-
-To verify whether the ##feedback## plugin is installed and enabled, execute the
-##[[show-plugins|SHOW PLUGINS]]## statement or query the ##[[plugins-table-information-schema|information_schema.plugins]]## table. For example:
-
-&lt;&lt;sql&gt;&gt;
-SELECT plugin_status FROM information_schema.plugins 
-  WHERE plugin_name = &#39;feedback&#39;;
-&lt;&lt;/sql&gt;&gt;
-
-If that ##SELECT## returns no rows, then you still need to [[#installing-the-plugin|install the plugin]].
-
-When the plugin is installed and enabled, you will see:
-
-&lt;&lt;sql&gt;&gt;
-SELECT plugin_status FROM information_schema.plugins 
-  WHERE plugin_name = &#39;feedback&#39;;
-+---------------+
-| plugin_status |
-+---------------+
-| ACTIVE        |
-+---------------+
-&lt;&lt;/sql&gt;&gt;
-
-If you see ##DISABLED## instead of ##ACTIVE##, then you still need to [[#enabling-the-plugin|enable the plugin]].
 
 == Collecting Data
 

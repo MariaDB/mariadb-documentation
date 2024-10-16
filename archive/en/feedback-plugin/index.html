@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-06-26 11:52">3 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2024-10-15 07:58">16 hours, 13 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -414,21 +414,17 @@
         <p>The <code>feedback</code> plugin is designed to collect and, optionally, upload
 configuration and usage information to <a href="http://mariadb.org/">MariaDB.org</a> or to any other configured URL.</p>
 <div class="cstm-style hidden"><p>See the <a href="http://mariadb.org/feedback_plugin/">MariaDB User Feedback</a> page on MariaDB.org to see collected MariaDB usage statistics.</p>
-</div><p>The <code>feedback</code> plugin exists in all MariaDB versions.</p>
-<p>MariaDB is distributed with this plugin included, but it is not enabled by default.
-On Windows, this plugin is part of the server and has a special checkbox in the installer window. Either
-way, you need to explicitly install and enable it in order for feedback data to be sent. </p>
-<div class="table_of_contents well well-small">
+</div><div class="table_of_contents well well-small">
 <h3>Contents</h3>
  <ol class="toc">
+
+    <li class=""><a href="#verifying-the-plugins-status" title="Verifying the Plugin&#39;s Status">Verifying the Plugin&#39;s Status</a></li>
 
     <li class=""><a href="#installing-the-plugin" title="Installing the Plugin">Installing the Plugin</a></li>
 
     <li class=""><a href="#uninstalling-the-plugin" title="Uninstalling the Plugin">Uninstalling the Plugin</a></li>
 
     <li class=""><a href="#enabling-the-plugin" title="Enabling the Plugin">Enabling the Plugin</a></li>
-
-    <li class=""><a href="#verifying-the-plugins-status" title="Verifying the Plugin&#39;s Status">Verifying the Plugin&#39;s Status</a></li>
 
     <li class=""><a href="#collecting-data" title="Collecting Data">Collecting Data</a></li>
 
@@ -457,16 +453,41 @@ way, you need to explicitly install and enable it in order for feedback data to 
  </ol>
 </li>
 </div>
-<h2 class="anchored_heading" id="installing-the-plugin">Installing the Plugin</h2>
-<p>Although the plugin's shared library is distributed with MariaDB by default, the plugin is not actually installed by MariaDB by default. There are two methods that can be used to install the plugin with MariaDB.</p>
-<p>The first method can be used to install the plugin without restarting the server. You can install the plugin dynamically by executing <code><a href="/kb/en/install-soname/">INSTALL SONAME</a></code> or <code><a href="/kb/en/install-plugin/">INSTALL PLUGIN</a></code>. For example:</p>
+<p>The <code>feedback</code> plugin exists in all MariaDB versions.</p>
+<p>MariaDB is usually distributed with this plugin included, but it is not enabled by default.
+On Windows, this plugin is part of the server and has a special checkbox in the installer window. Either
+way, you need to explicitly install and enable it in order for feedback data to be sent. </p>
+<h2 class="anchored_heading" id="verifying-the-plugins-status">Verifying the Plugin's Status</h2>
+<p>To verify whether the <code>feedback</code> plugin is installed and enabled, execute the
+<a href="/kb/en/show-plugins/">SHOW PLUGINS</a> statement or query the <a href="/kb/en/plugins-table-information-schema/">information_schema.plugins</a> table.</p>
+<p>Usually, the plugin is installed in MariaDB by default:</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="n">plugin_status</span> <span class="k">FROM</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">plugins</span> 
+  <span class="k">WHERE</span> <span class="n">plugin_name</span> <span class="o">=</span> <span class="s1">&#39;feedback&#39;</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---------------+</span>
+<span class="o">|</span> <span class="n">plugin_status</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------+</span>
+<span class="o">|</span> <span class="n">DISABLED</span>      <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------+</span>
+</pre><p>See <a href="/kb/en/feedback-plugin/#enabling-the-plugin">Enabling the Plugin</a>.</p>
+<p>If that <code>SELECT</code> returns no rows, then you still need to <a href="#installing-the-plugin">install the plugin</a>.</p>
+<p>When the plugin is installed and enabled, you will see:</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="n">plugin_status</span> <span class="k">FROM</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">plugins</span> 
+  <span class="k">WHERE</span> <span class="n">plugin_name</span> <span class="o">=</span> <span class="s1">&#39;feedback&#39;</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---------------+</span>
+<span class="o">|</span> <span class="n">plugin_status</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------+</span>
+<span class="o">|</span> <span class="n">ACTIVE</span>        <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------+</span>
+</pre><h2 class="anchored_heading" id="installing-the-plugin">Installing the Plugin</h2>
+<p>In some releases, the plugin's shared library is distributed with MariaDB by default, but the plugin is not actually installed by MariaDB. There are two methods that can be used to install the plugin with MariaDB.</p>
+<p>The first method can be used to install the plugin without restarting the server. You can install the plugin dynamically by executing <a href="/kb/en/install-soname/">INSTALL SONAME</a> or <a href="/kb/en/install-plugin/">INSTALL PLUGIN</a>. For example:</p>
 <pre class="fixed"><span class="n">INSTALL</span> <span class="n">SONAME</span> <span class="s1">&#39;feedback&#39;</span><span class="p">;</span>
 </pre><p>The second method can be used to tell the server to load the plugin when it starts up. The plugin can be installed this way by providing the <code><a href="/kb/en/mysqld-options/#-plugin-load">--plugin-load</a></code> or the <code><a href="/kb/en/mysqld-options/#-plugin-load-add">--plugin-load-add</a></code> options. This can be specified as a command-line argument to <code><a href="/kb/en/mysqld-options/">mysqld</a></code> or it can be specified in a relevant server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>. For example:</p>
 <pre class="fixed">[mariadb]
 ...
 plugin_load_add = feedback
 </pre><h2 class="anchored_heading" id="uninstalling-the-plugin">Uninstalling the Plugin</h2>
-<p>You can uninstall the plugin dynamically by executing <code><a href="/kb/en/uninstall-soname/">UNINSTALL SONAME</a></code> or <code><a href="/kb/en/uninstall-plugin/">UNINSTALL PLUGIN</a></code>. For example:</p>
+<p>You can uninstall the plugin dynamically by executing <a href="/kb/en/uninstall-soname/">UNINSTALL SONAME</a> or <a href="/kb/en/uninstall-plugin/">UNINSTALL PLUGIN</a>. For example:</p>
 <pre class="fixed"><span class="n">UNINSTALL</span> <span class="n">SONAME</span> <span class="s1">&#39;feedback&#39;</span><span class="p">;</span>
 </pre><p>If you installed the plugin by providing the <code><a href="/kb/en/mysqld-options/#-plugin-load">--plugin-load</a></code> or the <code><a href="/kb/en/mysqld-options/#-plugin-load-add">--plugin-load-add</a></code> options in a relevant server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>, then those options should be removed to prevent the plugin from being loaded the next time the server is restarted.</p>
 <h2 class="anchored_heading" id="enabling-the-plugin">Enabling the Plugin</h2>
@@ -476,21 +497,6 @@ plugin_load_add = feedback
 feedback=ON
 </pre><p>In Windows, the plugin can also be enabled during a new <a href="/kb/en/installing-mariadb-msi-packages-on-windows/">MSI</a> installation. The MSI GUI installation provides the "Enable feedback plugin" checkbox to enable the plugin. The MSI command-line installation provides the FEEDBACK=1 command-line option to enable the plugin.</p>
 <p>See the next section for how to verify the plugin is installed and active and (if needed) install the plugin.</p>
-<h2 class="anchored_heading" id="verifying-the-plugins-status">Verifying the Plugin's Status</h2>
-<p>To verify whether the <code>feedback</code> plugin is installed and enabled, execute the
-<code><a href="/kb/en/show-plugins/">SHOW PLUGINS</a></code> statement or query the <code><a href="/kb/en/plugins-table-information-schema/">information_schema.plugins</a></code> table. For example:</p>
-<pre class="fixed"><span class="k">SELECT</span> <span class="n">plugin_status</span> <span class="k">FROM</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">plugins</span> 
-  <span class="k">WHERE</span> <span class="n">plugin_name</span> <span class="o">=</span> <span class="s1">&#39;feedback&#39;</span><span class="p">;</span>
-</pre><p>If that <code>SELECT</code> returns no rows, then you still need to <a href="#installing-the-plugin">install the plugin</a>.</p>
-<p>When the plugin is installed and enabled, you will see:</p>
-<pre class="fixed"><span class="k">SELECT</span> <span class="n">plugin_status</span> <span class="k">FROM</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">plugins</span> 
-  <span class="k">WHERE</span> <span class="n">plugin_name</span> <span class="o">=</span> <span class="s1">&#39;feedback&#39;</span><span class="p">;</span>
-<span class="o">+</span><span class="c1">---------------+</span>
-<span class="o">|</span> <span class="n">plugin_status</span> <span class="o">|</span>
-<span class="o">+</span><span class="c1">---------------+</span>
-<span class="o">|</span> <span class="n">ACTIVE</span>        <span class="o">|</span>
-<span class="o">+</span><span class="c1">---------------+</span>
-</pre><p>If you see <code>DISABLED</code> instead of <code>ACTIVE</code>, then you still need to <a href="#enabling-the-plugin">enable the plugin</a>.</p>
 <h2 class="anchored_heading" id="collecting-data">Collecting Data</h2>
 <p>The <code>feedback</code> plugin will collect:</p>
 <ul start="1"><li>Certain rows from <a href="/kb/en/show-status/">SHOW STATUS</a> and <a href="/kb/en/show-variables/">SHOW VARIABLES</a>.
@@ -525,7 +531,7 @@ plugin will <strong>not</strong> automatically send any data. This may be necess
 <pre class="fixed">$ mariadb -e 'select * from information_schema.feedback' &gt; report.txt
 </pre><p>Then you can upload the generated <code>report.txt</code> <a href="https://mariadb.org/feedback_plugin/post">here</a> using your web browser.</p>
 <p>Or you can do it from the command line with tools such as <a href="https://curl.haxx.se/docs/manpage.html">curl</a>. For example:</p>
-<pre class="fixed">$ curl -F <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a5c1c4d1c498e5d7c0d5cad7d18bd1ddd1">[email&#160;protected]</a> https://mariadb.org/feedback_plugin/post
+<pre class="fixed">$ curl -F <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="95f1f4e1f4a8d5e7f0e5fae7e1bbe1ede1">[email&#160;protected]</a> https://mariadb.org/feedback_plugin/post
 </pre><p>Manual uploading allows you to be absolutely sure that we receive only the data shown in the <a href="/kb/en/information-schema-feedback-table/">INFORMATION_SCHEMA.FEEDBACK</a> table and that no private or sensitive information is being sent.</p>
 <h2 class="anchored_heading" id="versions">Versions</h2>
 <div class="cstm-style darkheader-nospace-borders"><table><tr><th>Version</th><th>Status</th><th>Introduced</th></tr>
