@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-protocol-differences-with-mysql/+r/143771/">143771</a></dd>
+            <dd><a href="/kb/en/mariadb-protocol-differences-with-mysql/+r/143910/">143910</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3114">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-10-07 12:08">2024-10-07 12:08</span></dd>
+<span class="datetime" title="2024-10-16 11:30">2024-10-16 11:30</span></dd>
         </dl>
     </div>
     
@@ -337,14 +337,16 @@
 MariaDB/MySQL servers can advertise feature support using capabilities. To expand the capabilities beyond the original 4 bytes, MariaDB utilizes 4 bytes, unused by MySQL, in the [[connection/#initial-handshake-packet|Initial handshake packet]] (server capabilities 3rd part). In order to avoid incompatibility in the future, those 4 bytes have to be read only if capability CLIENT_MYSQL is not SET (server then being MariaDB).
 
 Enhanced Capabilities
-* MARIADB_CLIENT_CACHE_METADATA: Enables clients to cache metadata and avoid repeated network transmissions.
-* MARIADB_CLIENT_EXTENDED_TYPE_INFO: Provides more detailed column metadata information for specific data types.
-* MARIADB_CLIENT_STMT_BULK_OPERATIONS: Introduces a dedicated command, [[com_stmt_bulk_execute|COM_STMT_BULK_EXECUTE]], for efficient batch execution of statements.
-* MARIADB_CLIENT_BULK_UNIT_RESULTS: Allows for individual result sets for each bulk operation.
+* MARIADB_CLIENT_CACHE_METADATA: Enables clients to cache metadata and avoid repeated network transmissions. (since MariaDB 10.6.0)
+* MARIADB_CLIENT_EXTENDED_TYPE_INFO: Provides more detailed column metadata information for specific data types. (since MariaDB 10.5.2)
+* MARIADB_CLIENT_STMT_BULK_OPERATIONS: Introduces a dedicated command, [[com_stmt_bulk_execute|COM_STMT_BULK_EXECUTE]], for efficient batch execution of statements. (since MariaDB 10.2.0)
+* MARIADB_CLIENT_BULK_UNIT_RESULTS: Allows for individual result sets for each bulk operation. (since MariaDB 11.5.1)
 
 See [[connection/#capabilities|Connection Capabilities]].
 
 === Prepare Statement Skipping Metadata
+
+//since MariaDB 10.6.0//
 
 Prepared statement metadata, which typically remains unchanged except during table alterations, can be cached by clients when the MARIADB_CLIENT_CACHE_METADATA capability is enabled. The server won&#39;t then send them again, unless they change. This significantly improves the performance of subsequent executions, especially for large metadata sets.
 
@@ -356,8 +358,92 @@ When MARIADB_CLIENT_CACHE_METADATA  capability is set, the Resultset [[result-se
     int&lt;1&gt; metadata follows (0 / 1)
 &lt;&lt;/style&gt;&gt; 
 
+===== Example
+
+&lt;&lt;style class=&#34;yellowbox&#34;&gt;&gt;
+java code:
+&lt;&lt;code&gt;&gt;
+stmt.execute(&#34;CREATE TABLE test_table (id int, val varchar(32))&#34;);
+stmt.execute(&#34;INSERT INTO test_table VALUES (1, &#39;a&#39;), (2, &#39;b&#39;)&#34;);
+try (PreparedStatement prep = sharedConnBinary.prepareStatement(&#34;SELECT * FROM test_table WHERE id = ?&#34;)) {
+    prep.setInt(1, 1);
+    prep.executeQuery();
+}
+&lt;&lt;/code&gt;&gt;
+
+Results with metadata caching:
+&lt;&lt;code&gt;&gt;
+Column count packet:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 02 00 00 01 02 00                                | ......           |
++------+--------------------------------------------------+------------------+
+row:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 08 00 00 02 00 00 01 00  00 00 01 61             | ...........a     |
++------+--------------------------------------------------+------------------+
+
+OK_Packet with a 0xFE header:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 07 00 00 03 FE 00 00 22  00 00 00                | .......&#34;...      |
++------+--------------------------------------------------+------------------+
+
+&lt;&lt;/code&gt;&gt;
+
+same without metadata caching:
+&lt;&lt;code&gt;&gt;
+Column count packet:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 01 00 00 01 02                                   | .....            |
++------+--------------------------------------------------+------------------+
+
+Column Definition packet:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 33 00 00 02 03 64 65 66  05 74 65 73 74 6A 0A 74 | 3....def.testj.t |
+|000010| 65 73 74 5F 74 61 62 6C  65 0A 74 65 73 74 5F 74 | est_table.test_t |
+|000020| 61 62 6C 65 02 69 64 02  69 64 0C 3F 00 0B 00 00 | able.id.id.?.... |
+|000030| 00 03 00 00 00 00 00                             | .......          |
++------+--------------------------------------------------+------------------+
+
+Column Definition packet:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 35 00 00 03 03 64 65 66  05 74 65 73 74 6A 0A 74 | 5....def.testj.t |
+|000010| 65 73 74 5F 74 61 62 6C  65 0A 74 65 73 74 5F 74 | est_table.test_t |
+|000020| 61 62 6C 65 03 76 61 6C  03 76 61 6C 0C FF 00 80 | able.val.val.... |
+|000030| 00 00 00 FD 00 00 00 00  00                      | .........        |
++------+--------------------------------------------------+------------------+
+
+row:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 08 00 00 04 00 00 01 00  00 00 01 61             | ...........a     |
++------+--------------------------------------------------+------------------+
+
+OK_Packet with a 0xFE header:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 07 00 00 05 FE 00 00 22  00 00 00                | .......&#34;...      |
++------+--------------------------------------------------+------------------+
+&lt;&lt;/code&gt;&gt;
+&lt;&lt;/style&gt;&gt;
 
 === Extended Column Information
+
+//since MariaDB 10.5.2//
+
 When the MARIADB_CLIENT_EXTENDED_TYPE_INFO capability is set, [[result-set-packets/#column-definition-packet|column definition packet]] can include additional type and format information.
 * For geometric fields: Detailed geometric data type (e.g., &#39;point&#39;, &#39;polygon&#39;)
 * For JSON fields: Type &#39;json&#39;
@@ -365,17 +451,70 @@ When the MARIADB_CLIENT_EXTENDED_TYPE_INFO capability is set, [[result-set-packe
 
 === Bulk
 
+//since MariaDB 10.2.0 - MariaDB 11.5.1 for unit results//
+
 The MARIADB_CLIENT_STMT_BULK_OPERATIONS capability enables the [[com_stmt_bulk_execute/|COM_STMT_BULK_EXECUTE]] command for efficient batch processing. However, note that only one result (OK or ERROR) is returned per batch, containing the total affected rows and the first auto-generated ID. For individual results, the MARIADB_CLIENT_BULK_UNIT_RESULTS capability can be set. The server will then return a resultset containing for each unitary results (containing auto generated ids and affected rows)
+
+===== Example
+
+&lt;&lt;style class=&#34;yellowbox&#34;&gt;&gt;
+java code: 
+&lt;&lt;code&gt;&gt;
+Statement stmt = connection.createStatement();
+stmt.execute(&#34;CREATE TABLE test_table (id int, val varchar(32))&#34;);
+
+try (PreparedStatement prep = connection.prepareStatement(&#34;INSERT INTO test_table VALUES (?, ?)&#34;)) {
+
+    prep.setInt(1, 1);
+    prep.setString(2, &#34;a&#34;);
+    prep.addBatch();
+
+    prep.setInt(1, 2);
+    prep.setString(2, &#34;b&#34;);
+    prep.addBatch();
+
+    prep.executeBatch();
+}
+&lt;&lt;/code&gt;&gt;
+
+
+client send :
+&lt;&lt;code&gt;&gt;
+MARIADB_CLIENT_STMT_BULK_OPERATIONS:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 1B 00 00 00 FA FF FF FF  FF 80 00 03 00 FD 00 00 | ................ |
+|000010| 01 00 00 00 00 01 61 00  02 00 00 00 00 01 62    | ......a.......b  |
++------+--------------------------------------------------+------------------+
+&lt;&lt;/code&gt;&gt;
+
+server response:
+&lt;&lt;code&gt;&gt;
+OK_Packet:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 2E 00 00 01 00 02 00 02  00 00 00 26 52 65 63 6F | ...........&amp;Reco |
+|000010| 72 64 73 3A 20 32 20 20  44 75 70 6C 69 63 61 74 | rds: 2  Duplicat |
+|000020| 65 73 3A 20 30 20 20 57  61 72 6E 69 6E 67 73 3A | es: 0  Warnings: |
+|000030| 20 30                                            |  0               |
++------+--------------------------------------------------+------------------+
+&lt;&lt;/code&gt;&gt;
+&lt;&lt;/style&gt;&gt;
+
 
 === Authentication Plugins
 
 MariaDB has specific authentication methods. 
 
-* [[connection/#client_ed25519-plugin|ED25519 plugin]]
-* [[connection/#parsec-plugin|PARSEC plugin]]
-* [[connection/#auth_gssapi_client-plugin| GSSAPI plugin]]
+* [[connection/#client_ed25519-plugin|ED25519 plugin]]  since MariaDB 10.3.0
+* [[connection/#parsec-plugin|PARSEC plugin]] since MariaDB 11.6.1
+* [[connection/#auth_gssapi_client-plugin| GSSAPI plugin]] since MariaDB 10.1.10
 
 === Redirection
+
+//since MariaDB 11.3.1 or Maxscale 25.08.0//
 
 MariaDB permits [[connection-redirection-mechanism-in-the-mariadb-clientserver-protocol/|connection redirection]].
 
@@ -394,7 +533,9 @@ Connectors can support 2 different levels:
 
 === No Configuration SSL
 
-MariaDB 11.4.1 introduced [[https://mariadb.org/mission-impossible-zero-configuration-ssl/|a feature permitting TLS certificate validation without needing to provide certificate client side]].
+//since MariaDB 11.4.1//
+
+Since [[https://mariadb.org/mission-impossible-zero-configuration-ssl/|a feature permitting TLS certificate validation without needing to provide certificate client side]].
 
 ===== Benefits
 
@@ -415,16 +556,9 @@ MariaDB 11.4.1 introduced [[https://mariadb.org/mission-impossible-zero-configur
 
 === Initial Session Tracking
 
-MySQL and MariaDB support session tracking with CLIENT_SESSION_TRACK capability set. 
+MySQL 5.7.0 and MariaDB 10.2.2 support session tracking when the CLIENT_SESSION_TRACK capability is set. 
+
 One difference is that since MariaDB 11.5.1, connection ending OK_Packet lists all the current variables of tracked variable. 
-
-=== Collations
-
-Connectors don&#39;t care about collations, but normally want to ensure charset in connection exchanges.
-
-The only good solution is to use &lt;&lt;sql&gt;&gt;SET NAMES utf8mb4&lt;&lt;/sql&gt;&gt; or &lt;&lt;sql&gt;&gt;SET NAMES utf8mb4 COLLATE someUtf8mb4collation&lt;&lt;/sql&gt;&gt;
-
-If supporting session tracking, connectors can check if charset of initial tracked variable &#39;character_set_connection&#39; corresponds to the expected value, then permit skipping this SET NAMES command.
 
 
 === MySQL Features Not Supported
@@ -458,7 +592,7 @@ Connectors usually follow a two-step process for prepared statements:
 * Execute: Send a [[com_stmt_execute/|COM_STMT_EXECUTE]] command, using the statement ID obtained in the previous step.
 
 
-When the server support MARIADB_CLIENT_STMT_BULK_OPERATIONS capability, a specific statement ID value of -1 (or 0xffffffff in hexadecimal) can be used to indicate that the previously prepared statement could be reused. This enables connectors to pipeline the preparation and execution steps into a single request:
+When the server support MARIADB_CLIENT_STMT_BULK_OPERATIONS capability (since MariaDB 10.2), a specific statement ID value of -1 (or 0xffffffff in hexadecimal) can be used to indicate that the previously prepared statement could be reused. This enables connectors to pipeline the preparation and execution steps into a single request:
 
 * Send a  [[com_stmt_prepare/|COM_STMT_PREPARE]] then a [[com_stmt_execute/|COM_STMT_EXECUTE]] with statement ID -1 (0xffffffff) commands to the server.
 * Read the prepare and execute responses
@@ -474,9 +608,22 @@ This description has been done for [[com_stmt_execute/|COM_STMT_EXECUTE]], but [
 
 ==== Query Timeout
 
-Since MariaDB 10.1.2 (so all maintained server versions), setting a timeout for all commands can be set using &lt;&lt;sql&gt;&gt;SET max_statement_time=XXX&lt;&lt;/sql&gt;&gt; with XXX in seconds.
+//Since MariaDB 10.1.2//
+ 
+Setting a timeout for all commands can be set using &lt;&lt;sql&gt;&gt;SET max_statement_time=XXX&lt;&lt;/sql&gt;&gt; with XXX in seconds.
 
-Setting it for a specific query can be done using &lt;&lt;sql&gt;&gt;SET STATEMENT max_statement_time=XXX FOR ...&lt;&lt;/sql&gt;&gt;</textarea>
+Setting it for a specific query can be done using &lt;&lt;sql&gt;&gt;SET STATEMENT max_statement_time=XXX FOR ...&lt;&lt;/sql&gt;&gt;
+
+
+=== Collations
+
+Connectors don&#39;t care about collations, but normally want to ensure charset in connection exchanges.
+
+The only good solution is to use &lt;&lt;sql&gt;&gt;SET NAMES utf8mb4&lt;&lt;/sql&gt;&gt; or &lt;&lt;sql&gt;&gt;SET NAMES utf8mb4 COLLATE someUtf8mb4collation&lt;&lt;/sql&gt;&gt;
+
+If supporting session tracking, connectors can check if charset of initial tracked variable &#39;character_set_connection&#39; corresponds to the expected value, then permit skipping this SET NAMES command.
+
+( &#39;server default collation&#39; from [[connection/#initial-handshake-packet|initial handshare packet]] cannot be trusted, since truncated to one byte. Recent mysql and mariadb collation can go on 2 bytes)</textarea>
     
 
 

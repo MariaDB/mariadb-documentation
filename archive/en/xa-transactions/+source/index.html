@@ -319,7 +319,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/xa-transactions/+r/143833/">143833</a></dd>
+            <dd><a href="/kb/en/xa-transactions/+r/143905/">143905</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-982">
@@ -328,7 +328,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-10-11 12:04">2024-10-11 12:04</span></dd>
+<span class="datetime" title="2024-10-16 09:28">2024-10-16 09:28</span></dd>
         </dl>
     </div>
     
@@ -561,7 +561,23 @@ xa rollback X&#39;31320d3334093637763738&#39;,X&#39;6162630a646566&#39;,3;
 
 However, [[galera-cluster|MariaDB Galera Cluster]] builds include a built-in plugin called ##wsrep##. Prior to MariaDB 10.4.3, this plugin was internally considered an [[xa-transactions|XA-capable]] [[storage-engines|storage engine]]. Consequently, these [[galera-cluster|MariaDB Galera Cluster]] builds have multiple XA-capable storage engines by default, even if the only &#34;real&#34; storage engine that supports external [[xa-transactions|XA transactions]] enabled on these builds by default is [[innodb|InnoDB]]. Therefore, when using one these builds MariaDB would be forced to use a [[transaction-coordinator-log|transaction coordinator log]] by default, which could have performance implications.
 
-See [[transaction-coordinator-log-overview/#mariadb-galera-cluster|Transaction Coordinator Log Overview: MariaDB Galera Cluster]] for more information.</textarea>
+See [[transaction-coordinator-log-overview/#mariadb-galera-cluster|Transaction Coordinator Log Overview: MariaDB Galera Cluster]] for more information.
+
+=== Incompatibility with 10.4 XA behaviour
+
+In 10.4 and earlier, an XA transaction was still tied to the connection
+until COMMIT, and would be rolled back on disconnect. From MariaDB 10.5, ##XA PREPARE##
+persists the XA transaction following the XA Specification. If an existing
+application relies on the previous behavior, upgrading to 10.5 or later can
+leave XA transactions in the PREPAREd state indefinitely after disconnect,
+causing such applications to no longer function correctly.
+
+As a work-around, the variable
+[[server-system-variables#legacy_xa_rollback_at_disconnect|legacy_xa_rollback_at_disconnect]]
+can be set to TRUE to re-enable the old behavior and roll back XA
+transactions in the PREPAREd state at disconnect. This is non-standard
+behaviour, and is not recommended for new applications. If
+rollback-at-disconnect is desired, it is better to use a normal (non-XA) transaction.</textarea>
     
 
 

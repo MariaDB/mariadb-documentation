@@ -270,12 +270,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-09-20 15:56">3 weeks, 2 days ago</span></dd>
+<span class="datetime" title="2024-09-20 15:56">3 weeks, 5 days ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-10-07 12:08">6 days, 20 hours ago</span></dd>
+<span class="datetime" title="2024-10-16 11:30">12 hours, 38 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -411,34 +411,143 @@
 <h3 class="anchored_heading" id="mariadb-capabilities-extension">MariaDB Capabilities Extension</h3>
 <p>MariaDB/MySQL servers can advertise feature support using capabilities. To expand the capabilities beyond the original 4 bytes, MariaDB utilizes 4 bytes, unused by MySQL, in the <a href="/kb/en/connection/#initial-handshake-packet">Initial handshake packet</a> (server capabilities 3rd part). In order to avoid incompatibility in the future, those 4 bytes have to be read only if capability CLIENT_MYSQL is not SET (server then being MariaDB).</p>
 <p>Enhanced Capabilities</p>
-<ul start="1"><li>MARIADB_CLIENT_CACHE_METADATA: Enables clients to cache metadata and avoid repeated network transmissions.
-</li><li>MARIADB_CLIENT_EXTENDED_TYPE_INFO: Provides more detailed column metadata information for specific data types.
-</li><li>MARIADB_CLIENT_STMT_BULK_OPERATIONS: Introduces a dedicated command, <a href="/kb/en/com_stmt_bulk_execute/">COM_STMT_BULK_EXECUTE</a>, for efficient batch execution of statements.
-</li><li>MARIADB_CLIENT_BULK_UNIT_RESULTS: Allows for individual result sets for each bulk operation.
+<ul start="1"><li>MARIADB_CLIENT_CACHE_METADATA: Enables clients to cache metadata and avoid repeated network transmissions. (since <a href="/kb/en/mariadb-1060-release-notes/">MariaDB 10.6.0</a>)
+</li><li>MARIADB_CLIENT_EXTENDED_TYPE_INFO: Provides more detailed column metadata information for specific data types. (since <a href="/kb/en/mariadb-1052-release-notes/">MariaDB 10.5.2</a>)
+</li><li>MARIADB_CLIENT_STMT_BULK_OPERATIONS: Introduces a dedicated command, <a href="/kb/en/com_stmt_bulk_execute/">COM_STMT_BULK_EXECUTE</a>, for efficient batch execution of statements. (since <a href="/kb/en/mariadb-1020-release-notes/">MariaDB 10.2.0</a>)
+</li><li>MARIADB_CLIENT_BULK_UNIT_RESULTS: Allows for individual result sets for each bulk operation. (since <a href="/kb/en/mariadb-11-5-1-release-notes/">MariaDB 11.5.1</a>)
 </li></ul>
 <p>See <a href="/kb/en/connection/#capabilities">Connection Capabilities</a>.</p>
 <h3 class="anchored_heading" id="prepare-statement-skipping-metadata">Prepare Statement Skipping Metadata</h3>
+<p><em>since <a href="/kb/en/mariadb-1060-release-notes/">MariaDB 10.6.0</a></em></p>
 <p>Prepared statement metadata, which typically remains unchanged except during table alterations, can be cached by clients when the MARIADB_CLIENT_CACHE_METADATA capability is enabled. The server won't then send them again, unless they change. This significantly improves the performance of subsequent executions, especially for large metadata sets.</p>
 <p>When MARIADB_CLIENT_CACHE_METADATA  capability is set, the Resultset <a href="/kb/en/result-set-packets/#column-count-packet">Column count packet</a> format indicates if metadata follows or is skipped:</p>
 <div class="cstm-style" style="padding: 16px;background-color: #f7f7f7;border-radius: 3px;"><ul start="1"><li>int&lt;lenenc&gt; column count
 </li><li>if (MARIADB_CLIENT_CACHE_METADATA capability set)
     int&lt;1&gt; metadata follows (0 / 1)
 </li></ul>
-</div><h3 class="anchored_heading" id="extended-column-information">Extended Column Information</h3>
+</div><h5 class="anchored_heading" id="example">Example</h5>
+<div class="cstm-style yellowbox"><p>java code:</p>
+<pre class="fixed">stmt.execute(&#34;CREATE TABLE test_table (id int, val varchar(32))&#34;);
+stmt.execute(&#34;INSERT INTO test_table VALUES (1, 'a'), (2, 'b')&#34;);
+try (PreparedStatement prep = sharedConnBinary.prepareStatement(&#34;SELECT * FROM test_table WHERE id = ?&#34;)) {
+    prep.setInt(1, 1);
+    prep.executeQuery();
+}
+</pre><p>Results with metadata caching:</p>
+<pre class="fixed">Column count packet:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 02 00 00 01 02 00                                | ......           |
++------+--------------------------------------------------+------------------+
+row:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 08 00 00 02 00 00 01 00  00 00 01 61             | ...........a     |
++------+--------------------------------------------------+------------------+
+
+OK_Packet with a 0xFE header:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 07 00 00 03 FE 00 00 22  00 00 00                | .......&#34;...      |
++------+--------------------------------------------------+------------------+
+
+</pre><p>same without metadata caching:</p>
+<pre class="fixed">Column count packet:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 01 00 00 01 02                                   | .....            |
++------+--------------------------------------------------+------------------+
+
+Column Definition packet:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 33 00 00 02 03 64 65 66  05 74 65 73 74 6A 0A 74 | 3....def.testj.t |
+|000010| 65 73 74 5F 74 61 62 6C  65 0A 74 65 73 74 5F 74 | est_table.test_t |
+|000020| 61 62 6C 65 02 69 64 02  69 64 0C 3F 00 0B 00 00 | able.id.id.?.... |
+|000030| 00 03 00 00 00 00 00                             | .......          |
++------+--------------------------------------------------+------------------+
+
+Column Definition packet:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 35 00 00 03 03 64 65 66  05 74 65 73 74 6A 0A 74 | 5....def.testj.t |
+|000010| 65 73 74 5F 74 61 62 6C  65 0A 74 65 73 74 5F 74 | est_table.test_t |
+|000020| 61 62 6C 65 03 76 61 6C  03 76 61 6C 0C FF 00 80 | able.val.val.... |
+|000030| 00 00 00 FD 00 00 00 00  00                      | .........        |
++------+--------------------------------------------------+------------------+
+
+row:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 08 00 00 04 00 00 01 00  00 00 01 61             | ...........a     |
++------+--------------------------------------------------+------------------+
+
+OK_Packet with a 0xFE header:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 07 00 00 05 FE 00 00 22  00 00 00                | .......&#34;...      |
++------+--------------------------------------------------+------------------+
+</pre></div><h3 class="anchored_heading" id="extended-column-information">Extended Column Information</h3>
+<p><em>since <a href="/kb/en/mariadb-1052-release-notes/">MariaDB 10.5.2</a></em></p>
 <p>When the MARIADB_CLIENT_EXTENDED_TYPE_INFO capability is set, <a href="/kb/en/result-set-packets/#column-definition-packet">column definition packet</a> can include additional type and format information.</p>
 <ul start="1"><li>For geometric fields: Detailed geometric data type (e.g., 'point', 'polygon')
 </li><li>For JSON fields: Type 'json'
 </li><li>For UUID fields: Type 'uuid'
 </li></ul>
 <h3 class="anchored_heading" id="bulk">Bulk</h3>
+<p><em>since <a href="/kb/en/mariadb-1020-release-notes/">MariaDB 10.2.0</a> - <a href="/kb/en/mariadb-11-5-1-release-notes/">MariaDB 11.5.1</a> for unit results</em></p>
 <p>The MARIADB_CLIENT_STMT_BULK_OPERATIONS capability enables the <a href="/kb/en/com_stmt_bulk_execute/">COM_STMT_BULK_EXECUTE</a> command for efficient batch processing. However, note that only one result (OK or ERROR) is returned per batch, containing the total affected rows and the first auto-generated ID. For individual results, the MARIADB_CLIENT_BULK_UNIT_RESULTS capability can be set. The server will then return a resultset containing for each unitary results (containing auto generated ids and affected rows)</p>
-<h3 class="anchored_heading" id="authentication-plugins">Authentication Plugins</h3>
+<h5 class="anchored_heading" id="example">Example</h5>
+<div class="cstm-style yellowbox"><p>java code: </p>
+<pre class="fixed">Statement stmt = connection.createStatement();
+stmt.execute(&#34;CREATE TABLE test_table (id int, val varchar(32))&#34;);
+
+try (PreparedStatement prep = connection.prepareStatement(&#34;INSERT INTO test_table VALUES (?, ?)&#34;)) {
+
+    prep.setInt(1, 1);
+    prep.setString(2, &#34;a&#34;);
+    prep.addBatch();
+
+    prep.setInt(1, 2);
+    prep.setString(2, &#34;b&#34;);
+    prep.addBatch();
+
+    prep.executeBatch();
+}
+</pre><p>client send :</p>
+<pre class="fixed">MARIADB_CLIENT_STMT_BULK_OPERATIONS:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 1B 00 00 00 FA FF FF FF  FF 80 00 03 00 FD 00 00 | ................ |
+|000010| 01 00 00 00 00 01 61 00  02 00 00 00 00 01 62    | ......a.......b  |
++------+--------------------------------------------------+------------------+
+</pre><p>server response:</p>
+<pre class="fixed">OK_Packet:
+       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| 2E 00 00 01 00 02 00 02  00 00 00 26 52 65 63 6F | ...........&amp;Reco |
+|000010| 72 64 73 3A 20 32 20 20  44 75 70 6C 69 63 61 74 | rds: 2  Duplicat |
+|000020| 65 73 3A 20 30 20 20 57  61 72 6E 69 6E 67 73 3A | es: 0  Warnings: |
+|000030| 20 30                                            |  0               |
++------+--------------------------------------------------+------------------+
+</pre></div><h3 class="anchored_heading" id="authentication-plugins">Authentication Plugins</h3>
 <p>MariaDB has specific authentication methods. </p>
-<ul start="1"><li><a href="/kb/en/connection/#client_ed25519-plugin">ED25519 plugin</a>
-</li><li><a href="/kb/en/connection/#parsec-plugin">PARSEC plugin</a>
-</li><li><a href="/kb/en/connection/#auth_gssapi_client-plugin">GSSAPI plugin</a>
+<ul start="1"><li><a href="/kb/en/connection/#client_ed25519-plugin">ED25519 plugin</a>  since <a href="/kb/en/mariadb-1030-release-notes/">MariaDB 10.3.0</a>
+</li><li><a href="/kb/en/connection/#parsec-plugin">PARSEC plugin</a> since <a href="/kb/en/mariadb-11-6-1-release-notes/">MariaDB 11.6.1</a>
+</li><li><a href="/kb/en/connection/#auth_gssapi_client-plugin">GSSAPI plugin</a> since <a href="/kb/en/mariadb-10110-release-notes/">MariaDB 10.1.10</a>
 </li></ul>
 <h3 class="anchored_heading" id="redirection">Redirection</h3>
+<p><em>since <a href="/kb/en/mariadb-11-3-1-release-notes/">MariaDB 11.3.1</a> or Maxscale 25.08.0</em></p>
 <p>MariaDB permits <a href="/kb/en/connection-redirection-mechanism-in-the-mariadb-clientserver-protocol/">connection redirection</a>.</p>
 <h5 class="anchored_heading" id="use-cases">Use Cases</h5>
 <ul start="1"><li>Proxy Scenarios: Connection redirection is particularly beneficial when multiple servers share a single proxy.
@@ -452,7 +561,8 @@
 </li></ul>
 </li></ul>
 <h3 class="anchored_heading" id="no-configuration-ssl">No Configuration SSL</h3>
-<p><a href="/kb/en/mariadb-11-4-1-release-notes/">MariaDB 11.4.1</a> introduced <a href="https://mariadb.org/mission-impossible-zero-configuration-ssl/">a feature permitting TLS certificate validation without needing to provide certificate client side</a>.</p>
+<p><em>since <a href="/kb/en/mariadb-11-4-1-release-notes/">MariaDB 11.4.1</a></em></p>
+<p>Since <a href="https://mariadb.org/mission-impossible-zero-configuration-ssl/">a feature permitting TLS certificate validation without needing to provide certificate client side</a>.</p>
 <h5 class="anchored_heading" id="benefits">Benefits</h5>
 <ul start="1"><li>Simplified Setup: No need to install and manage client certificates, making initial configuration much easier.
 </li></ul>
@@ -468,14 +578,8 @@
 </li><li>Comparison: If the client-generated hash matches the server-sent hash, the connection is deemed secure and proceeds. Otherwise, the connection must be terminated for security reasons.
 </li></ul>
 <h3 class="anchored_heading" id="initial-session-tracking">Initial Session Tracking</h3>
-<p>MySQL and MariaDB support session tracking with CLIENT_SESSION_TRACK capability set. 
-One difference is that since <a href="/kb/en/mariadb-11-5-1-release-notes/">MariaDB 11.5.1</a>, connection ending OK_Packet lists all the current variables of tracked variable. </p>
-<h3 class="anchored_heading" id="collations">Collations</h3>
-<p>Connectors don't care about collations, but normally want to ensure charset in connection exchanges.</p>
-<p>The only good solution is to use <code class="fixed" style="white-space:pre-wrap"><span class="k">SET</span> <span class="k">NAMES</span> <span class="n">utf8mb4</span>
-</code> or <code class="fixed" style="white-space:pre-wrap"><span class="k">SET</span> <span class="k">NAMES</span> <span class="n">utf8mb4</span> <span class="k">COLLATE</span> <span class="n">someUtf8mb4collation</span>
-</code></p>
-<p>If supporting session tracking, connectors can check if charset of initial tracked variable 'character_set_connection' corresponds to the expected value, then permit skipping this SET NAMES command.</p>
+<p>MySQL 5.7.0 and <a href="/kb/en/mariadb-1022-release-notes/">MariaDB 10.2.2</a> support session tracking when the CLIENT_SESSION_TRACK capability is set. </p>
+<p>One difference is that since <a href="/kb/en/mariadb-11-5-1-release-notes/">MariaDB 11.5.1</a>, connection ending OK_Packet lists all the current variables of tracked variable. </p>
 <h3 class="anchored_heading" id="mysql-features-not-supported">MySQL Features Not Supported</h3>
 <ul start="1"><li>X protocol is not supported
 </li></ul>
@@ -498,7 +602,7 @@ One difference is that since <a href="/kb/en/mariadb-11-5-1-release-notes/">Mari
 <ul start="1"><li>Prepare: Send a  <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a> command to the server, receiving a statement ID in response.
 </li><li>Execute: Send a <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a> command, using the statement ID obtained in the previous step.
 </li></ul>
-<p>When the server support MARIADB_CLIENT_STMT_BULK_OPERATIONS capability, a specific statement ID value of -1 (or 0xffffffff in hexadecimal) can be used to indicate that the previously prepared statement could be reused. This enables connectors to pipeline the preparation and execution steps into a single request:</p>
+<p>When the server support MARIADB_CLIENT_STMT_BULK_OPERATIONS capability (since <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>), a specific statement ID value of -1 (or 0xffffffff in hexadecimal) can be used to indicate that the previously prepared statement could be reused. This enables connectors to pipeline the preparation and execution steps into a single request:</p>
 <ul start="1"><li>Send a  <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a> then a <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a> with statement ID -1 (0xffffffff) commands to the server.
 </li><li>Read the prepare and execute responses
 </li></ul>
@@ -507,10 +611,18 @@ One difference is that since <a href="/kb/en/mariadb-11-5-1-release-notes/">Mari
 <p>Traditionally, connectors send <a href="/kb/en/com_stmt_prepare/">COM_STMT_PREPARE</a>, wait for results, then execute <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a>  with statement_id received from the prepare result. </p>
 <p>This description has been done for <a href="/kb/en/com_stmt_execute/">COM_STMT_EXECUTE</a>, but <a href="/kb/en/com_stmt_bulk_execute/">COM_STMT_BULK_EXECUTE</a> works exactly the same way. </p>
 <h4 class="anchored_heading" id="query-timeout">Query Timeout</h4>
-<p>Since <a href="/kb/en/mariadb-1012-release-notes/">MariaDB 10.1.2</a> (so all maintained server versions), setting a timeout for all commands can be set using <code class="fixed" style="white-space:pre-wrap"><span class="k">SET</span> <span class="n">max_statement_time</span><span class="o">=</span><span class="n">XXX</span>
+<p><em>Since <a href="/kb/en/mariadb-1012-release-notes/">MariaDB 10.1.2</a></em></p>
+<p>Setting a timeout for all commands can be set using <code class="fixed" style="white-space:pre-wrap"><span class="k">SET</span> <span class="n">max_statement_time</span><span class="o">=</span><span class="n">XXX</span>
 </code> with XXX in seconds.</p>
 <p>Setting it for a specific query can be done using <code class="fixed" style="white-space:pre-wrap"><span class="k">SET</span> <span class="k">STATEMENT</span> <span class="n">max_statement_time</span><span class="o">=</span><span class="n">XXX</span> <span class="k">FOR</span> <span class="p">...</span>
 </code></p>
+<h3 class="anchored_heading" id="collations">Collations</h3>
+<p>Connectors don't care about collations, but normally want to ensure charset in connection exchanges.</p>
+<p>The only good solution is to use <code class="fixed" style="white-space:pre-wrap"><span class="k">SET</span> <span class="k">NAMES</span> <span class="n">utf8mb4</span>
+</code> or <code class="fixed" style="white-space:pre-wrap"><span class="k">SET</span> <span class="k">NAMES</span> <span class="n">utf8mb4</span> <span class="k">COLLATE</span> <span class="n">someUtf8mb4collation</span>
+</code></p>
+<p>If supporting session tracking, connectors can check if charset of initial tracked variable 'character_set_connection' corresponds to the expected value, then permit skipping this SET NAMES command.</p>
+<p>( 'server default collation' from <a href="/kb/en/connection/#initial-handshake-packet">initial handshare packet</a> cannot be trusted, since truncated to one byte. Recent mysql and mariadb collation can go on 2 bytes)</p>
 
     </div>
 
