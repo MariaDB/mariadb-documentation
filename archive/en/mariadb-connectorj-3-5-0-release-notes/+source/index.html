@@ -323,7 +323,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-connectorj-3-5-0-release-notes/+r/143913/">143913</a></dd>
+            <dd><a href="/kb/en/mariadb-connectorj-3-5-0-release-notes/+r/143928/">143928</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3114">
@@ -332,7 +332,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-10-16 15:24">2024-10-16 15:24</span></dd>
+<span class="datetime" title="2024-10-21 17:11">2024-10-21 17:11</span></dd>
         </dl>
     </div>
     
@@ -358,25 +358,52 @@ MariaDB Connector/J 3.5.0 is a **//[[release-criteria|Stable]] (GA)//** release.
 &lt;&lt;/style&gt;&gt;
 
 == Notable changes
-==== PARSEC Authentication - CONJ-1193 
+=== PARSEC Authentication - CONJ-1193 
 
 Support of the PARSEC Authentication Plugin which is provided starting with MariaDB Server 11.6. See [[authentication-plugin-parsec|parsec documentation]] for more details. 
 
 This requires java 15+ (to use java native ed25519 Algorithm implementation). 
 For previous versions of  java, this will require adding BouncyCastle as dependency.
 
-====  New options `truststore`, `trustStorePassword` and `trustStoreType` - CONJ-1183
+===  New options `truststore`, `trustStorePassword` and `trustStoreType` - CONJ-1183
 
-Those options permit the use of a specific truststore that differs from the Java default truststore. This has been added for MariaDB 2.x and MySQL connector compatibility.
+Those options permit the use of a specific truststore that differs from the Java default truststore. This has been added for MariaDB 2.x and MySQL connector compatibility. See [[about-mariadb-connector-j/#truststore|documentation]]
 
+=== New option `connectionCollation` - CONJ-1199
+
+The Connector is using the utf8mb4 charset per default when establishing a connection. ‘connectionCollation’ can be used to define which utf8mb4 collation should be used. If not set the server default collation for utf8mb4 will be used.
+
+Starting with MariaDB 11.4 we recommend to instead set [[server-system-variables/#character_set_collations|character_set_collations]]
+
+=== Support for methods setObject/getObject and setArray/getArray - CONJ-1205
+
+This addition is a preparation for the Vector support of MariaDB Server
+
+Example of Array: 
+&lt;&lt;code&gt;&gt;
+Array valArray = connection.createArrayOf(&#34;float&#34;, new float[] {1, 2, 3});
+try (PreparedStatement prep =
+   connection.prepareStatement(&#34;INSERT INTO BinaryCodec(t0, t1) VALUES (?, ?, ?)&#34;)) {
+ prep.setInt(1, 1);
+ prep.setArray(2, valArray);
+ prep.setObject(3, new float[] {4, 5, 6});
+ prep.execute();
+}
+&lt;&lt;/code&gt;&gt;
+
+Resultset:
+&lt;&lt;code&gt;&gt; 
+Array resArray = rs.getArray(2);
+float[] res = rs.getObject(2, float[].class);
+&lt;&lt;/code&gt;&gt;
 
 == Bugs Fixed
 
-* CONJ-1202 Session variable setting must be executed last
-* CONJ-1201 incorrect default behavior for forceConnectionTimeZoneToSession
+* CONJ-1202 A change of the collation via a session variable might be ignored
+* CONJ-1201 Incorrect default behavior for forceConnectionTimeZoneToSession
+** NOTE: If client and server use different time zones and no timezone options where used, MariaDB Connector/J 3.4 introduces a change which is forcing client timezone to the session. This behavior is an not intended incompatibility change compared to MariaDB Connector/J 3.3, which is corrected in MariaDB Connector/J 3.5 with this change
 * CONJ-1200 Batch import fails with exception &#34;Unknown command&#34;
-* CONJ-1199 option `connectionCollation` addition in order to force collation
-* CONJ-1187 Use different exception type for connection timeouts
+* CONJ-1187 Throw exception type SQLTimeoutException instead of SQLNonTransientConnectionException for connection timeouts
 
 
 == Changelog
