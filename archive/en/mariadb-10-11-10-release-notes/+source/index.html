@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-10-11-10-release-notes/+r/141858/">141858</a></dd>
+            <dd><a href="/kb/en/mariadb-10-11-10-release-notes/+r/144100/">144100</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-08-19 11:00">2024-08-19 11:00</span></dd>
+<span class="datetime" title="2024-11-01 19:17">2024-11-01 19:17</span></dd>
         </dl>
     </div>
     
@@ -330,17 +330,14 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;include slug=&#34;unreleased-1011&#34;&gt;&gt;
-&lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
-&lt;&lt;button target=&#34;https://mariadb.com/downloads&#34; class=&#34;btn-primary&#34;&gt;&gt;Download&lt;&lt;/button&gt;&gt;
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;button target=&#34;https://mariadb.com/downloads&#34; class=&#34;btn-primary&#34;&gt;&gt;Download&lt;&lt;/button&gt;&gt;
 &lt;&lt;button target=&#34;mariadb-10-11-10-release-notes&#34; class=&#34;btn-info disabled&#34;&gt;&gt;Release Notes&lt;&lt;/button&gt;&gt;
 &lt;&lt;button target=&#34;mariadb-10-11-10-changelog&#34; class=&#34;btn-info&#34;&gt;&gt;Changelog&lt;&lt;/button&gt;&gt;
 &lt;&lt;button target=&#34;what-is-mariadb-10-11&#34; class=&#34;btn-info&#34;&gt;&gt;Overview of 10.11&lt;&lt;/button&gt;&gt;
 
 ^^//[[https://downloads.mariadb.org/mariadb/10.11.10/|Alternate download from mariadb.org]]//^^
 
-**Release date:** ?
-&lt;&lt;/style&gt;&gt;
+**Release date:** 1 Nov 2024
 
 MariaDB 10.11 is a stable long term series of MariaDB, [[https://mariadb.org/about/#maintenance-policy|maintained until]] February 2028. It is an evolution of MariaDB 10.10 with several entirely new features.
 
@@ -355,27 +352,81 @@ Thanks, and enjoy MariaDB!
 
 == Notable Items
 
+=== Storage Engines
 
-The following list of tasks due to be fixed in MariaDB 10.11.10 is pulled from [[jira|JIRA]].
+==== InnoDB
 
-&lt;&lt;style style=&#34;border-left: 1px solid grey; padding-left: 10px;&#34;&gt;&gt;
-&lt;&lt;jira search=&#34;project = MDEV  AND fixVersion = 10.11.10 ORDER BY component  ASC&#34;&gt;&gt;
-=== %fields.summary%
+* Trying to read 16384 bytes at 70368744161280 outside the bounds of the file: ./ibdata1 (MDEV-34453) 
+* MariaDB crashes with SIGILL because the OS does not support AVX512 (MDEV-34565) 
+* lock_rec_unlock_unmodified() causes deadlock (MDEV-34690) 
+* Can&#39;t write; duplicate key in table &#39;mysql.innodb_table_stats&#39; (MDEV-34207) 
+* ALTER TABLE...IMPORT TABLESPACE with FULLTEXT SEARCH may corrupt the adaptive hash index (MDEV-35059) 
+* XA prepare don&#39;t release unmodified records in non-blocking mode (MDEV-34466) 
+* Contention between secondary index UPDATE and purge due to large innodb_purge_batch_size (MDEV-34515) 
+* Redundant page lookups hurt performance (MDEV-34791) 
 
-|=Details:|[[https://jira.mariadb.org/browse/%key%|%key%]]
-----
-&lt;&lt;/jira&gt;&gt;
-&lt;&lt;/style&gt;&gt;
+==== Spider
+
+* Server crashes when calling spider UDF after aria_encrypt_tables is enabled (MDEV-34682) 
+* SELECT MIN on Spider table returns more rows than expected (MDEV-26345) 
+* spider group by handler wrong result on order by aggregate (MDEV-29546) 
+
+==== S3
+
+* engine S3 cause 500 error for huawei buckets (MDEV-34867) 
+
+=== Optimizer
+
+* Crash caused by query containing constant  having clause (MDEV-23983) 
+* Assertion with optimizer_join_limit_pref_ratio and 1-table select (MDEV-35072) 
+
+=== Data Definition - Alter Table
+
+* Under Windows Subsystem for Linux, InnoDB crashes on ALTER TABLE or OPTIMIZE TABLE (MDEV-34938) 
+* modification of the column fails to check foreign key constraint (MDEV-34392) 
+* Incorrect NULL value handling for instantly dropped BLOB columns (MDEV-35122) 
+
+=== Galera
+
+* Galera updated to 26.4.20
+* Server crashes when setting wsrep_cluster_address after adding invalid value to wsrep_allowlist table (MDEV-31173) 
+* TOI (ALTER) hangs on a parent table if SR transaction is in progress on a child table (MDEV-34836) 
+* INSERT...SELECT&#39; on MyISAM table suddenly replicated by  Galera (MDEV-34647) 
+* With wsrep_mode=REPLICATE_ARIA only part of mixed-engine transactions is replicated (MDEV-30653) 
+* galera_ssl_reload failed with warning message (MDEV-32778) 
+* when InnoDB gets an assertion failure, WSREP layer is not handled gracefully (MDEV-32363) 
+
+=== Backup
+
+* Recovery fails to note some log corruption (MDEV-34802) 
+* InnoDB fails to merge the change buffer to ROW_FORMAT=COMPRESSED tables (MDEV-34879) 
+* Can&#39;t selectively restore sequences using innodb tables from backup (MDEV-32350) 
+
+=== JSON
+
+* JSON_TABLE doesn&#39;t properly unquote strings (MDEV-27412) 
+* JSON_TABLE: default values should allow non-string literals (MDEV-25822) 
+
+=== General
+
+* As per the [[deprecation-policy|MariaDB Deprecation Policy]], this will be the last release of MariaDB 10.11 for SLES 12
+* mysqld hangs on startup when --init-file target does not exists (MDEV-34814) 
+* LOAD DATA INFILE with geometry data fails (MDEV-34883) 
+* heap-use-after-free in group_concat with compressed or GIS columns (MDEV-16699) 
+* Assertion `!is_cond()&#39; failed in Item_bool_func::val_int / do_select (MDEV-35135) 
+* Trigger doesn&#39;t work correctly with bulk update (MDEV-34718) 
+* Assertion failure in find_producing_item upon a query from a view (MDEV-35276) 
+* Quick mode produces the bug for mariadb client (MDEV-34704) 
 
 &lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 === Security
 * Fixes for the following [[cve|security vulnerabilities]]:
 ** CVE-####-#####
+&lt;&lt;/style&gt;&gt;
 
 == Changelog
 For a complete list of changes made in MariaDB 10.11.10, with links to detailed
 information on each push, see the [[mariadb-10-11-10-changelog|changelog]].
-&lt;&lt;/style&gt;&gt;
 
 &lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 == Contributors
