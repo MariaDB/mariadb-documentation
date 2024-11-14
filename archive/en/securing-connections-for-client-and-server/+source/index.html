@@ -323,7 +323,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/securing-connections-for-client-and-server/+r/141584/">141584</a></dd>
+            <dd><a href="/kb/en/securing-connections-for-client-and-server/+r/144233/">144233</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5454">
@@ -332,7 +332,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-08-04 10:33">2024-08-04 10:33</span></dd>
+<span class="datetime" title="2024-11-13 18:00">2024-11-13 18:00</span></dd>
         </dl>
     </div>
     
@@ -344,23 +344,30 @@
         
         <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
 
-By default, MariaDB transmits data between the server and clients without encrypting it. This is generally acceptable when the server and client run on the same host or in networks where security is guaranteed through other means. However, in cases where the server and client exist on separate networks or they are in a high-risk network, the lack of encryption does introduce security concerns as a malicious actor could potentially eavesdrop on the traffic as it is sent over the network between them.
+Starting from 11.4 MariaDB encrypts the transmitted data between the server and clients by default unless the server and client run on the same host.
 
-To mitigate this concern, MariaDB allows you to encrypt data in transit between the server and clients using the Transport Layer Security (TLS) protocol. TLS was formerly known as Secure Socket Layer (SSL), but strictly speaking the SSL protocol is a predecessor to TLS and, that version of the protocol is now considered insecure. The documentation still uses the term SSL often and for compatibility reasons TLS-related server system and status variables still use the prefix ##ssl_##, but internally, MariaDB only supports its secure successors.
+Before that the default behavior was to transmit the data unencrypted over the network introducing a security concerns as a malicious actor could potentially eavesdrop on the traffic as it is sent over the network between them.
 
-In order to secure connections between the server and client, you need to ensure that your server was compiled with TLS support. See [[secure-connections-overview|Secure Connections Overview]] to determine how to check whether a server was compiled with TLS support.
-
-You also need an X509 certificate, a private key, and the Certificate Authority (CA) chain to verify the X509 certificate for the server. If you want to use two-way TLS, then you will also need an X509 certificate, a private key, and the Certificate Authority (CA) chain to verify the X509 certificate for the client. If you want to use self-signed certificates that are created with OpenSSL, then see [[certificate-creation-with-openssl|Certificate Creation with OpenSSL]] for information on how to create those. 
+The data in transit are encrypted (by default or if enabled manually) using the Transport Layer Security (TLS) protocol. TLS was formerly known as Secure Socket Layer (SSL), but strictly speaking the SSL protocol is a predecessor to TLS and, that version of the protocol is now considered insecure. The documentation still uses the term SSL often and for compatibility reasons TLS-related server system and status variables still use the prefix ##ssl_##, but internally, MariaDB only supports its secure successors.
 
 == Enabling TLS
 
 === Enabling TLS for MariaDB Server
 
-In order to enable TLS on a MariaDB server that was compiled with TLS support, there are a number of system variables that you need to set, such as:
+&lt;&lt;product mariadb from=11.4&gt;&gt;
+Starting from 11.4, MariaDB enables TLS automatically. Certificates are generated on startup and only stored in memory. Certificate verification is enabled by default on the client side and certificates are verified if the authentication plugin itself is MitM safe (mysql_native_password, ed25519, parsec).
+
+If you want to use externally generated certificates as with older MariaDB versions, see below.
+&lt;&lt;/product&gt;&gt;
+&lt;&lt;product mariadb to=11.3&gt;&gt;
+In order to enable TLS in a MariaDB server, you need to generate TLS certificates and configure the server to use them.
+&lt;&lt;/product&gt;&gt;
+
+To do that there are a number of system variables that you need to set, such as:
 
 * You need to set the path to the server&#39;s X509 certificate by setting the [[ssltls-system-variables/#ssl_cert|ssl_cert]] system variable.
 * You need to set the path to the server&#39;s private key by setting the [[ssltls-system-variables/#ssl_key|ssl_key]] system variable.
-* You need to set the path to the certificate authority (CA) chain that can verify the server&#39;s certificate by setting either the [[ssltls-system-variables/#ssl_ca|ssl_ca]] or the [[ssltls-system-variables/#ssl_capath|ssl_capath]] system variables.
+* Unless you use a certificate which was signed by a trusted certificate authority (CA) you need to set the path to the certificate authority chain that can verify the server&#39;s certificate by setting either the [[ssltls-system-variables/#ssl_ca|ssl_ca]] or the [[ssltls-system-variables/#ssl_capath|ssl_capath]] system variables.
 * If you want to restrict the server to certain ciphers, then you also need to set the [[ssltls-system-variables/#ssl_cipher|ssl_cipher]] system variable.
 
 For example, to set these variables for the server, add the system variables to a relevant server [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]]:
@@ -399,25 +406,45 @@ See [[flush/#flush-ssl|FLUSH SSL]] for more information.
 
 === Enabling TLS for MariaDB Clients
 
-Different [[clients-utilities|clients and utilities]] may use different methods to enable TLS.
+Different [[clients-utilities|clients and utilities]] may use different methods to enable TLS. You can let the client to use TLS without specifying client-side certificate — this is called a **one-way TLS** below — to have the connection encrypted. Or you can additionally provide client-side certificate — this is **two-way TLS** — which will allow the server to do the certificate based client authentication.
 
-For many of the standard [[clients-utilities|clients and utilities]] that come bundled with MariaDB, you can enable two-way TLS by adding the same options that were set for the server to a relevant client [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]]. For example:
+==== Enabling One-Way TLS for MariaDB Clients
+
+One-way TLS means that only the server provides a private key and an X509 certificate. When TLS is used without a client certificate, it is called &#34;one-way&#34; TLS, because only the server can be authenticated, so certificate based authentication is only possible in one direction. However, encryption is still possible in both directions. [[secure-connections-overview/#server-certificate-verification|Server certificate verification]] means that the client verifies that the certificate belongs to the server.
+
+&lt;&lt;product mariadb from=11.4&gt;&gt;
+Starting from MariaDB 11.4 (Connector/C version 3.4) this mode is enabled by default. Connector/C will enable TLS automatically on all non-local connections and will require a verified server certificate to prevent man-in-the-middle attacks.
+&lt;&lt;/product&gt;&gt;
+
+To enable one-way TLS manually (for older clients or if you want verification with CA certificate) you can specify these options in a a relevant client [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]]:
 
 &lt;&lt;code&gt;&gt;
 [client-mariadb]
 ...
-ssl_cert = /etc/my.cnf.d/certificates/client-cert.pem
-ssl_key = /etc/my.cnf.d/certificates/client-key.pem
 ssl_ca = /etc/my.cnf.d/certificates/ca.pem
+ssl-verify-server-cert
 &lt;&lt;/code&gt;&gt;
 
-The specific options that you would need to set would depend on whether you want one-way TLS or two-way TLS, and whether you want to verify the server certificate.
+Or if you wanted to specify them on the command-line with the [[mariadb-command-line-client|mariadb]] client, then you could execute something like this:
 
-The same options may also enable TLS on non-standard [[clients-utilities|clients and utilities]] that are linked with either [[https://dev.mysql.com/doc/refman/5.5/en/c-api.html|libmysqlclient]] or [[mariadb-connector-c|MariaDB Connector/C]].
+&lt;&lt;code&gt;&gt;
+$ mariadb -u myuser -p -h myserver.mydomain.com \
+   --ssl-ca=/etc/my.cnf.d/certificates/ca.pem \
+   --ssl-verify-server-cert
+&lt;&lt;/code&gt;&gt;
+
+You can disable server certificate verification with
+&lt;&lt;code&gt;&gt;
+[client-mariadb]
+disable-ssl-verify-server-cert
+&lt;&lt;/code&gt;&gt;
+(or a similar command line option), but it creates a risk of a man-in-the-middle attack where the connection can be eavesdropped or manipulated even if it is being encrypted.
 
 ==== Enabling Two-Way TLS for MariaDB Clients
 
-Two-way TLS means that both the client and server provide a private key and an X509 certificate. It is called &#34;two-way&#34; TLS because both the client and server can be authenticated. For example, to specify these options in a relevant client [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]], you could set the following:
+Two-way TLS means that both the client and server provide a private key and an X509 certificate. It is called &#34;two-way&#34; TLS because both the client and server can be authenticated.
+
+For example, to specify these options in a relevant client [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]], you could set the following:
 
 &lt;&lt;code&gt;&gt;
 [client-mariadb]
@@ -439,44 +466,6 @@ $ mariadb -u myuser -p -h myserver.mydomain.com \
 &lt;&lt;/code&gt;&gt;
 
 Two-way SSL is required for an account if the ##REQUIRE X509##, ##REQUIRE SUBJECT##, and/or ##REQUIRE ISSUER## clauses are specified for the account.
-
-==== Enabling One-Way TLS for MariaDB Clients
-
-===== Enabling One-Way TLS for MariaDB Clients with Server Certificate Verification
-
-One-way TLS means that only the server provides a private key and an X509 certificate. When TLS is used without a client certificate, it is called &#34;one-way&#34; TLS, because only the server can be authenticated, so authentication is only possible in one direction. However, encryption is still possible in both directions. [[secure-connections-overview/#server-certificate-verification|Server certificate verification]] means that the client verifies that the certificate belongs to the server. For example, to specify these options in a a relevant client [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]], you could set the following:
-
-&lt;&lt;code&gt;&gt;
-[client-mariadb]
-...
-ssl_ca = /etc/my.cnf.d/certificates/ca.pem
-ssl-verify-server-cert
-&lt;&lt;/code&gt;&gt;
-
-Or if you wanted to specify them on the command-line with the [[mariadb-command-line-client|mariadb]] client, then you could execute something like this:
-
-&lt;&lt;code&gt;&gt;
-$ mariadb -u myuser -p -h myserver.mydomain.com \
-   --ssl-ca=/etc/my.cnf.d/certificates/ca.pem \
-   --ssl-verify-server-cert
-&lt;&lt;/code&gt;&gt;
-
-===== Enabling One-Way TLS for MariaDB Clients without Server Certificate Verification
-
-One-way TLS means that only the server provides a private key and an X509 certificate. When TLS is used without a client certificate, it is called &#34;one-way&#34; TLS, because only the server can be authenticated, so authentication is only possible in one direction. However, encryption is still possible in both directions. For example, to specify these options in a a relevant client [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]], you could set the following:
-
-&lt;&lt;code&gt;&gt;
-[client-mariadb]
-...
-ssl
-&lt;&lt;/code&gt;&gt;
-
-Or if you wanted to specify them on the command-line with the [[mariadb-command-line-client|mariadb]] client, then you could execute something like this:
-
-&lt;&lt;code&gt;&gt;
-$ mariadb -u myuser -p -h myserver.mydomain.com \
-   --ssl
-&lt;&lt;/code&gt;&gt;
 
 === Enabling TLS for MariaDB Connector/C Clients
 
