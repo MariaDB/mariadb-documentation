@@ -292,12 +292,12 @@ Unreleased means there are no officia..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-11-15 14:22">2 days, 12 hours ago</span></dd>
+<span class="datetime" title="2024-11-15 14:22">3 days, 10 hours ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-11-15 14:22">2 days, 12 hours ago</span></dd>
+<span class="datetime" title="2024-11-18 10:54">14 hours, 8 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -448,21 +448,24 @@ MariaDB Connector/J 3.5.1 is a <strong><em><a href="/kb/en/release-criteria/">St
 <p>Support of the PARSEC Authentication Plugin which is provided starting with MariaDB Server 11.6. See parsec documentation for more details.</p>
 <p>This requires java 15+ (to use java native ed25519 Algorithm implementation). For previous versions of java, this will require adding BouncyCastle as dependency.</p>
 <p><em>While initially documented in 3.5.0, this feature was not in the released version.</em></p>
-<h3 class="anchored_heading" id="new-hamode-sequential-write-loadbalance-read-conj-1207">New HaMode: sequential write, loadbalance read - <a href="https://jira.mariadb.org/browse/CONJ-1207">CONJ-1207</a></h3>
-<p>When running a multi-master cluster (i.e. Galera), writing to more than one node can lead to optimistic locking errors ("deadlocks"). Writing concurrently to multiple nodes also doesn't bring a whole lot of performance, due to having to (synchronously) replicate to all 3 nodes anyway.
-High availability mode “Load-balance-read” permits the use of masters in order (first master only, or the next only if first master fails) while distributing the load on replicas. </p>
-<p>Example of connection string: <code class="fixed" style="white-space:pre-wrap">jdbc:mariadb:load-balance-read://127.0.0.5,127.0.0.6,address=(host=127.0.0.7)(type=replica),address=(host=127.0.0.8)(type=replica)/DB</code></p>
+<h3 class="anchored_heading" id="new-high-availability-mode-with-loadbalancing-for-reads-conj-1207">New High Availability Mode With Loadbalancing For Reads - <a href="https://jira.mariadb.org/browse/CONJ-1207">CONJ-1207</a></h3>
+<p>When running a multi-master cluster (i.e. MariaDB Cluster with Galera), writing to more than one node can lead to optimistic locking errors ("deadlocks") in some use cases. Writing concurrently to multiple nodes also doesn't result in performance improvements, due to having to synchronously replicate to all nodes.
+The new high availability mode “Load-balance-read” permits the use of masters in a failover manner (try first master, the next one if the first master fails) while distributing the load on replicas. </p>
+<p>Example of connection string: </p>
+<pre class="fixed">jdbc:mariadb:load-balance-read://127.0.0.5,127.0.0.6,address=(host=127.0.0.7)(type=replica),address=(host=127.0.0.8)(type=replica)/DB
+</pre><p>Equivalent of:</p>
+<pre class="fixed">jdbc:mariadb:load-balance-read://address=(host=127.0.0.5)(type=primary),address=(host=127.0.0.6)(type=primary),address=(host=127.0.0.7)(type=replica),address=(host=127.0.0.8)(type=replica)/DB
+</pre><p>In the example the hosts 127.0.0.5, 127.0.0.6 will be used for writes, in a failover manner. 127.0.0.6,127.0.0.7 are of type replica, read load balancing will be used.</p>
+<h3 class="anchored_heading" id="permit-bulk-for-insert-on-duplicate-key-update-commands-for-1151-servers-conj-1208">Permit bulk for INSERT ON DUPLICATE KEY UPDATE commands for 11.5.1+ servers - <a href="https://jira.mariadb.org/browse/CONJ-1208">CONJ-1208</a></h3>
+<p>Since <a href="https://jira.mariadb.org/browse/MDEV-30366">MDEV-30366</a>, the server can return appropriate detailed answers. This was implemented, but not for specific INSERT ON DUPLICATE KEY UPDATE commands. </p>
 <h2 class="anchored_heading" id="bugs-fixed">Bugs Fixed</h2>
-<ul start="1"><li><a href="https://jira.mariadb.org/browse/CONJ-1208">CONJ-1208</a> Permit bulk for INSERT ON DUPLICATE KEY UPDATE commands for 11.5.1+ servers
-<ul start="1"><li>Since <a href="https://jira.mariadb.org/browse/MDEV-30366">MDEV-30366</a>, the server can return appropriate detailed answers. This was implemented, but not for specific INSERT ON DUPLICATE KEY UPDATE commands. 
-</li></ul>
-</li><li><a href="https://jira.mariadb.org/browse/CONJ-1053">CONJ-1053</a> Mark waffle-jna dependency optional in module descriptor
-</li><li><a href="https://jira.mariadb.org/browse/CONJ-1196">CONJ-1196</a> setObject on java.util.Date was considered was a java.sql.Date and truncate hour/minutes/seconds/ms while it must be considered like a java.sql.Timestamp
+<ul start="1"><li><a href="https://jira.mariadb.org/browse/CONJ-1053">CONJ-1053</a> waffle-jna dependency is not declared  optional in the module description
+</li><li><a href="https://jira.mariadb.org/browse/CONJ-1196">CONJ-1196</a> setObject on java.util.Date is en/decode as java.sql.Date and truncates hour/minutes/seconds/ms while it must be en/decode like a java.sql.Timestamp
 </li><li><a href="https://jira.mariadb.org/browse/CONJ-1211">CONJ-1211</a> JDBC 4.3 enquoteIdentifier missing validation
-<ul start="1"><li>identifier containing only number must be quoted, even if `alwaysQuote` parameter is set to false
-</li><li>length validation must be done (&lt; 64 characters).
+<ul start="1"><li>An identifier containing only number must be quoted, even if `alwaysQuote` parameter is set to false
+</li><li>Length validation must be done (&lt; 64 characters).
 </li></ul>
-</li><li><a href="https://jira.mariadb.org/browse/CONJ-1213">CONJ-1213</a> sql command ending with semicolon and trailing space are not using bulk
+</li><li><a href="https://jira.mariadb.org/browse/CONJ-1213">CONJ-1213</a> SQL commands ending with semicolon and trailing space are not using bulk
 </li></ul>
 <h2 class="anchored_heading" id="changelog">Changelog</h2>
 <p>For a complete list of changes made in MariaDB Connector/J 3.5.1, with links to detailed

@@ -323,7 +323,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-connectorj-3-5-1-release-notes/+r/144275/">144275</a></dd>
+            <dd><a href="/kb/en/mariadb-connectorj-3-5-1-release-notes/+r/144306/">144306</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3114">
@@ -332,7 +332,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-11-15 14:22">2024-11-15 14:22</span></dd>
+<span class="datetime" title="2024-11-18 10:54">2024-11-18 10:54</span></dd>
         </dl>
     </div>
     
@@ -369,28 +369,39 @@ This requires java 15+ (to use java native ed25519 Algorithm implementation). Fo
 
 //While initially documented in 3.5.0, this feature was not in the released version.//
 
-=== New HaMode: sequential write, loadbalance read - CONJ-1207
-When running a multi-master cluster (i.e. Galera), writing to more than one node can lead to optimistic locking errors (&#34;deadlocks&#34;). Writing concurrently to multiple nodes also doesn&#39;t bring a whole lot of performance, due to having to (synchronously) replicate to all 3 nodes anyway.
-High availability mode “Load-balance-read” permits the use of masters in order (first master only, or the next only if first master fails) while distributing the load on replicas. 
-
-Example of connection string: &lt;&lt;code&gt;&gt;jdbc:mariadb:load-balance-read://127.0.0.5,127.0.0.6,address=(host=127.0.0.7)(type=replica),address=(host=127.0.0.8)(type=replica)/DB&lt;&lt;/code&gt;&gt;
 
 
+=== New High Availability Mode With Loadbalancing For Reads - CONJ-1207
+
+When running a multi-master cluster (i.e. MariaDB Cluster with Galera), writing to more than one node can lead to optimistic locking errors (&#34;deadlocks&#34;) in some use cases. Writing concurrently to multiple nodes also doesn&#39;t result in performance improvements, due to having to synchronously replicate to all nodes.
+The new high availability mode “Load-balance-read” permits the use of masters in a failover manner (try first master, the next one if the first master fails) while distributing the load on replicas. 
+
+Example of connection string: 
+&lt;&lt;code&gt;&gt;
+jdbc:mariadb:load-balance-read://127.0.0.5,127.0.0.6,address=(host=127.0.0.7)(type=replica),address=(host=127.0.0.8)(type=replica)/DB
+&lt;&lt;/code&gt;&gt;
+
+Equivalent of:
+&lt;&lt;code&gt;&gt;
+jdbc:mariadb:load-balance-read://address=(host=127.0.0.5)(type=primary),address=(host=127.0.0.6)(type=primary),address=(host=127.0.0.7)(type=replica),address=(host=127.0.0.8)(type=replica)/DB
+&lt;&lt;/code&gt;&gt;
+
+In the example the hosts 127.0.0.5, 127.0.0.6 will be used for writes, in a failover manner. 127.0.0.6,127.0.0.7 are of type replica, read load balancing will be used.
 
 
+=== Permit bulk for INSERT ON DUPLICATE KEY UPDATE commands for 11.5.1+ servers - CONJ-1208
 
-
+Since MDEV-30366, the server can return appropriate detailed answers. This was implemented, but not for specific INSERT ON DUPLICATE KEY UPDATE commands. 
 
 == Bugs Fixed
 
-* CONJ-1208 Permit bulk for INSERT ON DUPLICATE KEY UPDATE commands for 11.5.1+ servers
-** Since MDEV-30366, the server can return appropriate detailed answers. This was implemented, but not for specific INSERT ON DUPLICATE KEY UPDATE commands. 
-* CONJ-1053 Mark waffle-jna dependency optional in module descriptor
-* CONJ-1196 setObject on java.util.Date was considered was a java.sql.Date and truncate hour/minutes/seconds/ms while it must be considered like a java.sql.Timestamp
+
+* CONJ-1053 waffle-jna dependency is not declared  optional in the module description
+* CONJ-1196 setObject on java.util.Date is en/decode as java.sql.Date and truncates hour/minutes/seconds/ms while it must be en/decode like a java.sql.Timestamp
 * CONJ-1211 JDBC 4.3 enquoteIdentifier missing validation
-** identifier containing only number must be quoted, even if `alwaysQuote` parameter is set to false
-** length validation must be done (&lt; 64 characters).
-* CONJ-1213 sql command ending with semicolon and trailing space are not using bulk
+** An identifier containing only number must be quoted, even if `alwaysQuote` parameter is set to false
+** Length validation must be done (&lt; 64 characters).
+* CONJ-1213 SQL commands ending with semicolon and trailing space are not using bulk
 
 == Changelog
 For a complete list of changes made in MariaDB Connector/J 3.5.1, with links to detailed
