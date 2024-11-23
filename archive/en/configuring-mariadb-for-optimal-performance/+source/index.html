@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/configuring-mariadb-for-optimal-performance/+r/140312/">140312</a></dd>
+            <dd><a href="/kb/en/configuring-mariadb-for-optimal-performance/+r/144412/">144412</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-7">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-06-18 12:03">2024-06-18 12:03</span></dd>
+<span class="datetime" title="2024-11-22 14:54">2024-11-22 14:54</span></dd>
         </dl>
     </div>
     
@@ -368,8 +368,51 @@ Some other important InnoDB variables:
 == [[aria-storage-engine|Aria]] Storage Engine
 * MariaDB uses by default the Aria storage engine for internal temporary files. If you have many temporary files, you should set [[aria-server-system-variables#aria_pagecache_buffer_size|aria_pagecache_buffer_size]] to a reasonably large value so that temporary overflow data is not flushed to disk. The default is 128M.
 
+You can check if Aria is configured properly by executing:
+&lt;&lt;sql&gt;&gt;
+MariaDB [test]&gt; show global status like &#34;Aria%&#34;;
++-----------------------------------+-------+
+| Variable_name                     | Value |
++-----------------------------------+-------+
+| Aria_pagecache_blocks_not_flushed | 0     |
+| Aria_pagecache_blocks_unused      | 964   |
+| Aria_pagecache_blocks_used        | 232   |
+| Aria_pagecache_read_requests      | 9598  |
+| Aria_pagecache_reads              | 0     |
+| Aria_pagecache_write_requests     | 222   |
+| Aria_pagecache_writes             | 0     |
+| Aria_transaction_log_syncs        | 0     |
++-----------------------------------+-------+
+&lt;&lt;/sql&gt;&gt;
+
+If ##Aria_pagecache_reads## is much smaller than ##Aria_pagecache_read_request## and
+ ##Aria_pagecache_writes## is much smaller than Aria_pagecache_write_request#, then your setup is good.  If the [[aria-server-system-variables#aria_pagecache_buffer_size|aria_pagecache_buffer_size]] is big enough, the two variables should be 0, like above.
+
 == [[MyISAM]]
 * If you don&#39;t use MyISAM tables explicitly (true for most MariaDB 10.4+ users), you can set [[myisam-system-variables#key_buffer_size|key_buffer_size]] to a very low value, like 64K.
+
+== Using in memory temporary tables
+
+Using memory tables for internal temporary results can speed up execution.
+However, if the memory table gets full, then the memory table will be moved to
+disk, which can hurt performance.
+
+You can check how the internal memory tables are performing by executing:
+
+&lt;&lt;sql&gt;&gt;
+MariaDB [test]&gt; show global status like &#34;Created%tables%&#34;;
++-------------------------+-------+
+| Variable_name           | Value |
++-------------------------+-------+
+| Created_tmp_disk_tables | 1     |
+| Created_tmp_tables      | 2     |
++-------------------------+-------+
+&lt;&lt;/sql&gt;&gt;
+
+##Created_tmp_tables## is the total number of internal temporary tables created as part of executing queries like SELECT.
+##Created_tmp_disk_tables## shows how many of these did hit the storage.
+
+You can increase the storage for internal temporary tables by setting [[server-system-variables/#max_heap_table_size|max_heap_table_size]] and [[server-system-variables/#tmp_memory_table_size|tmp_memory_table_size]] high enough. These values are per connection.
 
 == Lots of Connections
 

@@ -274,12 +274,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2013-12-25 13:33">10 years, 10 months ago</span></dd>
+<span class="datetime" title="2013-12-25 13:33">10 years, 11 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-06-18 12:03">5 months ago</span></dd>
+<span class="datetime" title="2024-11-22 14:54">10 hours, 9 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -437,6 +437,8 @@
 
     <li class=""><a href="#myisam" title="MyISAM">MyISAM</a></li>
 
+    <li class=""><a href="#using-in-memory-temporary-tables" title="Using in memory temporary tables">Using in memory temporary tables</a></li>
+
     <li class=""><a href="#lots-of-connections" title="Lots of Connections">Lots of Connections</a>    <ol class="toc">
 
         <li class=""><a href="#a-lot-of-fast-connections-small-set-of-queries-disconnects" title="A Lot of Fast Connections + Small Set of Queries + Disconnects">A Lot of Fast Connections + Small Set of Queries + Disconnects</a></li>
@@ -474,9 +476,40 @@ This article is to help you configure MariaDB for optimal performance.</p>
 <h2 class="anchored_heading" id="aria-storage-enginearia-storage-engine"><a href="/kb/en/aria-storage-engine/">Aria</a> Storage Engine</h2>
 <ul start="1"><li>MariaDB uses by default the Aria storage engine for internal temporary files. If you have many temporary files, you should set <a href="/kb/en/aria-server-system-variables/#aria_pagecache_buffer_size">aria_pagecache_buffer_size</a> to a reasonably large value so that temporary overflow data is not flushed to disk. The default is 128M.
 </li></ul>
+<p>You can check if Aria is configured properly by executing:</p>
+<pre class="fixed"><span class="n">MariaDB</span> <span class="p">[</span><span class="n">test</span><span class="p">]</span><span class="o">&gt;</span> <span class="k">show</span> <span class="k">global</span> <span class="n">status</span> <span class="k">like</span> <span class="ss">&quot;Aria%&quot;</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">-----------------------------------+-------+</span>
+<span class="o">|</span> <span class="n">Variable_name</span>                     <span class="o">|</span> <span class="n">Value</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">-----------------------------------+-------+</span>
+<span class="o">|</span> <span class="n">Aria_pagecache_blocks_not_flushed</span> <span class="o">|</span> <span class="mi">0</span>     <span class="o">|</span>
+<span class="o">|</span> <span class="n">Aria_pagecache_blocks_unused</span>      <span class="o">|</span> <span class="mi">964</span>   <span class="o">|</span>
+<span class="o">|</span> <span class="n">Aria_pagecache_blocks_used</span>        <span class="o">|</span> <span class="mi">232</span>   <span class="o">|</span>
+<span class="o">|</span> <span class="n">Aria_pagecache_read_requests</span>      <span class="o">|</span> <span class="mi">9598</span>  <span class="o">|</span>
+<span class="o">|</span> <span class="n">Aria_pagecache_reads</span>              <span class="o">|</span> <span class="mi">0</span>     <span class="o">|</span>
+<span class="o">|</span> <span class="n">Aria_pagecache_write_requests</span>     <span class="o">|</span> <span class="mi">222</span>   <span class="o">|</span>
+<span class="o">|</span> <span class="n">Aria_pagecache_writes</span>             <span class="o">|</span> <span class="mi">0</span>     <span class="o">|</span>
+<span class="o">|</span> <span class="n">Aria_transaction_log_syncs</span>        <span class="o">|</span> <span class="mi">0</span>     <span class="o">|</span>
+<span class="o">+</span><span class="c1">-----------------------------------+-------+</span>
+</pre><p>If <code>Aria_pagecache_reads</code> is much smaller than <code>Aria_pagecache_read_request</code> and
+ <code>Aria_pagecache_writes</code> is much smaller than Aria_pagecache_write_request#, then your setup is good.  If the <a href="/kb/en/aria-server-system-variables/#aria_pagecache_buffer_size">aria_pagecache_buffer_size</a> is big enough, the two variables should be 0, like above.</p>
 <h2 class="anchored_heading" id="myisam"><a href="/kb/en/myisam/">MyISAM</a></h2>
 <ul start="1"><li>If you don't use MyISAM tables explicitly (true for most <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a>+ users), you can set <a href="/kb/en/myisam-system-variables/#key_buffer_size">key_buffer_size</a> to a very low value, like 64K.
 </li></ul>
+<h2 class="anchored_heading" id="using-in-memory-temporary-tables">Using in memory temporary tables</h2>
+<p>Using memory tables for internal temporary results can speed up execution.
+However, if the memory table gets full, then the memory table will be moved to
+disk, which can hurt performance.</p>
+<p>You can check how the internal memory tables are performing by executing:</p>
+<pre class="fixed"><span class="n">MariaDB</span> <span class="p">[</span><span class="n">test</span><span class="p">]</span><span class="o">&gt;</span> <span class="k">show</span> <span class="k">global</span> <span class="n">status</span> <span class="k">like</span> <span class="ss">&quot;Created%tables%&quot;</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">-------------------------+-------+</span>
+<span class="o">|</span> <span class="n">Variable_name</span>           <span class="o">|</span> <span class="n">Value</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">-------------------------+-------+</span>
+<span class="o">|</span> <span class="n">Created_tmp_disk_tables</span> <span class="o">|</span> <span class="mi">1</span>     <span class="o">|</span>
+<span class="o">|</span> <span class="n">Created_tmp_tables</span>      <span class="o">|</span> <span class="mi">2</span>     <span class="o">|</span>
+<span class="o">+</span><span class="c1">-------------------------+-------+</span>
+</pre><p><code>Created_tmp_tables</code> is the total number of internal temporary tables created as part of executing queries like SELECT.
+<code>Created_tmp_disk_tables</code> shows how many of these did hit the storage.</p>
+<p>You can increase the storage for internal temporary tables by setting <a href="/kb/en/server-system-variables/#max_heap_table_size">max_heap_table_size</a> and <a href="/kb/en/server-system-variables/#tmp_memory_table_size">tmp_memory_table_size</a> high enough. These values are per connection.</p>
 <h2 class="anchored_heading" id="lots-of-connections">Lots of Connections</h2>
 <h3 class="anchored_heading" id="a-lot-of-fast-connections-small-set-of-queries-disconnects">A Lot of Fast Connections + Small Set of Queries + Disconnects</h3>
 <ul start="1"><li>If you are doing a lot of fast connections / disconnects, you should increase <a href="/kb/en/server-system-variables/#back_log">back_log</a> and if you are running <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> or below <a href="/kb/en/server-system-variables/#thread_cache_size">thread_cache_size</a>.
