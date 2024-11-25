@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-11-6-2-release-notes/+r/144243/">144243</a></dd>
+            <dd><a href="/kb/en/mariadb-11-6-2-release-notes/+r/144425/">144425</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-11-13 20:19">2024-11-13 20:19</span></dd>
+<span class="datetime" title="2024-11-25 08:20">2024-11-25 08:20</span></dd>
         </dl>
     </div>
     
@@ -330,17 +330,14 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;include slug=&#34;unreleased-11-6&#34;&gt;&gt;
-&lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
-&lt;&lt;button target=&#34;https://mariadb.com/downloads&#34; class=&#34;btn-primary&#34;&gt;&gt;Download&lt;&lt;/button&gt;&gt;
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;button target=&#34;https://mariadb.com/downloads&#34; class=&#34;btn-primary&#34;&gt;&gt;Download&lt;&lt;/button&gt;&gt;
 &lt;&lt;button target=&#34;mariadb-11-6-2-release-notes&#34; class=&#34;btn-info disabled&#34;&gt;&gt;Release Notes&lt;&lt;/button&gt;&gt;
-&lt;&lt;button target=&#34;mariadb-11-6-2-changelog&#34; class=&#34;btn-info disabled&#34;&gt;&gt;Changelog&lt;&lt;/button&gt;&gt;
+&lt;&lt;button target=&#34;mariadb-11-6-2-changelog&#34; class=&#34;btn-info&#34;&gt;&gt;Changelog&lt;&lt;/button&gt;&gt;
 &lt;&lt;button target=&#34;what-is-mariadb-11-5&#34; class=&#34;btn-info&#34;&gt;&gt;Overview of 11.4&lt;&lt;/button&gt;&gt;
 
 ^^//[[https://downloads.mariadb.org/mariadb/11.6.2/|Alternate download from mariadb.org]]//^^
 
-**Release date:** ?
-&lt;&lt;/style&gt;&gt;
+**Release date:** 21 Nov 2024
 
 MariaDB 11.6 is a [[mariadb-release-model|rolling release]]. It is an evolution of MariaDB 11.5 with several entirely new features.
 
@@ -355,16 +352,72 @@ Thanks, and enjoy MariaDB!
 
 == Notable Items
 
-The following list of tasks due to be fixed in MariaDB 11.6.2 is pulled from [[jira|JIRA]].
+=== Storage Engines
 
-&lt;&lt;style style=&#34;border-left: 1px solid grey; padding-left: 10px;&#34;&gt;&gt;
-&lt;&lt;jira search=&#34;project = MDEV  AND fixVersion = 11.6.2 ORDER BY component  ASC&#34;&gt;&gt;
-=== %fields.summary%
+==== InnoDB
 
-|=Details:|[[https://jira.mariadb.org/browse/%key%|%key%]]
-----
-&lt;&lt;/jira&gt;&gt;
-&lt;&lt;/style&gt;&gt;
+* Defaults change -  &#39;innodb_snapshot_isolation&#39; now defaults to ON, previously was OFF (MDEV-35124)
+* Fix attempt to read outside the bounds of the file: ./ibdata1 (MDEV-34453) 
+* Fix MariaDB crash with SIGILL because the OS does not support AVX512 (MDEV-34565) 
+* Fix deadlock caused by lock_rec_unlock_unmodified() (MDEV-34690) 
+* Fix duplicate key error in table &#39;mysql.innodb_table_stats&#39; (MDEV-34207) 
+* Fix possible adaptive hash index corruption with ALTER TABLE...IMPORT TABLESPACE and FULLTEXT SEARCH (MDEV-35059) 
+* XA prepare now correctly releases unmodified records in non-blocking mode (MDEV-34466) 
+* Fix contention between secondary index UPDATE and purge due to large innodb_purge_batch_size (MDEV-34515) 
+* Fix redundant page lookups that hurt performance (MDEV-34791) 
+
+==== Spider
+
+* Fix server crash when calling spider UDF after aria_encrypt_tables is enabled (MDEV-34682) 
+* SELECT MIN on Spider table no longer returns more rows than expected (MDEV-26345) 
+* Fix Spider group by handler wrong result on order by aggregate (MDEV-29546) 
+
+==== S3
+
+* Fix Storage Engine S3 that caused 500 error when using Huawai Cloud S3 and possibly other S3 providers (MDEV-34867) 
+** A new option ##S3-provider## has been added. ##S3-provider=Huawai## needs to be set for Huawai Cloud S3 
+
+=== Optimizer
+
+* Fix crash caused by query containing constant  having clause (MDEV-23983) 
+*  Fix assertion with optimizer_join_limit_pref_ratio and 1-table select (MDEV-35072) 
+
+=== Data Definition - Alter Table
+
+* Under Windows Subsystem for Linux, InnoDB crashes on ALTER TABLE or OPTIMIZE TABLE (MDEV-34938) 
+* modification of the column fails to check foreign key constraint (MDEV-34392) 
+* Incorrect NULL value handling for instantly dropped BLOB columns (MDEV-35122) 
+
+=== Galera
+
+* Galera updated to 26.4.20
+* Fix server crash when setting wsrep_cluster_address after adding invalid value to wsrep_allowlist table (MDEV-31173) 
+* TOI (ALTER) no longer hangs on a parent table if SR transaction is in progress on a child table (MDEV-34836) 
+* Fix INSERT...SELECT&#39; on MyISAM table suddenly replicated by alera (MDEV-34647) 
+* Fix case where with wsrep_mode=REPLICATE_ARIA, only part of the mixed-engine transactions was replicated (MDEV-30653) 
+* galera_ssl_reload failed with warning message (MDEV-32778) 
+* When InnoDB gets an assertion failure, WSREP layer is now handled gracefully (MDEV-32363) 
+
+=== Backup
+
+* Recovery now correctly notes some log corruption (MDEV-34802) 
+* InnoDB now correctly merges the change buffer to ROW_FORMAT=COMPRESSED tables (MDEV-34879)
+* Can now selectively restore sequences using innodb tables from backup (MDEV-32350) 
+
+=== JSON
+
+* JSON_TABLE now properly unquotes strings (MDEV-27412) 
+* JSON_TABLE default values now allows non-string literals (MDEV-25822) 
+
+=== General
+
+* [[mariadbd]] no longer hangs on startup when --init-file target does not exist (MDEV-34814) 
+* LOAD DATA INFILE with geometry data no longer fails (MDEV-34883) 
+* Fix heap-use-after-free in group_concat with compressed or GIS columns (MDEV-16699) 
+* Fix assertion `!is_cond()&#39; failed in Item_bool_func::val_int / do_select (MDEV-35135) 
+* Trigger now works correctly with bulk update (MDEV-34718) 
+* Fix assertion failure in find_producing_item upon a query from a view (MDEV-35276) 
+* Add new setting, [[mariadb-command-line-client/#-quick-max-column-widthn|--quick-max-column-width]] to the mariadb client for use in --quick mode (MDEV-34704) 
 
 &lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 === Security

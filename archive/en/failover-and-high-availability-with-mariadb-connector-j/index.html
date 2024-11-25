@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-04-08 06:58">2 years, 7 months ago</span></dd>
+<span class="datetime" title="2024-11-25 08:57">1 hour, 14 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -455,7 +455,18 @@
 
  <li class=""><a href="#configuration" title="Configuration">Configuration</a> <ol class="toc">
 
-    <li class=""><a href="#failover-and-load-balancing-modes" title="Failover and Load Balancing Modes">Failover and Load Balancing Modes</a> </ol>
+    <li class=""><a href="#failover-and-load-balancing-modes" title="Failover and Load Balancing Modes">Failover and Load Balancing Modes</a>    <ol class="toc">
+
+        <li class=""><a href="#sequential" title="sequential">sequential</a></li>
+
+        <li class=""><a href="#loadbalance" title="loadbalance">loadbalance</a></li>
+
+        <li class=""><a href="#replication" title="replication">replication</a></li>
+
+        <li class=""><a href="#load-balance-read" title="load-balance-read">load-balance-read</a></li>
+
+        <li class=""><a href="#aurora" title="aurora">aurora</a>    </ol>
+ </ol>
 </li>
 </div><p>
 <em><strong>This guide will cover:</strong></em></p>
@@ -551,12 +562,30 @@ During the reconnection phase, the driver will try to connect to the hosts seque
 Set this option to a small value (such as 2000ms - to be set according to your environment) which will permit rejecting a faulty server quickly.</p>
 <h2 class="anchored_heading" id="failover-and-load-balancing-modes">Failover and Load Balancing Modes</h2>
 <p>Each parameter corresponds to a specific use case:</p>
-<div class="cstm-style darkheader-nospace-borders centered"><table><tr><th>Mode</th><th>Description</th></tr>
-<tr><td><code>sequential</code></td><td>This mode supports connection failover in a multi-primary environment, such as MariaDB Galera Cluster. This mode does <strong>not</strong> support load-balancing reads on slaves. The connector will try to connect to hosts in the order in which they were declared in the connection URL, so the first available host is used for all queries.<br>For example, let's say that the connection URL is the following: <code>jdbc:mariadb:sequential:<em>host1,host2,host3/testdb</em></code><br>When the connector tries to connect, it will always try host1 first. If that host is not available, then it will try host2. etc. When a host fails, the connector will try to reconnect to hosts in the same order.</td></tr>
-<tr><td><code>loadbalance</code></td><td>This mode permits load-balancing connection in a multi-primary environment, such as MariaDB Galera Cluster. This mode does <strong>not</strong> support load-balancing reads on slaves. The connector performs load-balancing for all queries by randomly picking a host from the connection URL for each connection, so queries will be load-balanced as a result of the connections getting randomly distributed across all hosts.</td></tr>
-<tr><td><code>replication</code></td><td>This mode supports connection failover in a master-slave environment, such as a MariaDB Replication cluster. The mode supports environments with one or more masters. This mode does support load-balancing reads on slaves if the connection is set to read-only before executing the read. The connector performs load-balancing by randomly picking a slave from the connection URL to execute read queries for a connection.</td></tr>
-</table>
-</div>
+<h4 class="anchored_heading" id="sequential"><code>sequential</code></h4>
+<ul start="1"><li><strong>Description:</strong> This mode supports connection failover in a multi-master environment, such as MariaDB Galera Cluster. This mode does <strong>not</strong> support load-balancing reads on slaves. The connector will try to connect to hosts in the order in which they were declared in the connection URL, so the first available host is used for all queries.<br>For example, let's say that the connection URL is the following: <code>jdbc:mariadb:sequential:host1,host2,host3/testdb</code><br>When the connector tries to connect, it will always try host1 first. If that host is not available, then it will try host2. etc. When a host fails, the connector will try to reconnect to hosts in the same order.
+</li><li><strong>Introduced:</strong> 1.3.0
+</li></ul>
+<hr>
+<h4 class="anchored_heading" id="loadbalance"><code>loadbalance</code></h4>
+<ul start="1"><li><strong>Description:</strong> This mode supports connection load-balancing in a multi-master environment, such as MariaDB Galera Cluster. This mode does <strong>not</strong> support load-balancing reads on slaves. The connector performs load-balancing for all queries by randomly picking a host from the connection URL for each connection, so queries will be load-balanced as a result of the connections getting randomly distributed across all hosts. <br>Before 2.4.2, this option was named `failover` - alias still exist for compatibility -
+</li><li><strong>Introduced:</strong> 1.2.0
+</li></ul>
+<hr>
+<h4 class="anchored_heading" id="replication"><code>replication</code></h4>
+<ul start="1"><li><strong>Description:</strong> This mode supports connection failover in a master-slave environment, such as a MariaDB Replication cluster. The mode supports environments with one or more masters. This mode does support load-balancing reads on slaves if the connection is set to read-only before executing the read. The connector performs load-balancing by randomly picking a slave from the connection URL to execute read queries for a connection
+</li><li><strong>Introduced:</strong> 1.2.0
+</li></ul>
+<hr>
+<h4 class="anchored_heading" id="load-balance-read"><code>load-balance-read</code></h4>
+<ul start="1"><li><strong>Description:</strong> When running a multi-master cluster (i.e. Galera), writing to more than one node can lead to optimistic locking errors ("deadlocks"). Writing concurrently to multiple nodes also doesn't bring a whole lot of performance, due to having to (synchronously) replicate to all nodes anyway. <br><br>This mode supports connection failover in a multi-master environment, such as MariaDB Galera Cluster. This mode does support load-balancing reads on slaves. The connector will try to connect to primary hosts in the order in which they were declared in the connection URL, so the first available host is used for all queries.<br>For example, let's say that the connection URL is the following: <code>jdbc:mariadb:load-balance-read:<em>primary1,primary2,address=(host=replica1)(type=replica),address=(host=replica2)(type=replica)/DB</em></code><br>When the connector tries to connect, it will always try primary1 first. If that host is not available, then it will try primary2. etc. When a primary host fails, the connector will try to reconnect to hosts in the same order.<br><br>For replica hosts, the connector performs load-balancing for all queries by randomly picking a replica host from the connection URL for each connection, so queries will be load-balanced as a result of the connections getting randomly distributed across all replica hosts.
+</li><li><strong>Introduced:</strong> 3.5.1
+</li></ul>
+<hr>
+<h4 class="anchored_heading" id="aurora"><code>aurora</code></h4>
+<ul start="1"><li><strong>Description:</strong> This mode supports connection failover in an Amazon Aurora cluster. This mode does support load-balancing reads on slave instances if the connection is set to read-only before executing the read. The connector performs load-balancing by randomly picking a slave instance to execute read queries for a connection
+</li><li><strong>Introduced:</strong> 1.2.0 and <strong>not supported anymore since 3.0 version</strong></li></ul>
+
     </div>
 
 
