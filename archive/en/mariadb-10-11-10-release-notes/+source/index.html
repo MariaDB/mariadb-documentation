@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-10-11-10-release-notes/+r/144150/">144150</a></dd>
+            <dd><a href="/kb/en/mariadb-10-11-10-release-notes/+r/144498/">144498</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-11-06 11:29">2024-11-06 11:29</span></dd>
+<span class="datetime" title="2024-11-26 10:47">2024-11-26 10:47</span></dd>
         </dl>
     </div>
     
@@ -355,69 +355,69 @@ Thanks, and enjoy MariaDB!
 === Storage Engines
 
 ==== InnoDB
+* Fix attempt to read outside the bounds of the file: ./ibdata1 (MDEV-34453) 
+* Fix MariaDB crash with SIGILL because the OS does not support AVX512 (MDEV-34565) 
+* Fix deadlock caused by lock_rec_unlock_unmodified() (MDEV-34690) 
+* Fix duplicate key error in table &#39;mysql.innodb_table_stats&#39; (MDEV-34207) 
+* Fix possible adaptive hash index corruption with ALTER TABLE...IMPORT TABLESPACE and FULLTEXT SEARCH (MDEV-35059) 
+* XA prepare now correctly releases unmodified records in non-blocking mode (MDEV-34466) 
+* Fix contention between secondary index UPDATE and purge due to large innodb_purge_batch_size (MDEV-34515) 
+** New default of ##127## for [[innodb-system-variables/#innodb_purge_batch_size|innodb_purge_batch_size]] (previously ##1000##).
+* Fix redundant page lookups that hurt performance (MDEV-34791) 
 
-* Trying to read 16384 bytes at 70368744161280 outside the bounds of the file: ./ibdata1 (MDEV-34453) 
-* MariaDB crashes with SIGILL because the OS does not support AVX512 (MDEV-34565) 
-* lock_rec_unlock_unmodified() causes deadlock (MDEV-34690) 
-* Can&#39;t write; duplicate key in table &#39;mysql.innodb_table_stats&#39; (MDEV-34207) 
-* ALTER TABLE...IMPORT TABLESPACE with FULLTEXT SEARCH may corrupt the adaptive hash index (MDEV-35059) 
-* XA prepare don&#39;t release unmodified records in non-blocking mode (MDEV-34466) 
-* Contention between secondary index UPDATE and purge due to large innodb_purge_batch_size (MDEV-34515) 
-* Redundant page lookups hurt performance (MDEV-34791) 
+==== [[spider|Spider]]
 
-==== Spider
+* Fix server crash when calling [[spider-functions|spider UDF]] after [[aria-system-variables/#aria_encrypt_tables|aria_encrypt_tables]] is enabled (MDEV-34682) 
+* SELECT MIN on Spider table no longer returns more rows than expected (MDEV-26345) 
+* Fix Spider group by handler wrong result on order by aggregate (MDEV-29546) 
 
-* Server crashes when calling spider UDF after aria_encrypt_tables is enabled (MDEV-34682) 
-* SELECT MIN on Spider table returns more rows than expected (MDEV-26345) 
-* spider group by handler wrong result on order by aggregate (MDEV-29546) 
+==== [[s3-storage-engine/|S3]]
 
-==== S3
-
-* Storage Engine S3 causes 500 error when using Huawai Cloud S3 and possibly other S3 providers (MDEV-34867) 
-** A new option ##S3-provider## has been added. ##S3-provider=Huawai## needs to be set for Huawai Cloud S3 
+* Fix Storage Engine S3 that caused 500 error when using Huawai Cloud S3 and possibly other S3 providers (MDEV-34867) 
+** A new option [[s3-storage-engine-system-variables/#s3_provider|s3-provider]] has been added. ##s3-provider=Huawai## needs to be set for Huawai Cloud S3 
 
 === Optimizer
 
-* Crash caused by query containing constant  having clause (MDEV-23983) 
-* Assertion with optimizer_join_limit_pref_ratio and 1-table select (MDEV-35072) 
+* Fix crash caused by query containing constant  having clause (MDEV-23983) 
+* Fix assertion with optimizer_join_limit_pref_ratio and 1-table select (MDEV-35072) 
 
 === Data Definition - Alter Table
 
-* Under Windows Subsystem for Linux, InnoDB crashes on ALTER TABLE or OPTIMIZE TABLE (MDEV-34938) 
-* modification of the column fails to check foreign key constraint (MDEV-34392) 
-* Incorrect NULL value handling for instantly dropped BLOB columns (MDEV-35122) 
+* Fix InnoDB crash under Windows Subsystem for Linux on ALTER TABLE or OPTIMIZE TABLE (MDEV-34938) 
+* Modification of the column now correctly checks foreign key constraint (MDEV-34392) 
+* Fix incorrect NULL value handling for instantly dropped BLOB columns (MDEV-35122) 
 
-=== Galera
+=== [[galera|Galera]]
 
 * Galera updated to 26.4.20
-* Server crashes when setting wsrep_cluster_address after adding invalid value to wsrep_allowlist table (MDEV-31173) 
-* TOI (ALTER) hangs on a parent table if SR transaction is in progress on a child table (MDEV-34836) 
-* INSERT...SELECT&#39; on MyISAM table suddenly replicated by  Galera (MDEV-34647) 
-* With wsrep_mode=REPLICATE_ARIA only part of mixed-engine transactions is replicated (MDEV-30653) 
-* galera_ssl_reload failed with warning message (MDEV-32778) 
-* when InnoDB gets an assertion failure, WSREP layer is not handled gracefully (MDEV-32363) 
+* Fix server crash when setting wsrep_cluster_address after adding invalid value to wsrep_allowlist table (MDEV-31173) 
+* TOI (ALTER) no longer hangs on a parent table if SR transaction is in progress on a child table (MDEV-34836) 
+* Fix INSERT...SELECT&#39; on MyISAM table suddenly replicated by alera (MDEV-34647) 
+* Fix case where with wsrep_mode=REPLICATE_ARIA, only part of the mixed-engine transactions was replicated (MDEV-30653) 
+* Fix galera_ssl_reload failure with warning message (MDEV-32778) 
+* When InnoDB gets an assertion failure, WSREP layer is now handled gracefully (MDEV-32363) 
 
 === Backup
 
-* Recovery fails to note some log corruption (MDEV-34802) 
-* InnoDB fails to merge the change buffer to ROW_FORMAT=COMPRESSED tables (MDEV-34879) 
-* Can&#39;t selectively restore sequences using innodb tables from backup (MDEV-32350) 
+* Recovery now correctly notes some log corruption (MDEV-34802) 
+* InnoDB now correctly merges the change buffer to ROW_FORMAT=COMPRESSED tables (MDEV-34879)
+* Can now selectively restore sequences using innodb tables from backup (MDEV-32350) 
 
 === JSON
 
-* JSON_TABLE doesn&#39;t properly unquote strings (MDEV-27412) 
-* JSON_TABLE: default values should allow non-string literals (MDEV-25822) 
+* [[json_table|JSON_TABLE]] now properly unquotes strings (MDEV-27412) 
+* [[json_table|JSON_TABLE]] default values now allows non-string literals (MDEV-25822) 
 
 === General
 
 * As per the [[deprecation-policy|MariaDB Deprecation Policy]], this will be the last release of MariaDB 10.11 for SLES 12, and Windows 11 22H2
-* mysqld hangs on startup when --init-file target does not exists (MDEV-34814) 
-* LOAD DATA INFILE with geometry data fails (MDEV-34883) 
-* heap-use-after-free in group_concat with compressed or GIS columns (MDEV-16699) 
-* Assertion `!is_cond()&#39; failed in Item_bool_func::val_int / do_select (MDEV-35135) 
-* Trigger doesn&#39;t work correctly with bulk update (MDEV-34718) 
-* Assertion failure in find_producing_item upon a query from a view (MDEV-35276) 
-* Quick mode produces the bug for mariadb client (MDEV-34704) 
+* [[mariadbd]] no longer hangs on startup when --init-file target does not exist (MDEV-34814) 
+* LOAD DATA INFILE with geometry data no longer fails (MDEV-34883) 
+* Fix heap-use-after-free in group_concat with compressed or GIS columns (MDEV-16699) 
+* Fix assertion `!is_cond()&#39; failed in Item_bool_func::val_int / do_select (MDEV-35135) 
+* Trigger now works correctly with bulk update (MDEV-34718) 
+* Fix assertion failure in find_producing_item upon a query from a view (MDEV-35276) 
+* Add new setting, [[mariadb-command-line-client/#-quick-max-column-widthn|--quick-max-column-width]] to the mariadb client for use in --quick mode (MDEV-34704) 
 
 &lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 === Security
@@ -429,10 +429,8 @@ Thanks, and enjoy MariaDB!
 For a complete list of changes made in MariaDB 10.11.10, with links to detailed
 information on each push, see the [[mariadb-10-11-10-changelog|changelog]].
 
-&lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 == Contributors
-For a full list of contributors to MariaDB 10.11.10, see the [[https://mariadb.org/mariadb-10-11-3-10-10-4-10-9-6-10-8-8-10-6-13-10-5-20-10-4-29-and-10-3-39-now-available/|MariaDB Foundation release announcement]].
-&lt;&lt;/style&gt;&gt;
+For a full list of contributors to MariaDB 10.11.10, see the [[https://mariadb.org/mariadb-11-4-4-11-2-6-10-11-10-10-6-20-and-10-5-27-now-available/|MariaDB Foundation release announcement]].
 
 &lt;&lt;include slug=&#34;release-notification&#34;&gt;&gt;</textarea>
     
