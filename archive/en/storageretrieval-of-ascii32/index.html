@@ -261,12 +261,12 @@ for example :we have table x in which there is a column col( char(1) type) ..." 
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-11-08 08:34">1 year ago</span></dd>
+<span class="datetime" title="2023-11-08 08:34">1 year, 1 month ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-11-08 08:34">1 year ago</span></dd>
+<span class="datetime" title="2024-12-02 11:29">6 days, 15 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>question</dd>
@@ -405,6 +405,33 @@ when we are inserting chr(32) in col , t is inserting successfully but the time 
 
 
 
+    
+        <h2>Answer
+            <span class="answer_comment">Answered by 
+<span class="user" id="user-12">
+<a href="/kb/user/id/12" title="Kristian Nielsen">Kristian Nielsen</a>
+</span> in <a href="#comment_6467">this comment</a>.</span></h2>
+    
+    <div class="answer formatted">
+        <p>It is because char(n) columns strip trailing spaces when selected. So chr(32), a single space, gets interpreted as the empty string. See here:</p>
+<p>    <a href="https://mariadb.com/kb/en/char/">https://mariadb.com/kb/en/char/</a></p>
+<p>    " Trailing spaces are removed when CHAR values are retrieved"</p>
+<p>You can set the SQL_MODE to include PAD_CHAR_TO_FULL_LENGTH to disable this behaviour and be able to select the chr(32):</p>
+<pre>
+MariaDB&gt; set sql_mode = concat(@@sql_mode, ',PAD_CHAR_TO_FULL_LENGTH');
+MariaDB&gt; create table t5 (a char(1));
+MariaDB&gt; insert into t5 values ('a'), (' ');
+MariaDB&gt; select a, length(a), ascii(a) from t5;
++------+-----------+----------+
+| a    | length(a) | ascii(a) |
++------+-----------+----------+
+| a    |         1 |       97 |
+|      |         1 |       32 |
++------+-----------+----------+
+</pre>
+
+    </div>
+
 
         
             <div id="subscribe" class="well well-small hide hidden-print"
@@ -469,7 +496,7 @@ when we are inserting chr(32) in col , t is inserting successfully but the time 
             
                 
                     <li>
-                        <a href="/kb/en/the-table-have-issue-select-is-empty-but-cant-insert-more-data/">
+                        <a href="/kb/en/news-and-information/">
                             
                             News &amp; Information
                         </a>

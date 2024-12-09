@@ -303,7 +303,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/storageretrieval-of-ascii32/+r/132298/">132298</a></dd>
+            <dd><a href="/kb/en/storageretrieval-of-ascii32/+r/144580/">144580</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-14535">
@@ -312,7 +312,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-11-08 08:34">2023-11-08 08:34</span></dd>
+<span class="datetime" title="2024-12-02 11:29">2024-12-02 11:29</span></dd>
         </dl>
     </div>
     
@@ -329,6 +329,30 @@ select ASCII(col) from x;
 output is 0 instated of 32.</textarea>
     
 
+    
+        
+            <h2>Answer</h2>
+        
+        <textarea id="answer_source" class="creole_source autogrow">It is because char(n) columns strip trailing spaces when selected. So chr(32), a single space, gets interpreted as the empty string. See here:
+
+    https://mariadb.com/kb/en/char/
+
+    &#34; Trailing spaces are removed when CHAR values are retrieved&#34;
+
+You can set the SQL_MODE to include PAD_CHAR_TO_FULL_LENGTH to disable this behaviour and be able to select the chr(32):
+
+{{{
+MariaDB&gt; set sql_mode = concat(@@sql_mode, &#39;,PAD_CHAR_TO_FULL_LENGTH&#39;);
+MariaDB&gt; create table t5 (a char(1));
+MariaDB&gt; insert into t5 values (&#39;a&#39;), (&#39; &#39;);
+MariaDB&gt; select a, length(a), ascii(a) from t5;
++------+-----------+----------+
+| a    | length(a) | ascii(a) |
++------+-----------+----------+
+| a    |         1 |       97 |
+|      |         1 |       32 |
++------+-----------+----------+
+}}}</textarea>
     
 
 
