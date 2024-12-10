@@ -330,7 +330,7 @@ Ad..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/24.02.3/Documentation/Getting-Started/Configuration-Guide.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/24.02.4/Documentation/Getting-Started/Configuration-Guide.md">GitHub</a></dd>
         
     </dl>
 
@@ -489,6 +489,7 @@ Ad..." />
 </ul>
 </li>
 <li><a href="#global-settings">Global Settings</a><ul>
+<li><a href="#core_file">core_file</a></li>
 <li><a href="#auto_tune">auto_tune</a></li>
 <li><a href="#threads">threads</a></li>
 <li><a href="#threads_max">threads_max</a></li>
@@ -555,7 +556,7 @@ Ad..." />
 <li><a href="#admin_gui">admin_gui</a></li>
 <li><a href="#admin_secure_gui">admin_secure_gui</a></li>
 <li><a href="#admin_log_auth_failures">admin_log_auth_failures</a></li>
-<li><a href="#admin_pam_readwrite_service-and-admin_pam_readonly_service">admin_pam_readwrite_service and admin_pam_readonly_service</a></li>
+<li><a href="#admin_pam_readwrite_serviceadmin_pam_readonly_service">admin_pam_readwrite_service/admin_pam_readonly_service</a></li>
 <li><a href="#admin_readwrite_hosts">admin_readwrite_hosts</a></li>
 <li><a href="#admin_readonly_hosts">admin_readonly_hosts</a></li>
 <li><a href="#admin_jwt_algorithm">admin_jwt_algorithm</a></li>
@@ -582,12 +583,12 @@ Ad..." />
 </li>
 <li><a href="#service_1">Service</a><ul>
 <li><a href="#router_1">router</a></li>
-<li><a href="#router_options">router_options</a></li>
 <li><a href="#filters">filters</a></li>
 <li><a href="#targets">targets</a></li>
 <li><a href="#servers">servers</a></li>
 <li><a href="#cluster">cluster</a></li>
-<li><a href="#user-and-password">user and password</a></li>
+<li><a href="#user">user</a></li>
+<li><a href="#password">password</a></li>
 <li><a href="#enable_root_user">enable_root_user</a></li>
 <li><a href="#localhost_match_wildcard_host">localhost_match_wildcard_host</a></li>
 <li><a href="#version_string">version_string</a></li>
@@ -622,7 +623,8 @@ Ad..." />
 <li><a href="#port">port</a></li>
 <li><a href="#socket">socket</a></li>
 <li><a href="#private_address">private_address</a></li>
-<li><a href="#monitoruser-and-monitorpw">monitoruser and monitorpw</a></li>
+<li><a href="#monitoruser">monitoruser</a></li>
+<li><a href="#monitorpw">monitorpw</a></li>
 <li><a href="#extra_port">extra_port</a></li>
 <li><a href="#persistpoolmax">persistpoolmax</a></li>
 <li><a href="#persistmaxtime">persistmaxtime</a></li>
@@ -947,6 +949,7 @@ runtime and can only be defined in a configuration file:</p>
 <li><code>auto_tune</code></li>
 <li><code>cachedir</code></li>
 <li><code>connector_plugindir</code></li>
+<li><code>core_file</code></li>
 <li><code>datadir</code></li>
 <li><code>debug</code></li>
 <li><code>execdir</code></li>
@@ -1172,6 +1175,16 @@ colons. The value must not include space between the separators.</p>
 <p>The global settings, in a section named <code>[MaxScale]</code>, allow various parameters
 that affect MariaDB MaxScale as a whole to be tuned. This section must be
 defined in the root configuration file which by default is <code>/etc/maxscale.cnf</code>.</p>
+<h3 id="core_file"><code>core_file</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
+<li><strong>Default</strong>: true</li>
+<li><strong>Dynamic</strong>: No</li>
+</ul>
+<p>This parameter specifies whether a core file should be generated if MaxScale
+crashes. The default is <code>true</code> although usually a core file is not needed,
+as MaxScale is capable of logging the full strack trace of all threads
+when it crashes.</p>
 <h3 id="auto_tune"><code>auto_tune</code></h3>
 <ul>
 <li><strong>Type</strong>: string list</li>
@@ -1211,12 +1224,13 @@ However, the specified value will be overwritten at the next auto tuning
 round, but only if the servers of the service are monitored by a monitor.</p>
 <h3 id="threads"><code>threads</code></h3>
 <ul>
-<li><strong>Type</strong>: positive integer or <code>auto</code></li>
+<li><strong>Type</strong>: number or <code>auto</code></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
 <li><strong>Default</strong>: <code>auto</code></li>
-<li><strong>Dynamic</strong>: Yes</li>
 </ul>
-<p>This parameter controls the number of worker threads that are routing
-client traffic. The default is <code>auto</code> which uses as many threads
+<p>This parameter controls the number of worker threads that are handling the
+events coming from the kernel. The default is <code>auto</code> which uses as many threads
 as there are CPU cores. MaxScale versions older than 6 used one thread by
 default.</p>
 <p>You can explicitly enable automatic configuration of this value by setting the
@@ -1256,6 +1270,12 @@ which is specified using <a href="#threads">threads</a>.</p>
 the value of <code>threads</code> will be reduced to that. At runtime, an attempt to
 increase the value of <code>threads</code> beyond that of <code>threads_max</code> is an error.</p>
 <h3 id="rebalance_period"><code>rebalance_period</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#durations">duration</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>0s</code></li>
+</ul>
 <p>This duration parameter controls how often the load of the worker threads
 should be checked. The default value is 0, which means that no checks and
 no rebalancing will be performed.</p>
@@ -1269,13 +1289,19 @@ value of <code>rebalance_window</code> whose default value is 10.</p>
 of <code>rebalance_window</code>, it may lead to oscillation where work is constantly
 moved from one thread to another.</p>
 <h3 id="rebalance_threshold"><code>rebalance_threshold</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>20</code></li>
+</ul>
 <p>This integer parameter controls at which point MaxScale should start
 moving work from one worker thread to another.</p>
 <p>If the difference in load between the thread with the maximum load and
 the thread with the minimum load is larger than the value of this parameter,
 then work will be moved from the former to the latter.</p>
 <p>Although the load of a thread can vary between 0 and 100, the value of this
-parameter must be between 5 and 100. The default value is 20.</p>
+parameter must be between 5 and 100.</p>
 <div><pre><span></span>rebalance_threshold=15
 </pre></div>
 
@@ -1283,6 +1309,12 @@ parameter must be between 5 and 100. The default value is 20.</p>
 <p>Note that rebalancing will not be performed unless <code>rebalance_period</code>
 has been specified.</p>
 <h3 id="rebalance_window"><code>rebalance_window</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>10</code></li>
+</ul>
 <p>This integer parameter controls how many seconds of load should be
 taken into account when deciding whether work should be moved from
 one thread to another.</p>
@@ -1291,9 +1323,10 @@ seconds is considered when deciding whether work should be moved.</p>
 <p>The minimum value is 1 and the maximum 60.</p>
 <h3 id="skip_name_resolve"><code>skip_name_resolve</code></h3>
 <ul>
-<li><strong>Type</strong>: boolean</li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>This parameter controls whether reverse domain name lookups are made to convert
 client IP addresses to hostnames. If enabled, client IP addresses will not be
@@ -1304,6 +1337,12 @@ done to see if it matches the host. Reverse DNS lookups can be very slow which
 is why it is recommended that they are disabled and that users are defined using
 an IP address.</p>
 <h3 id="auth_connect_timeout"><code>auth_connect_timeout</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#durations">duration</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>10s</code></li>
+</ul>
 <p>Duration, default 10s. This setting defines the connection timeout when
 attempting to fetch MariaDB/MySQL/Clustrix users from a backend server. The same
 value is also used for read and write timeouts. Increasing this value causes
@@ -1323,6 +1362,12 @@ than a second.</p>
 <h3 id="auth_write_timeout"><code>auth_write_timeout</code></h3>
 <p>Deprecated and ignored as of MaxScale 2.5.0. See <em>auth_connect_timeout</em> above.</p>
 <h3 id="query_retries"><code>query_retries</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>1</code></li>
+</ul>
 <p>The number of times an interrupted internal query will be retried. The default
 is to retry the query once. This feature was added in MaxScale 2.1.10 and was
 disabled by default until MaxScale 2.3.0.</p>
@@ -1332,6 +1377,12 @@ advisable to make sure that the value of <code>query_retry_timeout</code> is set
 adequate value. Internal queries are only used to retrieve authentication data
 and monitor the servers.</p>
 <h3 id="query_retry_timeout"><code>query_retry_timeout</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#durations">duration</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>10s</code></li>
+</ul>
 <p>The total timeout in seconds for any retried queries. The default value is 5
 seconds.</p>
 <p>An interrupted query is retried for either the configured amount of attempts or
@@ -1344,8 +1395,9 @@ even if the duration is longer than a second.</p>
 <h3 id="passive"><code>passive</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>Controls whether MaxScale is a passive node in a cluster of multiple MaxScale
 instances.</p>
@@ -1364,16 +1416,18 @@ only observe the clusters being monitored and take no direct actions.</p>
 <h3 id="ms_timestamp"><code>ms_timestamp</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>Enable or disable the high precision timestamps in logfiles. Enabling this adds
 millisecond precision to all logfile timestamps.</p>
 <h3 id="syslog"><code>syslog</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>Log messages to the system journal. This logs messages using the native SystemD
 journal interface. The logs can be viewed with <code>journalctl</code>.</p>
@@ -1384,16 +1438,18 @@ logged twice: once into the system journal and once into MaxScale's own logfile.
 <h3 id="maxlog"><code>maxlog</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: true</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>true</code></li>
 </ul>
 <p>Log messages to MariaDB MaxScale's log file. The name of the log file is
 <code>maxscale.log</code> and it is located in the directory pointed by <a href="#logdir">logdir</a>.</p>
 <h3 id="log_warning"><code>log_warning</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: true</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>true</code></li>
 </ul>
 <p>Log messages whose syslog priority is <em>warning</em>.</p>
 <p>MaxScale logs warning level messages whenever a condition is encountered that
@@ -1402,8 +1458,9 @@ indicates a minor problem.</p>
 <h3 id="log_notice"><code>log_notice</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: true</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>true</code></li>
 </ul>
 <p>Log messages whose syslog priority is <em>notice</em>.</p>
 <p>These messages contain information that is helpful for the user and they usually
@@ -1412,8 +1469,9 @@ happens in either MaxScale or in the servers it monitors.</p>
 <h3 id="log_info"><code>log_info</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>Log messages whose syslog priority is <em>info</em>.</p>
 <p>These messages provide detailed information about the internal workings of
@@ -1425,8 +1483,9 @@ routing related problems.</p>
 <h3 id="log_debug"><code>log_debug</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>Log messages whose syslog priority is <em>debug</em>.</p>
 <p>These messages are intended for development purposes and are disabled by
@@ -1437,8 +1496,9 @@ effect. If an attempt to enable these is made, a warning is logged.</p>
 <h3 id="log_warn_super_user"><code>log_warn_super_user</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>When enabled, a warning is logged whenever a client with SUPER-privilege
 successfully authenticates. This also applies to COM_CHANGE_USER-commands. The
@@ -1447,9 +1507,10 @@ primary server switchover. Super-users bypass the <em>read_only</em>-flag which
 switchover uses to block writes to the primary.</p>
 <h3 id="log_augmentation"><code>log_augmentation</code></h3>
 <ul>
-<li><strong>Type</strong>: integer</li>
-<li><strong>Default</strong>: 0</li>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>0</code></li>
 </ul>
 <p>Enable or disable the augmentation of messages. If this is enabled, then each
 logged message is appended with the name of the function where the message was
@@ -1463,6 +1524,12 @@ log_augmentation=1
 
 <p>To disable the augmentation use the value 0 and to enable it use the value 1.</p>
 <h3 id="log_throttling"><code>log_throttling</code></h3>
+<ul>
+<li><strong>Type</strong>: number, <a href="#durations">duration</a>, <a href="#durations">duration</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>10, 1000ms, 10000ms</code></li>
+</ul>
 <p>It is possible that a particular error (or warning) is logged over and over
 again, if the cause for the error persistently remains. To prevent the log from
 flooding, it is possible to specify how many times a particular error may be
@@ -1506,20 +1573,30 @@ unit is provided, the value is interpreted as milliseconds in MaxScale 2.4. In
 subsequent versions a value without a unit may be rejected.</p>
 <p>Note that <em>notice</em>, <em>info</em> and <em>debug</em> messages are never throttled.</p>
 <h3 id="logdir"><code>logdir</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>/var/log/maxscale</code></li>
+</ul>
 <p>Set the directory where the logfiles are stored. The folder needs to be both
 readable and writable by the user running MariaDB MaxScale.</p>
-<p>The default value is <code>/var/log/maxscale/</code>.</p>
 <div><pre><span></span>logdir=/var/log/maxscale/
 </pre></div>
 
 
 <h3 id="datadir"><code>datadir</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>/var/lib/maxscale</code></li>
+</ul>
 <p>Set the directory where the data files used by MariaDB MaxScale are stored.
 Modules can write to this directory and for example the binlogrouter uses this
 folder as the default location for storing binary logs.</p>
 <p>This is also the directory where the password encryption key is read from that
 is generated by <code>maxkeys</code>.</p>
-<p>The default value is <code>/var/lib/maxscale/</code>.</p>
 <div><pre><span></span>datadir=/var/lib/maxscale/
 </pre></div>
 
@@ -1536,6 +1613,12 @@ defined, the file is read from <a href="#datadir">datadir</a>.</p>
 <p>This parameter was added in MaxScale 6.4.16, 22.08.13, 23.02.10, 23.08.6
 and 24.02.2.</p>
 <h3 id="libdir"><code>libdir</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: OS Dependent</li>
+</ul>
 <p>Set the directory where MariaDB MaxScale looks for modules. The library
 directory is the only directory that MariaDB MaxScale uses when it searches for
 modules. If you have custom modules for MariaDB MaxScale, make sure you have
@@ -1548,6 +1631,12 @@ is <code>/usr/lib64/maxscale/</code>. For Debian and Ubuntu it is
 
 
 <h3 id="sharedir"><code>sharedir</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>/usr/share/maxscale</code></li>
+</ul>
 <p>Sets the directory where static data assets are loaded.</p>
 <p>The MaxScale GUI static files are located in the <code>gui/</code> subdirectory. If the GUI
 files have been manually moved somewhere else, this path must be configured to
@@ -1558,32 +1647,52 @@ resolves to outside of this directory are not served by the MaxScale GUI: this
 is done to prevent other files from being accessible via the MaxScale REST
 API. This means that path to the GUI source directory can contain symbolic links
 but all parts after the <code>/gui/</code> directory must reside inside it.</p>
-<p>The default value is <code>/usr/share/maxscale/</code>.</p>
 <h3 id="cachedir"><code>cachedir</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>/var/cache/maxscale</code></li>
+</ul>
 <p>Configure the directory MariaDB MaxScale uses to store cached data.</p>
-<p>The default value is <code>/var/cache/maxscale/</code>.</p>
 <div><pre><span></span>cachedir=/var/cache/maxscale/
 </pre></div>
 
 
 <h3 id="piddir"><code>piddir</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>/var/run/maxscale</code></li>
+</ul>
 <p>Configure the directory for the PID file for MariaDB MaxScale. This file
 contains the Process ID for the running MariaDB MaxScale process.</p>
-<p>The default value is <code>/var/run/maxscale/</code>.</p>
 <div><pre><span></span>piddir=/var/run/maxscale/
 </pre></div>
 
 
 <h3 id="execdir"><code>execdir</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>/usr/bin</code></li>
+</ul>
 <p>Configure the directory where the executable files reside. All internal
 processes which are launched will use this directory to look for executable
 files.</p>
-<p>The default value is <code>/usr/bin/</code>.</p>
 <div><pre><span></span>execdir=/usr/bin/
 </pre></div>
 
 
 <h3 id="connector_plugindir"><code>connector_plugindir</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: OS Dependent</li>
+</ul>
 <p>Location of the MariaDB Connector-C plugin directory. The MariaDB Connector-C
 used in MaxScale can use this directory to load authentication plugins. The
 versions of the plugins must be binary compatible with the connector version
@@ -1599,17 +1708,28 @@ are stored depends on the operating system. For RHEL versions the value is
 
 
 <h3 id="persistdir"><code>persistdir</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>/var/lib/maxscale/maxscale.cnf.d/</code></li>
+</ul>
 <p>Configure the directory where persisted configurations are stored. When a new
 object is created via MaxCtrl, it will be stored in this directory. Do not use
 this directory for normal configuration files, use <em>/etc/maxscale.cnf.d/</em>
 instead. The user MaxScale is running as must be able to write into this
 directory.</p>
-<p>The default value is <code>/var/lib/maxscale/maxscale.cnf.d/</code>.</p>
 <div><pre><span></span>persistdir=/var/lib/maxscale/maxscale.cnf.d/
 </pre></div>
 
 
 <h3 id="module_configdir"><code>module_configdir</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>/etc/maxscale.modules.d/</code></li>
+</ul>
 <p>Configure the directory where module configurations are stored. Path arguments
 are resolved relative to this directory. This directory should be used to store
 module specific configurations.</p>
@@ -1619,15 +1739,19 @@ the working directory.</p>
 <p>For example, the configuration parameter <code>file=my_file.txt</code> would be interpreted
 as <code>/etc/maxscale.modules.d/my_file.txt</code> whereas <code>file=/home/user/my_file.txt</code> would
 be interpreted as <code>/home/user/my_file.txt</code>.</p>
-<p>The default value is <code>/etc/maxscale.modules.d/</code>.</p>
 <div><pre><span></span>module_configdir=/etc/maxscale.modules.d/
 </pre></div>
 
 
 <h3 id="language"><code>language</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>/var/lib/maxscale/</code></li>
+</ul>
 <p>Set the folder where the errmsg.sys file is located in. MariaDB MaxScale will
 look for the errmsg.sys file installed with MariaDB MaxScale from this folder.</p>
-<p>The default value is <code>/var/lib/maxscale/</code>.</p>
 <div><pre><span></span>language=/var/lib/maxscale/
 </pre></div>
 
@@ -1635,6 +1759,12 @@ look for the errmsg.sys file installed with MariaDB MaxScale from this folder.</
 <h3 id="query_classifier"><code>query_classifier</code></h3>
 <p>Deprecated since MariaDB MaxScale 23.08.</p>
 <h3 id="query_classifier_cache_size"><code>query_classifier_cache_size</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#sizes">size</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: System Dependent</li>
+</ul>
 <p>Specifies the maximum size of the query classifier cache. The default limit is
 15% of total system memory starting with MaxScale 2.3.7. In older versions the
 default limit was 40% of total system memory. This feature was added in MaxScale
@@ -1698,8 +1828,9 @@ the cache is and to see performance statistics.</p>
 <h3 id="substitute_variables"><code>substitute_variables</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>Enable or disable the substitution of environment variables in the MaxScale
 configuration file. If the substitution of variables is enabled and a
@@ -1725,6 +1856,13 @@ is placed in the configuration file. However, in the <code>[maxscale]</code> sec
 to ensure that substitution will take place, place the
 <code>substitute_variables=true</code> line first.</p>
 <h3 id="sql_mode"><code>sql_mode</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#enumerations">enum</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Values</strong>: <code>default</code>, <code>oracle</code></li>
+<li><strong>Default</strong>: <code>default</code></li>
+</ul>
 <p>Specifies whether the query classifier parser should initially expect <em>MariaDB</em>
 or <em>PL/SQL</em> kind of SQL.</p>
 <p>The allowed values are:
@@ -1734,7 +1872,6 @@ or <em>PL/SQL</em> kind of SQL.</p>
 </pre></div>
 
 
-<p>The default value is <code>default</code>.</p>
 <p><strong>NOTE</strong> If <code>sql_mode</code> is set to <code>oracle</code>, then MaxScale will also assume
 that <code>autocommit</code> initially is off.</p>
 <p>At runtime, MariaDB MaxScale will recognize statements like</p>
@@ -1756,6 +1893,12 @@ as if <code>autocommit</code> had been turned on.</p>
 the server, so the value of <code>sql_mode</code> should reflect the sql mode used
 when the server is started.</p>
 <h3 id="local_address"><code>local_address</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>What specific local address/interface to use when connecting to servers.</p>
 <p>This can be used for ensuring that MaxScale uses a particular interface
 when connecting to servers, in case the computer MaxScale is running on
@@ -1767,6 +1910,12 @@ has multiple interfaces.</p>
 <p>If given as a hostname, MaxScale will perform name lookup on the address
 when starting and reuse the result.</p>
 <h3 id="users_refresh_time"><code>users_refresh_time</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#durations">duration</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>30s</code></li>
+</ul>
 <p>How often, in seconds, MaxScale at most may refresh the users from the
 backend server.</p>
 <p>MaxScale will at startup load the users from the backend server, but if
@@ -1787,6 +1936,12 @@ even if the duration is longer than a second.</p>
 <p>In MaxScale 2.3.9 and older versions, the minimum allowed value was 10 seconds
 but, due to a bug, the default value was 0 which allowed infinite refreshes.</p>
 <h3 id="users_refresh_interval"><code>users_refresh_interval</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#durations">duration</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>0s</code></li>
+</ul>
 <p>How often, in seconds, MaxScale will automatically refresh the users from the
 backend server.</p>
 <p>This configuration is used to periodically refresh the backend users, making sure
@@ -1797,9 +1952,13 @@ failed authentication depending on <code>users_refresh_time</code>.</p>
 </pre></div>
 
 
-<p>The value is specified as documented <a href="#durations">here</a>. If no explicit unit
-is provided, the value is interpreted as seconds in MaxScale 2.4.</p>
 <h3 id="retain_last_statements"><code>retain_last_statements</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>0</code></li>
+</ul>
 <p>How many statements MaxScale should store for each session. This is for
 debugging purposes, as in case of problems it is often of value to be able
 to find out exactly what statements were sent before a particular
@@ -1811,8 +1970,14 @@ problem turned up.</p>
 </pre></div>
 
 
-<p>Default is <code>0</code>.</p>
 <h3 id="dump_last_statements"><code>dump_last_statements</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#enumerations">enum</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Values</strong>: <code>on_close</code>, <code>on_error</code>, <code>never</code></li>
+<li><strong>Default</strong>: <code>never</code></li>
+</ul>
 <p>With this configuration item it is specified in what circumstances MaxScale
 should dump the last statements that a client sent. The allowed values are
 <code>never</code>, <code>on_error</code> and <code>on_close</code>. With <code>never</code> the statements are never
@@ -1823,11 +1988,16 @@ is closed.</p>
 </pre></div>
 
 
-<p>Default is <code>never</code>.</p>
 <p>Note that you need to specify with <code>retain_last_statements</code> how many statements
 MaxScale should retain for each session. Unless it has been set to another value
 than <code>0</code>, this configuration setting will not have an effect.</p>
 <h3 id="session_trace"><code>session_trace</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>0</code></li>
+</ul>
 <p>How many log entries are stored in the session specific trace log. This log is
 written to disk when a session ends abnormally and can be used for debugging
 purposes. Currently the session trace log is written to the log in the following situations:</p>
@@ -1855,8 +2025,9 @@ the newest messages first and oldest ones last.</p>
 <h3 id="session_trace_match"><code>session_trace_match</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#regular-expressions">regex</a></li>
-<li><strong>Default</strong>: none</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
 </ul>
 <p>If both <code>session_trace</code> and <code>session_trace_match</code> are defined, and a trace log
 entry of a session matches the regular expression, the trace log is written to
@@ -1880,6 +2051,12 @@ connect to MaxScale. For every session that ends up logging a syntax error
 message, the last 1000 lines of log output done by that session is written into
 the MaxScale log.</p>
 <h3 id="writeq_high_water"><code>writeq_high_water</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#size">size</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>16Mi</code></li>
+</ul>
 <p>High water mark for network write buffer. When the size of the outbound network
 buffer in MaxScale for a single connection exceeds this value, network traffic
 throttling for that connection is started. The parameter accepts
@@ -1895,6 +2072,12 @@ data is determined by both the kernel TCP buffers and the value of
 <p>Network throttling is only enabled when <code>writeq_high_water</code> is non-zero. In
 MaxScale 23.02 and earlier, also <code>writeq_low_water</code> had to be non-zero.</p>
 <h3 id="writeq_low_water"><code>writeq_low_water</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#size">size</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>8Ki</code></li>
+</ul>
 <p>Low water mark for network write buffer. Once the traffic throttling is enabled,
 it will only be disabled when the network write buffer is below
 <code>writeq_low_water</code> bytes. The parameter accepts <a href="#sizes">size type values</a>. The
@@ -1916,8 +2099,9 @@ static configuration files whenever MaxScale is starting up.</p>
 <h3 id="load_persisted_configs"><code>load_persisted_configs</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: true</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>true</code></li>
 </ul>
 <p>Load persisted runtime changes on startup. This parameter was added in MaxScale
 2.3.6.</p>
@@ -1929,6 +2113,12 @@ configurations volatile (i.e. they are lost when maxscale is restarted), use
 the current runtime state of MaxScale. This makes problem analysis easier if an
 unexpected outage happens.</p>
 <h3 id="max_auth_errors_until_block"><code>max_auth_errors_until_block</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>10</code></li>
+</ul>
 <p>The maximum number of authentication failures that are tolerated before a host
 is temporarily blocked. The default value is 10 failures. After a host is
 blocked, connections from it are rejected for 60 seconds. To disable this
@@ -1939,6 +2129,12 @@ max_auth_errors_until_block</code> where <code>max_auth_errors_until_block</code
 configured value of this parameter and <code>threads</code> is the number of configured
 threads.</p>
 <h3 id="debug"><code>debug</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>Define debug options from the --debug command line option. Either the command
 line option or the parameter should be used, not both. The debug options are
 only for testing purposes and are not to be used in production.</p>
@@ -1948,30 +2144,61 @@ intended to be consumed by monitoring applications and visualization tools.</p>
 <p>The following options must be defined under the <code>[maxscale]</code> section in the
 configuration file.</p>
 <h3 id="admin_host"><code>admin_host</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>"127.0.0.1"</code></li>
+</ul>
 <p>The network interface where the REST API listens on. The default value is the
 IPv4 address <code>127.0.0.1</code> which only listens for local connections.</p>
 <h3 id="admin_port"><code>admin_port</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>8989</code></li>
+</ul>
 <p>The port where the REST API listens on. The default value is port 8989.</p>
 <h3 id="admin_auth"><code>admin_auth</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: true</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>true</code></li>
 </ul>
 <p>Enable REST API authentication using HTTP Basic Access
 authentication. This is not a secure method of authentication without HTTPS but
 it does add a small layer of security.</p>
 <p>For more information, read the <a href="/kb/en/maxscale-24-02-rest-api/">REST API documentation</a>.</p>
 <h3 id="admin_ssl_key"><code>admin_ssl_key</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>The path to the TLS private key in PEM format for the admin interface.</p>
 <p>If the <code>admin_ssl_key</code> and <code>admin_ssl_cert</code> options are all defined, the admin
 interface will use encrypted HTTPS instead of plain HTTP.</p>
 <h3 id="admin_ssl_cert"><code>admin_ssl_cert</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>The path to the TLS public certificate in PEM format. See <code>admin_ssl_key</code>
 documentation for more details.</p>
 <h3 id="admin_ssl_ca_cert"><code>admin_ssl_ca_cert</code></h3>
 <p>Deprecated since MariaDB MaxScale 22.08. See <code>admin_ssl_ca</code>.</p>
 <h3 id="admin_ssl_ca"><code>admin_ssl_ca</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>The path to the TLS CA certificate in PEM format. If defined, the client
 certificate, if provided, will be validated against it. This parameter is
 optional starting with MaxScale 2.3.19.</p>
@@ -2018,16 +2245,18 @@ retain the old behavior, specify all the accepted values with
 <h3 id="admin_enabled"><code>admin_enabled</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: true</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>true</code></li>
 </ul>
 <p>Enable or disable the admin interface. This allows the admin interface to
 be completely disabled to prevent access to it.</p>
 <h3 id="admin_gui"><code>admin_gui</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: true</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>true</code></li>
 </ul>
 <p>Enable or disable the admin graphical user interface.</p>
 <p>MaxScale provides a GUI for administrative operations via the REST API. When the
@@ -2038,8 +2267,9 @@ health check.</p>
 <h3 id="admin_secure_gui"><code>admin_secure_gui</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: true</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>true</code></li>
 </ul>
 <p>Whether to serve the GUI only over secure HTTPS connections.</p>
 <p>To be secure by default, the GUI is only served over HTTPS connections as
@@ -2050,11 +2280,18 @@ the MaxScale REST API, set this parameter to false.</p>
 <h3 id="admin_log_auth_failures"><code>admin_log_auth_failures</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: true</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>true</code></li>
 </ul>
 <p>Log authentication failures for the admin interface.</p>
-<h3 id="admin_pam_readwrite_service-and-admin_pam_readonly_service"><code>admin_pam_readwrite_service</code> and <code>admin_pam_readonly_service</code></h3>
+<h3 id="admin_pam_readwrite_serviceadmin_pam_readonly_service"><code>admin_pam_readwrite_service/admin_pam_readonly_service</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>Use Pluggable Authentication Modules (PAM) for REST API authentication. The settings
 accept a PAM service name which is used during authentication if normal authentication
 fails. <code>admin_pam_readwrite_service</code> should accept users who can do any
@@ -2297,8 +2534,9 @@ setting is ignored in the main configuration file (usually maxscale.cnf).</p>
 <h3 id="config_sync_cluster"><code>config_sync_cluster</code></h3>
 <ul>
 <li><strong>Type</strong>: monitor</li>
-<li><strong>Default</strong>: No default value</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
 </ul>
 <p>This parameter controls which cluster (i.e. monitor) is used to synchronize
 configuration changes between MaxScale instances. The first server labeled
@@ -2312,8 +2550,9 @@ Synchronization</a> section.</p>
 <h3 id="config_sync_user"><code>config_sync_user</code></h3>
 <ul>
 <li><strong>Type</strong>: string</li>
-<li><strong>Default</strong>: No default value</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
 </ul>
 <p>The username for the account that is used to synchronize configuration changes
 across MaxScale instances. Both this parameter and <code>config_sync_password</code> are
@@ -2341,8 +2580,9 @@ grants must be adjusted to target that database instead.</p>
 <h3 id="config_sync_password"><code>config_sync_password</code></h3>
 <ul>
 <li><strong>Type</strong>: password</li>
-<li><strong>Default</strong>: No default value</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
 </ul>
 <p>The password for <code>config_sync_user</code>. Both this parameter and <code>config_sync_user</code>
 are required if <code>config_sync_cluster</code> is configured. This password can
@@ -2350,8 +2590,9 @@ optionally be encrypted using <code>maxpasswd</code>.</p>
 <h3 id="config_sync_db"><code>config_sync_db</code></h3>
 <ul>
 <li><strong>Type</strong>: string</li>
-<li><strong>Default</strong>: <code>mysql</code></li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>mysql</code></li>
 </ul>
 <p>The database where the <code>maxscale_config</code> table is created. By default the table
 is created in the <code>mysql</code> database. This parameter was added in MaxScale
@@ -2363,8 +2604,9 @@ changes done to MaxScale by inserting them into a separate table.</p>
 <h3 id="config_sync_interval"><code>config_sync_interval</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#durations">duration</a></li>
-<li><strong>Default</strong>: 5s</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>5s</code></li>
 </ul>
 <p>How often to synchronize the configuration with the cluster.</p>
 <p>As the synchronization involves selecting the configuration version from the
@@ -2374,8 +2616,9 @@ how much load it places on the database.</p>
 <h3 id="config_sync_timeout"><code>config_sync_timeout</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#durations">duration</a></li>
-<li><strong>Default</strong>: 10s</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>10s</code></li>
 </ul>
 <p>Timeout for all SQL operations done during the configuration synchronization. If
 an operation exceeds this timeout, the configuration change is treated as failed
@@ -2483,6 +2726,11 @@ service defined within the configuration file. The definition of a service alone
 is not enough to allow MariaDB MaxScale to forward requests however, the service
 is merely present to link together the other configuration elements.</p>
 <h3 id="router_1"><code>router</code></h3>
+<ul>
+<li><strong>Type</strong>: router</li>
+<li><strong>Mandatory</strong>: Yes</li>
+<li><strong>Dynamic</strong>: No</li>
+</ul>
 <p>The router parameter of a service defines the name of the router module that
 will be used to implement the routing algorithm between the client of MariaDB
 MaxScale and the backend databases. Additionally routers may also be passed a
@@ -2507,11 +2755,13 @@ router_options=master,slave
 
 <p>A more complete description of router options and what is available for a given
 router is included with the documentation of the router itself.</p>
-<h3 id="router_options"><code>router_options</code></h3>
-<p>Option string given to the router module. The value of this parameter should be
-a comma-separated list of key-value pairs. See router specific documentation for
-more details.</p>
 <h3 id="filters"><code>filters</code></h3>
+<ul>
+<li><strong>Type</strong>: filter list</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
 <p>The filters option allow a set of filters to be defined for a service; requests
 from the client are passed through these filters before being sent to the router
 for dispatch to the backend server.  The filters parameter takes one or more
@@ -2524,6 +2774,12 @@ configuration file. Multiple filters are separated using the | character.</p>
 <p>The requests pass through the filters from left to right in the order defined in
 the configuration parameter.</p>
 <h3 id="targets"><code>targets</code></h3>
+<ul>
+<li><strong>Type</strong>: target list</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
 <p>The <code>targets</code> parameter is a comma separated list of server and/or service names
 that comprise the routing targets of the service. This parameter was added in
 MaxScale 2.5.0.</p>
@@ -2538,6 +2794,12 @@ sharding of schemarouter with the high-availability of readwritesplit.</p>
 <p><strong>NOTE:</strong> The <code>targets</code> parameter is mutually exclusive with the <code>cluster</code> and
   <code>servers</code> parameters.</p>
 <h3 id="servers"><code>servers</code></h3>
+<ul>
+<li><strong>Type</strong>: server list</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
 <p>The servers parameter in a service definition provides a comma separated list of
 the backend servers that comprise the service. The server names are those used
 in the name section of a block with a type parameter of server (see below).</p>
@@ -2548,6 +2810,12 @@ in the name section of a block with a type parameter of server (see below).</p>
 <p><strong>NOTE:</strong> The <code>servers</code> parameter is mutually exclusive with the <code>cluster</code> and
   <code>targets</code> parameters.</p>
 <h3 id="cluster"><code>cluster</code></h3>
+<ul>
+<li><strong>Type</strong>: monitor</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
 <p>The servers the service uses are defined by the monitor specified as value
 of this configuration parameter.</p>
 <div><pre><span></span>cluster=TheMonitor
@@ -2556,10 +2824,32 @@ of this configuration parameter.</p>
 
 <p><strong>NOTE:</strong> The <code>cluster</code> parameter is mutually exclusive with the <code>servers</code> and
   <code>targets</code> parameters.</p>
-<h3 id="user-and-password"><code>user</code> and <code>password</code></h3>
-<p>These settings define the credentials the service uses to fetch user account
+<h3 id="user"><code>user</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: Yes</li>
+<li><strong>Dynamic</strong>: Yes</li>
+</ul>
+<p>This setting defines the <em>user</em> the service uses to fetch user account
+information from backends. A <em>password</em> is specified using <a href="#password">password</a>.</p>
+<div><pre><span></span>user=maxscale
+password=Mhu87p2D
+</pre></div>
+
+
+<p>See <a href="/kb/en/maxscale-24-02-authentication-modules/">MySQL protocol authentication documentation</a>
+for more information (such as required grants) and troubleshooting tips
+regarding user account management and client authentication.</p>
+<h3 id="password"><code>password</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: Yes</li>
+<li><strong>Dynamic</strong>: Yes</li>
+</ul>
+<p>This settings defines the <em>password</em> the service uses to fetch user account
 information from backends. The <em>password</em> may be either a plain text password or
-an <a href="#encrypting-passwords">encrypted password</a>.</p>
+an <a href="#encrypting-passwords">encrypted password</a>. The <em>user</em> is specified
+using <a href="#user">user</a>.</p>
 <div><pre><span></span>user=maxscale
 password=Mhu87p2D
 </pre></div>
@@ -2582,14 +2872,21 @@ work, it is no longer necessary to perform those steps simultaneously.</p>
 <h3 id="enable_root_user"><code>enable_root_user</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>This parameter controls the ability of the root user to connect to MariaDB
 MaxScale and hence onwards to the backend servers via MariaDB MaxScale.</p>
 <h3 id="localhost_match_wildcard_host"><code>localhost_match_wildcard_host</code></h3>
 <p>Deprecated and ignored.</p>
 <h3 id="version_string"><code>version_string</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: None</li>
+</ul>
 <p>This parameter sets a custom version string that is sent in the MySQL Handshake
 from MariaDB MaxScale to clients.</p>
 <p>Example:</p>
@@ -2609,22 +2906,24 @@ MaxScale.</p>
 <h3 id="auth_all_servers"><code>auth_all_servers</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
-<p><strong>Note:</strong> This parameter has been deprecated in MaxScale 24.02. Modules that
-  require this to function correctly (e.g. schemarouter) now automatically
-  enable it.</p>
 <p>This parameter controls whether only a single server or all of the servers are
 used when loading the users from the backend servers.</p>
 <p>By default MaxScale uses the first server labeled as <code>Master</code> as the source of
 the authentication data. When this option is enabled, the authentication data is
 loaded from all the servers and combined into one big data set.</p>
+<p><strong>Note:</strong> This parameter was deprecated in MaxScale 24.02.0 but it was then
+  un-deprecated as there were still uses for it. Modules that required this to
+  function correctly (e.g. schemarouter) now automatically enable it.</p>
 <h3 id="strip_db_esc"><code>strip_db_esc</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: true</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>true</code></li>
 </ul>
 <p><strong>Note:</strong> This parameter has been deprecated in MaxScale 23.08. The stripping of
   escape characters is in all known cases the correct thing to do.</p>
@@ -2642,8 +2941,9 @@ this might cause conflicts when MaxScale tries to authenticate users.</p>
 <h3 id="log_auth_warnings"><code>log_auth_warnings</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: true</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>true</code></li>
 </ul>
 <p>Enable or disable the logging of authentication failures and warnings. If
 enabled, messages about failed authentication attempts will be logged with
@@ -2651,8 +2951,9 @@ details about who tried to connect to MariaDB MaxScale and from where.</p>
 <h3 id="log_warning_1"><code>log_warning</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>When enabled, this allows a service to log warning messages even if the global
 log level configuration disables them.</p>
@@ -2662,24 +2963,27 @@ logging configuration: with <code>log_warning=false</code> in the service and
 <h3 id="log_notice_1"><code>log_notice</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>When enabled, this allows a service to log notice messages even if the global
 log level configuration disables them.</p>
 <h3 id="log_info_1"><code>log_info</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>When enabled, this allows a service to log info messages even if the global log
 level configuration disables them.</p>
 <h3 id="log_debug_1"><code>log_debug</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>When enabled, this allows a service to log debug messages even if the global log
 level configuration disables them.</p>
@@ -2688,9 +2992,9 @@ release build does nothing.</p>
 <h3 id="wait_timeout"><code>wait_timeout</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#durations">duration</a></li>
-<li><strong>Default</strong>: 0s</li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>0s</code></li>
 <li><strong>Auto tune</strong>: <a href="#auto_tune">Yes</a></li>
 </ul>
 <p>The wait_timeout parameter is used to disconnect sessions to MariaDB
@@ -2724,6 +3028,12 @@ wait_timeout=300s
 
 
 <h3 id="max_connections"><code>max_connections</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>0</code></li>
+</ul>
 <p>The maximum number of simultaneous connections MaxScale should permit to this
 service. If the parameter is zero or is omitted, there is no limit. Any attempt
 to make more connections after the limit is reached will result in a "Too many
@@ -2740,8 +3050,9 @@ max_connections=100
 <h3 id="session_track_trx_state"><code>session_track_trx_state</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>*<em>Note:</em> This parameter has been deprecated in MaxScale 23.08 as the feature is
   now used automatically if needed. In addition, the session tracking no longer
@@ -2766,6 +3077,12 @@ session_track_transaction_info = CHARACTERISTICS
 
 
 <h3 id="retain_last_statements_1"><code>retain_last_statements</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>-1</code></li>
+</ul>
 <p>How many statements MaxScale should store for each session of this service.
 This overrides the value of the global setting with the same name. If
 <code>retain_last_statements</code> has been specified in the global section of the
@@ -2782,9 +3099,9 @@ new value will take effect for sessions created thereafter.</p>
 <h3 id="connection_keepalive"><code>connection_keepalive</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#durations">duration</a></li>
-<li><strong>Default</strong>: 300s</li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>300s</code></li>
 <li><strong>Auto tune</strong>: <a href="#auto_tune">Yes</a></li>
 </ul>
 <p>Keep idle connections alive by sending pings to backend servers. This feature
@@ -2819,8 +3136,9 @@ keepalive feature, you can disable it with <code>connection_keepalive=0s</code>.
 <h3 id="force_connection_keepalive"><code>force_connection_keepalive</code></h3>
 <ul>
 <li><strong>Type</strong>: boolean</li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong> No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>By default, connection keepalive pings are only sent if the client is either
 executing a query or has been idle for less than the duration configured in
@@ -2836,6 +3154,12 @@ happens because MaxScale unconditionally sends the pings which make the client
 behave like it is not idle and thus the connections will never be killed due to
 <code>wait_timeout</code>.</p>
 <h3 id="net_write_timeout"><code>net_write_timeout</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#durations">durations</a></li>
+<li><strong>Mandatory</strong> No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>0s</code></li>
+</ul>
 <p>This parameter controls how long a network write to the client can stay
 buffered. This feature is disabled by default.</p>
 <p>When <code>net_write_timeout</code> is configured and data is buffered on the client
@@ -2848,9 +3172,10 @@ of the timeout is seconds, a timeout specified in milliseconds will be rejected,
 even if the duration is longer than a second.</p>
 <h3 id="max_sescmd_history"><code>max_sescmd_history</code></h3>
 <ul>
-<li><strong>Type</strong>: integer</li>
-<li><strong>Default</strong>: 50</li>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>50</code></li>
 </ul>
 <p><code>max_sescmd_history</code> sets a limit on how many distinct session commands are
 stored in the session command history. When the history limit is exceeded, the
@@ -2858,19 +3183,45 @@ history is either pruned to the last <code>max_sescmd_history</code> command (wh
 <code>prune_sescmd_history</code> is enabled) or the history is disabled and server
 reconnections are no longer possible.</p>
 <p>The required history size can be estimated by counting the total number of
-prepared statements and session state modifying commands (e.g <code>SET NAMES</code>) that
-are used by a client. Note that connectors usually add some commands that aren't
-visible to the application developer which means a safety margin should be
-added. A good rule of thumb is to count the expected number of statements and
-double that number.</p>
+session state modifying commands (e.g <code>SET NAMES</code>) that are used by a
+client. Note that connectors usually add some commands that aren't visible to
+the application developer which means a safety margin should be added. A good
+rule of thumb is to count the expected number of statements and double that
+number. The default value of 50 is a value that'll work for most applications
+that do not rely heavily on user variables.</p>
+<p>Starting with MaxScale versions 21.06.18, 22.08.15, 23.02.12, 23.08.8, 24.02.4
+and 24.08.1, binary protocol prepared statements do not count towards the
+<code>max_sescmd_history</code> limit. In practice this means that all binary protocol
+prepared statements opened by the client are also kept open by MaxScale and are
+restored whenever a reconnection to a server happens. The limits imposed by
+<code>max_sescmd_history</code> apply to other text protocol commands e.g. <code>SET NAMES</code>.
+Note that text protocol prepared statements count as text protocol commands and
+are thus potentially pruned when history pruning happens. If an application uses
+a lot of <code>PREPARE stmt FROM &lt;sql&gt;</code> commands, it is recommended that the value of
+<code>max_sescmd_history</code> is increased accordingly.</p>
+<p>In older versions of MaxScale, binary protocol prepared statements were limited
+by <code>max_sescmd_history</code> and were also pruned by <code>prune_sescmd_history</code> but this
+caused problems when the binary protocol prepared statment were pruned while
+they were still open from the client's point of view. In older versions, the
+recommended value of <code>max_sescmd_history</code> is the number of state modifying
+commands plus the maximum number of open prepared statments that any application
+may use.</p>
 <p>This parameter was moved into the MaxScale core in MaxScale 6.0. The parameter
 can be configured for all routers that support the session command
 history. Currently only <code>readwritesplit</code> and <code>schemarouter</code> support it.</p>
+<p>In addition to limiting the number of commands to store, it also acts as a hard
+limit on the number of packets that may be queued up on a backend before it is
+closed. Packets are queued while the TCP socket is being opened and when
+prepared statements are being prepared. In certain rare cases, a slow server may
+fall behind and not catch up to the rest of the cluster and a backlog of packets
+forms. In these cases, if more than <code>max_sescmd_history</code> packets are queued, the
+connection to the server is closed.</p>
 <h3 id="prune_sescmd_history"><code>prune_sescmd_history</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: true</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>true</code></li>
 </ul>
 <p>This option enables pruning of the session command history when it exceeds the
 value configured in <code>max_sescmd_history</code>. When this option is enabled, only a
@@ -2932,8 +3283,9 @@ history. Currently only <code>readwritesplit</code> and <code>schemarouter</code
 <h3 id="disable_sescmd_history"><code>disable_sescmd_history</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>This option disables the session command history. This way no history is stored
 and if a replica server fails, the router will not try to replace the failed
@@ -2946,6 +3298,12 @@ acceptable.</p>
 can be configured for all routers that support the session command
 history. Currently only <code>readwritesplit</code> and <code>schemarouter</code> support it.</p>
 <h3 id="user_accounts_file"><code>user_accounts_file</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>Defines path to a file with additional user accounts for incoming clients.
 Default value is empty, which disables the feature.</p>
 <div><pre><span></span>user_accounts_file=/home/root/users.json
@@ -3034,6 +3392,13 @@ and role lists.</p>
 
 
 <h3 id="user_accounts_file_usage"><code>user_accounts_file_usage</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#enumerations">enum</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Values</strong>: <code>add_when_load_ok</code>, <code>file_only_always</code></li>
+<li><strong>Default</strong>: <code>add_when_load_ok</code></li>
+</ul>
 <p>Defines when <em>user_accounts_file</em> is read. The value is an enum, either
 "add_when_load_ok" (default) or "file_only_always".</p>
 <p>"add_when_load_ok" means that the file is only read when users are successfully
@@ -3048,7 +3413,13 @@ fetch binary logs from MaxScale even when backend servers are down.</p>
 
 
 <h3 id="idle_session_pool_time"><code>idle_session_pool_time</code></h3>
-<p>Time, default: -1s. Normally, MaxScale only pools backend connections when
+<ul>
+<li><strong>Type</strong>: <a href="#durations">duration</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>-1s</code></li>
+</ul>
+<p>Normally, MaxScale only pools backend connections when
 a session is closed (controlled by server settings <em>persistpoolmax</em> and
 <em>persistmaxtime</em>). Other sessions can use the pooled connections
 instead of creating new connections to backends. If connection sharing is enabled,
@@ -3179,7 +3550,13 @@ lazy_connect=1
 
 
 <h3 id="multiplex_timeout"><code>multiplex_timeout</code></h3>
-<p>Time, default: 60s. When connection sharing (as described above) is on, clients
+<ul>
+<li><strong>Type</strong>: <a href="#durations">duration</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>60s</code></li>
+</ul>
+<p>When connection sharing (as described above) is on, clients
 may have to wait for their turn to use a backend connection. If too much time
 passes without a connection becoming available, MaxScale returns an error to
 the client, usually also ending the session. <em>multiplex_timeout</em> sets this
@@ -3203,28 +3580,74 @@ port=3000
 
 
 <h3 id="address"><code>address</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: Yes, if <code>socket</code> is not provided.</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>The IP-address or hostname of the machine running the database server. MaxScale
-uses this address to connect to the server. This parameter is mandatory unless
-<em>socket</em> is defined. If the address is given as a hostname, MaxScale will
+uses this address to connect to the server.</p>
+<p>Either <em>address</em> or <em>socket</em> must be defined, but not both.
+If the address is given as a hostname, MaxScale will
 perform name lookup on the hostname when starting and update the result every
 minute and when the address changes.</p>
 <h3 id="port"><code>port</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>3306</code></li>
+</ul>
 <p>The port the backend server listens on for incoming connections. MaxScale uses
-this port to connect to the server. The default value is 3306.</p>
+this port to connect to the server.</p>
 <h3 id="socket"><code>socket</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: Yes, if <code>address</code> is not provided.</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>The absolute path to a UNIX domain socket the MariaDB server is listening
-on. Either <em>address</em> or <em>socket</em> must be defined and defining them both is an
-error.</p>
+on.</p>
 <h3 id="private_address"><code>private_address</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>Alternative IP-address or hostname for the server. This is currently only used
 by MariaDB Monitor to detect and set up replication. See
 <a href="/kb/en/maxscale-24-02-mariadb-monitor/#private_address">MariaDB Monitor documentation</a>
 for more information.</p>
-<h3 id="monitoruser-and-monitorpw"><code>monitoruser</code> and <code>monitorpw</code></h3>
-<p>These settings define a server-specific username and password for monitoring the
-server. Monitors typically use the credentials in their own configuration
-sections to connect to all servers. If server-specific settings are given, the
-monitor uses those instead.</p>
+<h3 id="monitoruser"><code>monitoruser</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
+<p>This setting together with <a href="#monitorpasswd">monitorpasswd</a> define server-specific
+credentials for monitoring the server. Monitors typically use the credentials in their
+own configuration sections to connect to all servers. If server-specific settings are
+given, the monitor uses those instead.</p>
+<div><pre><span></span>monitoruser=mymonitoruser
+monitorpw=mymonitorpasswd
+</pre></div>
+
+
+<h3 id="monitorpw"><code>monitorpw</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
+<p>This setting together with <a href="#monitoruser">monitoruser</a> define server-specific
+credentials for monitoring the server. Monitors typically use the credentials in their
+own configuration sections to connect to all servers. If server-specific settings are
+given, the monitor uses those instead.</p>
 <div><pre><span></span>monitoruser=mymonitoruser
 monitorpw=mymonitorpasswd
 </pre></div>
@@ -3233,6 +3656,12 @@ monitorpw=mymonitorpasswd
 <p><code>monitorpw</code> may be either a plain text password or an encrypted password.  See
 the section <a href="#encrypting-passwords">encrypting passwords</a> for more information.</p>
 <h3 id="extra_port"><code>extra_port</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>0</code></li>
+</ul>
 <p>An alternative port used for administrative connections to the server.  If this
 setting is defined, MaxScale uses it for monitoring the server and to fetch user
 accounts. Client sessions will still use the normal port.</p>
@@ -3247,9 +3676,10 @@ the port is not open on the server, normal port is used.</p>
 and <a href="https://mariadb.com/kb/en/thread-pool-system-status-variables/#extra_max_connections">extra_max_connections</a>.</p>
 <h3 id="persistpoolmax"><code>persistpoolmax</code></h3>
 <ul>
-<li><strong>Type</strong>: integer</li>
-<li><strong>Default</strong>: 0</li>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>0</code></li>
 </ul>
 <p>Sets the size of the server connection pool. Disabled by default. When enabled,
 MaxScale places unused connections to the server to a pool and reuses them
@@ -3261,6 +3691,12 @@ up <em>persistpoolmax</em> so that every thread has an equal size pool.</p>
 session, the state of the connection is dependent on the router. ReadWriteSplit
 restores the connection to match the session state. Other routers do not.</p>
 <h3 id="persistmaxtime"><code>persistmaxtime</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#durations">duration</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>0s</code></li>
+</ul>
 <p>The <code>persistmaxtime</code> parameter defaults to zero but can be set to a duration as
 documented <a href="#durations">here</a>. If no explicit unit is provided, the value is
 interpreted as seconds in MaxScale 2.4. In subsequent versions a value without a
@@ -3271,6 +3707,12 @@ duration is longer than a second.</p>
 elapsed time since it joined the pool is less than the given value. Otherwise,
 the DCB will be discarded and the connection closed.</p>
 <h3 id="max_routing_connections"><code>max_routing_connections</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>0</code></li>
+</ul>
 <p>Maximum number of routing connections to this server. Connections held in a pool
 also count towards this maximum. Does not limit monitor connections or user
 account fetching. A value of 0 (default) means no limit.</p>
@@ -3293,8 +3735,9 @@ queries will hang, possibly for a long time. The timeout is controlled by
 <h3 id="proxy_protocol"><code>proxy_protocol</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>If <code>proxy_protocol</code> is enabled, MaxScale will send a
 <a href="http://www.haproxy.org/download/1.8/doc/proxy-protocol.txt">PROXY protocol</a>
@@ -3328,6 +3771,12 @@ Server states also need to be set manually in MaxCtrl. These steps are <em>not</
 required for MariaDB 10.3, since its implementation is more flexible and allows
 both PROXY-headered and headerless connections from a proxy-enabled IP.</p>
 <h3 id="disk_space_threshold"><code>disk_space_threshold</code></h3>
+<ul>
+<li><strong>Type</strong>: Custom</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: None</li>
+</ul>
 <p>This parameter specifies how full a disk may be, before MaxScale should start
 logging warnings or take other actions (e.g. perform a switchover). This
 functionality will only work with MariaDB server versions 10.1.32, 10.2.14 and
@@ -3375,6 +3824,13 @@ MaxScale starts to warn to take action.</p>
 <p>There is no default value, but this parameter must be explicitly specified
 if the disk space situation should be monitored.</p>
 <h3 id="rank"><code>rank</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#enumerations">enum</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Values</strong>: <code>primary</code>, <code>secondary</code></li>
+<li><strong>Default</strong>: <code>primary</code></li>
+</ul>
 <p>This parameter controls the order in which servers are used. Valid values for
 this parameter are <code>primary</code> and <code>secondary</code>. The default value is
 <code>primary</code>.</p>
@@ -3415,9 +3871,10 @@ they are available. When they are no longer available, the <code>DR-site-primary
 <code>DR-site-replica</code> will be used.</p>
 <h3 id="priority"><code>priority</code></h3>
 <ul>
-<li><strong>Type</strong>: integer</li>
-<li><strong>Default</strong>: 0</li>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: 0</li>
 </ul>
 <p>Server priority. Currently only used by galeramon to choose the order in which
 nodes are selected as the current primary server. Refer to the
@@ -3458,41 +3915,94 @@ sudden connection spikes and rejected connections. For more information see
 <div><pre><span></span>[MyListener1]
 type=listener
 service=MyService1
-protocol=MariaDB
 port=3006
 </pre></div>
 
 
 <h3 id="service_2"><code>service</code></h3>
+<ul>
+<li><strong>Type</strong>: service</li>
+<li><strong>Mandatory</strong>: Yes</li>
+<li><strong>Dynamic</strong>: No</li>
+</ul>
 <p>The service to which the listener is associated. This is the name of a service
 that is defined elsewhere in the configuration file.</p>
 <h3 id="protocol"><code>protocol</code></h3>
+<ul>
+<li><strong>Type</strong>: protocol</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>mariadb</code></li>
+</ul>
 <p>The name of the protocol module used for communication between the client and
-MaxScale. The same protocol is also used for backend communication. Usually this
-is set to "mariadb". Other allowed values are "postgresql" and "nosqlprotocol".</p>
+MaxScale. The same protocol is also used for backend communication.</p>
+<p>Usually this does not need to be defined as the default protocol is the MariaDB
+network protocol that is used by SQL connections.</p>
+<p>For NoSQL client connections, the protocol must be set to
+<code>protocol=nosqlprotocol</code>. For more details on how to configure the NoSQL
+protocol, refer to the <a href="/kb/en/mariadb-maxscale-2402-maxscale-2402-nosql-protocol-module/">NoSQL Protocol</a> module
+documentation.</p>
 <h3 id="address_1"><code>address</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>"::"</code></li>
+</ul>
 <p>This sets the address the listening socket is bound to. The address may be
 specified as an IP address in 'dot notation' or as a hostname. If left undefined
 the listener will bind to all network interfaces.</p>
 <h3 id="port_1"><code>port</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: Yes, if <code>socket</code> is not provided.</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>0</code></li>
+</ul>
 <p>The port the listener listens on. If left undefined a default port for the
 protocol is used.</p>
 <h3 id="socket_1"><code>socket</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: Yes, if <code>port</code> is not provided.</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>If defined, the listener uses Unix domain sockets to listen for incoming
 connections. The parameter value is the name of the socket to use.</p>
 <p>If you want to use both network ports and UNIX domain sockets with a service,
 define two separate listeners that connect to the same service.</p>
 <h3 id="authenticator"><code>authenticator</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>The authenticator module to use. Each protocol module defines a default
 authentication module, which is used if the setting is left undefined.
 MariaDB and PostgreSQL protocols support multiple authenticators and they can
 be used simultaneously by giving a comma-separated list e.g.
 <code>authenticator=PAMAuth,mariadbauth,gssapiauth</code></p>
 <h3 id="authenticator_options"><code>authenticator_options</code></h3>
-<p>Defines additional options for authentication. The value should be a
-comma-separated list of key-value pairs. See protocol and authenticator specific
-documentation for more details.</p>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
+<p>This defines additional options for authentication. As of MaxScale 2.5.0, only
+<em>MariaDBClient</em> and its authenticators support additional options. The value of
+this parameter should be a comma-separated list of key-value pairs. See
+authenticator specific documentation for more details.</p>
 <h3 id="sql_mode_1"><code>sql_mode</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#enumeration">enum</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Values</strong>: <code>default</code>, <code>oracle</code></li>
+<li><strong>Default</strong>: <code>default</code></li>
+</ul>
 <p>Specify the sql mode for the listener similarly to global <code>sql_mode</code> setting.
 If both are used this setting will override the global setting for this listener.</p>
 <h3 id="proxy_protocol_networks"><code>proxy_protocol_networks</code></h3>
@@ -3522,6 +4032,12 @@ authentication results.</p>
 <p>Similar to MariaDB Server, MaxScale will also accept normal connections even
 if <code>proxy_protocol_networks</code> is configured for the listener.</p>
 <h3 id="connection_init_sql_file"><code>connection_init_sql_file</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>Path to a text file with sql queries. Any sessions created from the listener
 will send the contents of the file to backends after authentication. Each
 non-empty line in the file is interpreted as a query. Each query must succeed
@@ -3538,6 +4054,12 @@ set @myvar2 = 4;
 
 
 <h3 id="user_mapping_file"><code>user_mapping_file</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>Path to a json-text file with user and group mapping, as well as server
 credentials. Only affects MariaDB-protocol based listeners. Default value is
 empty, which disables the feature.</p>
@@ -3834,18 +4356,36 @@ listeners and servers, it must have both the clientAuth and serverAuth usages.</
 <h3 id="ssl"><code>ssl</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: false</li>
 </ul>
 <p>This enables SSL connections when set to true. The legacy values <code>required</code> and
 <code>disabled</code> were removed in MaxScale 6.0.</p>
 <p>If enabled, the certificate files mentioned above must also be
 supplied. MaxScale connections to will then be encrypted with TLS/SSL.</p>
+<p>Starting with MaxScale 21.06.18, 22.08.15, 23.02.12, 23.08.8, 24.02.4 and
+24.08.1, if ssl is disabled for a listener, MariaDB user accounts that require
+ssl cannot log in through that listener.  Any user account with a non-empty
+<em>ssl_type</em>-field in <em>mysql.user</em>-table is blocked. This includes users created
+with <code>REQUIRE SSL</code> or <code>REQUIRE X509</code>.</p>
 <h3 id="ssl_key"><code>ssl_key</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>A string giving a file path that identifies an existing readable file. The file
 must be the SSL client private key MaxScale should use. This is a required
 parameter for listeners but an optional parameter for servers.</p>
 <h3 id="ssl_cert"><code>ssl_cert</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>A string giving a file path that identifies an existing readable file. The file
 must be the SSL client certificate MaxScale should use with the server. The
 certificate must match the key defined in <code>ssl_key</code>. This is a required
@@ -3853,6 +4393,12 @@ parameter for listeners but an optional parameter for servers.</p>
 <h3 id="ssl_ca_cert"><code>ssl_ca_cert</code></h3>
 <p>Deprecated since MariaDB MaxScale 22.08. See <code>ssl_ca</code>.</p>
 <h3 id="ssl_ca"><code>ssl_ca</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>A string giving a file path that identifies an existing readable file. The file
 must be a Certificate Authority (CA) certificate. It will be used to verify
 that the peer certificate (sent by either client or a MariaDB Server) is valid.
@@ -3904,14 +4450,32 @@ the protocol versions must be explicitly listed, for example
 <a href="https://mariadb.com/kb/en/ssltls-system-variables/#tls_version">tls_version</a>
 parameter works.</p>
 <h3 id="ssl_cipher"><code>ssl_cipher</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>Set the list of TLS ciphers. By default, no explicit ciphers are defined and the
 system defaults are used. Note that this parameter does not modify TLSv1.3
 ciphers.</p>
 <h3 id="ssl_cert_verify_depth"><code>ssl_cert_verify_depth</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>9</code></li>
+</ul>
 <p>The maximum length of the certificate authority chain that will be accepted. The
 default value is 9, same as the OpenSSL default. The configured value must be
 larger than 0.</p>
 <h3 id="ssl_verify_peer_certificate"><code>ssl_verify_peer_certificate</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
+</ul>
 <p>Peer certificate verification. This functionality is disabled by default. In
 versions prior to 2.3.17 the feature was enabled by default.</p>
 <p>When this feature is enabled, the peer (client or MariaDB Server) must send a
@@ -3921,8 +4485,9 @@ For listeners, this behaves as if <code>REQUIRE X509</code> was defined for all 
 <h3 id="ssl_verify_peer_host"><code>ssl_verify_peer_host</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="#booleans">boolean</a></li>
-<li><strong>Default</strong>: false</li>
+<li><strong>Mandatory</strong> No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>Peer host verification.</p>
 <p>When this feature is enabled, the peer (client or MariaDB Server) hostname or
@@ -3940,6 +4505,12 @@ ssl_verify_peer_host=true
 <p>behaves like the <code>--ssl-verify-server-cert</code> command  line option for the
 <code>mysql</code> client.</p>
 <h3 id="ssl_crl"><code>ssl_crl</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>A string giving a file path that identifies an existing readable file. The file
 must be a Certificate Revocation List in the PEM format that defines the revoked
 certificates. This parameter is only accepted by listeners.</p>
@@ -3962,7 +4533,6 @@ Authority file are also provided.</p>
 <div><pre><span></span>[RW-Split-Listener]
 type=listener
 service=RW-Split-Router
-protocol=MariaDBClient
 port=3306
 ssl=true
 ssl_cert=/usr/local/mariadb/maxscale/ssl/crt.maxscale.pem
@@ -4005,7 +4575,7 @@ run MariaDB MaxScale without a monitor module. In this case an external
 monitoring system must the status of each server via MaxCtrl or the REST
 API. <strong>Only do this if you know what you are doing.</strong></p>
 <h2 id="filter-modules">Filter Modules</h2>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/24.02.3/Documentation/Getting-Started/images/filter_example.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/24.02.4/Documentation/Getting-Started/images/filter_example.png"></p>
 <p>Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
 explanation of each filter's functionality can be found in its documentation.</p>
