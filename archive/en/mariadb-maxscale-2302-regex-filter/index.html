@@ -451,7 +451,8 @@ Example 1 - Replace MySQL 5.1 create table..." />
 <li><a href="#overview">Overview</a></li>
 <li><a href="#configuration">Configuration</a></li>
 <li><a href="#filter-parameters">Filter Parameters</a><ul>
-<li><a href="#match-options">match, options</a></li>
+<li><a href="#match">match</a></li>
+<li><a href="#options">options</a></li>
 <li><a href="#replace">replace</a></li>
 <li><a href="#source">source</a></li>
 <li><a href="#user">user</a></li>
@@ -468,11 +469,18 @@ Example 1 - Replace MySQL 5.1 create table..." />
 </ul>
 </div>
 <h2 id="overview">Overview</h2>
-<p>The Regex filter is a filter module for MariaDB MaxScale that is able to rewrite query content using regular expression matches and text substitution. It uses the PCRE2 syntax which differs from the POSIX regular expressions used in MariaDB MaxScale versions prior to 1.3.0.</p>
-<p>For all details about the PCRE2 syntax, please read the <a href="http://www.pcre.org/current/doc/html/pcre2syntax.html">PCRE2 syntax documentation</a>.</p>
-<p>Please note that the PCRE2 library uses a different syntax to refer to capture groups in the replacement string. The main difference is the usage of the dollar character instead of the backslash character for references e.g. <code>$1</code> instead of <code>\1</code>. For more details about the replacement string differences, please read the <a href="http://www.pcre.org/current/doc/html/pcre2api.html#SEC34">Creating a new string with substitutions</a> chapter in the PCRE2 manual.</p>
+<p>The Regex filter is a filter module for MariaDB MaxScale that is able to rewrite
+query content using regular expression matches and text substitution. The
+regular expressions use the
+<a href="http://www.pcre.org/current/doc/html/pcre2syntax.html">PCRE2 syntax</a>.</p>
+<p>PCRE2 library uses a different syntax than POSIX to refer to capture
+groups in the replacement string. The main difference is the usage of the dollar
+character instead of the backslash character for references e.g. <code>$1</code> instead of
+<code>\1</code>. For more details about the replacement string differences, please read the
+<a href="http://www.pcre.org/current/doc/html/pcre2api.html#SEC34">Creating a new string with substitutions</a>
+chapter in the PCRE2 manual.</p>
 <h2 id="configuration">Configuration</h2>
-<p>The configuration block for the Regex filter requires the minimal filter options in its section within the maxscale.cnf file, stored in /etc/maxscale.cnf.</p>
+<p>The following demonstrates a minimal configuration.</p>
 <div><pre><span></span>[MyRegexFilter]
 type=filter
 module=regexfilter
@@ -491,44 +499,92 @@ filters=MyRegexfilter
 
 <h2 id="filter-parameters">Filter Parameters</h2>
 <p>The Regex filter has two mandatory parameters: <em>match</em> and <em>replace</em>.</p>
-<h3 id="match-options"><code>match</code>, <code>options</code></h3>
-<p><em>match</em> is a
-<a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#regular-expressions">PCRE2 regular expression</a>
-which defines the text in the SQL statements that is replaced.</p>
-<p>The <em>options</em>-parameter affects how the patterns are compiled as
-<a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#standard-regular-expression-settings-for-filters">usual</a>.
-Regex filter does not support the <code>extended</code>-option.</p>
+<h3 id="match"><code>match</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#regular-expressions">regex</a></li>
+<li><strong>Mandatory</strong>: Yes</li>
+<li><strong>Dynamic</strong>: Yes</li>
+</ul>
+<p>Defines the text in the SQL statements that is replaced.</p>
 <div><pre><span></span>match=TYPE[ ]*=
 options=case
 </pre></div>
 
 
+<h3 id="options"><code>options</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#enumerations">enum</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Values</strong>: <code>ignorecase</code>, <code>case</code>, <code>extended</code></li>
+<li><strong>Default</strong>: <code>ignorecase</code></li>
+</ul>
+<p>The <em>options</em>-parameter affects how the patterns are compiled as
+<a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#standard-regular-expression-settings-for-filters">usual</a>.</p>
 <h3 id="replace"><code>replace</code></h3>
-<p>This is the text that should replace the part of the SQL-query matching the pattern
-defined in <em>match</em>.</p>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: Yes</li>
+<li><strong>Dynamic</strong>: Yes</li>
+</ul>
+<p>This is the text that should replace the part of the SQL-query matching the
+pattern defined in <em>match</em>.</p>
 <div><pre><span></span>replace=ENGINE =
 </pre></div>
 
 
 <h3 id="source"><code>source</code></h3>
-<p>The optional source parameter defines an address that is used to match against the address from which the client connection to MariaDB MaxScale originates. Only sessions that originate from this address will have the match and replacement applied to them.</p>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
+<p>The optional source parameter defines an address that is used to match against
+the address from which the client connection to MariaDB MaxScale
+originates. Only sessions that originate from this address will have the match
+and replacement applied to them.</p>
 <div><pre><span></span>source=127.0.0.1
 </pre></div>
 
 
 <h3 id="user"><code>user</code></h3>
-<p>The optional user parameter defines a user name that is used to match against the user from which the client connection to MariaDB MaxScale originates. Only sessions that are connected using this username will have the match and replacement applied to them.</p>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
+<p>The optional user parameter defines a username that is used to match against
+the user from which the client connection to MariaDB MaxScale originates. Only
+sessions that are connected using this username will have the match and
+replacement applied to them.</p>
 <div><pre><span></span>user=john
 </pre></div>
 
 
 <h3 id="log_file"><code>log_file</code></h3>
-<p>The optional log_file parameter defines a log file in which the filter writes all queries that are not matched and matching queries with their replacement queries. All sessions will log to this file so this should only be used for diagnostic purposes.</p>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
+<p>The optional log_file parameter defines a log file in which the filter writes
+all queries that are not matched and matching queries with their replacement
+queries. All sessions will log to this file so this should only be used for
+diagnostic purposes.</p>
 <div><pre><span></span>log_file=/tmp/regexfilter.log
 </pre></div>
 
 
 <h3 id="log_trace"><code>log_trace</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
 <p>The optional log_trace parameter toggles the logging of non-matching and
 matching queries with their replacements into the log file on the <em>info</em> level.
 This is the preferred method of diagnosing the matching of queries since the log
@@ -541,7 +597,11 @@ session specific logging, please read the
 
 <h2 id="examples">Examples</h2>
 <h3 id="example-1-replace-mysql-51-create-table-syntax-with-that-for-later-versions">Example 1 - Replace MySQL 5.1 create table syntax with that for later versions</h3>
-<p>MySQL 5.1 used the parameter TYPE = to set the storage engine that should be used for a table. In later versions this changed to be ENGINE =. Imagine you have an application that you can not change for some reason, but you wish to migrate to a newer version of MySQL. The regexfilter can be used to transform the create table statements into the form that could be used by MySQL 5.5</p>
+<p>MySQL 5.1 used the parameter TYPE = to set the storage engine that should be
+used for a table. In later versions this changed to be ENGINE =. Imagine you
+have an application that you can not change for some reason, but you wish to
+migrate to a newer version of MySQL. The regexfilter can be used to transform
+the create table statements into the form that could be used by MySQL 5.5</p>
 <div><pre><span></span>[CreateTableFilter]
 type=filter
 module=regexfilter

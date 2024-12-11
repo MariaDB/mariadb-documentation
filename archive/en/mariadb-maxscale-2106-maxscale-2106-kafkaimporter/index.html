@@ -478,16 +478,16 @@ details). The table will be automatically created with the following SQL:</p>
 <div><pre><span></span><span>CREATE</span> <span>TABLE</span> <span>IF</span> <span>NOT</span> <span>EXISTS</span> <span>my_table</span> <span>(</span>
   <span>data</span> <span>LONGTEXT</span> <span>CHARACTER</span> <span>SET</span> <span>utf8mb4</span> <span>COLLATE</span> <span>utf8mb4_bin</span> <span>NOT</span> <span>NULL</span><span>,</span>
   <span>id</span> <span>VARCHAR</span><span>(</span><span>1024</span><span>)</span> <span>AS</span> <span>(</span><span>JSON_EXTRACT</span><span>(</span><span>data</span><span>,</span> <span>'$._id'</span><span>))</span> <span>UNIQUE</span> <span>KEY</span><span>,</span>
-  <span>CONSTRAINT</span> <span>data_is_json</span> <span>CHECK</span><span>(</span><span>JSON_VALID</span><span>(</span><span>data</span><span>)),</span>
-  <span>CONSTRAINT</span> <span>id_is_not_null</span> <span>CHECK</span><span>(</span><span>JSON_EXTRACT</span><span>(</span><span>data</span><span>,</span> <span>'$._id'</span><span>)</span> <span>IS</span> <span>NOT</span> <span>NULL</span><span>)</span>
+  <span>CONSTRAINT</span> <span>data_is_json</span> <span>CHECK</span><span>(</span><span>JSON_VALID</span><span>(</span><span>data</span><span>))</span>
 <span>);</span>
 </pre></div>
 
 
 <p>The payload of the message is inserted into the <code>data</code> field from which the <code>id</code>
-field is calculated. The payload must be a valid JSON object and it must contain
-the <code>_id</code> field. This is similar to the MongoDB document format where the <code>_id</code>
-field is the primary key of the document collection.</p>
+field is calculated. The payload must be a valid JSON object and it must either
+contain a unique <code>_id</code> field or it must not exist or the value must be a JSON
+null. This is similar to the MongoDB document format where the <code>_id</code> field is
+the primary key of the document collection.</p>
 <p>If a message is read from Kafka and the insertion into the table fails due to a
 violation of one of the constraints, the message is ignored. Similarly, messages
 with duplicate <code>_id</code> value are also ignored: this is done to avoid inserting the
@@ -502,6 +502,18 @@ which string values can be inserted into.</p>
 available to the service. The first server labeled as the Master with the best
 rank will be chosen. This means that a monitor must be configured for the
 MariaDB server where the data is to be inserted.</p>
+<p>In MaxScale versions 21.06.18, 22.08.15, 23.02.12, 23.08.8, 24.02.4 and 24.08.2
+the <code>_id</code> field is not required to be present. Older versions of MaxScale used
+the following SQL where the <code>_id</code> field was mandatory:</p>
+<div><pre><span></span><span>CREATE</span> <span>TABLE</span> <span>IF</span> <span>NOT</span> <span>EXISTS</span> <span>my_table</span> <span>(</span>
+  <span>data</span> <span>LONGTEXT</span> <span>CHARACTER</span> <span>SET</span> <span>utf8mb4</span> <span>COLLATE</span> <span>utf8mb4_bin</span> <span>NOT</span> <span>NULL</span><span>,</span>
+  <span>id</span> <span>VARCHAR</span><span>(</span><span>1024</span><span>)</span> <span>AS</span> <span>(</span><span>JSON_EXTRACT</span><span>(</span><span>data</span><span>,</span> <span>'$._id'</span><span>))</span> <span>UNIQUE</span> <span>KEY</span><span>,</span>
+  <span>CONSTRAINT</span> <span>data_is_json</span> <span>CHECK</span><span>(</span><span>JSON_VALID</span><span>(</span><span>data</span><span>)),</span>
+  <span>CONSTRAINT</span> <span>id_is_not_null</span> <span>CHECK</span><span>(</span><span>JSON_EXTRACT</span><span>(</span><span>data</span><span>,</span> <span>'$._id'</span><span>)</span> <span>IS</span> <span>NOT</span> <span>NULL</span><span>)</span>
+<span>);</span>
+</pre></div>
+
+
 <h3 id="required-grants">Required Grants</h3>
 <p>The user defined by the <code>user</code> parameter of the service must have <code>INSERT</code> and
 <code>CREATE</code> privileges on all tables that are created.</p>
@@ -523,9 +535,9 @@ MariaDB server where the data is to be inserted.</p>
 <h3 id="batch_size"><code>batch_size</code></h3>
 <ul>
 <li><strong>Type</strong>: count</li>
-<li><strong>Default</strong>: <code>100</code></li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>100</code></li>
 </ul>
 <p>Maximum number of uncommitted records. The KafkaImporter will buffer records
 into batches and commit them once either enough records are gathered (controlled
@@ -533,11 +545,11 @@ by this parameter) or when the KafkaImporter goes idle. Any uncommitted records
 will be read again if a reconnection to either Kafka or MariaDB occurs.</p>
 <h3 id="kafka_sasl_mechanism"><code>kafka_sasl_mechanism</code></h3>
 <ul>
-<li><strong>Type</strong>: enum</li>
-<li><strong>Default</strong>: <code>PLAIN</code></li>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-21-06-mariadb-maxscale-configuration-guide/#enumerations">enum</a></li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
 <li><strong>Values</strong>: <code>PLAIN</code>, <code>SCRAM-SHA-256</code>, <code>SCRAM-SHA-512</code></li>
+<li><strong>Default</strong>: <code>PLAIN</code></li>
 </ul>
 <p>SASL mechanism to use. The Kafka broker must be configured with the same
 authentication scheme.</p>
@@ -545,62 +557,62 @@ authentication scheme.</p>
 <ul>
 <li><strong>Type</strong>: string</li>
 <li><strong>Mandatory</strong>: No</li>
-<li><strong>Default</strong>: No default value</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
 </ul>
 <p>SASL username used for authentication. If this parameter is defined,
 <code>kafka_sasl_password</code> must also be provided.</p>
 <h3 id="kafka_sasl_password"><code>kafka_sasl_password</code></h3>
 <ul>
 <li><strong>Type</strong>: string</li>
-<li><strong>Default</strong>: No default value</li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
 </ul>
 <p>SASL password for the user. If this parameter is defined, <code>kafka_sasl_user</code> must
 also be provided.</p>
 <h3 id="kafka_ssl"><code>kafka_ssl</code></h3>
 <ul>
-<li><strong>Type</strong>: bool</li>
-<li><strong>Default</strong>: <code>false</code></li>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-21-06-mariadb-maxscale-configuration-guide/#booleans">boolean</a></li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
 </ul>
 <p>Enable SSL for Kafka connections.</p>
 <h3 id="kafka_ssl_ca"><code>kafka_ssl_ca</code></h3>
 <ul>
 <li><strong>Type</strong>: path</li>
-<li><strong>Default</strong>: No default value</li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
 </ul>
 <p>SSL Certificate Authority file in PEM format. If this parameter is not
 defined, the system default CA certificate is used.</p>
 <h3 id="kafka_ssl_cert"><code>kafka_ssl_cert</code></h3>
 <ul>
 <li><strong>Type</strong>: path</li>
-<li><strong>Default</strong>: No default value</li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
 </ul>
 <p>SSL public certificate file in PEM format. If this parameter is defined,
 <code>kafka_ssl_key</code> must also be provided.</p>
 <h3 id="kafka_ssl_key"><code>kafka_ssl_key</code></h3>
 <ul>
 <li><strong>Type</strong>: path</li>
-<li><strong>Default</strong>: No default value</li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
 </ul>
 <p>SSL private key file in PEM format. If this parameter is defined,
 <code>kafka_ssl_cert</code> must also be provided.</p>
 <h3 id="table_name_in"><code>table_name_in</code></h3>
 <ul>
-<li><strong>Type</strong>: enum</li>
-<li><strong>Default</strong>: <code>topic</code></li>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-21-06-mariadb-maxscale-configuration-guide/#enumerations">enum</a></li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
 <li><strong>Values</strong>: <code>topic</code>, <code>key</code></li>
+<li><strong>Default</strong>: <code>topic</code></li>
 </ul>
 <p>The Kafka message part that is used to locate the table to insert the data into.</p>
 <p>Enumeration Values:</p>
@@ -625,10 +637,10 @@ the name would be:</p>
 
 <h3 id="timeout"><code>timeout</code></h3>
 <ul>
-<li><strong>Type</strong>: duration</li>
-<li><strong>Default</strong>: <code>5000ms</code></li>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-21-06-mariadb-maxscale-configuration-guide/#durations">duration</a></li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>5000ms</code></li>
 </ul>
 <p>Timeout for both Kafka and MariaDB network communication.</p>
 <h2 id="limitations">Limitations</h2>

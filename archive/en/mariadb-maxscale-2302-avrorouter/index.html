@@ -426,7 +426,7 @@ The Binlog Server can connect to a primary server and request binlog records.
 These records can then consumed by the avrorouter directly from the binlog cache
 of the Binlog Server. This allows MariaDB MaxScale to automatically transform
 binlog events on the primary to local Avro format files.</p>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.11/Documentation/Routers/images/Binlog-Avro.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/23.02.12/Documentation/Routers/images/Binlog-Avro.png"></p>
 <p>The avrorouter can also consume binary logs straight from the primary. This will
 remove the need to configure the Binlog Server but it will increase the disk space
 requirement on the primary server by at least a factor of two.</p>
@@ -442,7 +442,6 @@ streams from a database table.</p>
 <li><a href="#router-parameters">Router Parameters</a><ul>
 <li><a href="#gtid_start_pos">gtid_start_pos</a></li>
 <li><a href="#server_id">server_id</a></li>
-<li><a href="#source">source</a></li>
 <li><a href="#codec">codec</a></li>
 <li><a href="#match-and-exclude">match and exclude</a></li>
 <li><a href="#binlogdir">binlogdir</a></li>
@@ -507,7 +506,6 @@ threads=auto
 type=server
 address=127.0.0.1
 port=3306
-protocol=MariaDBBackend
 
 [cdc-service]
 type=service
@@ -536,6 +534,12 @@ tables is not contained in the binlogs.</p>
 <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/">Configuration Guide</a>.</p>
 <h3 id="router-parameters">Router Parameters</h3>
 <h4 id="gtid_start_pos"><code>gtid_start_pos</code></h4>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>The GTID where avrorouter starts the replication from in direct replication
 mode. The parameter value must be in the MariaDB GTID format e.g. 0-1-123 where
 the first number is the replication domain, the second the server_id value of
@@ -544,23 +548,35 @@ the server and the last is the GTID sequence number.</p>
 defined, the replication will start from the implicit GTID that the primary first
 serves.</p>
 <h4 id="server_id"><code>server_id</code></h4>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>1234</code></li>
+</ul>
 <p>The
 <a href="https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#server_id">server_id</a>
-used when replicating from the primary in direct replication mode. The default
-value is 1234.</p>
-<h4 id="source"><code>source</code></h4>
-<p><strong>Note:</strong> This parameter has been removed in MaxScale 2.5.0 due to changes in
-          the binlogrouter. The direct replication mode is the recommended mode
-          of operation. Using the binlogrouter is less efficient and more
-          cumbersome to both configure and manage than the direct replication
-          mode.</p>
+used when replicating from the primary in direct replication mode.</p>
 <h4 id="codec"><code>codec</code></h4>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#enumerations">enum</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Values</strong>: <code>null</code>, <code>deflate</code></li>
+<li><strong>Default</strong>: <code>null</code></li>
+</ul>
 <p>The compression codec to use. By default, the avrorouter does not use compression.</p>
 <p>This parameter takes one of the following two values; <em>null</em> or
 <em>deflate</em>. These are the mandatory compression algorithms required by the
 Avro specification. For more information about the compression types,
 refer to the <a href="https://avro.apache.org/docs/current/spec.html#Required+Codecs">Avro specification</a>.</p>
 <h4 id="match-and-exclude"><code>match</code> and <code>exclude</code></h4>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#regular-expressions">regex</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>These <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#standard-regular-expression-settings-for-filters">regular expression settings</a>
 filter events for processing depending on table names. Avrorouter does not support the
 <em>options</em>-parameter for regular expressions.</p>
@@ -570,12 +586,22 @@ but not <code>test.clients_old</code> table use <code>match=^test[.]clients$</co
 tables, surround each table in parentheses and add a pipe character between
 them: <code>match=(^test[.]t1$)|(^test[.]t2$)</code>.</p>
 <h4 id="binlogdir"><code>binlogdir</code></h4>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>/var/lib/maxscale/</code></li>
+</ul>
 <p>The location of the binary log files. This is the first mandatory parameter
 and it defines where the module will read binlog files from. Read access to
 this directory is required.</p>
-<p>If used in conjunction with the binlogrouter, the value of this option should be
-the same for both the binlogrouter and the avrorouter.</p>
 <h4 id="avrodir"><code>avrodir</code></h4>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>/var/lib/maxscale/</code></li>
+</ul>
 <p>The location where the Avro files are stored. This is the second mandatory
 parameter and it governs where the converted files are stored. This directory
 will be used to store the Avro files, plain-text Avro schemas and other files
@@ -586,16 +612,29 @@ files. These files are named <em>avro.index</em> and <em>avro-conversion.ini</em
 the default data directory, <em>/var/lib/maxscale/</em>, is used. Before version 2.1 of
 MaxScale, the value of <em>binlogdir</em> was used as the default value for <em>avrodir</em>.</p>
 <h5 id="filestem"><code>filestem</code></h5>
-<p>The base name of the binlog files. The default value is "mysql-bin". The binlog
-files are assumed to follow the naming schema <em>&lt;filestem&gt;.&lt;n&gt;</em> where <em>&lt;n&gt;</em> is
-the binlog number and <em>&lt;filestem&gt;</em> is the value of this router option.</p>
-<p>For example, with the following router option:</p>
-<div><pre><span></span>filestem=mybin,binlogdir=/var/lib/mysql/binlogs/
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>mysql-bin</code></li>
+</ul>
+<p>The base name of the binlog files. The binlog files are assumed to follow the
+naming schema <em>&lt;filestem&gt;.&lt;n&gt;</em> where <em>&lt;n&gt;</em> is the binlog number and <em>&lt;filestem&gt;</em>
+is the value of this router option.</p>
+<p>For example, with the following parameters:</p>
+<div><pre><span></span>filestem=mybin
+binlogdir=/var/lib/mysql/binlogs/
 </pre></div>
 
 
 <p>The first binlog file the avrorouter would look for is <code>/var/lib/mysql/binlogs/mybin.000001</code>.</p>
 <h4 id="start_index"><code>start_index</code></h4>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>1</code></li>
+</ul>
 <p>The starting index number of the binlog file. The default value is 1.
 For the binlog <em>mysql-bin.000001</em> the index would be 1, for <em>mysql-bin.000005</em>
 the index would be 5.</p>
@@ -603,6 +642,12 @@ the index would be 5.</p>
 of this option to the correct index. The avrorouter will always start from the
 beginning of the binary log file.</p>
 <h3 id="cooperative_replication"><code>cooperative_replication</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#booleans">boolean</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>false</code></li>
+</ul>
 <p>Controls whether multiple instances cooperatively replicate from the same
 cluster. This is a boolean parameter and is disabled by default. It was
 added in MaxScale 6.0.</p>
@@ -632,12 +677,30 @@ will cause a small increase in file size and search times.</p>
 larger chunks of memory to be flushed to disk at one time. This will make
 the conversion process noticeably faster.</p>
 <h5 id="group_trx"><code>group_trx</code></h5>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>1</code></li>
+</ul>
 <p>Controls the number of transactions that are grouped into a single Avro
-data block. The default value is 1 transaction.</p>
+data block.</p>
 <h5 id="group_rows"><code>group_rows</code></h5>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>1000</code></li>
+</ul>
 <p>Controls the number of row events that are grouped into a single Avro
-data block. The default value is 1000 row events.</p>
+data block.</p>
 <h5 id="block_size"><code>block_size</code></h5>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#sizes">size</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>16KiB</code></li>
+</ul>
 <p>The Avro data block size in bytes. The default is 16 kilobytes. Increase this
 value if individual events in the binary logs are very large. The value is a
 size type parameter which means that it can also be defined with an SI suffix.

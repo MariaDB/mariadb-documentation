@@ -276,12 +276,12 @@ param..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-03-01 19:51">9 months, 1 week ago</span></dd>
+<span class="datetime" title="2024-03-01 19:51">9 months, 2 weeks ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-03-01 19:51">9 months, 1 week ago</span></dd>
+<span class="datetime" title="2024-03-01 19:51">9 months, 2 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -934,17 +934,20 @@ candidates are found and the timeout is exceeded, the router returns to normal
 behavior and returns an error.</p>
 <p>When combined with the <code>master_reconnection</code> parameter, failures of writes done
 outside of transactions can be hidden from the client connection. This allows a
-primary to be replaced while a write is in progress.</p>
-<p>The delayed query retrying mode in readwritesplit does not do any sort of
-duplicate write detection. To prevent accidental data duplication, it is highly
-recommended to tune the monitor timeouts to values that produce accurate
-results.</p>
-<p>Duplicate execution of a statement can occur if the connection to the server is
-lost or the server crashes but the server comes back up before the timeout for
-the retrying is exceeded. At this point, if the server managed to read the
-client's statement, it will be executed. For this reason, it is recommended to
-only enable <code>delayed_retry</code> when the possibility of duplicate statement
-execution is an acceptable risk.</p>
+primary to be replaced while writes are being sent.</p>
+<p>Starting with MaxScale 21.06.18, 22.08.15, 23.02.12, 23.08.8, 24.02.4 and
+24.08.1, <code>delayed_retry</code> will no longer attempt to retry a query if it was
+already sent to the database. If a query is received while a valid target server
+is not available, the execution of the query is delayed until a valid target is
+found or the delayed retry timeout is hit. If a query was already sent, it will
+not be replayed to prevent duplicate execution of statements.</p>
+<p>In older versions of MaxScale, duplicate execution of a statement can occur if
+the connection to the server is lost or the server crashes but the server comes
+back up before the timeout for the retrying is exceeded. At this point, if the
+server managed to read the client's statement, it will be executed. For this
+reason, it is recommended to only enable <code>delayed_retry</code> for older versions of
+MaxScale when the possibility of duplicate statement execution is an acceptable
+risk.</p>
 <h3 id="delayed_retry_timeout"><code>delayed_retry_timeout</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#durations">duration</a></li>
@@ -1592,7 +1595,16 @@ writes are written to binlog and thus become replicated to replicas.</p>
 <li>All statements within an open read-write transaction</li>
 <li>Stored procedure calls</li>
 <li>User-defined function calls</li>
-<li>Statements that use <code>LAST_INSERT_ID()</code></li>
+<li>Queries that use sequences (<code>NEXT VALUE FOR seq</code>, <code>NEXTVAL(seq)</code> or <code>seq.nextval</code>)</li>
+<li>Statements that use any of the following functions:</li>
+<li><code>LAST_INSERT_ID()</code></li>
+<li><code>GET_LOCK()</code></li>
+<li><code>RELEASE_LOCK()</code></li>
+<li><code>IS_USED_LOCK()</code></li>
+<li><code>IS_FREE_LOCK()</code></li>
+<li>Statements that use any of the following variables:</li>
+<li><code>@@last_insert_id</code></li>
+<li><code>@@identity</code></li>
 </ul>
 <p>In addition to these, if the <strong>readwritesplit</strong> service is configured with the
 <code>max_replication_lag</code> parameter, and if all replicas suffer from too much

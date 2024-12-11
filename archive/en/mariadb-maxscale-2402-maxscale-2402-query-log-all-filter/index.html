@@ -302,12 +302,12 @@ source_mat..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-03-01 19:51">9 months, 1 week ago</span></dd>
+<span class="datetime" title="2024-03-01 19:51">9 months, 2 weeks ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-03-01 19:51">9 months, 1 week ago</span></dd>
+<span class="datetime" title="2024-03-01 19:51">9 months, 2 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -451,8 +451,11 @@ source_mat..." />
 <li><a href="#log-rotation">Log Rotation</a></li>
 <li><a href="#filter-parameters">Filter Parameters</a><ul>
 <li><a href="#filebase">filebase</a></li>
-<li><a href="#match-exclude-and-options">match, exclude and options</a></li>
-<li><a href="#user-and-source">user and source</a></li>
+<li><a href="#match">match</a></li>
+<li><a href="#exclude">exclude</a></li>
+<li><a href="#options">options</a></li>
+<li><a href="#user">user</a></li>
+<li><a href="#source">source</a></li>
 <li><a href="#user_match">user_match</a></li>
 <li><a href="#user_exclude">user_exclude</a></li>
 <li><a href="#source_match">source_match</a></li>
@@ -505,33 +508,59 @@ written to the file. This applies to both unified and session type logging.</p>
 <p>The QLA filter has one mandatory parameter, <code>filebase</code>, and a number of optional
 parameters. These were introduced in the 1.0 release of MariaDB MaxScale.</p>
 <h3 id="filebase"><code>filebase</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: Yes</li>
+<li><strong>Dynamic</strong>: No</li>
+</ul>
 <p>The basename of the output file created for each session. A session index is
 added to the filename for each written session file. For unified log files,
-<em>.unified</em> is appended. This is a mandatory parameter.</p>
+<em>.unified</em> is appended.</p>
 <div><pre><span></span>filebase=/tmp/SqlQueryLog
 </pre></div>
 
 
-<h3 id="match-exclude-and-options"><code>match</code>, <code>exclude</code> and <code>options</code></h3>
-<p>These
-<a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#standard-regular-expression-settings-for-filters">regular expression settings</a>
-limit which queries are logged.</p>
-<div><pre><span></span>match=select.*from.*customer.*where
-exclude=^insert
-options=case,extended
-</pre></div>
-
-
-<h3 id="user-and-source"><code>user</code> and <code>source</code></h3>
-<p>These optional parameters limit logging on a session level. If <code>user</code> is
-defined, only the sessions with a matching client username are logged. If
-<code>source</code> is defined, only sessions with a matching client source address are
-logged.</p>
-<div><pre><span></span>user=john
-source=127.0.0.1
-</pre></div>
-
-
+<h3 id="match"><code>match</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#regular-expressions">regex</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
+<p>Include queries that match the regex.</p>
+<h3 id="exclude"><code>exclude</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#regular-expressions">regex</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
+<p>Exclude queries that match the regex.</p>
+<h3 id="options"><code>options</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#enumerations">enum_mask</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Values</strong>: <code>case</code>, <code>ignorecase</code>, <code>extended</code></li>
+<li><strong>Default</strong>: <code>case</code></li>
+</ul>
+<p>The <code>extended</code> option enables PCRE2 extended regular expressions.</p>
+<h3 id="user"><code>user</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
+<p>Limit logging to sessions with this user.</p>
+<h3 id="source"><code>source</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
+<p>Limit logging to sessions with this client source address.</p>
 <h3 id="user_match"><code>user_match</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#regular-expressions">regex</a></li>
@@ -587,7 +616,14 @@ address <code>192.168.0.109</code>:</p>
 
 
 <h3 id="log_type"><code>log_type</code></h3>
-<p>The type of log file to use. The default value is <em>session</em>.</p>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#enumerations">enum_mask</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Values</strong>: <code>session</code>, <code>unified</code>, <code>stdout</code></li>
+<li><strong>Default</strong>: <code>session</code></li>
+</ul>
+<p>The type of log file to use.</p>
 <table>
 <thead>
 <tr>
@@ -610,16 +646,15 @@ address <code>192.168.0.109</code>:</p>
 </tr>
 </tbody>
 </table>
-<div><pre><span></span>log_type=session
-</pre></div>
-
-
-<p>The log types can be combined, e.g. setting <code>log_type=session,stdout</code>
-will write both session-specific files, and all sessions to stdout.</p>
 <h3 id="log_data"><code>log_data</code></h3>
-<p>Type of data to log in the log files. The parameter value is a comma separated
-list of the following elements. By default the <em>date</em>, <em>user</em> and <em>query</em>
-options are enabled.</p>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#enumerations">enum_mask</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Values</strong>: <code>service</code>, <code>session</code>, <code>date</code>, <code>user</code>, <code>reply_time</code>, <code>total_reply_time</code>, <code>query</code>, <code>default_db</code>, <code>num_rows</code>, <code>reply_size</code>, <code>transaction</code>, <code>transaction_time</code>, <code>num_warnings</code>, <code>error_msg</code></li>
+<li><strong>Default</strong>: <code>date, user, query</code></li>
+</ul>
+<p>Type of data to log in the log files.</p>
 <table>
 <thead>
 <tr>
@@ -694,12 +729,8 @@ options are enabled.</p>
 </tr>
 </tbody>
 </table>
-<div><pre><span></span>log_data=date, user, query, total_reply_time
-</pre></div>
-
-
 <p>The durations <em>reply_time</em> and <em>total_reply_time</em> are by default in milliseconds,
-but can be specified to be in microseconds using <em>duration_unit</em>.</p>
+but can be specified to another unit using <em>duration_unit</em>.</p>
 <p>The log entry is written when the last reply from the server is received.
 Prior to version 6.2 the entry was written when the query was received from
 the client, or if <em>reply_time</em> was specified, on first reply from the server.</p>
@@ -718,47 +749,57 @@ the execution of binary protocol commands as SQL
 batched statements (COM_STMT_BULK_LOAD) used by some connectors is not
 logged.</p>
 <h3 id="duration_unit"><code>duration_unit</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>milliseconds</code></li>
+</ul>
 <p>The unit for logging a duration. The unit can be <code>milliseconds</code> or <code>microseconds</code>.
 The abbreviations <code>ms</code> for milliseconds and <code>us</code> for microseconds are also valid.
-The default is <code>milliseconds</code>.
 This option is available as of MaxScale version 6.2.</p>
-<div><pre><span></span>duration_unit=microseconds
-</pre></div>
-
-
 <h3 id="use_canonical_form"><code>use_canonical_form</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#booleans">bool</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
+</ul>
 <p>When this option is true the canonical form of the query is logged. In the
 canonical form all user defined constants are replaced with question marks.
-The default is false, i.e. log the sql as is.
 This option is available as of MaxScale version 6.2.</p>
-<div><pre><span></span>use_canonical_form=true
-</pre></div>
-
-
 <h3 id="flush"><code>flush</code></h3>
-<p>Flush log files after every write. The default is false.</p>
-<div><pre><span></span>flush=true
-</pre></div>
-
-
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#booleans">bool</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
+</ul>
+<p>Flush log files after every write.</p>
 <h3 id="append"><code>append</code></h3>
-<p>Append new entries to log files instead of overwriting them. The default is
-true.
-<strong>NOTE</strong>: the default was changed from false to true, as of the following
-versions: 2.4.18, 2.5.16 and 6.2.</p>
-<div><pre><span></span>append=true
-</pre></div>
-
-
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#booleans">bool</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>true</code></li>
+</ul>
 <h3 id="separator"><code>separator</code></h3>
-<p>Default value is "," (a comma). Defines the separator string between elements of
-a log entry. The value should be enclosed in quotes.</p>
-<div><pre><span></span>separator=" | "
-</pre></div>
-
-
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>","</code></li>
+</ul>
+<p>Defines the separator string between elements of
+log entries. The value should be enclosed in quotes.</p>
 <h3 id="newline_replacement"><code>newline_replacement</code></h3>
-<p>Default value is " " (one space). SQL-queries may include line breaks, which, if
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>" "</code></li>
+</ul>
+<p>Default value is <code>" "</code> (one space). SQL-queries may include line breaks, which, if
 printed directly to the log, may break automatic parsing. This parameter defines
 what should be written in the place of a newline sequence (\r, \n or \r\n). If
 this is set as the empty string, then newlines are not replaced and printed as

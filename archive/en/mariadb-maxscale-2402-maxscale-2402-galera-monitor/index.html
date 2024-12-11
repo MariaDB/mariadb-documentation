@@ -292,12 +292,12 @@ Common Monitor Para..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-03-01 19:51">9 months, 1 week ago</span></dd>
+<span class="datetime" title="2024-03-01 19:51">9 months, 2 weeks ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-03-01 19:51">9 months, 1 week ago</span></dd>
+<span class="datetime" title="2024-03-01 19:51">9 months, 2 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -437,6 +437,7 @@ Common Monitor Para..." />
 <ul>
 <li><a href="#galera-monitor">Galera Monitor</a><ul>
 <li><a href="#overview">Overview</a><ul>
+<li><a href="#wsrep-variables-and-their-effects">WSREP Variables and Their Effects</a></li>
 <li><a href="#galera-clusters-and-replicas-replicating-from-it">Galera clusters and replicas replicating from it</a></li>
 </ul>
 </li>
@@ -466,6 +467,33 @@ traditional primary-replica clusters.</p>
 <p>By default, the Galera Monitor will choose the node with the lowest
 <code>wsrep_local_index</code> value as the primary. This will mean that two MaxScales
 running on different servers will choose the same server as the primary.</p>
+<h3 id="wsrep-variables-and-their-effects">WSREP Variables and Their Effects</h3>
+<p>The following WSREP variables are inspected by galeramon to see whether a node is
+usable. If the node is not usable, it loses the <code>Master</code> and <code>Slave</code> labels and
+will be in the <code>Running</code> state.</p>
+<ul>
+<li>
+<p>If <code>wsrep_ready=0</code>, the WSREP system is not yet ready and the Galera node
+  cannot accept queries.</p>
+</li>
+<li>
+<p>If <code>wsrep_desync=1</code> is set, the node is desynced and is not participating in
+  the Galera replication.</p>
+</li>
+<li>
+<p>If <code>wsrep_reject_queries=[ALL|ALL_KILL]</code> is set, queries are refused and the
+  node is unusable.</p>
+</li>
+<li>
+<p>With <code>wsrep_sst_donor_rejects_queries=1</code>, donor nodes reject
+  queries. Galeramon treats this the same as if <code>wsrep_reject_queries=ALL</code> was
+  set.</p>
+</li>
+<li>
+<p>If <code>wsrep_local_state</code> is not 4 (or 2 with <code>available_when_donor=true</code>), the
+  node is not in the correct state and is not used.</p>
+</li>
+</ul>
 <h3 id="galera-clusters-and-replicas-replicating-from-it">Galera clusters and replicas replicating from it</h3>
 <p>MaxScale 2.4.0 added support for replicas replicating off of Galera nodes. If a
 non-Galera server monitored by galeramon is replicating from a Galera node also

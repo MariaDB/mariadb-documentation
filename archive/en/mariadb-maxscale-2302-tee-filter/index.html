@@ -463,7 +463,11 @@ tee..." />
 <li><a href="#filter-parameters">Filter Parameters</a><ul>
 <li><a href="#target">target</a></li>
 <li><a href="#service">service</a></li>
-<li><a href="#match-exclude-and-options">match, exclude and options</a></li>
+<li><a href="#match">match</a></li>
+<li><a href="#exclude">exclude</a></li>
+</ul>
+</li>
+<li><a href="#options">options</a><ul>
 <li><a href="#source">source</a></li>
 <li><a href="#user">user</a></li>
 <li><a href="#sync">sync</a></li>
@@ -513,23 +517,69 @@ filters=DataMartFilter
 <p>The tee filter requires a mandatory parameter to define the service to replicate
 statements to and accepts a number of optional parameters.</p>
 <h3 id="target"><code>target</code></h3>
+<ul>
+<li><strong>Type</strong>: target</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: none</li>
+</ul>
 <p>The target where the filter will duplicate all queries. The target can be either
 a service or a server. The duplicate connection that is created to this target
 will be referred to as the "branch target" in this document.</p>
 <h3 id="service"><code>service</code></h3>
+<ul>
+<li><strong>Type</strong>: service</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: none</li>
+</ul>
 <p>The service where the filter will duplicate all queries. This parameter is
 deprecated in favor of the <code>target</code> parameter and will be removed in a future
 release. Both <code>target</code> and <code>service</code> cannot be defined.</p>
-<h3 id="match-exclude-and-options"><code>match</code>, <code>exclude</code> and <code>options</code></h3>
-<p>These <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#standard-regular-expression-settings-for-filters">regular expression settings</a>
-limit the queries replicated by the tee filter.</p>
+<h3 id="match"><code>match</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#regular-expressions">regex</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
+<p>What queries should be included.</p>
 <div><pre><span></span>match=/insert.*into.*order*/
-exclude=/select.*from.*t1/
-options=case,extended
+</pre></div>
+
+
+<h3 id="exclude"><code>exclude</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#regular-expressions">regex</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
+<p>What queries should be excluded.</p>
+<div><pre><span></span>exclude=/select.*from.*t1/
+</pre></div>
+
+
+<h2 id="options"><code>options</code></h2>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#enumerations">enum</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Values</strong>: <code>ignorecase</code>, <code>case</code>, <code>extended</code></li>
+<li><strong>Default</strong>: <code>ignorecase</code></li>
+</ul>
+<p>How regular expressions should be interpreted.</p>
+<div><pre><span></span>options=case,extended
 </pre></div>
 
 
 <h3 id="source"><code>source</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
 <p>The optional source parameter defines an address that is used to match against
 the address from which the client connection to MariaDB MaxScale originates.
 Only sessions that originate from this address will be replicated.</p>
@@ -538,6 +588,12 @@ Only sessions that originate from this address will be replicated.</p>
 
 
 <h3 id="user"><code>user</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: None</li>
+</ul>
 <p>The optional user parameter defines a user name that is used to match against
 the user from which the client connection to MariaDB MaxScale originates. Only
 sessions that are connected using this username are replicated.</p>
@@ -546,14 +602,18 @@ sessions that are connected using this username are replicated.</p>
 
 
 <h3 id="sync"><code>sync</code></h3>
-<p>Enable synchronous routing mode. This boolean parameter was added in MaxScale
-6.2.0 and is disabled by default.</p>
-<p>When configured with <code>sync=true</code>, the filter will queue new queries until the
-response from both the main and the branch target has been received. This means
-that for <code>n</code> executed queries, <code>n - 1</code> queries are guaranteed to be
-synchronized. Adding one extra statement (e.g. <code>SELECT 1</code>) to a batch of
-statements guarantees that all previous SQL statements have been successfully
-executed on both targets.</p>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#booleans">boolean</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>false</code></li>
+</ul>
+<p>Enable synchronous routing mode. When configured with <code>sync=true</code>, the filter
+will queue new queries until the response from both the main and the branch
+target has been received. This means that for <code>n</code> executed queries, <code>n - 1</code>
+queries are guaranteed to be synchronized. Adding one extra statement
+(e.g. <code>SELECT 1</code>) to a batch of statements guarantees that all previous SQL
+statements have been successfully executed on both targets.</p>
 <p>In the synchronous routing mode, a failure of the branch target will cause the
 client session to be closed.</p>
 <h2 id="limitations">Limitations</h2>
@@ -627,13 +687,11 @@ options=/var/log/DataMart/InsertsLog
 [Orders-Listener]
 type=listener
 target=Orders
-protocol=MariaDBClient
 port=4011
 
 [DataMart-Listener]
 type=listener
 target=DataMart
-protocol=MariaDBClient
 port=4012
 </pre></div>
     </div>

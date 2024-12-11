@@ -304,12 +304,12 @@ read_..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-03-01 19:51">9 months, 1 week ago</span></dd>
+<span class="datetime" title="2024-03-01 19:51">9 months, 2 weeks ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-03-01 19:51">9 months, 1 week ago</span></dd>
+<span class="datetime" title="2024-03-01 19:51">9 months, 2 weeks ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -461,6 +461,7 @@ read_..." />
 <li><a href="#exclude">exclude</a></li>
 <li><a href="#cooperative_replication">cooperative_replication</a></li>
 <li><a href="#send_schema">send_schema</a></li>
+<li><a href="#read_gtid_from_kafka">read_gtid_from_kafka</a></li>
 <li><a href="#kafka_ssl">kafka_ssl</a></li>
 <li><a href="#kafka_ssl_ca">kafka_ssl_ca</a></li>
 <li><a href="#kafka_ssl_cert">kafka_ssl_cert</a></li>
@@ -579,20 +580,50 @@ will be queried from the primary server.</p>
 <p>During shutdown, the Kafka event queue is flushed. This can take up to 60
 seconds if the network is slow or there are network problems.</p>
 <h2 id="configuration">Configuration</h2>
-<p>The <code>servers</code> parameter defines the set of servers where the data is replicated
-from. The replication will be done from the first primary server that is found.</p>
+<ul>
+<li>
+<p>In order for <code>kafkacdc</code> to work, the binary logging on the source server must
+  be configured to use row-based replication and the row image must be set to
+  full by configuring <code>binlog_format=ROW</code> and <code>binlog_row_image=FULL</code>.</p>
+</li>
+<li>
+<p>The <code>servers</code> parameter defines the set of servers where the data is
+  replicated from. The replication will be done from the first primary server
+  that is found.</p>
+</li>
+<li>
 <p>The <code>user</code> and <code>password</code> of the service will be used to connect to the
-primary. This user requires the REPLICATION SLAVE grant.</p>
+  primary. This user requires the <code>REPLICATION SLAVE</code> grant.</p>
+</li>
+<li>
 <p>The KafkaCDC service must not be configured to use listeners. If a listener is
-configured, all attempts to start a session will fail.</p>
+  configured, all attempts to start a session will fail.</p>
+</li>
+</ul>
 <h2 id="parameters">Parameters</h2>
 <h3 id="bootstrap_servers"><code>bootstrap_servers</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: Yes</li>
+<li><strong>Dynamic</strong>: No</li>
+</ul>
 <p>The list of Kafka brokers to use in <code>host:port</code> format. Multiple values
 can be separated with commas. This is a mandatory parameter.</p>
 <h3 id="topic"><code>topic</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: Yes</li>
+<li><strong>Dynamic</strong>: No</li>
+</ul>
 <p>The Kafka topic where the replicated events will be sent. This is a
 mandatory parameter.</p>
 <h3 id="enable_idempotence"><code>enable_idempotence</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#booleans">boolean</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>false</code></li>
+</ul>
 <p>Enable idempotent producer mode. This feature requires Kafka version 0.11 or
 newer to work and is disabled by default.</p>
 <p>When enabled, the Kafka producer enters a strict mode which avoids event
@@ -611,9 +642,20 @@ be less than or equal to 5), retries=INT32_MAX (must be greater than 0),
 acks=all, queuing.strategy=fifo.</p>
 </blockquote>
 <h3 id="timeout"><code>timeout</code></h3>
-<p>The connection and read timeout for the replication stream. The default
-value is 10 seconds.</p>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#durations">duration</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>10s</code></li>
+</ul>
+<p>The connection and read timeout for the replication stream.</p>
 <h3 id="gtid"><code>gtid</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>The initial GTID position from where the replication is started. By default the
 replication is started from the beginning. The value of this parameter is only
 used if no previously replicated events with GTID positions can be retrieved
@@ -635,6 +677,12 @@ parameter will be ignored. To reset the recorded GTID position, delete the
 <code>current_gtid.txt</code> file located in <code>/var/lib/maxscale/&lt;SERVICE&gt;/</code> where
 <code>&lt;SERVICE&gt;</code> is the name of the KafkaCDC service.</p>
 <h3 id="server_id"><code>server_id</code></h3>
+<ul>
+<li><strong>Type</strong>: number</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>1234</code></li>
+</ul>
 <p>The
 <a href="https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#server_id">server_id</a>
 used when replicating from the primary in direct replication mode. The default
@@ -644,6 +692,7 @@ value is 1234. This parameter was added in MaxScale 2.5.7.</p>
 <li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#regular-expressions">regex</a></li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
 </ul>
 <p>Only include data from tables that match this pattern.</p>
 <p>For example, if configured with <code>match=accounts[.].*</code>, only data from the
@@ -674,6 +723,7 @@ exclude=db1[.](accounts|users)
 <li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#regular-expressions">regex</a></li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
+<li><strong>Default</strong>: <code>""</code></li>
 </ul>
 <p>Exclude data from tables that match this pattern.</p>
 <p>For example, if configured with <code>exclude=mydb[.].*</code>, all data from the tables in
@@ -682,6 +732,12 @@ the <code>mydb</code> database is not sent to Kafka.</p>
 parameters. See <a href="#match"><code>match</code></a> for an explanation on how the patterns are
 matched against the database and table names.</p>
 <h3 id="cooperative_replication"><code>cooperative_replication</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#booleans">boolean</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>false</code></li>
+</ul>
 <p>Controls whether multiple instances cooperatively replicate from the same
 cluster. This is a boolean parameter and is disabled by default. It was added in
 MaxScale 6.0.</p>
@@ -709,13 +765,43 @@ format of the data being sent changes.</p>
 <p>If this information in these schema change events is not needed or the code that
 processes the Kafka stream can't handle them, they can be disabled with this
 parameter.</p>
+<h3 id="read_gtid_from_kafka"><code>read_gtid_from_kafka</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#booleans">boolean</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>true</code></li>
+</ul>
+<p>On startup, the latest GTID is by default read from the Kafka cluster. This
+makes it possible to recover the replication position stored by another
+MaxScale. Sometimes this is not desirable and the GTID should only be read from
+the local file or started anew. Examples of these are when the GTIDs are reset
+or the replication topology has changed.</p>
 <h3 id="kafka_ssl"><code>kafka_ssl</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#booleans">boolean</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>false</code></li>
+</ul>
 <p>Enable SSL for Kafka connections. This is a boolean parameter and is disabled by
 default.</p>
 <h3 id="kafka_ssl_ca"><code>kafka_ssl_ca</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>Path to the certificate authority file in PEM format. If this is not provided,
 the default system certificates will be used.</p>
 <h3 id="kafka_ssl_cert"><code>kafka_ssl_cert</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>Path to the public certificate in PEM format.</p>
 <p>The client must provide a certificate if the Kafka server performs authentication
 of the client certificates. This feature is enabled by default in Kafka and is
@@ -723,15 +809,40 @@ controlled by
 <a href="https://kafka.apache.org/documentation/#brokerconfigs_ssl.endpoint.identification.algorithm"><code>ssl.endpoint.identification.algorithm</code></a>.</p>
 <p>If <code>kafka_ssl_cert</code> is provided, <code>kafka_ssl_key</code> must also be provided.</p>
 <h3 id="kafka_ssl_key"><code>kafka_ssl_key</code></h3>
+<ul>
+<li><strong>Type</strong>: path</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>Path to the private key in PEM format.</p>
 <p>If <code>kafka_ssl_key</code> is provided, <code>kafka_ssl_cert</code> must also be provided.</p>
 <h3 id="kafka_sasl_user"><code>kafka_sasl_user</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>Username for SASL authentication.</p>
 <p>If <code>kafka_sasl_user</code> is provided, <code>kafka_sasl_password</code> must also be provided.</p>
 <h3 id="kafka_sasl_password"><code>kafka_sasl_password</code></h3>
+<ul>
+<li><strong>Type</strong>: string</li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Default</strong>: <code>""</code></li>
+</ul>
 <p>Password for SASL authentication.</p>
 <p>If <code>kafka_sasl_password</code> is provided, <code>kafka_sasl_user</code> must also be provided.</p>
 <h3 id="kafka_sasl_mechanism"><code>kafka_sasl_mechanism</code></h3>
+<ul>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-24-02-mariadb-maxscale-configuration-guide/#enumerations">enum</a></li>
+<li><strong>Mandatory</strong>: No</li>
+<li><strong>Dynamic</strong>: No</li>
+<li><strong>Values</strong>: <code>PLAIN</code>, <code>SCRAM-SHA-256</code>, <code>SCRAM-SHA-512</code></li>
+<li><strong>Default</strong>: <code>PLAIN</code></li>
+</ul>
 <p>The SASL mechanism used. The default value is <code>PLAIN</code> which uses plaintext
 authentication. It is recommended to enable SSL whenever plaintext
 authentication is used.</p>
@@ -751,7 +862,6 @@ events from MariaDB into Kafka as JSON:</p>
 type=server
 address=127.0.0.1
 port=3306
-protocol=MariaDBBackend
 
 # The monitor for the server
 [MariaDB-Monitor]
