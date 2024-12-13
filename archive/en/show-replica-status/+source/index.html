@@ -323,7 +323,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/show-replica-status/+r/140958/">140958</a></dd>
+            <dd><a href="/kb/en/show-replica-status/+r/145241/">145241</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -332,7 +332,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-06-25 20:51">2024-06-25 20:51</span></dd>
+<span class="datetime" title="2024-12-12 15:13">2024-12-12 15:13</span></dd>
         </dl>
     </div>
     
@@ -346,7 +346,7 @@
 
 &lt;&lt;code&gt;&gt;
 SHOW SLAVE [&#34;connection_name&#34;] STATUS [FOR CHANNEL &#34;connection_name&#34;]
-SHOW REPLICA [&#34;connection_name&#34;] STATUS -- From MariaDB 10.5.1
+SHOW REPLICA [&#34;connection_name&#34;] STATUS [FOR CHANNEL &#34;connection_name&#34;] -- From MariaDB 10.5.1
 &lt;&lt;/code&gt;&gt;
 or
 &lt;&lt;code&gt;&gt;
@@ -360,6 +360,8 @@ SHOW ALL REPLICAS STATUS -- From MariaDB 10.5.1
 This statement is to be run on a replica and provides status information on essential parameters of the [[replication|replica]] threads.
 
 This statement requires the [[grant#super|SUPER]] privilege, the [[grant#replication-client|REPLICATION_CLIENT]] privilege, or, from MariaDB 10.5.2, the [[grant/#binlog-monitor|REPLICATION SLAVE ADMIN]] privilege, or, from MariaDB 10.5.9, the [[grant/#replica-monitor|REPLICA MONITOR]] privilege.
+
+
 
 === Multi-Source
 The ##ALL## and ##&#34;connection_name&#34;## options allow you to connect to [[multi-source-replication|many primaries at the same time]].
@@ -380,6 +382,10 @@ using the channel_name directly after ##SHOW SLAVE##.
 === Column Descriptions
 
 The order in which the columns appear depends on the MariaDB version. This means that extracting a column value is best done by comparing the field name instead of using a fixed offset into the row.
+
+&lt;&lt;product MariaDB from=11.6.0&gt;&gt;
+These columns can also be viewed/extracted from the ##[[information-schema-slave_status-table|INFORMATION_SCHEMA.SLAVE_STATUS]]## table
+&lt;&lt;/product&gt;&gt;
 
 &lt;&lt;style class=&#34;darkheader-nospace-borders&#34;&gt;&gt;
 |= Name |= Description |
@@ -409,7 +415,7 @@ The order in which the columns appear depends on the MariaDB version. This means
 | Skip_Counter | Number of events that a replica skips from the master, as recorded in the [[replication-and-binary-log-server-system-variables#sql_slave_skip_counter|sql_slave_skip_counter]] system variable. |
 | Exec_Master_Log_Pos | Position up to which the SQL thread has processed in the current master [[binary-log|binary log]] file. Can be used to start a new replica from a current replica with the [[change-master-to|CHANGE MASTER TO ... MASTER_LOG_POS]] option. |
 | Relay_Log_Space | Total size of all relay log files combined. |
-| Until_Condition | |
+| Until_Condition | One of four possible values: ##None##, ##Master##, ##Relay##, or ##Gtid##, depending on the respective [[start-slave|START SLAVE UNTIL]]  condition. | 
 | Until_Log_File | The ##MASTER_LOG_FILE## value of the [[start-slave|START SLAVE UNTIL]] condition. |
 | Until_Log_Pos | The ##MASTER_LOG_POS## value of the [[start-slave|START SLAVE UNTIL]] condition. |
 | Master_SSL_Allowed | Whether an SSL connection is permitted (##Yes##), not permitted (##No##) or permitted but without the replica having SSL support enabled (##Ignored##) |
@@ -442,13 +448,13 @@ The order in which the columns appear depends on the MariaDB version. This means
 | Slave_DDL_Groups | This status variable counts the occurrence of DDL statements.  This is a replica-side counter for optimistic parallel replication. |
 | Slave_Non_Transactional_Groups | This status variable counts the occurrence of non-transactional event groups.  This is a replica-side counter for optimistic parallel replication. |
 | Slave_Transactional_Groups | This status variable counts the occurrence of transactional event groups.  This is a replica-side counter for optimistic parallel replication. |
-| Replicate_Rewrite_DB | |
-| Retried_transactions | |
-| Max_relay_log_size | |
-| Executed_log_entries | |
-| Slave_received_heartbeats | |
-| Slave_heartbeat_period | |
-| Gtid_Slave_Pos | |
+| Replicate_Rewrite_DB | Value of configured ##[[replication-filters/#replicate_rewrite_db|replicate_rewrite_db]]## system variable/option. |
+| Retried_transactions | The number of times that replicating transactions have been retried due to temporary errors (e.g. deadlocks in parallel replication). |
+| Max_relay_log_size | Maximum size of the relay log (configured by variable ##[[replication-and-binary-log-system-variables/#max_relay_log_size|max_relay_log_size]]##). |
+| Executed_log_entries | Number of binary log events that have been executed, irrespective of error outcome (i.e. if the event execution results in an error, this number will still increase). |
+| Slave_received_heartbeats | Number of ##[[heartbeat_log_event|Heartbeat Log Events]]## that the slave has received. Note this counter does not reset when the slave is restarted; only when a new ##[[change-master-to|CHANGE MASTER]]## command has executed. |
+| Slave_heartbeat_period | Configured (by ##[[change-master-to/#master_heartbeat_period|CHANGE MASTER TO MASTER_HEARTBEAT_PERIOD]]##) interval in seconds between replication heartbeats. |
+| Gtid_Slave_Pos | The value of the global variable ##[[gtid/#gtid_slave_pos|gtid_slave_pos]]##, i.e. the GTID of the last transaction applied to the database by the server&#39;s [[replication-threads/#threads-on-the-slave|replica threads]] for each replication domain. |
 | Master_last_event_time | Timestamp of the last event read from the primary by the IO thread. NULL until the replica has started and the replica has read one query event from the primary that changes data. From MariaDB 11.6. |
 | Slave_last_event_time | Primary timestamp of the last event committed on the replica. NULL until the replica has started and the replica has read one query event from the primary that changes data. From MariaDB 11.6. |
 | Master_Slave_time_diff | The difference of the above two timestamps. NULL until the replica has started and the replica has read one query event from the primary that changes data. From MariaDB 11.6. |
@@ -463,107 +469,130 @@ obtain a more readable vertical layout.
 &lt;&lt;code wrap=true&gt;&gt;
 SHOW SLAVE STATUS\G
 *************************** 1. row ***************************
-               Slave_IO_State: Waiting for master to send event
-                  Master_Host: db01.example.com
-                  Master_User: replicant
-                  Master_Port: 3306
-                Connect_Retry: 60
-              Master_Log_File: mariadb-bin.000010
-          Read_Master_Log_Pos: 548
-               Relay_Log_File: relay-bin.000004
-                Relay_Log_Pos: 837
-        Relay_Master_Log_File: mariadb-bin.000010
-             Slave_IO_Running: Yes
-            Slave_SQL_Running: Yes
-              Replicate_Do_DB: 
-          Replicate_Ignore_DB: 
-           Replicate_Do_Table: 
-       Replicate_Ignore_Table: 
-      Replicate_Wild_Do_Table: 
-  Replicate_Wild_Ignore_Table: 
-                   Last_Errno: 0
-                   Last_Error: 
-                 Skip_Counter: 0
-          Exec_Master_Log_Pos: 548
-              Relay_Log_Space: 1497
-              Until_Condition: None
-               Until_Log_File: 
-                Until_Log_Pos: 0
-           Master_SSL_Allowed: No
-           Master_SSL_CA_File: 
-           Master_SSL_CA_Path: 
-              Master_SSL_Cert: 
-            Master_SSL_Cipher: 
-               Master_SSL_Key: 
-        Seconds_Behind_Master: 0
-Master_SSL_Verify_Server_Cert: No
-                Last_IO_Errno: 0
-                Last_IO_Error: 
-               Last_SQL_Errno: 0
-               Last_SQL_Error: 
-  Replicate_Ignore_Server_Ids: 
-             Master_Server_Id: 101
-               Master_SSL_Crl: 
-           Master_SSL_Crlpath: 
-                   Using_Gtid: No
-                  Gtid_IO_Pos: 
+                Slave_IO_State: Waiting for master to send event
+                   Master_Host: db01.example.com
+                   Master_User: replicant
+                   Master_Port: 3306
+                 Connect_Retry: 60
+               Master_Log_File: mariadb-bin.000021
+           Read_Master_Log_Pos: 17315
+                Relay_Log_File: relay-bin.000042
+                 Relay_Log_Pos: 17446
+         Relay_Master_Log_File: mariadb-bin.000021
+              Slave_IO_Running: Yes
+             Slave_SQL_Running: Yes
+               Replicate_Do_DB: 
+           Replicate_Ignore_DB: 
+            Replicate_Do_Table: 
+        Replicate_Ignore_Table: 
+       Replicate_Wild_Do_Table: 
+   Replicate_Wild_Ignore_Table: 
+                    Last_Errno: 0
+                    Last_Error: 
+                  Skip_Counter: 0
+           Exec_Master_Log_Pos: 17146
+               Relay_Log_Space: 17972
+               Until_Condition: None
+                Until_Log_File: 
+                 Until_Log_Pos: 0
+            Master_SSL_Allowed: Yes
+            Master_SSL_CA_File: 
+            Master_SSL_CA_Path: 
+               Master_SSL_Cert: 
+             Master_SSL_Cipher: 
+                Master_SSL_Key: 
+         Seconds_Behind_Master: 6
+ Master_SSL_Verify_Server_Cert: No
+                 Last_IO_Errno: 0
+                 Last_IO_Error: 
+                Last_SQL_Errno: 0
+                Last_SQL_Error: 
+   Replicate_Ignore_Server_Ids: 
+              Master_Server_Id: 1
+                Master_SSL_Crl: 
+            Master_SSL_Crlpath: 
+                    Using_Gtid: Slave_Pos
+                   Gtid_IO_Pos: 0-1-2042
+       Replicate_Do_Domain_Ids: 
+   Replicate_Ignore_Domain_Ids: 
+                 Parallel_Mode: optimistic
+                     SQL_Delay: 0
+           SQL_Remaining_Delay: NULL
+       Slave_SQL_Running_State: Updating
+              Slave_DDL_Groups: 1
+Slave_Non_Transactional_Groups: 0
+    Slave_Transactional_Groups: 2041
+          Replicate_Rewrite_DB: 
 &lt;&lt;/code&gt;&gt;
 
 &lt;&lt;code wrap=true&gt;&gt;
 SHOW ALL SLAVES STATUS\G
 *************************** 1. row ***************************
-              Connection_name: 
-              Slave_SQL_State: Slave has read all relay log; waiting for the slave I/O thread to update it
-               Slave_IO_State: Waiting for master to send event
-                  Master_Host: db01.example.com
-                  Master_User: replicant
-                  Master_Port: 3306
-                Connect_Retry: 60
-              Master_Log_File: mariadb-bin.000010
-          Read_Master_Log_Pos: 3608
-               Relay_Log_File: relay-bin.000004
-                Relay_Log_Pos: 3897
-        Relay_Master_Log_File: mariadb-bin.000010
-             Slave_IO_Running: Yes
-            Slave_SQL_Running: Yes
-              Replicate_Do_DB: 
-          Replicate_Ignore_DB: 
-           Replicate_Do_Table: 
-       Replicate_Ignore_Table: 
-      Replicate_Wild_Do_Table: 
-  Replicate_Wild_Ignore_Table: 
-                   Last_Errno: 0
-                   Last_Error: 
-                 Skip_Counter: 0
-          Exec_Master_Log_Pos: 3608
-              Relay_Log_Space: 4557
-              Until_Condition: None
-               Until_Log_File: 
-                Until_Log_Pos: 0
-           Master_SSL_Allowed: No
-           Master_SSL_CA_File: 
-           Master_SSL_CA_Path: 
-              Master_SSL_Cert: 
-            Master_SSL_Cipher: 
-               Master_SSL_Key: 
-        Seconds_Behind_Master: 0
-Master_SSL_Verify_Server_Cert: No
-                Last_IO_Errno: 0
-                Last_IO_Error: 
-               Last_SQL_Errno: 0
-               Last_SQL_Error: 
-  Replicate_Ignore_Server_Ids: 
-             Master_Server_Id: 101
-               Master_SSL_Crl: 
-           Master_SSL_Crlpath: 
-                   Using_Gtid: No
-                  Gtid_IO_Pos:
-         Retried_transactions: 0
-           Max_relay_log_size: 104857600
-         Executed_log_entries: 40
-    Slave_received_heartbeats: 11
-       Slave_heartbeat_period: 1800.000
-               Gtid_Slave_Pos: 0-101-2320
+               Connection_name: 
+               Slave_SQL_State: Updating
+                Slave_IO_State: Waiting for master to send event
+                   Master_Host: db01.example.com
+                   Master_User: replicant
+                   Master_Port: 3306
+                 Connect_Retry: 60
+               Master_Log_File: mariadb-bin.000021
+           Read_Master_Log_Pos: 17315
+                Relay_Log_File: relay-bin.000042
+                 Relay_Log_Pos: 17446
+         Relay_Master_Log_File: mariadb-bin.000021
+              Slave_IO_Running: Yes
+             Slave_SQL_Running: Yes
+               Replicate_Do_DB: 
+           Replicate_Ignore_DB: 
+            Replicate_Do_Table: 
+        Replicate_Ignore_Table: 
+       Replicate_Wild_Do_Table: 
+   Replicate_Wild_Ignore_Table: 
+                    Last_Errno: 0
+                    Last_Error: 
+                  Skip_Counter: 0
+           Exec_Master_Log_Pos: 17146
+               Relay_Log_Space: 17972
+               Until_Condition: None
+                Until_Log_File: 
+                 Until_Log_Pos: 0
+            Master_SSL_Allowed: Yes
+            Master_SSL_CA_File: 
+            Master_SSL_CA_Path: 
+               Master_SSL_Cert: 
+             Master_SSL_Cipher: 
+                Master_SSL_Key: 
+         Seconds_Behind_Master: 6
+ Master_SSL_Verify_Server_Cert: No
+                 Last_IO_Errno: 0
+                 Last_IO_Error: 
+                Last_SQL_Errno: 0
+                Last_SQL_Error: 
+   Replicate_Ignore_Server_Ids: 
+              Master_Server_Id: 1
+                Master_SSL_Crl: 
+            Master_SSL_Crlpath: 
+                    Using_Gtid: Slave_Pos
+                   Gtid_IO_Pos: 0-1-2042
+       Replicate_Do_Domain_Ids: 
+   Replicate_Ignore_Domain_Ids: 
+                 Parallel_Mode: optimistic
+                     SQL_Delay: 0
+           SQL_Remaining_Delay: NULL
+       Slave_SQL_Running_State: Updating
+              Slave_DDL_Groups: 1
+Slave_Non_Transactional_Groups: 0
+    Slave_Transactional_Groups: 2041
+          Replicate_Rewrite_DB: 
+          Retried_transactions: 0
+            Max_relay_log_size: 1073741824
+          Executed_log_entries: 6330
+     Slave_received_heartbeats: 0
+        Slave_heartbeat_period: 60.000
+                Gtid_Slave_Pos: 0-1-2041
+        Master_last_event_time: 2024-12-12 06:53:52
+         Slave_last_event_time: 2024-12-12 06:53:50
+        Master_Slave_time_diff: 2
 &lt;&lt;/code&gt;&gt;
 
 You can also access some of the variables directly from status variables:
