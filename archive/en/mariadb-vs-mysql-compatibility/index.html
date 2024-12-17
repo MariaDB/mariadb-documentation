@@ -275,7 +275,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-09-25 12:46">2 months, 3 weeks ago</span></dd>
+<span class="datetime" title="2024-12-16 18:36">6 hours, 25 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -565,7 +565,14 @@ versions on the <a href="/kb/en/what-is-in-the-different-mariadb-releases/">What
 <p>Although MariaDB Server and MySQL 5.7 are compatible at the replication level, they may have some incompatibilities at the SQL (detailed below). Those differences can cause replication failures in some cases. To decrease the risk of compatibility issues, it is recommended to set <a href="/kb/en/replication-and-binary-log-system-variables/#binlog_format">binlog_format</a> to <code>ROW</code>. When you want to replicate from MySQL 5.7 to MariaDB Server, it is recommended to test your application, so that any compatibility issues can be found and fixed.</p>
 <p>MariaDB can't make any claims about whether a MySQL 5.7 replica server can replicate from a MariaDB primary server.</p>
 <h3 class="anchored_heading" id="mysql-80">MySQL 8.0</h3>
-<p>MariaDB Server cannot replicate from a MySQL 8.0 primary server, because MySQL 8.0 has a binary log format that is incompatible.</p>
+<p>Before <a href="/kb/en/mariadb-10621-release-notes/">MariaDB 10.6.21</a>, MariaDB Server could not replicate from a MySQL 8.0 primary server, because MySQL 8.0 has a binary log format that is incompatible.</p>
+<p><a href="/kb/en/mariadb-10621-release-notes/">MariaDB 10.6.21</a> and newer can replicate from a MySQL 8.0 server as long as the following
+things holds.</p>
+<ul start="1"><li>Columns of type JSON is not supported.  One should change these to TEXT.
+</li><li>One should set <code>binlog-row-value-options=""</code>. This disables the incompatible <code>PARTIAL_UPDATE_ROWS_EVENT</code> event.
+</li><li>One should set <code>binlog_transaction_compression=0</code>. This disables the incompatible <code>TRANSACTION_PAYLOAD_EVENT</code> event.
+</li><li>One should not use the MySQL 8.0 utf8mb4_ja_0900_... collations when replicating to <a href="/kb/en/what-is-mariadb-106/">MariaDB 10.6</a> - <a href="/kb/en/mariadb-11-4-4-release-notes/">MariaDB 11.4.4</a>.  <a href="/kb/en/mariadb-11-4-5-release-notes/">MariaDB 11.4.5</a> and above will supports most of the MySQL 8.0 utf8mb4_ja_0900_... collations.
+</li></ul>
 <h2 class="anchored_heading" id="incompatibilities-between-currently-maintained-mariadb-versions-and-mysql">Incompatibilities between Currently Maintained MariaDB Versions and MySQL</h2>
 <h3 class="anchored_heading" id="incompatibilities-between-mariadb-rolling-and-mysql-80">Incompatibilities between MariaDB Rolling and MySQL 8.0</h3>
 <ul start="1"><li><a href="/kb/en/function-differences-between-mariadb-rolling-and-mysql-8-0/">Function Differences Between MariaDB Rolling and MySQL 8.0</a>

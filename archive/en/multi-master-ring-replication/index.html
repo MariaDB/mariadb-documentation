@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Multi-Master ring replication - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
+
+    
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Multi-Master ring replication" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/multi-master-ring-replication/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="Multi-Master or Ring Replication" />
+
+    <meta name="description" content="Multi-Master or Ring Replication" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/multi-master-ring-replication/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2024 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/multi-master-ring-replication/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/replication-cluster-multi-master/">High Availability &amp; Performance Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/standard-replication/">MariaDB Replication</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/multi-master-ring-replication/">Multi-Master ring replication</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/multi-master-ring-replication/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/multi-master-ring-replication/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/multi-master-ring-replication/+flag"
+                data-flag-url="/kb/en/multi-master-ring-replication/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/multi-master-ring-replication/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2024-12-16 15:39">9 hours, 22 minutes ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2024-12-16 21:00">4 hours, 2 minutes ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/multi-master-ring-replication/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/multi-master-ring-replication/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/multi-master-ring-replication/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/multi-master-ring-replication/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <ul>
+                
+                    <li><a href="/kb/en/multi-master-ring-replication/+image/multi-master-ring-replication">multi-master-ring-replication</a><br />Multi master ring replication
+                    </li>
+                
+            </ul>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Multi-Master ring replication</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="cstm-style bluebox text"><p>The terms <em>master</em> and <em>slave</em> have historically been used in replication, and MariaDB has begun the process of adding <em>primary</em> and <em>replica</em> synonyms. The old terms will continue to be used to maintain backward compatibility - see <a href="https://jira.mariadb.org/browse/MDEV-18777">MDEV-18777</a> to follow progress on this effort.</p>
+</div>
+<div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#what-is-multi-master-ring-replication" title="What is Multi-Master Ring Replication">What is Multi-Master Ring Replication</a></li>
+
+    <li class=""><a href="#configuring-the-masters" title="Configuring the Masters">Configuring the Masters</a></li>
+
+    <li class=""><a href="#limitations-when-using-ring-replication" title="Limitations when using Ring Replication">Limitations when using Ring Replication</a></li>
+
+    <li class=""><a href="#how-does-multi-master-ring-replication-work" title="How does Multi-Master Ring Replication work">How does Multi-Master Ring Replication work</a></li>
+
+    <li class=""><a href="#how-to-resolve-things-if-they-go-wrong-in-multi-master-ring-replication" title="How to resolve things if they go wrong in Multi-Master Ring Replication">How to resolve things if they go wrong in Multi-Master Ring Replication</a>    <ol class="toc">
+
+        <li class=""><a href="#what-to-do-when-one-of-the-masters-dies-and-has-to-be-replaced-by-a-slave" title="What to do when one of the masters dies and has to be replaced by a slave.">What to do when one of the masters dies and has to be replaced by a slave.</a>        <ol class="toc">
+
+            <li class=""><a href="#missing-event-after-failover" title="Missing event after failover">Missing event after failover</a></li>
+
+            <li class=""><a href="#error-applying-events" title="Error  applying events">Error  applying events</a>        </ol>
+</li>
+
+        <li class=""><a href="#handling-duplicate-key-errors-and-other-conflicts" title="Handling duplicate key errors and other conflicts">Handling duplicate key errors and other conflicts</a>    </ol>
+ </ol>
+</li>
+</div>
+<h2 class="anchored_heading" id="what-is-multi-master-ring-replication">What is Multi-Master Ring Replication</h2>
+<p>Multi-Master "Ring" Replication means that you have two or more masters where each master is replicating its data to another master asynchronously.  This is not to be confused with  <a href="/kb/en/galera-cluster/">MariaDB Galera Cluster</a> which is a <a href="/kb/en/about-galera-replication/">virtually synchronous</a> multi-primary cluster for MariaDB.</p>
+<p>The benefit of asynchronous replication compared to <a href="/kb/en/galera-cluster/">Galera Cluster</a>, is that Ring Replication is resilient against bad network connections between the master servers.  If a connection goes down, all masters will continue to serve its clients locally and data will automatically be synced when the link is available again. </p>
+<p>The following picture shows one of the more advanced Multi-Master setups that is resilient against any master going down but can also handle 'human failures', like an accidental drop table, thanks to the addition of <a href="/kb/en/delayed-replication/">delayed slaves</a>.</p>
+<p><img src="/kb/en/multi-master-ring-replication/+image/multi-master-ring-replication" height="500" width="500"> </p>
+<p>One should <a href="/kb/en/setting-up-replication/">setup replication</a> on each master like one does in <a href="/kb/en/standard-replication/">standard MariaDB replication</a>. The replication setup among the masters should be a ring.  In other words, each master should replicate to one other master and each master should only have one other master as a slave.</p>
+<p>Each master can of course have one or more normal slaves. A master could also be a <a href="/kb/en/multi-source-replication/">slave of another master</a> that is not in the ring setup.</p>
+<p>All MariaDB servers support Multi-Master Ring Replication.  In fact, when MySQL replication was originally designed around the year 2000, it was to be a Multi-Master Ring Replication solution for Yahoo to replicate from the East Coast to the West Coast.</p>
+<h2 class="anchored_heading" id="configuring-the-masters">Configuring the Masters</h2>
+<p>First, follow the instructions in <a href="/kb/en/setting-up-replication/">setup replication</a>. The main thing to remember is to use the <a href="/kb/en/change-master-to/#master_use_gtid">master_use_gtid=current_pos</a> option for <a href="/kb/en/change-master-to/">CHANGE MASTER</a>.</p>
+<p>The main things that are different for Multi-Master Ring Replication are:</p>
+<ul start="1"><li>Give <strong>every master and slave in the replication setup</strong> a unique server_id. This can be a number from 1 to 4294967295 or 1-255 if one is using  <a href="/kb/en/uuid_short/">uuid_short()</a>.  It is a good practice to ensure that you do not have any servers in your system with the same server_id!
+</li><li>Use <a href="/kb/en/gtid/">global transaction id</a> (as described above)
+</li><li>Give each master a unique <a href="/kb/en/gtid/#gtid_domain_id">gtid_domain_id</a>. This will allow replication to apply transactions from a different master in parallel independent from other masters.
+</li></ul>
+<p>Add the following into your <a href="/kb/en/configuring-mariadb-with-mycnf/">my.cnf</a> file for <strong>all masters</strong> and restart the servers.</p>
+<pre class="fixed">[mariadb]
+# Replace the following with a unique ID. All slaves of this master should have the same
+# gtid_domain_id to allow easy failover to a slave if needed
+gtid_domain_id=1
+#
+# Let us assume there will never be more than 10 masters in a Multi-Master ring setup
+auto_increment_increment=10
+# Set this to a different value 1-10 for each master. Could be the same as gtid_domain_id
+# This is to ensure that all masters generate different values for AUTO_INCREMENT keys.
+auto_increment_offset=1
+#
+# The following is needed to ensure the ALTER TABLE on another master will not
+# break ring replication
+slave_type_conversions=ALL_NON_LOSSY,ALL_LOSSY
+#
+# We cannot use semi-sync in Ring Replication as the masters need to be resilient against
+# bad connections
+rpl_semi_sync_master_enabled=0
+#
+# We have to log updates from other masters to the binary log.
+log_slave_updates
+</pre><h2 class="anchored_heading" id="limitations-when-using-ring-replication">Limitations when using Ring Replication</h2>
+<ul start="1"><li>MariaDB does not yet support conflict resolution for conflicting changes. It is up to the application to ensure that there is never a conflicting insert/update/delete between the masters.  The easiest setup is having each master server work on a different database or table. If not, one <strong>must</strong>:
+<ul start="1"><li>Ensure you have an id (master-unique-id) for each row that unequally identifies the master who is responsible for this row.  This should preferably be short and part of the primary key in each table. A good value for this would be the <code>gtid_domain_id</code> as this is unique for each local cluster.
+</li><li>Never insert rows with <code>PRIMARY KEY</code> or  <code>UNIQUE KEY</code> values that can be same on another master.  This can be avoided by
+<ul start="1"><li>Have the master-unique-id part of all primary and unique keys.
+</li><li>In case of AUTO_INCREMENT keys, have a different value for <a href="/kb/en/auto_increment/#replication">auto_increment_increment</a> on each master.
+</li><li>Use <a href="/kb/en/uuid_short/">uuid_short()</a> to generate unique values, like in <code>create table t1 (a bigint unsigned default(uuid_short()) primary key)</code>. Note that if one is using  <a href="/kb/en/uuid_short/">uuid_short()</a> in Multi-Master ring replication, one can only use <code>server_id</code> in the range 1-255!
+</li></ul>
+</li><li>Ensure that <a href="/kb/en/update/">UPDATE</a> and <a href="/kb/en/delete/">DELETE</a> on each master only updates rows generated by this master.
+</li></ul>
+</li><li>If several masters are constantly generating and updating rows for common tables, one has to be extra careful with <code>ALTER TABLE</code> to ensure that any change one does will not cause conflicts when the <code>ALTER TABLE</code> is replicated to other servers. In particular one has to ensure that all masters and their slaves are configured with <code>slave_type_conversions=ALL_NON_LOSSY,ALL_LOSSY</code>.
+</li><li>One should <strong>not</strong> change <code>server_id</code> for the lifetime of the server.  If a master is replaced by a slave, one should change the slave's <code>server_id</code> to the master's before reconnecting replication. This is needed to ensure that the new master can ignore events created by the slaves old master.
+</li></ul>
+<h2 class="anchored_heading" id="how-does-multi-master-ring-replication-work">How does Multi-Master Ring Replication work</h2>
+<ul start="1"><li>The main difference between Multi-Master Ring Replication and normal replication is that a change done by a master will eventually replicate back to it.  When this happens, the master will see that the binary log event has the same server_id as the master has and will ignore the event.  This is why it is critical to ensure that all server_id's are unique and that one does not change the server id.
+</li></ul>
+<h2 class="anchored_heading" id="how-to-resolve-things-if-they-go-wrong-in-multi-master-ring-replication">How to resolve things if they go wrong in Multi-Master Ring Replication</h2>
+<p>When used correctly, Multi-Master Ring Replication is as resilient to errors as normal MariaDB master-slave replication.  If the connection goes down, the replication will stop and will automatically continue when the connection resumes.</p>
+<h3 class="anchored_heading" id="what-to-do-when-one-of-the-masters-dies-and-has-to-be-replaced-by-a-slave">What to do when one of the masters dies and has to be replaced by a slave.</h3>
+<ul start="1"><li>Ensure that the slave is up to date (has digested all relay events).
+</li><li>Check if there are any events on the old master that have not been sent to the slave. You can use <a href="/kb/en/mariadb-binlog/">mariadb-binlog</a> to read the old master binary log files and apply them to the slave.
+</li><li>Update the slaves <code>server_id</code> to the old masters <code>server_id</code>. This will ensure that the slave will ignore any old events from its upcoming master sent by the old master.
+</li><li>You can now treat the slave as a new master and put it back in the replication ring. Any events from the old master will be ignored.
+</li><li>If the new master comes up, set its <code>server_id</code> to the old slaves before connecting it the the new master.
+</li></ul>
+<p>In the unfortunate case where the slave is <strong>not up to date</strong> and one cannot access any information of the old master, then one can continue the following way:</p>
+<ul start="1"><li>Do not change the <code>server_id</code> of the slave!
+</li><li>Add the slave to the replication ring and wait until all the events that the old master sent to the ring are replicated to the slave. One can use <a href="/kb/en/mariadb-binlog/">mariadb-binlog</a> to monitor the relay logs for this.
+</li><li>Stop the slave.
+</li><li>Change <code>server_id</code> to the old masters <code>server_id</code>.
+</li><li>Start the slave (as a new master)
+</li><li>Now you can allow applications to connect to the new master and do updates.
+<ul start="1"><li>This could be allowed earlier if one can be sure that nothing previously sent to the ring will conflict with new changes sent to the new master.
+</li></ul>
+</li></ul>
+<h4 class="anchored_heading" id="missing-event-after-failover">Missing event after failover</h4>
+<p>There is a possibility that an event that was sent to the other masters but never was sent or applied to the slave.</p>
+<p>In this case, the new master will be missing some information that exists on the other slaves. This data will be sent to the new master from the ring, but it will ignored as the <code>server_id</code>'s are the same.</p>
+<p>In a failover event, is it good to monitor the binary log of the new masters master and see if
+there are any events newer than the new master's last event that needs to be applied</p>
+<h4 class="anchored_heading" id="error-applying-events">Error  applying events</h4>
+<p>As long as each master handles their own set of data, as described above, there should not be any conflicting data coming from the other master. </p>
+<p>If there are conflicts, one should resolve them as one resolves issues with normal replication.
+The most common way to solve issues is to skip the conflicting log events with <a href="/kb/en/set-global-sql_slave_skip_counter/">SET GLOBAL SQL_SLAVE_SKIP_COUNTER</a>.</p>
+<h3 class="anchored_heading" id="handling-duplicate-key-errors-and-other-conflicts">Handling duplicate key errors and other conflicts</h3>
+<p>If things are setup correctly as described earlier, one should never get duplicate key errors in Multi-Master ring replication. Any duplicate key error or data mismatch is usually an application error where it inserts/updates or deletes something it should not have the right to do.</p>
+<p>To fix this:</p>
+<ul start="1"><li>Use <a href="/kb/en/set-global-sql_slave_skip_counter/">SET GLOBAL SQL_SLAVE_SKIP_COUNTER</a> to skip the error.
+</li><li>Use <code>mariadb-binlog --base64-output=decode-rows --verbose --start-position=# binlog-name</code> to see what is missing and apply the changes missing on the server (minus the conflict).</li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/multi-master-ring-replication/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/multi-master-ring-replication/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/multi-source-replication/">
+                        ← Multi-Source Replication
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/high-availability-performance-tuning-mariadb-replication/">
+                        ↑ MariaDB Replication ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/using-mariadb-replication-with-mariadb-galera-cluster/">
+                        Using MariaDB Replication with MariaDB Galera Cluster →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="15248" data-comments-url="/kb/en/multi-master-ring-replication/+comments"
+         data-reply-url="/kb/en/multi-master-ring-replication/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/high-availability-performance-tuning-mariadb-replication/">
+                    ↑ MariaDB Replication ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-overview/">
+                            
+                            Replication Overview
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-commands/">
+                            <span class="pull-right not_primary"></span>
+                            Replication Commands
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/setting-up-replication/">
+                            
+                            Setting Up Replication
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/setting-up-a-replica-with-mariabackup/">
+                            <span class="pull-right not_primary"></span>
+                            Setting up a Replica with Mariabackup
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/read-only-replicas/">
+                            
+                            Read-Only Replicas
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-as-a-backup-solution/">
+                            <span class="pull-right not_primary"></span>
+                            Replication as a Backup Solution
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/multi-source-replication/">
+                            
+                            Multi-Source Replication
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Multi-Master ring replication</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/using-mariadb-replication-with-mariadb-galera-cluster/">
+                            <span class="pull-right not_primary"></span>
+                            Using MariaDB Replication with MariaDB Galera Cluster
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/delayed-replication/">
+                            
+                            Delayed Replication
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/parallel-replication/">
+                            
+                            Parallel Replication
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/semisynchronous-replication/">
+                            
+                            Semisynchronous Replication
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-threads/">
+                            
+                            Replication Threads
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/binary-log/">
+                            <span class="pull-right not_primary"></span>
+                            Binary Log
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/relay-log/">
+                            <span class="pull-right not_primary"></span>
+                            Relay Log
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/gtid/">
+                            
+                            Global Transaction ID
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-and-binary-log-system-variables/">
+                            
+                            Replication and Binary Log System Variables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-and-binary-log-status-variables/">
+                            
+                            Replication and Binary Log Status Variables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/unsafe-statements-for-statement-based-replication/">
+                            
+                            Unsafe Statements for Statement-based Replication
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-and-foreign-keys/">
+                            
+                            Replication and Foreign Keys
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/enhancements-for-start-transaction-with-consistent-snapshot/">
+                            
+                            Enhancements for START TRANSACTION WITH CONSISTENT SNAPSHOT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/group-commit-for-the-binary-log/">
+                            <span class="pull-right not_primary"></span>
+                            Group Commit for the Binary Log
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/selectively-skipping-replication-of-binlog-events/">
+                            
+                            Selectively Skipping Replication of Binlog Events
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/binlog-event-checksums/">
+                            
+                            Binlog Event Checksums
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/binlog-event-checksum-interoperability/">
+                            
+                            Binlog Event Checksum Interoperability
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/annotate_rows_log_event/">
+                            <span class="pull-right not_primary"></span>
+                            Annotate_rows_log_event
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/row-based-replication-with-no-primary-key/">
+                            
+                            Row-based Replication With No Primary Key
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-filters/">
+                            
+                            Replication Filters
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/running-triggers-on-the-replica-for-row-based-events/">
+                            
+                            Running Triggers on the Replica for Row-based Events
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-when-the-primary-and-replica-have-different-table-definitions/">
+                            
+                            Replication When the Primary and Replica Have Different Table Definitions
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/restricting-speed-of-reading-binlog-from-primary-by-a-replica/">
+                            
+                            Restricting Speed of Reading Binlog from Primary by a Replica
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/changing-a-replica-to-become-the-primary/">
+                            
+                            Changing a Replica to Become the Primary
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/replication-with-secure-connections/">
+                            <span class="pull-right not_primary"></span>
+                            Replication with Secure Connections
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/obsolete-replication-information/">
+                            
+                            Obsolete Replication Information
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    <ul class="list-inline text-center footer-nav">
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/products" title="Products">Products</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/services" title="Services">Services</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/pricing" title="Pricing">Pricing</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/resources" title="Resources">Resources</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/about-us" title="About MariaDB">About Us</a></h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/download" title="Download">Download MariaDB</a></h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row row-10">
+                
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div class="footer-copyright">
+                        <div class="text-center">
+                            <ul class="list-inline no-margin">
+                                <li>
+                                    <a href="/legal" title="Legal">Legal</a>
+                                </li>
+                                <li>
+                                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                            <p>Copyright &copy; 2024 MariaDB. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
+
+</html>

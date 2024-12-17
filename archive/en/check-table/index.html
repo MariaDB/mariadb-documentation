@@ -283,7 +283,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-10-10 18:21">1 year, 2 months ago</span></dd>
+<span class="datetime" title="2024-12-16 11:51">13 hours, 11 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -451,7 +451,7 @@ storage engines:</p>
 <tr><td>CHANGED</td><td>Check only tables that has changed since last REPAIR / CHECK. Only supported by the MyISAM and Aria engines. For other engines the table is checked normally.</td></tr>
 <tr><td>QUICK</td><td>Do a fast check. For MyISAM and Aria, this means skipping the check of the delete link chain, which may take some time.</td></tr>
 <tr><td>MEDIUM</td><td>Scan also the data files. Checks integrity between data and index files with checksums. In most cases this should find all possible errors.</td></tr>
-<tr><td>EXTENDED</td><td>Does a full check to verify every possible error. For InnoDB, Aria, and MyISAM, verify for each row that all its keys exists, and for those index keys, they point back to the primary clustered key. This may take a long time on large tables. This option was previously ignored by InnoDB before <a href="/kb/en/mariadb-10611-release-notes/">MariaDB 10.6.11</a>, <a href="/kb/en/mariadb-1077-release-notes/">MariaDB 10.7.7</a>, <a href="/kb/en/mariadb-10-8-6-release-notes/">MariaDB 10.8.6</a> and <a href="/kb/en/mariadb-10-9-4-release-notes/">MariaDB 10.9.4</a>.</td></tr>
+<tr><td>EXTENDED</td><td>Does a full check to verify every possible error. For InnoDB, Aria, and MyISAM, verify for each row that all its keys exists, and for those index keys, they point back to the primary clustered key. This may take a long time on large tables. This option was previously ignored by InnoDB before <a href="/kb/en/mariadb-10611-release-notes/">MariaDB 10.6.11</a>, <a href="/kb/en/mariadb-1077-release-notes/">MariaDB 10.7.7</a>, <a href="/kb/en/mariadb-10-8-6-release-notes/">MariaDB 10.8.6</a> and <a href="/kb/en/mariadb-10-9-4-release-notes/">MariaDB 10.9.4</a>.  From <a href="/kb/en/what-is-mariadb-118/">MariaDB 11.8</a>, also checks for referential integrity.</td></tr>
 </table>
 </div><p>For most cases running <code>CHECK TABLE</code> without options or <code>MEDIUM</code> should be
 good enough.</p>
@@ -463,12 +463,29 @@ at <a href="/kb/en/checksum-table/">CHECKSUM TABLE</a>.</p>
 <p>Each tablespace contains a header with metadata. This header is not checked by this statement.</p>
 <p>During the execution of <code>CHECK TABLE</code>, other threads may be blocked.</p>
 <h2 class="anchored_heading" id="examples">Examples</h2>
-<pre class="fixed"><span class="k">check</span> <span class="k">table</span> <span class="n">y</span> <span class="n">extended</span><span class="p">;</span>
+<pre class="fixed"><span class="k">CHECK</span> <span class="k">TABLE</span> <span class="n">y</span> <span class="n">EXTENDED</span><span class="p">;</span>
 <span class="o">+</span><span class="c1">--------+-------+----------+----------+</span>
 <span class="o">|</span> <span class="k">Table</span>  <span class="o">|</span> <span class="n">Op</span>    <span class="o">|</span> <span class="n">Msg_type</span> <span class="o">|</span> <span class="n">Msg_text</span> <span class="o">|</span>
 <span class="o">+</span><span class="c1">--------+-------+----------+----------+</span>
 <span class="o">|</span> <span class="n">test</span><span class="p">.</span><span class="n">y</span> <span class="o">|</span> <span class="k">check</span> <span class="o">|</span> <span class="n">status</span>   <span class="o">|</span> <span class="n">OK</span>       <span class="o">|</span>
 <span class="o">+</span><span class="c1">--------+-------+----------+----------+</span>
+</pre><p>From <a href="/kb/en/what-is-mariadb-118/">MariaDB 11.8</a>:</p>
+<pre class="fixed"><span class="k">CHECK</span> <span class="k">TABLE</span> <span class="n">t1</span> <span class="n">EXTENDED</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---------+-------+----------+----------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="k">Table</span>   <span class="o">|</span> <span class="n">Op</span>    <span class="o">|</span> <span class="n">Msg_type</span> <span class="o">|</span> <span class="n">Msg_text</span>                                                             <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------+-------+----------+----------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="n">test</span><span class="p">.</span><span class="n">t1</span> <span class="o">|</span> <span class="k">check</span> <span class="o">|</span> <span class="n">Warning</span>  <span class="o">|</span> <span class="k">No</span> <span class="n">suitable</span> <span class="k">key</span> <span class="k">found</span> <span class="k">for</span> <span class="k">foreign</span> <span class="k">key</span> <span class="n">t2_ibfk_1</span> <span class="k">in</span> <span class="k">table</span> <span class="n">test</span><span class="p">.</span><span class="n">t1</span>    <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------+-------+----------+----------------------------------------------------------------------+</span>
+
+<span class="k">CHECK</span> <span class="k">TABLE</span> <span class="n">t2</span> <span class="n">EXTENDED</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---------+-------+----------+--------------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="k">Table</span>   <span class="o">|</span> <span class="n">Op</span>    <span class="o">|</span> <span class="n">Msg_type</span> <span class="o">|</span> <span class="n">Msg_text</span>                                                                                         <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------+-------+----------+--------------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="n">test</span><span class="p">.</span><span class="n">t2</span> <span class="o">|</span> <span class="k">check</span> <span class="o">|</span> <span class="n">status</span>   <span class="o">|</span> <span class="n">Cannot</span> <span class="k">add</span> <span class="k">or</span> <span class="k">update</span> <span class="n">a</span> <span class="n">child</span> <span class="k">row</span><span class="p">:</span> <span class="n">a</span> <span class="k">foreign</span> <span class="k">key</span> <span class="k">constraint</span> <span class="n">fails</span> <span class="p">(</span><span class="k">Key</span><span class="p">:</span> <span class="n">t2_ibfk_1</span><span class="p">,</span> <span class="n">record</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span><span class="p">)</span>  <span class="o">|</span>
+<span class="o">|</span> <span class="n">test</span><span class="p">.</span><span class="n">t2</span> <span class="o">|</span> <span class="k">check</span> <span class="o">|</span> <span class="n">status</span>   <span class="o">|</span> <span class="n">Cannot</span> <span class="k">add</span> <span class="k">or</span> <span class="k">update</span> <span class="n">a</span> <span class="n">child</span> <span class="k">row</span><span class="p">:</span> <span class="n">a</span> <span class="k">foreign</span> <span class="k">key</span> <span class="k">constraint</span> <span class="n">fails</span> <span class="p">(</span><span class="k">Key</span><span class="p">:</span> <span class="n">t2_ibfk_1</span><span class="p">,</span> <span class="n">record</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span><span class="p">)</span>  <span class="o">|</span>
+<span class="o">|</span> <span class="n">test</span><span class="p">.</span><span class="n">t2</span> <span class="o">|</span> <span class="k">check</span> <span class="o">|</span> <span class="n">status</span>   <span class="o">|</span> <span class="n">Cannot</span> <span class="k">add</span> <span class="k">or</span> <span class="k">update</span> <span class="n">a</span> <span class="n">child</span> <span class="k">row</span><span class="p">:</span> <span class="n">a</span> <span class="k">foreign</span> <span class="k">key</span> <span class="k">constraint</span> <span class="n">fails</span> <span class="p">(</span><span class="k">Key</span><span class="p">:</span> <span class="n">t2_ibfk_1</span><span class="p">,</span> <span class="n">record</span><span class="p">:</span> <span class="s1">&#39;3&#39;</span><span class="p">)</span>  <span class="o">|</span>
+<span class="o">|</span> <span class="n">test</span><span class="p">.</span><span class="n">t2</span> <span class="o">|</span> <span class="k">check</span> <span class="o">|</span> <span class="n">error</span>    <span class="o">|</span> <span class="n">Corrupt</span>                                                                                          <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------+-------+----------+--------------------------------------------------------------------------------------------------+</span>
 </pre>
     </div>
 
