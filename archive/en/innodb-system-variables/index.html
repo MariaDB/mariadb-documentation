@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-12-02 06:55">2 weeks ago</span></dd>
+<span class="datetime" title="2024-12-20 00:26">39 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -724,6 +724,8 @@
             <li class=""><a href="#innodb_log_compressed_pages" title="innodb_log_compressed_pages">innodb_log_compressed_pages</a></li>
 
             <li class=""><a href="#innodb_log_file_buffering" title="innodb_log_file_buffering">innodb_log_file_buffering</a></li>
+
+            <li class=""><a href="#innodb_log_file_mmap" title="innodb_log_file_mmap">innodb_log_file_mmap</a></li>
 
             <li class=""><a href="#innodb_log_file_size" title="innodb_log_file_size">innodb_log_file_size</a></li>
 
@@ -2695,6 +2697,17 @@ add/drop/reorder of columns.
 </li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-1084-release-notes/">MariaDB 10.8.4</a>, <a href="/kb/en/mariadb-1092-release-notes/">MariaDB 10.9.2</a>
 </li></ul>
 <hr>
+<h4 class="anchored_heading" id="innodb_log_file_mmap"><code>innodb_log_file_mmap</code></h4>
+<ul start="1"><li><strong>Description:</strong> Whether ib_logfile0 resides in persistent memory or should initially be memory-mapped. When using the default innodb_log_buffer_size=2m, mariadb-backup --backup would spend a lot of time re-reading and re-parsing the log. For reading the log file during mariadb-backup --backup, it is beneficial to memory-map the entire ib_logfile0 to the address space (typically 48 bits or 256 TiB) and read it from there,
+both during --backup and --prepare. OFF by default on most platforms, to avoid aggressive read-ahead of the entire ib_logfile0 in when only a tiny portion would be accessed. On Linux and FreeBSD the default is innodb_log_file_mmap=ON, because those platforms define a specific mmap(2) option for enabling such read-ahead and therefore it can be assumed that the default wouldbe on-demand paging. This parameter will only have impact on the initial InnoDB startup and recovery. Any writes to the log will use regular I/O, except when the ib_logfile0 is stored in a specially configured file system that is backed by persistent memory (Linux "mount -o dax").
+</li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--innodb-log-file-mmap{=0|1}</code>
+</li><li><strong>Scope:</strong> Global
+</li><li><strong>Dynamic:</strong> No
+</li><li><strong>Data Type:</strong> <code>boolean</code>
+</li><li><strong>Default Value:</strong> <code>ON</code> (Linux, FreeBSD), <code>OFF</code> (Other platforms)
+</li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-10-11-10-release-notes/">MariaDB 10.11.10</a>, <a href="/kb/en/mariadb-11-2-6-release-notes/">MariaDB 11.2.6</a>, <a href="/kb/en/mariadb-11-4-4-release-notes/">MariaDB 11.4.4</a>, <a href="/kb/en/mariadb-11-6-2-release-notes/">MariaDB 11.6.2</a>, <a href="/kb/en/mariadb-11-7-1-release-notes/">MariaDB 11.7.1</a>
+</li></ul>
+<hr>
 <h4 class="anchored_heading" id="innodb_log_file_size"><code>innodb_log_file_size</code></h4>
 <ul start="1"><li><strong>Description:</strong> Size in bytes of each <a href="/kb/en/innodb-redo-log/">InnoDB redo log</a> file in the log group. The combined size can be no more than 512GB. Larger values mean less disk I/O due to less flushing checkpoint activity, but also slower recovery from a crash. In <a href="/kb/en/what-is-mariadb-105/">MariaDB 10.5</a>, crash recovery has been improved and shouldn't run out of memory, so the default has been increased. It can safely be set higher to reduce checkpoint flushing, even larger than <a href="#innodb_buffer_pool_size">innodb_buffer_pool_size</a>.<br>From <a href="/kb/en/what-is-mariadb-109/">MariaDB 10.9</a> the variable is dynamic, and the server no longer needs to be restarted for the resizing to take place. Unless the log is located in a persistent memory file system (PMEM), an attempt to <a href="/kb/en/set/">SET GLOBAL</a> innodb_log_file_size to less than <a href="#innodb_log_buffer_size">innodb_log_buffer_size</a> will be refused. Log resizing can be aborted by killing the connection that is executing the SET GLOBAL statement.
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--innodb-log-file-size=#</code>
@@ -2781,7 +2794,7 @@ add/drop/reorder of columns.
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="innodb_lru_flush_size"><code>innodb_lru_flush_size</code></h4>
-<ul start="1"><li><strong>Description:</strong> Number of pages to flush on LRU eviction.
+<ul start="1"><li><strong>Description:</strong> Number of pages to flush on LRU eviction. Changes in <a href="/kb/en/mariadb-10618-release-notes/">MariaDB 10.6.18</a>, <a href="/kb/en/mariadb-10-11-8-release-notes/">MariaDB 10.11.8</a>, <a href="/kb/en/mariadb-11-0-6-release-notes/">MariaDB 11.0.6</a>, <a href="/kb/en/mariadb-11-1-5-release-notes/">MariaDB 11.1.5</a>, <a href="/kb/en/mariadb-11-2-4-release-notes/">MariaDB 11.2.4</a> and <a href="/kb/en/mariadb-11-4-2-release-notes/">MariaDB 11.4.2</a> made this setting superfluous, and it is no longer used. 
 </li><li><strong>Commandline:</strong> <code class="fixed" style="white-space:pre-wrap">--innodb-lru-flush-size=#</code>
 </li><li><strong>Scope:</strong> Global
 </li><li><strong>Dynamic:</strong> Yes
@@ -2789,6 +2802,7 @@ add/drop/reorder of columns.
 </li><li><strong>Default Value:</strong> <code>32</code>
 </li><li><strong>Range:</strong> <code>1</code> to <code>18446744073709551615</code>
 </li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-1057-release-notes/">MariaDB 10.5.7</a>
+</li><li><strong>Deprecated:</strong> <a href="/kb/en/mariadb-10620-release-notes/">MariaDB 10.6.20</a>, <a href="/kb/en/mariadb-10-11-10-release-notes/">MariaDB 10.11.10</a>, <a href="/kb/en/mariadb-11-2-6-release-notes/">MariaDB 11.2.6</a> and <a href="/kb/en/mariadb-11-4-4-release-notes/">MariaDB 11.4.4</a>. <a href="/kb/en/mariadb-11-6-1-release-notes/">MariaDB 11.6.1</a>, <a href="/kb/en/mariadb-11-7-1-release-notes/">MariaDB 11.7.1</a>
 </li></ul>
 <hr>
 <h4 class="anchored_heading" id="innodb_lru_scan_depth"><code>innodb_lru_scan_depth</code></h4>

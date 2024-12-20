@@ -270,12 +270,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-12-16 15:39">2 days, 9 hours ago</span></dd>
+<span class="datetime" title="2024-12-16 15:39">3 days, 9 hours ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-12-18 15:22">9 hours, 39 minutes ago</span></dd>
+<span class="datetime" title="2024-12-19 17:32">7 hours, 30 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -320,7 +320,13 @@
         
             <ul>
                 
-                    <li><a href="/kb/en/multi-master-ring-replication/+image/multi-master-ring-replication">multi-master-ring-replication</a><br />Multi master ring replication
+                    <li><a href="/kb/en/multi-master-ring-replication/+image/multi-master-ring-replication">multi-master-ring-replication</a><br />Simple multi-master-ring-replication
+                    </li>
+                
+                    <li><a href="/kb/en/multi-master-ring-replication/+image/multi-master-ring-replication1">multi-master-ring-replication1</a><br />Multi-master-ring-replication
+                    </li>
+                
+                    <li><a href="/kb/en/multi-master-ring-replication/+image/multi-master-ring-replication2">multi-master-ring-replication2</a><br />multi-master-ring-replication through slaves
                     </li>
                 
             </ul>
@@ -418,7 +424,7 @@
 <h3>Contents</h3>
  <ol class="toc">
 
-    <li class=""><a href="#what-is-multi-master-ring-replication" title="What is Multi-Master Ring Replication">What is Multi-Master Ring Replication</a></li>
+ <li class=""><a href="#what-is-multi-master-ring-replication" title="What is Multi-Master Ring Replication">What is Multi-Master Ring Replication</a> <ol class="toc">
 
     <li class=""><a href="#configuring-the-masters" title="Configuring the Masters">Configuring the Masters</a></li>
 
@@ -434,16 +440,28 @@
 </li>
 
         <li class=""><a href="#handling-duplicate-key-errors-and-other-conflicts" title="Handling duplicate key errors and other conflicts">Handling duplicate key errors and other conflicts</a>    </ol>
+ </ol>
+</li>
+
+ <li class=""><a href="#multi-master-ring-replication-through-slaves" title="Multi-Master Ring Replication through slaves">Multi-Master Ring Replication through slaves</a> <ol class="toc">
+
+    <li class=""><a href="#benefits-of-replication-through-slaves" title="Benefits of replication through slaves">Benefits of replication through slaves</a></li>
+
+    <li class=""><a href="#disadvantages-of-replication-through-slaves" title="Disadvantages of replication through slaves">Disadvantages of replication through slaves</a>    <ol class="toc">
+
+        <li class=""><a href="#setting-things-up" title="Setting things up">Setting things up</a></li>
+
+        <li class=""><a href="#what-to-do-when-one-of-the-masters-dies-and-has-to-be-replaced-by-a-slave" title="What to do when one of the masters dies and has to be replaced by a slave.">What to do when one of the masters dies and has to be replaced by a slave.</a>    </ol>
 </li>
 
     <li class=""><a href="#see-also" title="See also">See also</a> </ol>
 </li>
 </div>
-<h2 class="anchored_heading" id="what-is-multi-master-ring-replication">What is Multi-Master Ring Replication</h2>
+<h1 class="anchored_heading" id="what-is-multi-master-ring-replication">What is Multi-Master Ring Replication</h1>
 <p>Multi-Master "Ring" Replication means that you have two or more masters where each master is replicating its data to another master asynchronously.  This is not to be confused with  <a href="/kb/en/galera-cluster/">MariaDB Galera Cluster</a> which is a <a href="/kb/en/about-galera-replication/">virtually synchronous</a> multi-primary cluster for MariaDB.</p>
 <p>The benefit of asynchronous replication compared to <a href="/kb/en/galera-cluster/">Galera Cluster</a>, is that Ring Replication is resilient against bad network connections between the master servers.  If a connection goes down, all masters will continue to serve its clients locally and data will automatically be synced when the link is available again. </p>
 <p>The following picture shows one of the more advanced Multi-Master setups that is resilient against any master going down but can also handle 'human failures', like an accidental drop table, thanks to the addition of <a href="/kb/en/delayed-replication/">delayed slaves</a>.</p>
-<p><img src="/kb/en/multi-master-ring-replication/+image/multi-master-ring-replication" height="500" width="500"> </p>
+<p><img src="/kb/en/multi-master-ring-replication/+image/multi-master-ring-replication1" height="500" width="500"> </p>
 <p>One should <a href="/kb/en/setting-up-replication/">setup replication</a> on each master like one does in <a href="/kb/en/standard-replication/">standard MariaDB replication</a>. The replication setup among the masters should be a ring.  In other words, each master should replicate to one other master and each master should only have one other master as a slave.</p>
 <p>Each master can of course have one or more normal slaves. A master could also be a <a href="/kb/en/multi-source-replication/">slave of another master</a> that is not in the ring setup.</p>
 <p>All MariaDB servers support Multi-Master Ring Replication.  In fact, when MySQL replication was originally designed around the year 2000, it was to be a Multi-Master Ring Replication solution for Yahoo to replicate from the East Coast to the West Coast.</p>
@@ -513,6 +531,44 @@ The most common way to solve issues is to skip the conflicting log events with <
 <p>To fix this:</p>
 <ul start="1"><li>Use <a href="/kb/en/set-global-sql_slave_skip_counter/">SET GLOBAL SQL_SLAVE_SKIP_COUNTER</a> to skip the error.
 </li><li>Use <code>mariadb-binlog --base64-output=decode-rows --verbose --start-position=# binlog-name</code> to see what is missing and apply the changes missing on the server (minus the conflict).
+</li></ul>
+<h1 class="anchored_heading" id="multi-master-ring-replication-through-slaves">Multi-Master Ring Replication through slaves</h1>
+<p>An alternative setup to use for Multi-master ring replications is to replicate to the other
+masters through slaves. The following setup shows how this can be done.</p>
+<p><img src="/kb/en/multi-master-ring-replication/+image/multi-master-ring-replication2" height="500" width="500"> </p>
+<h2 class="anchored_heading" id="benefits-of-replication-through-slaves">Benefits of replication through slaves</h2>
+<ul start="1"><li>The slave will never be out of sync compared to other master. This makes failover from master to slave much easier as one does not have to check if slave has all data.
+</li><li>Slightly less load on the master
+</li><li>One can use <a href="/kb/en/semisynchronous-replication/">semisynchronous-replication</a> between master and slave.
+</li><li>Slave configuration is consolidated to one place. That is, if a master's immediate slave and replicating master should share the same configuration (e.g. rewrite rules, filters, etc), only the immediate slave needs them configured, as the replicating master will pull in the effects inherently. 
+</li></ul>
+<h2 class="anchored_heading" id="disadvantages-of-replication-through-slaves">Disadvantages of replication through slaves</h2>
+<ul start="1"><li>There will be a slightly longer delay for the data to hit the next master as it has to go trough the slave.  This can be notable if there is a very large transaction executed on the master.
+</li><li>If the master OR the slave dies, the replication to other masters will stop.
+</li><li>A replicating master is subject to the configuration of a slave (e.g. transactions may be incorrectly filtered out).
+</li><li>Re-setting replication after failover is a bit more complex.
+</li></ul>
+<h3 class="anchored_heading" id="setting-things-up">Setting things up</h3>
+<ul start="1"><li>Setup is identical to Multi-Master Ring Replication, except that rpl_semi_sync_master_enabled=0 is not required.
+</li></ul>
+<h3 class="anchored_heading" id="what-to-do-when-one-of-the-masters-dies-and-has-to-be-replaced-by-a-slave">What to do when one of the masters dies and has to be replaced by a slave.</h3>
+<p>Let assume that master1 in the above picture has failed.
+The new slave that will be added to replace slave1 place in the picture will be called slave3. 
+The new master will be called master3 (to simplify explanations).
+ Note that in some cases, the failed master can be re-used as the new slave if it it did recover properly.  If this is the case, reset all replications setups on the failed master.</p>
+<ul start="1"><li>Promote slave1 as the new master3.  Applications should now be moved to use master3. Note <a href="/kb/en/maxscale/">MaxScale</a> can do this step automatically.
+</li><li>Setup master3 as a slave of slave2.
+<ul start="1"><li>The ring replication is now active (at least temporarily, until we have slave3 in place).
+</li></ul>
+</li><li>Delete the old replication setup in master3 that pointed to the deleted master1.
+</li><li>Prepare the new slave3 (which can take a while if it based on a backup of master3).
+</li><li>Setup slave3 as a slave of master3.
+</li><li>If delayed slave1 exists, redirect it to be a slave of slave3.
+</li><li>Update master2 to be slave of slave3 (from being a slave of master3).
+</li></ul>
+<p>Some other options:</p>
+<ul start="1"><li>For semi-sync setups, the old master1 can be re-used as slave3 if re-started with <code>--init-rpl-role=SLAVE</code> during recovery
+</li><li>For non-semi-synchronous setups, one can use option <a href="/kb/en/change-master-to/#master_demote_to_slave">CHANGE MASTER TO MASTER_DEMOTE_TO_SLAVE=1</a> (requires <a href="/kb/en/what-is-mariadb-1011/">MariaDB 10.11</a> or higher).
 </li></ul>
 <h2 class="anchored_heading" id="see-also">See also</h2>
 <ul start="1"><li><a href="/kb/en/multi-source-replication/">Multi-source replication</a></li></ul>
