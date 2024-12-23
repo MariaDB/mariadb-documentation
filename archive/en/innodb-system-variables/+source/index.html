@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-system-variables/+r/144546/">144546</a></dd>
+            <dd><a href="/kb/en/innodb-system-variables/+r/145434/">145434</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-12-02 06:55">2024-12-02 06:55</span></dd>
+<span class="datetime" title="2024-12-20 00:26">2024-12-20 00:26</span></dd>
         </dl>
     </div>
     
@@ -2042,6 +2042,17 @@ add/drop/reorder of columns.
 * **Introduced:** MariaDB 10.8.4, MariaDB 10.9.2
 ----
 
+==== ##innodb_log_file_mmap##
+* **Description:** Whether ib_logfile0 resides in persistent memory or should initially be memory-mapped. When using the default innodb_log_buffer_size=2m, mariadb-backup --backup would spend a lot of time re-reading and re-parsing the log. For reading the log file during mariadb-backup --backup, it is beneficial to memory-map the entire ib_logfile0 to the address space (typically 48 bits or 256 TiB) and read it from there,
+both during --backup and --prepare. OFF by default on most platforms, to avoid aggressive read-ahead of the entire ib_logfile0 in when only a tiny portion would be accessed. On Linux and FreeBSD the default is innodb_log_file_mmap=ON, because those platforms define a specific mmap(2) option for enabling such read-ahead and therefore it can be assumed that the default wouldbe on-demand paging. This parameter will only have impact on the initial InnoDB startup and recovery. Any writes to the log will use regular I/O, except when the ib_logfile0 is stored in a specially configured file system that is backed by persistent memory (Linux &#34;mount -o dax&#34;).
+* **Commandline:** &lt;&lt;code&gt;&gt;--innodb-log-file-mmap{=0|1}&lt;&lt;/code&gt;&gt;
+* **Scope:** Global
+* **Dynamic:** No
+* **Data Type:** ##boolean##
+* **Default Value:** ##ON## (Linux, FreeBSD), ##OFF## (Other platforms)
+* **Introduced:** MariaDB 10.11.10, MariaDB 11.2.6, MariaDB 11.4.4, MariaDB 11.6.2, MariaDB 11.7.1
+----
+
 ==== ##innodb_log_file_size##
 * **Description:** Size in bytes of each [[innodb-redo-log|InnoDB redo log]] file in the log group. The combined size can be no more than 512GB. Larger values mean less disk I/O due to less flushing checkpoint activity, but also slower recovery from a crash. In MariaDB 10.5, crash recovery has been improved and shouldn&#39;t run out of memory, so the default has been increased. It can safely be set higher to reduce checkpoint flushing, even larger than [[#innodb_buffer_pool_size|innodb_buffer_pool_size]].\\From MariaDB 10.9 the variable is dynamic, and the server no longer needs to be restarted for the resizing to take place. Unless the log is located in a persistent memory file system (PMEM), an attempt to [[set|SET GLOBAL]] innodb_log_file_size to less than [[#innodb_log_buffer_size|innodb_log_buffer_size]] will be refused. Log resizing can be aborted by killing the connection that is executing the SET GLOBAL statement.
 * **Commandline:** &lt;&lt;code&gt;&gt;--innodb-log-file-size=#&lt;&lt;/code&gt;&gt;
@@ -2125,7 +2136,7 @@ add/drop/reorder of columns.
 ----
 
 ==== ##innodb_lru_flush_size##
-* **Description:** Number of pages to flush on LRU eviction.
+* **Description:** Number of pages to flush on LRU eviction. Changes in MariaDB 10.6.18, MariaDB 10.11.8, MariaDB 11.0.6, MariaDB 11.1.5, MariaDB 11.2.4 and MariaDB 11.4.2 made this setting superfluous, and it is no longer used. 
 * **Commandline:** &lt;&lt;code&gt;&gt;--innodb-lru-flush-size=#&lt;&lt;/code&gt;&gt;
 * **Scope:** Global
 * **Dynamic:** Yes
@@ -2133,6 +2144,7 @@ add/drop/reorder of columns.
 * **Default Value:** ##32##
 * **Range:** ##1## to ##18446744073709551615##
 * **Introduced:** MariaDB 10.5.7
+* **Deprecated:** MariaDB 10.6.20, MariaDB 10.11.10, MariaDB 11.2.6 and MariaDB 11.4.4. MariaDB 11.6.1, MariaDB 11.7.1
 ----
 
 ==== ##innodb_lru_scan_depth##

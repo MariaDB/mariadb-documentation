@@ -319,7 +319,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/check-table/+r/130885/">130885</a></dd>
+            <dd><a href="/kb/en/check-table/+r/145264/">145264</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-7">
@@ -328,7 +328,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-10-10 18:21">2023-10-10 18:21</span></dd>
+<span class="datetime" title="2024-12-16 11:51">2024-12-16 11:51</span></dd>
         </dl>
     </div>
     
@@ -372,7 +372,7 @@ storage engines:
 | CHANGED | Check only tables that has changed since last REPAIR / CHECK. Only supported by the MyISAM and Aria engines. For other engines the table is checked normally.|
 | QUICK |Do a fast check. For MyISAM and Aria, this means skipping the check of the delete link chain, which may take some time.|
 | MEDIUM | Scan also the data files. Checks integrity between data and index files with checksums. In most cases this should find all possible errors.|
-| EXTENDED | Does a full check to verify every possible error. For InnoDB, Aria, and MyISAM, verify for each row that all its keys exists, and for those index keys, they point back to the primary clustered key. This may take a long time on large tables. This option was previously ignored by InnoDB before MariaDB 10.6.11, MariaDB 10.7.7, MariaDB 10.8.6 and MariaDB 10.9.4. |
+| EXTENDED | Does a full check to verify every possible error. For InnoDB, Aria, and MyISAM, verify for each row that all its keys exists, and for those index keys, they point back to the primary clustered key. This may take a long time on large tables. This option was previously ignored by InnoDB before MariaDB 10.6.11, MariaDB 10.7.7, MariaDB 10.8.6 and MariaDB 10.9.4.  From MariaDB 11.8, also checks for referential integrity. |
 &lt;&lt;/style&gt;&gt;
 
 For most cases running ##CHECK TABLE## without options or ##MEDIUM## should be
@@ -393,12 +393,32 @@ During the execution of ##CHECK TABLE##, other threads may be blocked.
 
 == Examples
 &lt;&lt;sql&gt;&gt;
-check table y extended;
+CHECK TABLE y EXTENDED;
 +--------+-------+----------+----------+
 | Table  | Op    | Msg_type | Msg_text |
 +--------+-------+----------+----------+
 | test.y | check | status   | OK       |
 +--------+-------+----------+----------+
+&lt;&lt;/sql&gt;&gt;
+
+From MariaDB 11.8:
+&lt;&lt;sql&gt;&gt;
+CHECK TABLE t1 EXTENDED;
++---------+-------+----------+----------------------------------------------------------------------+
+| Table   | Op    | Msg_type | Msg_text                                                             |
++---------+-------+----------+----------------------------------------------------------------------+
+| test.t1 | check | Warning  | No suitable key found for foreign key t2_ibfk_1 in table test.t1    |
++---------+-------+----------+----------------------------------------------------------------------+
+
+CHECK TABLE t2 EXTENDED;
++---------+-------+----------+--------------------------------------------------------------------------------------------------+
+| Table   | Op    | Msg_type | Msg_text                                                                                         |
++---------+-------+----------+--------------------------------------------------------------------------------------------------+
+| test.t2 | check | status   | Cannot add or update a child row: a foreign key constraint fails (Key: t2_ibfk_1, record: &#39;2&#39;)  |
+| test.t2 | check | status   | Cannot add or update a child row: a foreign key constraint fails (Key: t2_ibfk_1, record: &#39;2&#39;)  |
+| test.t2 | check | status   | Cannot add or update a child row: a foreign key constraint fails (Key: t2_ibfk_1, record: &#39;3&#39;)  |
+| test.t2 | check | error    | Corrupt                                                                                          |
++---------+-------+----------+--------------------------------------------------------------------------------------------------+
 &lt;&lt;/sql&gt;&gt;</textarea>
     
 
