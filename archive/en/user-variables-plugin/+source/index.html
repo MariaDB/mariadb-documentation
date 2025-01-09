@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/user-variables-plugin/+r/127232/">127232</a></dd>
+            <dd><a href="/kb/en/user-variables-plugin/+r/145620/">145620</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3487">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-06-12 11:51">2023-06-12 11:51</span></dd>
+<span class="datetime" title="2025-01-08 10:18">2025-01-08 10:18</span></dd>
         </dl>
     </div>
     
@@ -338,9 +338,46 @@
 
 &lt;&lt;toc&gt;&gt;
 
+== Viewing
+User-defined variables can be viewed by either querying the [[information-schema-user_variables-table|USER_VARIABLES]], or by running ##SHOW USER_VARIABLES##.
+
+=== Flushing User-Defined Variables
+User-defined variables are reset and the Information Schema table emptied with the [[flush|FLUSH USER_VARIABLES]] statement.
+
+== Examples
+
+&lt;&lt;sql&gt;&gt;
+SET @v1 = 0;
+SET @v2 = &#39;abc&#39;;
+SET @v3 = CAST(123 AS CHAR(5));
+
+SHOW USER_VARIABLES;
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| v3            | 123   |
+| v2            | abc   |
+| v1            | 0     |
++---------------+-------+
+
+SELECT * FROM information_schema.USER_VARIABLES ORDER BY VARIABLE_NAME;
++---------------+----------------+---------------+--------------------+
+| VARIABLE_NAME | VARIABLE_VALUE | VARIABLE_TYPE | CHARACTER_SET_NAME |
++---------------+----------------+---------------+--------------------+
+| v1            | 0              | INT           | latin1             |
+| v2            | abc            | VARCHAR       | utf8               |
+| v3            | 123            | VARCHAR       | utf8               |
++---------------+----------------+---------------+--------------------+
+
+FLUSH USER_VARIABLES;
+
+SELECT * FROM information_schema.USER_VARIABLES ORDER BY VARIABLE_NAME;
+Empty set (0.000 sec)
+&lt;&lt;/sql&gt;&gt;
+
 == Installing the Plugin
 
-In current versions, the ##user_variables## plugin is statically linked into the server by default, so it does not need to be installed.
+In current versions, the ##user_variables## plugin is statically linked into the server by default, so it does not need to be installed, and the following steps are unnecessary.
 
 Prior to MariaDB 10.2.6, although the plugin&#39;s shared library is distributed with MariaDB by default, the plugin was not actually installed by MariaDB by default. There are two methods that can be used to install the plugin with MariaDB.
 
@@ -367,37 +404,6 @@ UNINSTALL SONAME &#39;user_variables&#39;;
 &lt;&lt;/sql&gt;&gt;
 
 If you installed the plugin by providing the [[mysqld-options/#-plugin-load|--plugin-load]] or the [[mysqld-options/#-plugin-load-add|--plugin-load-add]] options in a relevant server [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]], then those options should be removed to prevent the plugin from being loaded the next time the server is restarted.
-
-== Examples
-
-&lt;&lt;sql&gt;&gt;
-SELECT * FROM information_schema.USER_VARIABLES ORDER BY VARIABLE_NAME;
-+---------------+----------------+---------------+--------------------+
-| VARIABLE_NAME | VARIABLE_VALUE | VARIABLE_TYPE | CHARACTER_SET_NAME |
-+---------------+----------------+---------------+--------------------+
-| var           | 0              | INT           | utf8               |
-| var2          | abc            | VARCHAR       | utf8               |
-+---------------+----------------+---------------+--------------------+
-&lt;&lt;/sql&gt;&gt;
-
-=== Flushing User-Defined Variables
-User-defined variables are reset and the Information Schema table emptied with the [[flush|FLUSH USER_VARIABLES]] statement.
-
-&lt;&lt;sql&gt;&gt;
-SET @str = CAST(123 AS CHAR(5));
-
-SELECT * FROM information_schema.USER_VARIABLES ORDER BY VARIABLE_NAME;
-+---------------+----------------+---------------+--------------------+
-| VARIABLE_NAME | VARIABLE_VALUE | VARIABLE_TYPE | CHARACTER_SET_NAME |
-+---------------+----------------+---------------+--------------------+
-| str           | 123            | VARCHAR       | utf8mb3            |
-+---------------+----------------+---------------+--------------------+
-
-FLUSH USER_VARIABLES;
-
-SELECT * FROM information_schema.USER_VARIABLES ORDER BY VARIABLE_NAME;
-Empty set (0.000 sec)
-&lt;&lt;/sql&gt;&gt;
 
 
 == Versions

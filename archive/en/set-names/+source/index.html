@@ -319,7 +319,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/set-names/+r/145605/">145605</a></dd>
+            <dd><a href="/kb/en/set-names/+r/145615/">145615</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -328,7 +328,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-01-07 18:28">2025-01-07 18:28</span></dd>
+<span class="datetime" title="2025-01-08 09:10">2025-01-08 09:10</span></dd>
         </dl>
     </div>
     
@@ -357,7 +357,9 @@ The collation clause is optional. If not defined (or if ##DEFAULT## is specified
 
 Quotes are optional for the character set or collation clauses.
 
-== Examples in MariaDB 10.6
+== Examples
+
+Prior to MariaDB 10.6, the utf8 [[character-sets|character set]] (and related collation) was the default for the given variables:
 &lt;&lt;sql&gt;&gt;
 SELECT VARIABLE_NAME, SESSION_VALUE 
   FROM INFORMATION_SCHEMA.SYSTEM_VARIABLES WHERE 
@@ -422,23 +424,63 @@ SELECT VARIABLE_NAME, SESSION_VALUE
 +--------------------------+-------------------+
 &lt;&lt;/sql&gt;&gt;
 
-== Examples in MariaDB 11.8
+From MariaDB 10.6 to MariaDB 11.7, the utf8 [[character-sets|character set]] (and related collations) became an alias for utf8mb3 rather than the other way around. MariaDB 11.4 added the [[server-system-variables/#character_set_collations|character_set_collations]] variable, so the SELECT query is more specific in this example:
+
 &lt;&lt;sql&gt;&gt;
 SELECT VARIABLE_NAME, SESSION_VALUE 
-    -&gt;   FROM INFORMATION_SCHEMA.SYSTEM_VARIABLES WHERE 
-    -&gt;   VARIABLE_NAME LIKE &#39;character_set_c%&#39; OR 
-    -&gt;   VARIABLE_NAME LIKE &#39;character_set_re%&#39; OR 
-    -&gt;   VARIABLE_NAME LIKE &#39;collation_c%&#39;;
-+--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
-| VARIABLE_NAME            | SESSION_VALUE                                                                                                                           |
-+--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
-| CHARACTER_SET_RESULTS    | utf8mb3                                                                                                                                 |
-| CHARACTER_SET_CONNECTION | utf8mb3                                                                                                                                 |
-| CHARACTER_SET_CLIENT     | utf8mb3                                                                                                                                 |
-| CHARACTER_SET_COLLATIONS | utf8mb3=utf8mb3_uca1400_ai_ci,ucs2=ucs2_uca1400_ai_ci,utf8mb4=utf8mb4_uca1400_ai_ci,utf16=utf16_uca1400_ai_ci,utf32=utf32_uca1400_ai_ci |
-| COLLATION_CONNECTION     | utf8mb3_uca1400_ai_ci                                                                                                                   |
-+--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------+
+    FROM INFORMATION_SCHEMA.SYSTEM_VARIABLES WHERE 
+    VARIABLE_NAME LIKE &#39;character_set_con%&#39; OR 
+    VARIABLE_NAME LIKE &#39;character_set_cl%&#39; OR 
+    VARIABLE_NAME LIKE &#39;character_set_re%&#39; OR 
+    VARIABLE_NAME LIKE &#39;collation_c%&#39;;
++--------------------------+--------------------+
+| VARIABLE_NAME            | SESSION_VALUE      |
++--------------------------+--------------------+
+| CHARACTER_SET_RESULTS    | utf8mb3            |
+| CHARACTER_SET_CONNECTION | utf8mb3            |
+| CHARACTER_SET_CLIENT     | utf8mb3            |
+| COLLATION_CONNECTION     | utf8mb3_general_ci |
++--------------------------+--------------------+
+
+SET NAMES utf8mb4;
+
+SELECT VARIABLE_NAME, SESSION_VALUE 
+    FROM INFORMATION_SCHEMA.SYSTEM_VARIABLES WHERE 
+    VARIABLE_NAME LIKE &#39;character_set_con%&#39; OR 
+    VARIABLE_NAME LIKE &#39;character_set_cl%&#39; OR 
+    VARIABLE_NAME LIKE &#39;character_set_re%&#39; OR 
+    VARIABLE_NAME LIKE &#39;collation_c%&#39;;
++--------------------------+--------------------+
+| VARIABLE_NAME            | SESSION_VALUE      |
++--------------------------+--------------------+
+| CHARACTER_SET_RESULTS    | utf8mb4            |
+| CHARACTER_SET_CONNECTION | utf8mb4            |
+| CHARACTER_SET_CLIENT     | utf8mb4            |
+| COLLATION_CONNECTION     | utf8mb4_general_ci |
++--------------------------+--------------------+
 &lt;&lt;/sql&gt;&gt;
+
+From MariaDB 11.8, ##utf8mb4## became the default for the affected variables: 
+&lt;&lt;sql&gt;&gt;
+
+SET NAMES DEFAULT;                
+
+SELECT VARIABLE_NAME, SESSION_VALUE 
+    FROM INFORMATION_SCHEMA.SYSTEM_VARIABLES WHERE 
+    VARIABLE_NAME LIKE &#39;character_set_con%&#39; OR 
+    VARIABLE_NAME LIKE &#39;character_set_cl%&#39; OR 
+    VARIABLE_NAME LIKE &#39;character_set_re%&#39; OR 
+    VARIABLE_NAME LIKE &#39;collation_c%&#39;;
++--------------------------+-----------------------+
+| VARIABLE_NAME            | SESSION_VALUE         |
++--------------------------+-----------------------+
+| CHARACTER_SET_RESULTS    | utf8mb4               |
+| CHARACTER_SET_CONNECTION | utf8mb4               |
+| CHARACTER_SET_CLIENT     | utf8mb4               |
+| COLLATION_CONNECTION     | utf8mb4_uca1400_ai_ci |
++--------------------------+-----------------------+
+&lt;&lt;/sql&gt;&gt;
+
 == See Also
 * [[set-character-set|SET CHARACTER SET]]
 * [[setting-character-sets-and-collations|Setting Character Sets and Collations]]

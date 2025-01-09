@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2022-05-30 13:31">2 years, 7 months ago</span></dd>
+<span class="datetime" title="2025-01-08 10:13">14 hours, 50 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -429,9 +429,11 @@
 <h3>Contents</h3>
  <ol class="toc">
 
-    <li class=""><a href="#information-schema" title="Information Schema">Information Schema</a></li>
+    <li class=""><a href="#viewing" title="Viewing">Viewing</a></li>
 
     <li class=""><a href="#flushing-user-defined-variables" title="Flushing User-Defined Variables">Flushing User-Defined Variables</a></li>
+
+    <li class=""><a href="#examples" title="Examples">Examples</a></li>
 
     <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
 </li>
@@ -468,17 +470,31 @@ DEALLOCATE PREPARE stmt;
 </pre><p>Another common use is to include a counter in a query:</p>
 <pre class="fixed">SET @var = 0;
 SELECT a, b, c, (@var:=@var+1) AS counter FROM my_table;
-</pre><h2 class="anchored_heading" id="information-schema">Information Schema</h2>
-<p>User-defined variables can be viewed in the <a href="/kb/en/information-schema-user_variables-table/">Information Schema USER_VARIABLES Table</a> (as part of the <a href="/kb/en/user-variables-plugin/">User Variables plugin</a>) from <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>.</p>
+</pre><h2 class="anchored_heading" id="viewing">Viewing</h2>
+<p>User-defined variables can be viewed by either querying the <a href="/kb/en/information-schema-user_variables-table/">USER_VARIABLES</a>, or by running <code>SHOW USER_VARIABLES</code>.</p>
 <h2 class="anchored_heading" id="flushing-user-defined-variables">Flushing User-Defined Variables</h2>
 <p>User-defined variables are reset and the <a href="/kb/en/information-schema-user_variables-table/">Information Schema table</a> emptied with the <a href="/kb/en/flush/">FLUSH USER_VARIABLES</a> statement.</p>
-<pre class="fixed"><span class="k">SET</span> <span class="o">@</span><span class="n">str</span> <span class="o">=</span> <span class="k">CAST</span><span class="p">(</span><span class="mi">123</span> <span class="k">AS</span> <span class="nb">CHAR</span><span class="p">(</span><span class="mi">5</span><span class="p">));</span>
+<h2 class="anchored_heading" id="examples">Examples</h2>
+<pre class="fixed"><span class="k">SET</span> <span class="o">@</span><span class="n">v1</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">SET</span> <span class="o">@</span><span class="n">v2</span> <span class="o">=</span> <span class="s1">&#39;abc&#39;</span><span class="p">;</span>
+<span class="k">SET</span> <span class="o">@</span><span class="n">v3</span> <span class="o">=</span> <span class="k">CAST</span><span class="p">(</span><span class="mi">123</span> <span class="k">AS</span> <span class="nb">CHAR</span><span class="p">(</span><span class="mi">5</span><span class="p">));</span>
+
+<span class="k">SHOW</span> <span class="n">USER_VARIABLES</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---------------+-------+</span>
+<span class="o">|</span> <span class="n">Variable_name</span> <span class="o">|</span> <span class="n">Value</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------+-------+</span>
+<span class="o">|</span> <span class="n">v3</span>            <span class="o">|</span> <span class="mi">123</span>   <span class="o">|</span>
+<span class="o">|</span> <span class="n">v2</span>            <span class="o">|</span> <span class="n">abc</span>   <span class="o">|</span>
+<span class="o">|</span> <span class="n">v1</span>            <span class="o">|</span> <span class="mi">0</span>     <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------+-------+</span>
 
 <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">USER_VARIABLES</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">VARIABLE_NAME</span><span class="p">;</span>
 <span class="o">+</span><span class="c1">---------------+----------------+---------------+--------------------+</span>
 <span class="o">|</span> <span class="n">VARIABLE_NAME</span> <span class="o">|</span> <span class="n">VARIABLE_VALUE</span> <span class="o">|</span> <span class="n">VARIABLE_TYPE</span> <span class="o">|</span> <span class="k">CHARACTER_SET_NAME</span> <span class="o">|</span>
 <span class="o">+</span><span class="c1">---------------+----------------+---------------+--------------------+</span>
-<span class="o">|</span> <span class="n">str</span>           <span class="o">|</span> <span class="mi">123</span>            <span class="o">|</span> <span class="nb">VARCHAR</span>       <span class="o">|</span> <span class="n">utf8mb3</span>            <span class="o">|</span>
+<span class="o">|</span> <span class="n">v1</span>            <span class="o">|</span> <span class="mi">0</span>              <span class="o">|</span> <span class="nb">INT</span>           <span class="o">|</span> <span class="n">latin1</span>             <span class="o">|</span>
+<span class="o">|</span> <span class="n">v2</span>            <span class="o">|</span> <span class="n">abc</span>            <span class="o">|</span> <span class="nb">VARCHAR</span>       <span class="o">|</span> <span class="n">utf8</span>               <span class="o">|</span>
+<span class="o">|</span> <span class="n">v3</span>            <span class="o">|</span> <span class="mi">123</span>            <span class="o">|</span> <span class="nb">VARCHAR</span>       <span class="o">|</span> <span class="n">utf8</span>               <span class="o">|</span>
 <span class="o">+</span><span class="c1">---------------+----------------+---------------+--------------------+</span>
 
 <span class="n">FLUSH</span> <span class="n">USER_VARIABLES</span><span class="p">;</span>

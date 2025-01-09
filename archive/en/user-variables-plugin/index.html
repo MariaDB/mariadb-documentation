@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-06-12 11:51">1 year, 6 months ago</span></dd>
+<span class="datetime" title="2025-01-08 10:18">14 hours, 45 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -416,14 +416,16 @@
 <h3>Contents</h3>
  <ol class="toc">
 
-    <li class=""><a href="#installing-the-plugin" title="Installing the Plugin">Installing the Plugin</a></li>
-
-    <li class=""><a href="#uninstalling-the-plugin" title="Uninstalling the Plugin">Uninstalling the Plugin</a></li>
-
-    <li class=""><a href="#examples" title="Examples">Examples</a>    <ol class="toc">
+    <li class=""><a href="#viewing" title="Viewing">Viewing</a>    <ol class="toc">
 
         <li class=""><a href="#flushing-user-defined-variables" title="Flushing User-Defined Variables">Flushing User-Defined Variables</a>    </ol>
 </li>
+
+    <li class=""><a href="#examples" title="Examples">Examples</a></li>
+
+    <li class=""><a href="#installing-the-plugin" title="Installing the Plugin">Installing the Plugin</a></li>
+
+    <li class=""><a href="#uninstalling-the-plugin" title="Uninstalling the Plugin">Uninstalling the Plugin</a></li>
 
     <li class=""><a href="#versions" title="Versions">Versions</a></li>
 
@@ -433,8 +435,39 @@
  </ol>
 </li>
 </div>
-<h2 class="anchored_heading" id="installing-the-plugin">Installing the Plugin</h2>
-<p>In current versions, the <code>user_variables</code> plugin is statically linked into the server by default, so it does not need to be installed.</p>
+<h2 class="anchored_heading" id="viewing">Viewing</h2>
+<p>User-defined variables can be viewed by either querying the <a href="/kb/en/information-schema-user_variables-table/">USER_VARIABLES</a>, or by running <code>SHOW USER_VARIABLES</code>.</p>
+<h3 class="anchored_heading" id="flushing-user-defined-variables">Flushing User-Defined Variables</h3>
+<p>User-defined variables are reset and the Information Schema table emptied with the <a href="/kb/en/flush/">FLUSH USER_VARIABLES</a> statement.</p>
+<h2 class="anchored_heading" id="examples">Examples</h2>
+<pre class="fixed"><span class="k">SET</span> <span class="o">@</span><span class="n">v1</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">SET</span> <span class="o">@</span><span class="n">v2</span> <span class="o">=</span> <span class="s1">&#39;abc&#39;</span><span class="p">;</span>
+<span class="k">SET</span> <span class="o">@</span><span class="n">v3</span> <span class="o">=</span> <span class="k">CAST</span><span class="p">(</span><span class="mi">123</span> <span class="k">AS</span> <span class="nb">CHAR</span><span class="p">(</span><span class="mi">5</span><span class="p">));</span>
+
+<span class="k">SHOW</span> <span class="n">USER_VARIABLES</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---------------+-------+</span>
+<span class="o">|</span> <span class="n">Variable_name</span> <span class="o">|</span> <span class="n">Value</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------+-------+</span>
+<span class="o">|</span> <span class="n">v3</span>            <span class="o">|</span> <span class="mi">123</span>   <span class="o">|</span>
+<span class="o">|</span> <span class="n">v2</span>            <span class="o">|</span> <span class="n">abc</span>   <span class="o">|</span>
+<span class="o">|</span> <span class="n">v1</span>            <span class="o">|</span> <span class="mi">0</span>     <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------+-------+</span>
+
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">USER_VARIABLES</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">VARIABLE_NAME</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">---------------+----------------+---------------+--------------------+</span>
+<span class="o">|</span> <span class="n">VARIABLE_NAME</span> <span class="o">|</span> <span class="n">VARIABLE_VALUE</span> <span class="o">|</span> <span class="n">VARIABLE_TYPE</span> <span class="o">|</span> <span class="k">CHARACTER_SET_NAME</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------+----------------+---------------+--------------------+</span>
+<span class="o">|</span> <span class="n">v1</span>            <span class="o">|</span> <span class="mi">0</span>              <span class="o">|</span> <span class="nb">INT</span>           <span class="o">|</span> <span class="n">latin1</span>             <span class="o">|</span>
+<span class="o">|</span> <span class="n">v2</span>            <span class="o">|</span> <span class="n">abc</span>            <span class="o">|</span> <span class="nb">VARCHAR</span>       <span class="o">|</span> <span class="n">utf8</span>               <span class="o">|</span>
+<span class="o">|</span> <span class="n">v3</span>            <span class="o">|</span> <span class="mi">123</span>            <span class="o">|</span> <span class="nb">VARCHAR</span>       <span class="o">|</span> <span class="n">utf8</span>               <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------+----------------+---------------+--------------------+</span>
+
+<span class="n">FLUSH</span> <span class="n">USER_VARIABLES</span><span class="p">;</span>
+
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">USER_VARIABLES</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">VARIABLE_NAME</span><span class="p">;</span>
+<span class="n">Empty</span> <span class="k">set</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span> <span class="n">sec</span><span class="p">)</span>
+</pre><h2 class="anchored_heading" id="installing-the-plugin">Installing the Plugin</h2>
+<p>In current versions, the <code>user_variables</code> plugin is statically linked into the server by default, so it does not need to be installed, and the following steps are unnecessary.</p>
 <p>Prior to <a href="/kb/en/mariadb-1026-release-notes/">MariaDB 10.2.6</a>, although the plugin's shared library is distributed with MariaDB by default, the plugin was not actually installed by MariaDB by default. There are two methods that can be used to install the plugin with MariaDB.</p>
 <p>The first method can be used to install the plugin without restarting the server. You can install the plugin dynamically by executing <a href="/kb/en/install-soname/">INSTALL SONAME</a> or <a href="/kb/en/install-plugin/">INSTALL PLUGIN</a>. For example:</p>
 <pre class="fixed"><span class="n">INSTALL</span> <span class="n">SONAME</span> <span class="s1">&#39;user_variables&#39;</span><span class="p">;</span>
@@ -446,30 +479,7 @@ plugin_load_add = user_variables
 <p>You can uninstall the plugin dynamically by executing <a href="/kb/en/uninstall-soname/">UNINSTALL SONAME</a> or <a href="/kb/en/uninstall-plugin/">UNINSTALL PLUGIN</a>. For example:</p>
 <pre class="fixed"><span class="n">UNINSTALL</span> <span class="n">SONAME</span> <span class="s1">&#39;user_variables&#39;</span><span class="p">;</span>
 </pre><p>If you installed the plugin by providing the <a href="/kb/en/mysqld-options/#-plugin-load">--plugin-load</a> or the <a href="/kb/en/mysqld-options/#-plugin-load-add">--plugin-load-add</a> options in a relevant server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>, then those options should be removed to prevent the plugin from being loaded the next time the server is restarted.</p>
-<h2 class="anchored_heading" id="examples">Examples</h2>
-<pre class="fixed"><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">USER_VARIABLES</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">VARIABLE_NAME</span><span class="p">;</span>
-<span class="o">+</span><span class="c1">---------------+----------------+---------------+--------------------+</span>
-<span class="o">|</span> <span class="n">VARIABLE_NAME</span> <span class="o">|</span> <span class="n">VARIABLE_VALUE</span> <span class="o">|</span> <span class="n">VARIABLE_TYPE</span> <span class="o">|</span> <span class="k">CHARACTER_SET_NAME</span> <span class="o">|</span>
-<span class="o">+</span><span class="c1">---------------+----------------+---------------+--------------------+</span>
-<span class="o">|</span> <span class="n">var</span>           <span class="o">|</span> <span class="mi">0</span>              <span class="o">|</span> <span class="nb">INT</span>           <span class="o">|</span> <span class="n">utf8</span>               <span class="o">|</span>
-<span class="o">|</span> <span class="n">var2</span>          <span class="o">|</span> <span class="n">abc</span>            <span class="o">|</span> <span class="nb">VARCHAR</span>       <span class="o">|</span> <span class="n">utf8</span>               <span class="o">|</span>
-<span class="o">+</span><span class="c1">---------------+----------------+---------------+--------------------+</span>
-</pre><h3 class="anchored_heading" id="flushing-user-defined-variables">Flushing User-Defined Variables</h3>
-<p>User-defined variables are reset and the Information Schema table emptied with the <a href="/kb/en/flush/">FLUSH USER_VARIABLES</a> statement.</p>
-<pre class="fixed"><span class="k">SET</span> <span class="o">@</span><span class="n">str</span> <span class="o">=</span> <span class="k">CAST</span><span class="p">(</span><span class="mi">123</span> <span class="k">AS</span> <span class="nb">CHAR</span><span class="p">(</span><span class="mi">5</span><span class="p">));</span>
-
-<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">USER_VARIABLES</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">VARIABLE_NAME</span><span class="p">;</span>
-<span class="o">+</span><span class="c1">---------------+----------------+---------------+--------------------+</span>
-<span class="o">|</span> <span class="n">VARIABLE_NAME</span> <span class="o">|</span> <span class="n">VARIABLE_VALUE</span> <span class="o">|</span> <span class="n">VARIABLE_TYPE</span> <span class="o">|</span> <span class="k">CHARACTER_SET_NAME</span> <span class="o">|</span>
-<span class="o">+</span><span class="c1">---------------+----------------+---------------+--------------------+</span>
-<span class="o">|</span> <span class="n">str</span>           <span class="o">|</span> <span class="mi">123</span>            <span class="o">|</span> <span class="nb">VARCHAR</span>       <span class="o">|</span> <span class="n">utf8mb3</span>            <span class="o">|</span>
-<span class="o">+</span><span class="c1">---------------+----------------+---------------+--------------------+</span>
-
-<span class="n">FLUSH</span> <span class="n">USER_VARIABLES</span><span class="p">;</span>
-
-<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">information_schema</span><span class="p">.</span><span class="n">USER_VARIABLES</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">VARIABLE_NAME</span><span class="p">;</span>
-<span class="n">Empty</span> <span class="k">set</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span> <span class="n">sec</span><span class="p">)</span>
-</pre><h2 class="anchored_heading" id="versions">Versions</h2>
+<h2 class="anchored_heading" id="versions">Versions</h2>
 <div class="cstm-style darkheader-nospace-borders"><table><tr><th>Version</th><th>Status</th><th>Introduced</th></tr>
 <tr><td>1.0</td><td>Stable</td><td><a href="/kb/en/mariadb-10313-release-notes/">MariaDB 10.3.13</a></td></tr>
 <tr><td>1.0</td><td>Gamma</td><td><a href="/kb/en/mariadb-1026-release-notes/">MariaDB 10.2.6</a></td></tr>
