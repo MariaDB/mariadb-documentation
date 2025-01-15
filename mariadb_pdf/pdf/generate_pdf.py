@@ -31,7 +31,9 @@ def generate_sub_pdf(
     (dir_path / config.html_path).write_text(html, encoding="utf-8")
     del html
     wkhtmltopdf(f"{dir_path}/{config.html_path}", dir_path / config.pdf_path, config)
-    log.info(f"Wrote PDF to {dir_path / config.pdf_path}")
+    if config.verbose:
+        log.info(f"Wrote PDF to {dir_path / config.pdf_path}")
+
 
 def default_outline(kburls: list[CsvItem]) -> list[TocItem]:
     return [TocItem(header = row.header, page_num=0, link_id=row.id) for row in kburls]
@@ -42,10 +44,15 @@ def read_outline(kburls: list[CsvItem], outline_path: Path) -> list[TocItem]:
     outline_rows = filter(lambda row: row.startswith('<item title="'), outline_rows)
     outline_rows = map(get_title_page, outline_rows)
     outline_rows = filter(lambda row: row[0][0].isnumeric(), outline_rows)
-    return [create_toc_item(*row, csv_item) for row, csv_item in zip(outline_rows, kburls, strict=True)] 
+    return [
+        create_toc_item(*row, csv_item)
+        for row, csv_item in zip(outline_rows, kburls, strict=True)
+    ]
+
 
 def create_toc_item(header: str, page_num: int, csv_item: CsvItem) -> TocItem:
     return TocItem(header=header, page_num=page_num, link_id=csv_item.id)
+
 
 def get_title_page(line: str) -> tuple[str, int]:
     title = re.search('title="([^"]*)"', line)
@@ -53,8 +60,10 @@ def get_title_page(line: str) -> tuple[str, int]:
     assert title and page
     return title[1], int(page[1])
 
+
 def wkhtmltopdf(html_path: str, pdf_path: Path, config: Config):
-    log.info("Starting wk")
+    if config.verbose:
+        log.info("Starting wk")
     wk_config = pdfkit.configuration(wkhtmltopdf="")
     pdfkit.from_file(
         html_path,

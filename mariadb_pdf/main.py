@@ -12,11 +12,14 @@ def main():
     language_csvs = read_languages(csv, config)
     try:
         for lang, lang_csv in language_csvs.items():
-            log.info(f"Generating {lang}({len(lang_csv)})")
+            if config.verbose:
+                log.info(f"Generating {lang}({len(lang_csv)})")
             generate_full_pdf(lang_csv, Path(f"output_{lang}"), config)
     finally:
         Path(config.wkhtml_settings["dump-outline"]).unlink(missing_ok=True)
-    log.info("Finished")
+    if config.verbose:
+        log.info("Finished")
+
 
 if __name__ == "__main__":
     main()
