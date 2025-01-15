@@ -25,8 +25,8 @@ def process_pages(
             url_to_depth_str[row.url] = row.depth_str
 
     length = len(kburls)
+    log.info("Start HTML read")
     for index, (row, outline_row) in enumerate(zip(kburls, outline, strict=True)):
-        logging.info("Start HTML read")
         if config.verbose:
             print(f"\rProgress: {index+1}/{length}", end="")
         assert row.include != 0

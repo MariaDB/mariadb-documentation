@@ -132,8 +132,6 @@ def _read_args() -> _ArgConfig:
         dest="loglevel",
         const=logging.INFO,
     )
-    args = parser.parse_args()
-    logging.basicConfig(level=args.loglevel)
     return parser.parse_args(namespace=_ArgConfig)  # type: ignore
 
 
