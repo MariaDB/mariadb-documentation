@@ -2,9 +2,10 @@ from setup.config import Config
 from setup.kb_urls import CsvItem
 from setup.logger import log
 from setup.paths import get_html
+
 from .contents import TocItem
-from .process_html_page import process_html_page
 from .merge_html import merge_html
+from .process_html_page import process_html_page
 
 
 def read_html(kburls: list[CsvItem], outline: list[TocItem], config: Config) -> str:
@@ -12,16 +13,20 @@ def read_html(kburls: list[CsvItem], outline: list[TocItem], config: Config) -> 
     html = merge_html(pages, kburls, outline, config)
     return html
 
-def process_pages(kburls: list[CsvItem], outline: list[TocItem], config: Config) -> list[str]:
+
+def process_pages(
+    kburls: list[CsvItem], outline: list[TocItem], config: Config
+) -> list[str]:
     html_pages: list[str] = []
-    
+
     url_to_depth_str = {}
     for row in kburls:
         if row.include in [1, 2]:
             url_to_depth_str[row.url] = row.depth_str
-    
+
     length = len(kburls)
     for index, (row, outline_row) in enumerate(zip(kburls, outline, strict=True)):
+        logging.info("Start HTML read")
         if config.verbose:
             print(f"\rProgress: {index+1}/{length}", end="")
         assert row.include != 0
@@ -48,3 +53,4 @@ def process_article(row: CsvItem, port: int) -> tuple[str, str]:
         log.error(f"Could not read url: {row.url}")
         exit(1)
     return process_html_page(html, row)
+

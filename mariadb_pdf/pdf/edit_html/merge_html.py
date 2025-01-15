@@ -16,7 +16,7 @@ PAGE_BREAK = '<div style = "page-break-after:always;"></div>\n'
 def merge_html(
     pages: list[str], kburls: list[CsvItem], outline: list[TocItem], config: Config
 ) -> str:
-    logger.info("Merging HTML")
+    logging.info("Merging HTML")
     html = "\n".join(pages)
     html = create_contents(outline, config.toc_config) + html
     html = absolute_links(html)
