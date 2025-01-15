@@ -1,19 +1,23 @@
+import re
+from pathlib import Path
+
+import pdfkit
+
 from setup.config import Config
 from setup.kb_urls import CsvItem
 from setup.logger import log
-from .edit_html.read_html import read_html
-from .edit_html.contents import TocItem
 
-from pathlib import Path
-import pdfkit
-import re
+from .edit_html.contents import TocItem
+from .edit_html.read_html import read_html
+
 
 def generate_full_pdf(kburls: list[CsvItem], dir_path: Path, config: Config):
     dir_path.mkdir(exist_ok=True)
     outline = default_outline(kburls)
     if config.pdf:
-        assert "dump-outline" in config.wkhtml_settings,\
-            "the setting 'dump-outline' must be inside the 'wkhtmltopdf' config table'"
+        assert (
+            "dump-outline" in config.wkhtml_settings
+        ), "the setting 'dump-outline' must be inside the 'wkhtmltopdf' config table'"
         generate_sub_pdf(kburls, dir_path, config, outline)
         if config.repeat_outline:
             outline = read_outline(kburls, Path(config.wkhtml_settings["dump-outline"]))
@@ -22,10 +26,9 @@ def generate_full_pdf(kburls: list[CsvItem], dir_path: Path, config: Config):
         html = read_html(kburls, outline, config)
         (dir_path / config.html_path).write_text(html, encoding="utf-8")
 
+
 def generate_sub_pdf(
-    kburls: list[CsvItem],
-    dir_path: Path, config: Config,
-    outline: list[TocItem]
+    kburls: list[CsvItem], dir_path: Path, config: Config, outline: list[TocItem]
 ):
     html = read_html(kburls, outline, config)
     (dir_path / config.html_path).write_text(html, encoding="utf-8")
@@ -36,7 +39,8 @@ def generate_sub_pdf(
 
 
 def default_outline(kburls: list[CsvItem]) -> list[TocItem]:
-    return [TocItem(header = row.header, page_num=0, link_id=row.id) for row in kburls]
+    return [TocItem(header=row.header, page_num=0, link_id=row.id) for row in kburls]
+
 
 def read_outline(kburls: list[CsvItem], outline_path: Path) -> list[TocItem]:
     outline = outline_path.read_text(encoding="utf-8")

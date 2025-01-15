@@ -1,10 +1,11 @@
+from pathlib import Path
+
+from pdf.generate_pdf import generate_full_pdf
 from setup.config import read_config
 from setup.kb_urls import read_csv
 from setup.languages import read_languages
 from setup.logger import log
 
-from pdf.generate_pdf import generate_full_pdf
-from pathlib import Path
 
 def main():
     config = read_config()
@@ -23,3 +24,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
