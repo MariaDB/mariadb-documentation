@@ -1,18 +1,22 @@
-from setup.kb_urls import CsvItem
-from setup.config import Config
-from setup.logger import log
-from pathlib import Path
-from datetime import datetime
-
-from .contents import create_contents, TocItem
 import re
+from datetime import datetime
+from pathlib import Path
+
+from setup.config import Config
+from setup.kb_urls import CsvItem
+from setup.logger import log
+
+from .contents import TocItem, create_contents
 
 BASE_KB = "https://mariadb.com/kb/"
 PREFACE_PATH = "preface.html"
 PAGE_BREAK = '<div style = "page-break-after:always;"></div>\n'
 
-def merge_html(pages: list[str], kburls: list[CsvItem], outline: list[TocItem], config: Config) -> str:
-    log.info("Merging HTML")
+
+def merge_html(
+    pages: list[str], kburls: list[CsvItem], outline: list[TocItem], config: Config
+) -> str:
+    logger.info("Merging HTML")
     html = "\n".join(pages)
     html = create_contents(outline, config.toc_config) + html
     html = absolute_links(html)
@@ -25,6 +29,7 @@ def merge_html(pages: list[str], kburls: list[CsvItem], outline: list[TocItem], 
 def absolute_links(html: str) -> str:
     return html.replace('="/kb/', f'="{BASE_KB}')
 
+
 def internalise_links(html: str, kburls: list[CsvItem]) -> str:
     urls_completed = set()
 
@@ -35,20 +40,25 @@ def internalise_links(html: str, kburls: list[CsvItem]) -> str:
                 html = html.replace(f'href="{url}#', f'href="#{row.id}')
                 html = html.replace(f'href="{url}"', f'href="#{row.id}"')
 
-    #remove duplicates hashes for previously external links carrying internal links
+    # remove duplicates hashes for previously external links carrying internal links
     pattern = r'(href ?= ?")(#[\w-]+)#([\w-]+)'
     html = re.sub(pattern, r"\1\2\3", html)
 
     return html
 
+
 def read_preface() -> str:
     formatted_date = datetime.today().date()
-    return Path(PREFACE_PATH).read_text(encoding="utf-8").replace("[generated_time]", str(formatted_date))
+    return (
+        Path(PREFACE_PATH)
+        .read_text(encoding="utf-8")
+        .replace("[generated_time]", str(formatted_date))
+    )
+
 
 # region: -- Boilerplate
 END_BOILERPLATE = "\n\n</body>\n</html>"
-START_BOILERPLATE = (
-"""
+START_BOILERPLATE = """
 <!DOCTYPE html>
 <html>
     <head>
@@ -92,6 +102,7 @@ START_BOILERPLATE = (
         </style>
     </head>
 <body class = "mpkb nodes products nodes_view jqui">\n\n
-""")
+"""
 
-#endregion: -- Boilerplate
+# endregion: -- Boilerplate
+
