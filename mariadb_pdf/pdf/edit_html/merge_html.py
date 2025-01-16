@@ -1,11 +1,12 @@
-from setup.kb_urls import CsvItem
-from setup.config import Config
-from setup.logger import log
-from pathlib import Path
-from datetime import datetime
-
-from .contents import create_contents, TocItem
 import re
+from datetime import datetime
+from pathlib import Path
+
+from setup.config import Config
+from setup.kb_urls import CsvItem
+from setup.logger import log
+
+from .contents import TocItem, create_contents
 
 BASE_KB = "https://mariadb.com/kb/"
 PREFACE_PATH = "preface.html"
@@ -29,6 +30,7 @@ def merge_html(
 def absolute_links(html: str) -> str:
     return html.replace('="/kb/', f'="{BASE_KB}')
 
+
 def internalise_links(html: str, kburls: list[CsvItem]) -> str:
     urls_completed = set()
 
@@ -39,20 +41,25 @@ def internalise_links(html: str, kburls: list[CsvItem]) -> str:
                 html = html.replace(f'href="{url}#', f'href="#{row.id}')
                 html = html.replace(f'href="{url}"', f'href="#{row.id}"')
 
-    #remove duplicates hashes for previously external links carrying internal links
+    # remove duplicates hashes for previously external links carrying internal links
     pattern = r'(href ?= ?")(#[\w-]+)#([\w-]+)'
     html = re.sub(pattern, r"\1\2\3", html)
 
     return html
 
+
 def read_preface() -> str:
     formatted_date = datetime.today().date()
-    return Path(PREFACE_PATH).read_text(encoding="utf-8").replace("[generated_time]", str(formatted_date))
+    return (
+        Path(PREFACE_PATH)
+        .read_text(encoding="utf-8")
+        .replace("[generated_time]", str(formatted_date))
+    )
+
 
 # region: -- Boilerplate
 END_BOILERPLATE = "\n\n</body>\n</html>"
-START_BOILERPLATE = (
-"""
+START_BOILERPLATE = """
 <!DOCTYPE html>
 <html>
     <head>
@@ -69,7 +76,7 @@ START_BOILERPLATE = (
             }
             .pdfhorizontal_dotted_line {
                 position: relative;
-         
+
             }
             .pdfhorizontal_dotted_line span {
                 display: inline-block;
@@ -88,14 +95,15 @@ START_BOILERPLATE = (
                 border-top: 1px dashed black;
             }
             a[href ^= "http"]:after {
-                content: " " url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVklEQVR4Xn3PgQkAMQhDUXfqTu7kTtkpd5RA8AInfArtQ2iRXFWT2QedAfttj2FsPIOE1eCOlEuoWWjgzYaB/IkeGOrxXhqB+uA9Bfcm0lAZuh+YIeAD+cAqSz4kCMUAAAAASUVORK5CYII=);    
+                content: " " url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVklEQVR4Xn3PgQkAMQhDUXfqTu7kTtkpd5RA8AInfArtQ2iRXFWT2QedAfttj2FsPIOE1eCOlEuoWWjgzYaB/IkeGOrxXhqB+uA9Bfcm0lAZuh+YIeAD+cAqSz4kCMUAAAAASUVORK5CYII=);
             }
             a[class=""]:after {
                 content: ""
-            }       
+            }
         </style>
     </head>
 <body class = "mpkb nodes products nodes_view jqui">\n\n
-""")
+"""
 
-#endregion: -- Boilerplate
+# endregion: -- Boilerplate
+
