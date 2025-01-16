@@ -11,8 +11,12 @@ BASE_KB = "https://mariadb.com/kb/"
 PREFACE_PATH = "preface.html"
 PAGE_BREAK = '<div style = "page-break-after:always;"></div>\n'
 
-def merge_html(pages: list[str], kburls: list[CsvItem], outline: list[TocItem], config: Config) -> str:
-    log.info("Merging HTML")
+
+def merge_html(
+    pages: list[str], kburls: list[CsvItem], outline: list[TocItem], config: Config
+) -> str:
+    if config.verbose:
+        log.info("Merging HTML")
     html = "\n".join(pages)
     html = create_contents(outline, config.toc_config) + html
     html = absolute_links(html)
