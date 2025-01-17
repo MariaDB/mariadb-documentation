@@ -270,12 +270,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2025-01-13 21:34">2 days, 3 hours ago</span></dd>
+<span class="datetime" title="2025-01-13 21:34">3 days, 3 hours ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-01-14 08:39">1 day, 16 hours ago</span></dd>
+<span class="datetime" title="2025-01-16 10:37">14 hours, 24 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -449,18 +449,25 @@
 <h3 class="anchored_heading" id="mysql-57-to-mariadb">MySQL 5.7 to MariaDB</h3>
 <p><a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> and later can replicate from a MySQL 5.7 primary server.</p>
 <p>MariaDB does not support the MySQL implementation of Global Transaction IDs (GTIDs), so the MariaDB replica server must use the binary log file and position for replication. If GTID mode is enabled on the MySQL primary server, the MariaDB replica server will remove the MySQL GTID events and replace them with MariaDB GTID events.</p>
-<p>Although MariaDB and MySQL 5.7 are compatible at the replication level, they may have some incompatibilities at the SQL level. Those differences can cause replication failures in some cases. To decrease the risk of compatibility issues, it is recommended to set <a href="/kb/en/replication-and-binary-log-system-variables/#binlog_format">binlog_format</a> to <code>ROW</code>. When you want to replicate from MySQL 5.7 to MariaDB, it is recommended to test your application, so that any compatibility issues can be found and fixed. See <a href="/kb/en/compatibility-differences/">Incompatibilities and Feature Differences</a> between the specific versions.</p>
+<p>You can disable <code>GTID</code> and use logfile name and position in MariaDB by excuting on the slave:</p>
+<pre class="fixed"><span class="n">CHANGE</span> <span class="n">MASTER</span> <span class="p">...</span> <span class="n">MASTER_LOG_FILE</span><span class="o">=</span><span class="n">file_name</span> <span class="n">MASTER_LOG_POS</span><span class="o">=#</span> <span class="n">MASTER_USE_GTID</span><span class="o">=</span><span class="k">no</span>
+</pre><p>Although MariaDB and MySQL 5.7 are compatible at the replication level, they may have some incompatibilities at the SQL level. Those differences can cause replication failures in some cases. To decrease the risk of compatibility issues, it is recommended to set <a href="/kb/en/replication-and-binary-log-system-variables/#binlog_format">binlog_format</a> to <code>ROW</code> in MySQL. When you want to replicate from MySQL 5.7 to MariaDB, it is recommended to test your application, so that any compatibility issues can be found and fixed. See <a href="/kb/en/compatibility-differences/">Incompatibilities and Feature Differences</a> between the specific versions.</p>
 <h3 class="anchored_heading" id="mysql-80-to-mariadb">MySQL 8.0 to MariaDB</h3>
-<p>Prior to <a href="/kb/en/mariadb-10621-release-notes/">MariaDB 10.6.21</a>, <a href="/kb/en/mariadb-10-11-11-release-notes/">MariaDB 10.11.11</a>, <a href="/kb/en/mariadb-11-4-5-release-notes/">MariaDB 11.4.5</a> and <a href="/kb/en/mariadb-11-7-2-release-notes/">MariaDB 11.7.2</a>, MariaDB Server could not replicate from a MySQL 8.0 primary server, because MySQL 8.0 has a binary log format that is incompatible.</p>
+<p>Prior to <a href="/kb/en/mariadb-10621-release-notes/">MariaDB 10.6.21</a>, <a href="/kb/en/mariadb-10-11-11-release-notes/">MariaDB 10.11.11</a>, <a href="/kb/en/mariadb-11-4-5-release-notes/">MariaDB 11.4.5</a> and <a href="/kb/en/mariadb-11-7-2-release-notes/">MariaDB 11.7.2</a>, MariaDB Server could not replicate from a MySQL 8.0 primary server, because MySQL 8.0 has a binary log format that includes new events which makes it incompatible.</p>
 <p><a href="/kb/en/mariadb-10621-release-notes/">MariaDB 10.6.21</a>, <a href="/kb/en/mariadb-10-11-11-release-notes/">MariaDB 10.11.11</a>, <a href="/kb/en/mariadb-11-4-5-release-notes/">MariaDB 11.4.5</a>, <a href="/kb/en/mariadb-11-7-2-release-notes/">MariaDB 11.7.2</a>  and newer can replicate from a MySQL 8.0 server with the following conditions:</p>
-<ul start="1"><li>MariaDB does not support the MySQL default authentication caching_sha2_password, so one has to add another replication user using the mysql_native_password protocol.
-</li><li>Columns of type JSON are not supported. One should change these to TEXT.
+<ul start="1"><li>MariaDB does not support the MySQL default authentication caching_sha2_password, so one has to add another replication user using the mysql_native_password protocol and use this with <a href="/kb/en/change-master-to/">CHANGE MASTER</a> in MariaDB.
+</li><li>Columns of type JSON are not supported. One should change these to <code>TEXT</code> in MySQL. MySQL will work fine with JSON as TEXT, except for a minor performance degradation when using JSON expressions.
 </li><li><code>binlog-row-value-options</code> should be set to <code>""</code> should be set. This disables the incompatible <code>PARTIAL_UPDATE_ROWS_EVENT</code> event.
 </li><li><code>binlog_transaction_compression</code> should be set to <code>0</code>. This disables binlog compression and the incompatible <code>TRANSACTION_PAYLOAD_EVENT</code> event.
-</li><li>MySQL 8.0 utf8mb4_ja_0900_ collations can not be used when replicating to <a href="/kb/en/what-is-mariadb-106/">MariaDB 10.6</a> - <a href="/kb/en/mariadb-11-4-4-release-notes/">MariaDB 11.4.4</a>.  <a href="/kb/en/mariadb-11-4-5-release-notes/">MariaDB 11.4.5</a> and above will support most of the MySQL 8.0 utf8mb4_ja_0900_... collations.
-</li><li>For differences at the SQL level that may cause replication failures, see <a href="/kb/en/compatibility-differences/">Incompatibilities and Feature Differences</a> between the specific versions.
+</li><li>MySQL 8.0 utf8mb4_ja_0900_ collations can <strong>not</strong> be used when replicating to <a href="/kb/en/what-is-mariadb-106/">MariaDB 10.6</a> - <a href="/kb/en/mariadb-11-4-4-release-notes/">MariaDB 11.4.4</a>.  <a href="/kb/en/mariadb-11-4-5-release-notes/">MariaDB 11.4.5</a> and above will support <a href="/kb/en/supported-character-sets-and-collations/#collations">most of the MySQL 8.0 utf8mb4_ja_0900_... collations</a>.
+</li><li>For differences at the SQL level that may cause replication failures, see <a href="/kb/en/compatibility-differences/">Incompatibilities and Feature Differences</a> between the specific versions. When using <a href="/kb/en/replication-and-binary-log-system-variables/#binlog_format">binlog_format</a>  this almost exclusively affects DDL'sm, where MariaDB is very compatible with MySQL.
 </li></ul>
-<h2 class="anchored_heading" id="replicating-from-mariadb-to-mysql">Replicating from MariaDB to MySQL</h2>
+<p>Here are the changes one should do in the config files for MySQL 8.0:</p>
+<pre class="fixed">binlog-row-value-options=&#34;&#34;
+binlog_transaction_compression=0
+# Not required, but recommended for cross-replication
+binlog_format=row
+</pre><h2 class="anchored_heading" id="replicating-from-mariadb-to-mysql">Replicating from MariaDB to MySQL</h2>
 <p>Here are some issues to be aware of when replicating from MariaDB to MySQL.</p>
 <p>On the MySQL side, one should:</p>
 <ul start="1"><li>Not use binlog with <a href="/kb/en/gtid/">global transaction ids</a> (CHANGE SOURCE_AUTO_POSITION=no)
@@ -468,9 +475,17 @@
 <p>On the MariaDB side, one should:</p>
 <ul start="1"><li>Not use <a href="/kb/en/encrypting-binary-logs/">binlog encryption</a> (<a href="/kb/en/replication-and-binary-log-system-variables/#encrypt_binlog">--encrypt-binlog</a> should be 0)
 </li><li>Not use <a href="/kb/en/compressing-events-to-reduce-size-of-the-binary-log/">binary log compression</a> (<a href="/kb/en/replication-and-binary-log-system-variables/#log_bin_compress">--log-bin-compress</a> should be 0)
-</li><li>Ensure that one uses a <a href="/kb/en/character-sets/">character set</a> that MySQL supports. The MariaDB default character set utf8mb4 is not supported by MySQL.
+</li><li>Ensure that one uses a <a href="/kb/en/character-sets/">character set</a> and  <a href="/kb/en/supported-character-sets-and-collations/#collations">collations</a> that MySQL supports. The MariaDB default collations for utf8mb4 is not supported by MySQL.  Note that if you just have upgraded from MySQL to MariaDB then you are probably already using the MySQL character sets and collations for your old tables!  If you want replication to also work for new tables, the best option is to set the character set and collation in the MariaDB config file.
 </li></ul>
-<p>For differences at the SQL level that may cause replication failures, see <a href="/kb/en/compatibility-differences/">Incompatibilities and Feature Differences</a> between the specific versions.</p>
+<p>Example of changes to add to the MariaDB config file:</p>
+<pre class="fixed">encrypt-binlog=0
+log-bin-compress=0
+# Not required, but recommended for cross-replication
+binlog_format=row
+# Character set to be able to replicate new tables to  MySQL 8.0
+character-set-server=utf8mb4
+collation-server=utf8mb4_0900_ai_ci
+</pre><p>For differences at the SQL level that may cause replication failures, see <a href="/kb/en/compatibility-differences/">Incompatibilities and Feature Differences</a> between the specific versions.</p>
 
     </div>
 
