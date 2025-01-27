@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Virtual Column Support in the Optimizer - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
+
+    
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Virtual Column Support in the Optimizer" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/virtual-column-support-in-the-optimizer/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="Restore overwritten changes" />
+
+    <meta name="description" content="Restore overwritten changes" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/virtual-column-support-in-the-optimizer/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/virtual-column-support-in-the-optimizer/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/services" title="Services">Services</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="About Us">About Us</a>
+    </li>
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/replication-cluster-multi-master/">High Availability &amp; Performance Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/optimization-and-tuning/">Optimization and Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/query-optimizations/">Query Optimizations</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/virtual-column-support-in-the-optimizer/">Virtual Column Support in the Optimizer</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/virtual-column-support-in-the-optimizer/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/virtual-column-support-in-the-optimizer/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/virtual-column-support-in-the-optimizer/+flag"
+                data-flag-url="/kb/en/virtual-column-support-in-the-optimizer/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/virtual-column-support-in-the-optimizer/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2025-01-27 09:02">3 hours, 39 minutes ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2025-01-27 11:49">51 minutes ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/virtual-column-support-in-the-optimizer/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/virtual-column-support-in-the-optimizer/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/virtual-column-support-in-the-optimizer/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/virtual-column-support-in-the-optimizer/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+    
+    
+
+<div class="well well-small box"><div><h5>Product Versions</h5></div><div>
+
+        <ul id="product_chooser">
+            
+                <li class="mariadb_from_11_8">
+                    <label><input type="checkbox" data-product-class="mariadb_from_11_8"
+                            >MariaDB starting with 11.8</label>
+                </li>
+            
+                <li class="mariadb_from_11_8">
+                    <label><input type="checkbox" data-product-class="mariadb_from_11_8"
+                            >MariaDB starting with 11.8</label>
+                </li>
+            
+        </ul>
+    
+</div>
+</div>
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Virtual Column Support in the Optimizer</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="mariadb_from_11_8 mariadb from_11_8 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-118/">11.8</a></h5><p>Starting from <a href="/kb/en/what-is-mariadb-118/">MariaDB 11.8</a>, the optimizer can recognize use of indexed virtual column expressions in the WHERE clause and use them to construct range and ref(const) accesses.</p>
+</div><div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class="mariadb_from_11_8"><a href="#motivating-example" title="Motivating Example">Motivating Example</a></li>
+
+    <li class="mariadb_from_11_8"><a href="#general-considerations" title="General Considerations">General Considerations</a></li>
+
+    <li class="mariadb_from_11_8"><a href="#considerations-for-accessing-json-fields" title="Considerations for Accessing JSON fields">Considerations for Accessing JSON fields</a></li>
+
+    <li class="mariadb_from_11_8"><a href="#references" title="References">References</a> </ol>
+</li>
+</div>
+<h2 class="anchored_heading" id="motivating-example">Motivating Example</h2>
+<p>Suppose one has a table with data in JSON:</p>
+<pre class="fixed"><span class="k">create</span> <span class="k">table</span> <span class="n">t1</span> <span class="p">(</span><span class="n">json_data</span> <span class="n">JSON</span><span class="p">);</span>
+<span class="k">insert</span> <span class="k">into</span> <span class="n">t1</span> <span class="k">values</span><span class="p">(</span><span class="s1">&#39;{&quot;column1&quot;: 1234}&#39;</span><span class="p">);</span> 
+<span class="k">insert</span> <span class="k">into</span> <span class="n">t1</span> <span class="p">...</span>
+</pre><p>In order to do efficient queries over data in JSON, one can add a virtual column and an index:</p>
+<pre class="fixed"><span class="k">alter</span> <span class="k">table</span> <span class="n">t1</span>
+  <span class="k">add</span> <span class="k">column</span> <span class="n">vcol1</span> <span class="nb">int</span> <span class="k">as</span> <span class="p">(</span><span class="k">cast</span><span class="p">(</span><span class="n">json_value</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="s1">&#39;$.column1&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="nb">integer</span><span class="p">)),</span>
+  <span class="k">add</span> <span class="k">index</span><span class="p">(</span><span class="n">vcol1</span><span class="p">);</span>
+</pre><p>Before <a href="/kb/en/what-is-mariadb-118/">MariaDB 11.8</a>, one had to use <code>vcol1</code> in the WHERE clause.  Now, one can use the 
+virtual column expression, too. A query like this:</p>
+<pre class="fixed"><span class="k">explain</span> <span class="k">select</span> <span class="o">*</span> 
+<span class="k">from</span> <span class="n">t1</span> 
+<span class="k">where</span> 
+  <span class="k">cast</span><span class="p">(</span><span class="n">json_value</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="s1">&#39;$.column1&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="nb">integer</span><span class="p">)</span><span class="o">=</span><span class="mi">100</span><span class="p">;</span>
+</pre><p>will be resolved through the index on <code>vcol1</code>:</p>
+<pre class="fixed">+------+-------------+-------+------+---------------+-------+---------+-------+------+-------+
+| id   | select_type | table | type | possible_keys | key   | key_len | ref   | rows | Extra |
++------+-------------+-------+------+---------------+-------+---------+-------+------+-------+
+|    1 | SIMPLE      | t1    | ref  | vcol1         | vcol1 | 5       | const | 1    |       |
++------+-------------+-------+------+---------------+-------+---------+-------+------+-------+
+</pre><h2 class="anchored_heading" id="general-considerations">General Considerations</h2>
+<ul start="1"><li>In MariaDB, one has to create a virtual column and then create an index over it.  Other databases allow to create an index directly over expression: <code>create index on t1((col1+col2))</code>.  This is not yet supported.
+</li></ul>
+<ul start="1"><li>The WHERE clause must use the exact same expression as in the virtual column definition.
+</li></ul>
+<ul start="1"><li>In the optimizer trace, the rewrites are shown like so:
+</li></ul>
+<pre class="fixed">            &#34;virtual_column_substitution&#34;: {
+              &#34;condition&#34;: &#34;WHERE&#34;,
+              &#34;resulting_condition&#34;: &#34;t1.vcol1 = 100&#34;
+            }
+</pre><h2 class="anchored_heading" id="considerations-for-accessing-json-fields">Considerations for Accessing JSON fields</h2>
+<p>SQL is strongly-typed language while JSON is weakly-typed. This means one must specify the desired datatypes when accessing JSON data from SQL. In the above example, we declared <code>vcol1</code> as <code>INT</code> and then used  <code>(CAST ... AS INTEGER)</code> (both in the ALTER TABLE and in the query):</p>
+<pre class="fixed"><span class="k">alter</span> <span class="k">table</span> <span class="n">t1</span>
+  <span class="k">add</span> <span class="k">column</span> <span class="n">vcol1</span> <span class="nb">int</span> <span class="k">as</span> <span class="p">(</span><span class="k">cast</span><span class="p">(</span><span class="n">json_value</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="s1">&#39;$.column1&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="nb">integer</span><span class="p">))</span> <span class="p">...</span>
+</pre><p>When handling string values, <code>CAST</code> is not necessary, as JSON_VALUE returns strings. 
+However, one must take into account collations. If you declare a column as <code>json_data JSON</code>, its collation will be <code>utf8mb4_bin</code>, and the collation of <code>JSON_VALUE(json_data, ...)</code> will also be <code>utf8mb4_bin</code>.
+Most use cases require a more commonly-used collation. It is possible to achieve that using the <code>COLLATE</code> clause:</p>
+<pre class="fixed"><span class="k">alter</span> <span class="k">table</span> <span class="n">t1</span>
+  <span class="k">add</span> <span class="n">col1</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span> <span class="k">collate</span> <span class="n">utf8mb4_uca1400_ai_ci</span> <span class="k">as</span>
+  <span class="p">(</span><span class="n">json_value</span><span class="p">(</span><span class="n">js1</span><span class="p">,</span> <span class="s1">&#39;$.string_column&#39;</span><span class="p">)</span> <span class="k">collate</span> <span class="n">utf8mb4_uca1400_ai_ci</span><span class="p">),</span>
+  <span class="k">add</span> <span class="k">index</span><span class="p">(</span><span class="n">col1</span><span class="p">);</span>
+<span class="p">...</span>
+<span class="k">select</span>  <span class="p">...</span> 
+<span class="k">where</span>
+  <span class="n">json_value</span><span class="p">(</span><span class="n">js1</span><span class="p">,</span> <span class="s1">&#39;$.string_column&#39;</span><span class="p">)</span> <span class="k">collate</span> <span class="n">utf8mb4_uca1400_ai_ci</span><span class="o">=</span><span class="s1">&#39;string-value&#39;</span><span class="p">;</span>
+</pre><h2 class="anchored_heading" id="references">References</h2>
+<ul start="1"><li><a href="https://jira.mariadb.org/browse/MDEV-35616">MDEV-35616</a>: Add basic optimizer support for virtual columns</li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/virtual-column-support-in-the-optimizer/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/virtual-column-support-in-the-optimizer/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/use-index/">
+                        ← USE INDEX
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/query-optimizations/">
+                        ↑ Query Optimizations ↑
+                    </a>
+                    </li>
+                
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="15411" data-comments-url="/kb/en/virtual-column-support-in-the-optimizer/+comments"
+         data-reply-url="/kb/en/virtual-column-support-in-the-optimizer/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/query-optimizations/">
+                    ↑ Query Optimizations ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/index-hints-how-to-force-query-plans/">
+                            
+                            Index Hints: How to Force Query Plans
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/subquery-optimizations/">
+                            
+                            Subquery Optimizations
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/optimization-strategies/">
+                            
+                            Optimization Strategies
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/optimizations-for-derived-tables/">
+                            
+                            Optimizations for Derived Tables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/table-elimination/">
+                            
+                            Table Elimination
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/statistics-for-optimizing-queries/">
+                            
+                            Statistics for Optimizing Queries
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/filesort-with-small-limit-optimization/">
+                            
+                            Filesort with Small LIMIT Optimization
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/limit-rows-examined/">
+                            
+                            LIMIT ROWS EXAMINED
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/index_merge-sort_intersection/">
+                            
+                            index_merge sort_intersection
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-53-optimizer-debugging/">
+                            
+                            MariaDB 5.3 Optimizer Debugging
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/optimizer-switch/">
+                            
+                            optimizer_switch
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/how-to-quickly-insert-data-into-mariadb/">
+                            
+                            How to Quickly Insert Data Into MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/index-condition-pushdown/">
+                            
+                            Index Condition Pushdown
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/query-limits-and-timeouts/">
+                            
+                            Query Limits and Timeouts
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/aborting-statements/">
+                            
+                            Aborting Statements that Exceed a Certain Time to Execute
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/partition-pruning-and-selection/">
+                            <span class="pull-right not_primary"></span>
+                            Partition Pruning and Selection
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/big-deletes/">
+                            
+                            Big DELETEs 
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/charset-narrowing-optimization/">
+                            
+                            Charset Narrowing Optimization
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/data-sampling-techniques-for-efficiently-finding-a-random-row/">
+                            
+                            Data Sampling: Techniques for Efficiently Finding a Random Row
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/data-warehousing-high-speed-ingestion/">
+                            
+                            Data Warehousing High Speed Ingestion
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/data-warehousing-summary-tables/">
+                            
+                            Data Warehousing Summary Tables
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/data-warehousing-techniques/">
+                            
+                            Data Warehousing Techniques
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/query-optimizations-distinct-removal-in-aggregate-functions/">
+                            
+                            DISTINCT removal in aggregate functions
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/equality-propagation-optimization/">
+                            
+                            Equality propagation optimization
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/force-index/">
+                            
+                            FORCE INDEX
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/groupwise-max-in-mariadb/">
+                            
+                            Groupwise Max in MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/guiduuid-performance/">
+                            
+                            GUID/UUID Performance
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/hash_join_cardinality-optimizer_switch-flag/">
+                            
+                            hash_join_cardinality optimizer_switch Flag
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/ignore-index/">
+                            
+                            IGNORE INDEX
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/not_null_range_scan-optimization/">
+                            
+                            not_null_range_scan Optimization
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/optimizer_adjust_secondary_key_costs/">
+                            
+                            optimizer_adjust_secondary_key_costs
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/optimizer_join_limit_pref_ratio-optimization/">
+                            
+                            optimizer_join_limit_pref_ratio optimization
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/optimizing-for-latest-news-style-queries/">
+                            
+                            Optimizing for &#34;Latest News&#34;-style Queries
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/pagination-optimization/">
+                            
+                            Pagination Optimization
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/pivoting-in-mariadb/">
+                            
+                            Pivoting in MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/rollup-unique-user-counts/">
+                            
+                            Rollup Unique User Counts
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/rowid-filtering-optimization/">
+                            
+                            Rowid Filtering Optimization
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/sargable-date-and-year/">
+                            
+                            Sargable DATE and YEAR
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/sargable-upper/">
+                            
+                            Sargable UPPER
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/use-index/">
+                            
+                            USE INDEX
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Virtual Column Support in the Optimizer</span>
+                        
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    <ul class="list-inline text-center footer-nav">
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/products" title="Products">Products</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/services" title="Services">Services</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/pricing" title="Pricing">Pricing</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/resources" title="Resources">Resources</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/about-us" title="About MariaDB">About Us</a></h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/download" title="Download">Download MariaDB</a></h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row row-10">
+                
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div class="footer-copyright">
+                        <div class="text-center">
+                            <ul class="list-inline no-margin">
+                                <li>
+                                    <a href="/legal" title="Legal">Legal</a>
+                                </li>
+                                <li>
+                                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                            <p>Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
+
+</html>
