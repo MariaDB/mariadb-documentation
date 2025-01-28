@@ -287,7 +287,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-09-23 09:47">1 year, 4 months ago</span></dd>
+<span class="datetime" title="2025-01-27 11:40">13 hours, 22 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -421,39 +421,67 @@
     <div class="answer formatted">
         <p>MariaDB databases in containers need backup and restore like their non-container equivalents.</p>
 <h2 class="anchored_heading" id="logicial-backups">Logicial Backups</h2>
-<h3 class="anchored_heading" id="backup">Backup</h3>
+<p>In this section, we will assume that the MariaDB container has been created as follows:</p>
+<pre class="fixed">$ docker volume create mariadb_data
+$ docker volume create mariadb_backup
+$ docker run --rm \
+  -v mariadb_data:/var/lib/mysql \
+  -v mariadb_backup:/backup \
+  mariadb \
+  sh -c &#34;chown -R mysql:mysql /var/lib/mysql /backup&#34;
+$ docker run -d --name mariadb \
+  -v mariadb_data:/var/lib/mysql \
+  -v mariadb_backup:/backup \
+  -e MARIADB_ROOT_PASSWORD='MariaDB11!' \
+  &lt;mariadb-image&gt;
+</pre><h3 class="anchored_heading" id="backup">Backup</h3>
 <p><a href="/kb/en/mariadb-dump/">mariadb-dump</a> is in the Docker Official Image and can be used as follows:</p>
-<pre class="fixed">$ docker exec some-%%REPO%% mariadb-dump --all-databases -uroot -p&#34;$MARIADB_ROOT_PASSWORD&#34;' 
-&gt; /some/path/on/your/host/all-databases.sql
+<pre class="fixed">$ docker exec mariadb sh -c 'mariadb-dump --all-databases -u root -p&#34;$MARIADB_ROOT_PASSWORD&#34; &gt; backup/db.sql'
 </pre><h3 class="anchored_heading" id="restoring-data-from-dump-files">Restoring Data from Dump Files</h3>
-<p>For restoring data, you can use the `docker exec` command with the `-i` flag, similar to the following:</p>
-<pre class="fixed">$ docker exec -i some-%%REPO%% sh -c 'exec mariadb -uroot -p&#34;$MARIADB_ROOT_PASSWORD&#34;' 
-&lt; /some/path/on/your/host/all-databases.sql
+<p>For restoring data, you can use the following `docker exec` command:</p>
+<pre class="fixed">$ docker exec mariadb sh -c 'mariadb -u root -p&#34;$MARIADB_ROOT_PASSWORD&#34; &lt; backup/db.sql'
 </pre><h2 class="anchored_heading" id="physical-backups">Physical Backups</h2>
 <p><a href="/kb/en/mariadb-backup/">mariadb-backup</a> is in the Docker Official Image.</p>
 <h3 class="anchored_heading" id="backup">Backup</h3>
 <p>MariaDB Backup can create a backup as follows:</p>
 <p>To perform a backup using <a href="/kb/en/mariabackup/">Mariabackup</a>, a second container is started that shares the original container's data directory. An additional volume for the backup needs to be included in the second backup instance. Authentication against the MariaDB database instance is required to successfully complete the backup. In the example below, a `mysql@localhost` user is used with the MariaDB server's Unix socket shared with the backup container.</p>
-<pre class="fixed">$ docker volume create some-%%REPO%%-socket
-$ docker run --name some-%%REPO%% -v /my/own/datadir:/var/lib/mysql 
--v some-%%REPO%%-socket:/var/run/mysqld -e MARIADB_MYSQL_LOCALHOST_USER=1 
--e MARIADB_MYSQL_LOCALHOST_GRANTS=&#34;RELOAD, PROCESS, LOCK TABLES, BINLOG MONITOR&#34; 
--e MARIADB_ROOT_PASSWORD=my-secret-pw -d %%IMAGE%%:latest
-</pre><p>Note: Privileges listed here are for 10.5+. For an exact list, see <a href="/kb/en/mariabackup-overview/#authentication-and-privileges">Mariabackup: Authentication and Privileges</a>.</p>
-<p>Mariabackup will run as the `mysql` user in the container, so the permissions on `/backup` will need to ensure that it can be written to by this user:</p>
-<pre class="fixed">$ docker volume create some-%%REPO%%-backup
-$ docker run --rm some-%%REPO%%-backup 
--v some-%%REPO%%-backup:/backup %%IMAGE%%:latest chown mysql: /backup
+<p>Note: Privileges listed here are for 10.5+. For an exact list, see <a href="/kb/en/mariabackup-overview/#authentication-and-privileges">Mariabackup: Authentication and Privileges</a>.</p>
+<pre class="fixed">$ docker volume create mariadb_data
+$ docker volume create mariadb_backup
+$ docker run --rm \
+  -v mariadb_data:/var/lib/mysql \
+  -v mariadb_backup:/backup \
+  mariadb \
+  sh -c &#34;chown -R mysql:mysql /var/lib/mysql /backup&#34;
+$ docker run -d --name mariadb \
+  -v mariadb_data:/var/lib/mysql \
+  -v mariadb_backup:/backup \
+  -e MARIADB_ROOT_PASSWORD='MariaDB11!' \
+  -e MARIADB_MYSQL_LOCALHOST_USER=1 \
+  -e MARIADB_MYSQL_LOCALHOST_GRANTS='RELOAD, PROCESS, LOCK TABLES, BINLOG MONITOR' \
+  &lt;mariadb-image&gt;
+</pre><p>Mariabackup will run as the `mysql` user in the container, so the permissions on `/backup` will need to ensure that it can be written to by this user:</p>
+<pre class="fixed">$ docker exec mariadb sh -c 'mariadb-backup --backup --target-dir=backup --user=mysql'
 </pre><h3 class="anchored_heading" id="restore">Restore</h3>
 <p>These steps restore the backup made with Mariabackup.</p>
 <p>At some point before doing the restore, the backup needs to be prepared. Perform the prepare like this:</p>
-<pre class="fixed">$ docker run --user mysql --rm -v some-%%REPO%%-backup:/backup 
-%%IMAGE%%:latest mariabackup --prepare --target-dir=/backup
-</pre><p>Now that the image is prepared, start the container with both the data and the backup volumes and restore the backup:</p>
-<pre class="fixed">$ docker run --user mysql --rm -v /my/new/datadir:/var/lib/mysql 
--v some-%%REPO%%-backup:/backup %%IMAGE%%:latest mariabackup --copy-back --target-dir=/backup
+<pre class="fixed">$ docker run --rm -it \
+  --name mariadb-restore \
+  -v mariadb_backup:/backup \
+  &lt;mariadb-image&gt; \
+  mariadb-backup --prepare --target-dir=backup
+</pre><p>Now that the image is prepared, start the container with both the data and the backup volumes and restore the backup. The data directory must be empty to perform this action:</p>
+<pre class="fixed">$ docker run --rm -it \
+  --name mariadb-restore \
+  -v /my/new/datadir:/var/lib/mysql \
+  -v mariadb_backup:/backup \
+  &lt;mariadb-image&gt; \
+  mariadb-backup --copy-back --target-dir=backup
 </pre><p>With `/my/new/datadir` containing the restored backup, start normally as this is an initialized data directory:</p>
-<pre class="fixed">$ docker run --name some-%%REPO%% -v /my/new/datadir:/var/lib/mysql -d %%IMAGE%%:latest
+<pre class="fixed">$ docker run -d --name mariadb \
+  -v /my/new/datadir:/var/lib/mysql \
+  -e MARIADB_ROOT_PASSWORD='MariaDB11!' \
+  &lt;mariadb-image&gt;
 </pre><p>For further information on Mariabackup, see <a href="/kb/en/mariabackup-overview/">Mariabackup Overview</a>.</p>
 
     </div>
