@@ -274,12 +274,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2025-01-27 09:02">1 day, 16 hours ago</span></dd>
+<span class="datetime" title="2025-01-27 09:02">4 days, 16 hours ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-01-27 11:49">1 day, 13 hours ago</span></dd>
+<span class="datetime" title="2025-01-31 18:53">6 hours, 10 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -444,7 +444,12 @@
 
     <li class="mariadb_from_11_8"><a href="#general-considerations" title="General Considerations">General Considerations</a></li>
 
-    <li class="mariadb_from_11_8"><a href="#considerations-for-accessing-json-fields" title="Considerations for Accessing JSON fields">Considerations for Accessing JSON fields</a></li>
+    <li class="mariadb_from_11_8"><a href="#accessing-json-fields" title="Accessing JSON fields">Accessing JSON fields</a>    <ol class="toc">
+
+        <li class="mariadb_from_11_8"><a href="#cast-the-value-to-the-desired-type" title="Cast the value to the desired type">Cast the value to the desired type</a></li>
+
+        <li class="mariadb_from_11_8"><a href="#specify-collation-for-strings" title="Specify collation for strings">Specify collation for strings</a>    </ol>
+</li>
 
     <li class="mariadb_from_11_8"><a href="#references" title="References">References</a> </ol>
 </li>
@@ -454,26 +459,28 @@
 <pre class="fixed"><span class="k">create</span> <span class="k">table</span> <span class="n">t1</span> <span class="p">(</span><span class="n">json_data</span> <span class="n">JSON</span><span class="p">);</span>
 <span class="k">insert</span> <span class="k">into</span> <span class="n">t1</span> <span class="k">values</span><span class="p">(</span><span class="s1">&#39;{&quot;column1&quot;: 1234}&#39;</span><span class="p">);</span> 
 <span class="k">insert</span> <span class="k">into</span> <span class="n">t1</span> <span class="p">...</span>
-</pre><p>In order to do efficient queries over data in JSON, one can add a virtual column and an index:</p>
+</pre><p>In order to do efficient queries over data in JSON, one can add a virtual column and an index on it:</p>
 <pre class="fixed"><span class="k">alter</span> <span class="k">table</span> <span class="n">t1</span>
   <span class="k">add</span> <span class="k">column</span> <span class="n">vcol1</span> <span class="nb">int</span> <span class="k">as</span> <span class="p">(</span><span class="k">cast</span><span class="p">(</span><span class="n">json_value</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="s1">&#39;$.column1&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="nb">integer</span><span class="p">)),</span>
   <span class="k">add</span> <span class="k">index</span><span class="p">(</span><span class="n">vcol1</span><span class="p">);</span>
 </pre><p>Before <a href="/kb/en/what-is-mariadb-118/">MariaDB 11.8</a>, one had to use <code>vcol1</code> in the WHERE clause.  Now, one can use the 
-virtual column expression, too. A query like this:</p>
-<pre class="fixed"><span class="k">explain</span> <span class="k">select</span> <span class="o">*</span> 
-<span class="k">from</span> <span class="n">t1</span> 
-<span class="k">where</span> 
-  <span class="k">cast</span><span class="p">(</span><span class="n">json_value</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="s1">&#39;$.column1&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="nb">integer</span><span class="p">)</span><span class="o">=</span><span class="mi">100</span><span class="p">;</span>
-</pre><p>will be resolved through the index on <code>vcol1</code>:</p>
-<pre class="fixed">+------+-------------+-------+------+---------------+-------+---------+-------+------+-------+
+virtual column expression, too:</p>
+<pre class="fixed"><span class="c1">-- This will use the index before 11.8:</span>
+<span class="k">explain</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">t1</span> <span class="k">where</span> <span class="n">vcol1</span><span class="o">=</span><span class="mi">100</span><span class="p">;</span>
+<span class="c1">-- Starting from 11.8, this will use the index, too:</span>
+<span class="k">explain</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">t1</span> 
+<span class="k">where</span> <span class="k">cast</span><span class="p">(</span><span class="n">json_value</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="s1">&#39;$.column1&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="nb">integer</span><span class="p">)</span><span class="o">=</span><span class="mi">100</span><span class="p">;</span>
+</pre><pre class="fixed">+------+-------------+-------+------+---------------+-------+---------+-------+------+-------+
 | id   | select_type | table | type | possible_keys | key   | key_len | ref   | rows | Extra |
 +------+-------------+-------+------+---------------+-------+---------+-------+------+-------+
 |    1 | SIMPLE      | t1    | ref  | vcol1         | vcol1 | 5       | const | 1    |       |
 +------+-------------+-------+------+---------------+-------+---------+-------+------+-------+
 </pre><h2 class="anchored_heading" id="general-considerations">General Considerations</h2>
-<ul start="1"><li>In MariaDB, one has to create a virtual column and then create an index over it.  Other databases allow to create an index directly over expression: <code>create index on t1((col1+col2))</code>.  This is not yet supported.
+<ul start="1"><li>In MariaDB, one has to create a virtual column and then create an index over it. Other databases allow to create an index directly over expression: <code>create index on t1((col1+col2))</code>.  This is not yet supported in MariaDB (<a href="https://jira.mariadb.org/browse/MDEV-35853">MDEV-35853</a>).
 </li></ul>
-<ul start="1"><li>The WHERE clause must use the exact same expression as in the virtual column definition.
+<ul start="1"><li>The <code>WHERE</code> clause must use the exact same expression as in the virtual column definition.
+</li></ul>
+<ul start="1"><li>The optimization is implemented in a similar way to MySQL: the optimizer finds potentially useful occurrences of <code>vcol_expr</code> in the WHERE clause and replaces them with <code>vcol_name</code>.
 </li></ul>
 <ul start="1"><li>In the optimizer trace, the rewrites are shown like so:
 </li></ul>
@@ -481,13 +488,21 @@ virtual column expression, too. A query like this:</p>
               &#34;condition&#34;: &#34;WHERE&#34;,
               &#34;resulting_condition&#34;: &#34;t1.vcol1 = 100&#34;
             }
-</pre><h2 class="anchored_heading" id="considerations-for-accessing-json-fields">Considerations for Accessing JSON fields</h2>
-<p>SQL is strongly-typed language while JSON is weakly-typed. This means one must specify the desired datatypes when accessing JSON data from SQL. In the above example, we declared <code>vcol1</code> as <code>INT</code> and then used  <code>(CAST ... AS INTEGER)</code> (both in the ALTER TABLE and in the query):</p>
+</pre><h2 class="anchored_heading" id="accessing-json-fields">Accessing JSON fields</h2>
+<h3 class="anchored_heading" id="cast-the-value-to-the-desired-type">Cast the value to the desired type</h3>
+<p>SQL is strongly-typed language while JSON is weakly-typed. This means one must specify the desired datatype when accessing JSON data from SQL. In the above example, we declared <code>vcol1</code> as <code>INT</code> and then used  <code>(CAST ... AS INTEGER)</code> (both in the ALTER TABLE and in the <code>WHERE</code> clause in SELECT query:):</p>
 <pre class="fixed"><span class="k">alter</span> <span class="k">table</span> <span class="n">t1</span>
-  <span class="k">add</span> <span class="k">column</span> <span class="n">vcol1</span> <span class="nb">int</span> <span class="k">as</span> <span class="p">(</span><span class="k">cast</span><span class="p">(</span><span class="n">json_value</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="s1">&#39;$.column1&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="nb">integer</span><span class="p">))</span> <span class="p">...</span>
-</pre><p>When handling string values, <code>CAST</code> is not necessary, as JSON_VALUE returns strings. 
-However, one must take into account collations. If you declare a column as <code>json_data JSON</code>, its collation will be <code>utf8mb4_bin</code>, and the collation of <code>JSON_VALUE(json_data, ...)</code> will also be <code>utf8mb4_bin</code>.
-Most use cases require a more commonly-used collation. It is possible to achieve that using the <code>COLLATE</code> clause:</p>
+  <span class="k">add</span> <span class="k">column</span> <span class="n">vcol1</span> <span class="nb">INT</span> <span class="k">as</span> <span class="p">(</span><span class="k">CAST</span><span class="p">(</span><span class="n">json_value</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="s1">&#39;$.column1&#39;</span><span class="p">)</span> <span class="k">AS</span> <span class="nb">INTEGER</span><span class="p">))</span> <span class="p">...</span>
+</pre><pre class="fixed"><span class="k">select</span> <span class="p">...</span>  <span class="k">where</span> <span class="p">...</span> <span class="k">CAST</span><span class="p">(</span><span class="n">json_value</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="s1">&#39;$.column1&#39;</span><span class="p">)</span> <span class="k">AS</span> <span class="nb">INTEGER</span><span class="p">)</span> <span class="p">...;</span>
+</pre><h3 class="anchored_heading" id="specify-collation-for-strings">Specify collation for strings</h3>
+<p>When extracting string values, <code>CAST</code> is not necessary, as <code>JSON_VALUE</code> returns strings. </p>
+<p>However, one must take into account collations. If one declares the column as <code>JSON</code>:</p>
+<pre class="fixed"><span class="k">create</span> <span class="k">table</span> <span class="n">t1</span> <span class="p">(</span> 
+  <span class="n">json_data</span> <span class="n">JSON</span> 
+  <span class="p">...</span>
+</pre><p>the collation of <code>json_data</code> will be <code>utf8mb4_bin</code>. The collation of 
+ <code>JSON_VALUE(json_data, ...)</code> will also be <code>utf8mb4_bin</code>.</p>
+<p>Most use cases require a more commonly-used collation. It is possible to achieve that using the <code>COLLATE</code> clause:</p>
 <pre class="fixed"><span class="k">alter</span> <span class="k">table</span> <span class="n">t1</span>
   <span class="k">add</span> <span class="n">col1</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span> <span class="k">collate</span> <span class="n">utf8mb4_uca1400_ai_ci</span> <span class="k">as</span>
   <span class="p">(</span><span class="n">json_value</span><span class="p">(</span><span class="n">js1</span><span class="p">,</span> <span class="s1">&#39;$.string_column&#39;</span><span class="p">)</span> <span class="k">collate</span> <span class="n">utf8mb4_uca1400_ai_ci</span><span class="p">),</span>
