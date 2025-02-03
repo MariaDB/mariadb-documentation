@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: Mariabackup: Why does to_lsn not change in an incremental backup?</title><link>https://mariadb.com/kb/en/mariabackup-why-does-to_lsn-not-change-in-an-incremental-backup/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/mariabackup-why-does-to_lsn-not-change-in-an-incremental-backup/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Mon, 03 Feb 2025 13:06:55 +0000</lastBuildDate><item><title>Re: Mariabackup: Why does to_lsn not change in an incremental backup?</title><link>https://mariadb.com/kb/en/mariabackup-why-does-to_lsn-not-change-in-an-incremental-backup/+comments/7012</link><description>&lt;p&gt;Thank you very much for this quick response.
+I read the link as well as the related mdev, and I now understand the reasons much better.
+I just ran a test that correctly inserts the expected LSN:&lt;/p&gt;
+&lt;p&gt;This brings me to the following points:
+-The information is important enough to be added to the documentation, especially since it includes an example of a MariaDB-server version that hadn't yet changed the checkpoint execution delay.&lt;/p&gt;
+&lt;p&gt;- When we execute --prepare, we see that the LSNs are being analyzed. It seems to me that a simple update to (or creation of a second) mariadb_backup_checkpoints file with this information would be enough to resolve the issue.&lt;/p&gt;
+&lt;p&gt;For the FULL backup:&lt;/p&gt;
+&lt;pre class="fixed"&gt;# mariadb_backup_checkpoints 
+backup_type = full-backuped
+from_lsn = 0
+to_lsn = 9084028
+last_lsn = 9085399
+recover_binlog_info = 0
+
+# mariadb-backup output
+2025-02-02  0:47:11 0 [Note] InnoDB: Starting crash recovery from checkpoint LSN=9084028
+2025-02-02  0:47:11 0 [Note] InnoDB: End of log at LSN=9085399
+&lt;/pre&gt;&lt;p&gt;Pour la INCREMENTAL :&lt;/p&gt;
+&lt;pre class="fixed"&gt;# mariadb_backup_checkpoints 
+backup_type = log-applied
+from_lsn = 0
+to_lsn = 9084028
+last_lsn = 9085399
+recover_binlog_info = 0
+
+# mariadb-backup output
+[00] 2025-02-02 00:52:39 incremental backup from 9084028 is enabled.
+2025-02-02  0:52:39 0 [Note] InnoDB: End of log at LSN=9089520
+&lt;/pre&gt;&lt;p&gt;Je vais donc me basé sur le to_lsn en from et du last_lsn en to dans mes test d'intégrité dans le script.
+Because even if modifying the innodb_max_dirty_pages_pct_lwm parameter works, it would probably require adjusting the sleep duration, which is not ideal.&lt;/p&gt;
+&lt;p&gt;Thanks again for this valuable information.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Mourad S</dc:creator><guid>https://mariadb.com/kb/en/mariabackup-why-does-to_lsn-not-change-in-an-incremental-backup/+comments/7012</guid></item><item><title>Re: Mariabackup: Why does to_lsn not change in an incremental backup?</title><link>https://mariadb.com/kb/en/mariabackup-why-does-to_lsn-not-change-in-an-incremental-backup/+comments/7010</link><description>&lt;p&gt;I have answered this question in &lt;a href="https://jira.mariadb.org/browse/MDEV-31687"&gt;MDEV-31687&lt;/a&gt;.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Marko Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/mariabackup-why-does-to_lsn-not-change-in-an-incremental-backup/+comments/7010</guid></item></channel></rss>

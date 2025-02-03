@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-11-14 20:02">2 months, 1 week ago</span></dd>
+<span class="datetime" title="2025-02-02 13:43">1 day, 1 hour ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -498,7 +498,9 @@
 
                 <li class=""><a href="#one-way-tls-examples" title="One-Way TLS Examples">One-Way TLS Examples</a>            </ol>
         </ol>
-    </ol>
+</li>
+
+        <li class=""><a href="#data-source-specific-attributes" title="Data Source Specific Attributes">Data Source Specific Attributes</a>    </ol>
 </li>
 
     <li class=""><a href="#known-issues" title="Known Issues">Known Issues</a>    <ol class="toc">
@@ -675,6 +677,9 @@ sudo apt-get install unixodbc-dev
 </li><li><code>ATTR</code>: option to set connection attributes. Using it makes sense only if performance schema is enabled on server. Format: <code>ATTR={&lt;attrname1&gt;=&lt;attrvalue1&gt;[,&lt;attrname2=attrvalue2,...]}</code>
 <ul start="1"><li>This parameter is available starting with MariaDB Connector/ODBC version 3.2.0
 </li></ul>
+</li><li><code>EDSERVER</code>: forces SQLExecDirect to use server side prepare if possible. It is useful if binary protocol is preferable to use for the queries.
+<ul start="1"><li>This parameter is available starting with MariaDB Connector/ODBC version 3.2.5
+</li></ul>
 </li></ul>
 <h4 class="anchored_heading" id="general-connection-parameters-example">General Connection Parameters Example</h4>
 <p>For example, to set these parameters in a connection string via C/C++ code, you could do something like the following:</p>
@@ -781,7 +786,77 @@ PASSWORD = odbc_pw
 DATABASE = odbc_test
 PORT = 3306
 SSLCIPHER = DHE-RSA-AES256-GCM-SHA384
-</pre><h2 class="anchored_heading" id="known-issues">Known Issues</h2>
+</pre><h3 class="anchored_heading" id="data-source-specific-attributes">Data Source Specific Attributes</h3>
+<p>ODBC 3.8 allows drivers to define and use their own connection and statement attributes. MariaDB Connector/ODBC conforms ODBC 3.8 starting from 3.2 release series. In the version 3.2.5 we introduce our first MariaDB specific statement and connection attribute types.</p>
+<p>Independence from the data source is one of the greatest values that using of the ODBC gives to application developers, and use of such attributes won't cause the vendor lock, i.e. dependency on concrete ODBC driver. If application sets these attributes with other 3.8 conforming driver, it will simply get the HYC00 error "Optional feature not implemented". If the driver manager or the driver does not support ODBC 3.8, it will return error about unknown attribute HY024. In any case the application should simply ignore the error(or process it in some way but not to stop normal execution) and using of these attributes with other data sources will not have any bad outcomes, while improving performance if used with the data source they have been designed for MariaDB Connector/ODBC in this case.</p>
+<p> The values of these attribute types are defined in the sqlmariadb.h that will be included in our distribution packages and installed under include/mariadb. However application developers might consider to use attribute type literal values and not their defined names in order to avoid extra build dependency.</p>
+<p>Here is the list of currently supported attributes</p>
+<ul><li><code>SQL_ATTR_EXECDIRECT_ON_SERVER</code>=<code>25100</code> Can be set at statement or connection level.
+It controls if SQLExecDirect should use server(if set to <code>SQL_TRUE</code>) or client side(if set to <code>SQL_FALSE</code>, the default) prepared statements. At the connection level it will define default attribute value for all statements created for the connection and is equivalent of use of the <code>EDSERVER</code> connection string option. The type of the attribute value is <code>SQLLEN</code>.
+</li></ul>
+<p>To set the attribute value:</p>
+<pre class="fixed">// If sqlmariadb.h included
+// This makes Stmt to use server side prepared statement in SQLExecDirect
+SQLSetStmtAttr(Stmt, SQL_ATTR_EXECDIRECT_ON_SERVER, (SQLPOINTER)SQL_TRUE, 0);
+// This makes all statements created on Connection after this, to use client side prepared statement in
+// SQLExecDirect, unless attribute is set to different value for that statement handle
+SQLSetConnectAttr(Conn, SQL_ATTR_EXECDIRECT_ON_SERVER, (SQLPOINTER)SQL_FALSE, 0);
+
+// If sqlmariadb.h is *not* included
+// This makes Stmt to use client side prepared statement in SQLExecDirect
+SQLSetStmtAttr(Stmt, SQL_ATTR_EXECDIRECT_ON_SERVER, (SQLPOINTER)SQL_FALSE, 0);
+// This makes all statements created on Connection after this, to use server side prepared statement in
+// SQLExecDirect, unless attribute is set to different value for that statement handle
+SQLSetConnectAttr(Conn, SQL_ATTR_EXECDIRECT_ON_SERVER, (SQLPOINTER)SQL_TRUE, 0);
+</pre><p>To read the attribute value</p>
+<pre class="fixed">SQLLEN attributeValue= -1;
+// If sqlmariadb.h included
+SQLGetStmtAttr(Stmt, SQL_ATTR_EXECDIRECT_ON_SERVER, &amp;attributeValue, 0, NULL);
+if (attributeValue == SQL_TRUE) {
+// SQLExecDirect will prepare a query on the server and use binary protocol
+}
+SQLGetConnectAttr(Conn, SQL_ATTR_EXECDIRECT_ON_SERVER, &amp;attributeValue, 0, NULL);
+
+// If sqlmariadb.h is *not* included
+SQLGetStmtAttr(Stmt, 25100,  &amp;attributeValue, 0, NULL);
+if (attributeValue == SQL_FALSE) {
+// SQLExecDirect will prepare a query on the client and use text protocol
+}
+SQLGetConnectAttr(Conn, 25100, &amp;attributeValue, 0, NULL);
+</pre><p><strong> This attribute is available starting with MariaDB Connector/ODBC version 3.2.5.</strong></p>
+<ul><li><code>SQL_ATTR_PREPARE_ON_CLIENT</code>=<code>25101</code> Can be set at statement or connection level. It controls if SQLPrepare should use server(if set to <code>SQL_FALSE</code>, the default) or client side(if set to <code>SQL_TRUE</code>) prepared statements. At the connection level it will define default attribute value for all statements created for the connection and is equivalent of use of the <code>PREPONCLIENT</code> connection string option. The type of the attribute value is <code>SQLLEN</code>.
+</li></ul>
+<p>To set the attribute value:</p>
+<pre class="fixed">// If sqlmariadb.h included
+// This makes Stmt to use client side prepared statement in SQLPrepare
+SQLSetStmtAttr(Stmt, SQL_ATTR_PREPARE_ON_CLIENT, (SQLPOINTER)SQL_TRUE, 0);
+// This makes all statements created on Conn after this, to use server side prepared statement in
+// SQLPrepare, unless attribute is set to different value for that statement handle
+SQLSetConnectAttr(Conn, SQL_ATTR_PREPARE_ON_CLIENT, (SQLPOINTER)SQL_FALSE, 0);
+
+// If sqlmariadb.h is *not* included
+// This makes Stmt to use server side prepared statement in SQLPrepare
+SQLSetStmtAttr(Stmt, 25101, (SQLPOINTER)SQL_FALSE, 0);
+// This makes all statements created on Conn after this, to use client side prepared statement in
+// SQLPrepare, unless attribute is set to different value for that statement handle
+SQLSetConnectAttr(Conn, 25101, (SQLPOINTER)SQL_TRUE, 0);
+</pre><p>To read the attribute value</p>
+<pre class="fixed">SQLLEN attributeValue= -1;
+// If sqlmariadb.h included
+SQLGetStmtAttr(Stmt, SQL_ATTR_PREPARE_ON_CLIENT, &amp;attributeValue, 0, NULL);
+if (attributeValue == SQL_TRUE) {
+// SQLPrepare will prepare a query on the client side and use text protocol
+}
+SQLGetConnectAttr(Conn, SQL_ATTR_PREPARE_ON_CLIENT, &amp;attributeValue, 0, NULL);
+
+// If sqlmariadb.h is *not* included
+SQLGetStmtAttr(Stmt, 25101,  &amp;attributeValue, 0, NULL);
+if (attributeValue == SQL_FALSE) {
+// SQLPrepare will prepare a query on the server side and use binary protocol
+}
+SQLGetConnectAttr(Conn, 25101, &amp;attributeValue, 0, NULL);
+</pre><p><strong> This attribute is available starting with MariaDB Connector/ODBC version 3.2.5.</strong></p>
+<h2 class="anchored_heading" id="known-issues">Known Issues</h2>
 <h3 class="anchored_heading" id="multiple-statement-execution">Multiple Statement Execution</h3>
 <p>Multiple statement execution is not fully supported. This means that if you try to prepare a multi-statement query where one of statements depends on the execution result of one of the previous statements, then it may fail. For example, the following may return an error in some versions:</p>
 <pre class="fixed">SQLPrepare(hstmt, &#34;CREATE VIEW some_table_view AS SELECT * FROM some_table;SELECT * FROM some_table_view &#34;, SQL_NTS);
