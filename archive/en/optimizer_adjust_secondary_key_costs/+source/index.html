@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/optimizer_adjust_secondary_key_costs/+r/142015/">142015</a></dd>
+            <dd><a href="/kb/en/optimizer_adjust_secondary_key_costs/+r/146795/">146795</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-7911">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-08-25 20:33">2024-08-25 20:33</span></dd>
+<span class="datetime" title="2025-02-04 20:27">2025-02-04 20:27</span></dd>
         </dl>
     </div>
     
@@ -339,9 +339,9 @@
 * **Scope:** Global, Session
 * **Dynamic:** Yes
 * **Data Type:** ##set##
-* **Default Value:** ##&#34;&#34;##
-* **Range:** ##0## to ##7## or any combination of ##adjust_secondary_key_cost##, ##disable_max_seek## or ##disable_forced_index_in_group_by##.
-* **Introduced:** MariaDB 10.6.17, MariaDB 10.11.7, MariaDB 11.0.5, MariaDB 11.1.4, MariaDB 11.2.3 
+* **Default Value:** ##fix_card_multiplier##
+* **Range:** ##0## to ##63## or any combination of ##adjust_secondary_key_cost##, ##disable_max_seek## or ##disable_forced_index_in_group_by##, ##fix_innodb_cardinality##,##fix_reuse_range_for_ref##, ##fix_card_multiplier##
+* **Introduced:** MariaDB 10.6.17, MariaDB 10.11.7
 
 \\
 &lt;&lt;product mariadb from=11.0&gt;&gt;
@@ -350,11 +350,13 @@
 
 The value for ##optimizer_adjust_secondary_key_costs## is one of more of the following:
 &lt;&lt;style class=&#34;darkheader-nospace-borders&#34;&gt;&gt;
-|= Value |= Version added |= Default behavior |= Change when variable is used |
+|= Value |= Version added |= Old behavior |= Change when variable is used |
 |  adjust_secondary_key_cost |[[mariadb-10-6-17-release-notes|10.6.17]] | Limit ##ref## costs by max_seeks | The secondary key costs for ##ref## are updated to be at least five times the clustered primary key costs if a clustered primary key exists |
 | disable_max_seek | [[mariadb-10-6-17-release-notes|10.6.17]] |  ##ref## cost on secondary keys is limited to max_seek = min(&#39;number of expected rows&#39;/ 10, scan_time*3) | Disable &#39;max_seek&#39; optimization and do a slight adjustment of filter cost |
 |disable_forced_index_in_group_by | [[mariadb-10-6-18-release-notes|10.6.18]] | Use a rule-based choice when deciding to use an index to resolve GROUP BY | The choice is now cost based |
 |fix_innodb_cardinality | [[mariadb-10-6-19-release-notes|10.6.19]] | By default InnoDB doubles the cardinality for indexes in an effort to force index usage over table scans. This can cause the optimizer to create sub-optimal plans for ranges or index entries that cover a big part of the table. | Using this option removes the doubling of cardinality in InnoDB.  ##fix_innodb_cardinality## is recommended to be used only as a server startup option, as it is enabled for a table at first usage. See MDEV-34664 for details. |
+|fix_reuse_range_for_ref|  [[mariadb-10-6-20-release-notes|10.6.20]] | Number of estimated rows for &#39;ref&#39; did not always match costs from range optimizer | Use cost from range optimizer for &#39;ref&#39; if all used key parts are constants. The old code did not always do this |
+|fix_card_multiplier|  [[mariadb-10-6-20-release-notes|10.6.20]] | Index selectivity can be bigger than 1.0 if index statistics is not up to date. Not on by default.| Ensure that the calculated index selectivity is never bigger than 1.0. Having index selectivity bigger than 1.0 causes MariaDB to believe that there is more rows in the table than in reality, which can cause wrong plans. This option is on by default.|
 &lt;&lt;/style&gt;&gt;
 
 One can set all options with:

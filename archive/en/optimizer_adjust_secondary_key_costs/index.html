@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-08-25 20:33">5 months, 1 week ago</span></dd>
+<span class="datetime" title="2025-02-04 20:27">4 hours, 37 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -435,18 +435,20 @@
 </li><li><strong>Scope:</strong> Global, Session
 </li><li><strong>Dynamic:</strong> Yes
 </li><li><strong>Data Type:</strong> <code>set</code>
-</li><li><strong>Default Value:</strong> <code>""</code>
-</li><li><strong>Range:</strong> <code>0</code> to <code>7</code> or any combination of <code>adjust_secondary_key_cost</code>, <code>disable_max_seek</code> or <code>disable_forced_index_in_group_by</code>.
-</li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-10617-release-notes/">MariaDB 10.6.17</a>, <a href="/kb/en/mariadb-10-11-7-release-notes/">MariaDB 10.11.7</a>, <a href="/kb/en/mariadb-11-0-5-release-notes/">MariaDB 11.0.5</a>, <a href="/kb/en/mariadb-11-1-4-release-notes/">MariaDB 11.1.4</a>, <a href="/kb/en/mariadb-11-2-3-release-notes/">MariaDB 11.2.3</a> 
+</li><li><strong>Default Value:</strong> <code>fix_card_multiplier</code>
+</li><li><strong>Range:</strong> <code>0</code> to <code>63</code> or any combination of <code>adjust_secondary_key_cost</code>, <code>disable_max_seek</code> or <code>disable_forced_index_in_group_by</code>, <code>fix_innodb_cardinality</code>,<code>fix_reuse_range_for_ref</code>, <code>fix_card_multiplier</code>
+</li><li><strong>Introduced:</strong> <a href="/kb/en/mariadb-10617-release-notes/">MariaDB 10.6.17</a>, <a href="/kb/en/mariadb-10-11-7-release-notes/">MariaDB 10.11.7</a>
 </li></ul>
 <p><br></p>
 <div class="mariadb_from_11_0 mariadb from_11_0 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-110/">11.0</a></h5><p><code>optimizer_adjust_secondary_key_costs</code> will be obsolete starting from <a href="/kb/en/what-is-mariadb-110/">MariaDB 11.0</a> as the new optimizer in 11.0 does not have max_seek optimization and is already using cost based choices for index usage with GROUP BY.</p>
 </div><p>The value for <code>optimizer_adjust_secondary_key_costs</code> is one of more of the following:</p>
-<div class="cstm-style darkheader-nospace-borders"><table><tr><th>Value</th><th>Version added</th><th>Default behavior</th><th>Change when variable is used</th></tr>
+<div class="cstm-style darkheader-nospace-borders"><table><tr><th>Value</th><th>Version added</th><th>Old behavior</th><th>Change when variable is used</th></tr>
 <tr><td>adjust_secondary_key_cost</td><td><a href="/kb/en/mariadb-10-6-17-release-notes/">10.6.17</a></td><td>Limit <code>ref</code> costs by max_seeks</td><td>The secondary key costs for <code>ref</code> are updated to be at least five times the clustered primary key costs if a clustered primary key exists</td></tr>
 <tr><td>disable_max_seek</td><td><a href="/kb/en/mariadb-10-6-17-release-notes/">10.6.17</a></td><td><code>ref</code> cost on secondary keys is limited to max_seek = min('number of expected rows'/ 10, scan_time*3)</td><td>Disable 'max_seek' optimization and do a slight adjustment of filter cost</td></tr>
 <tr><td>disable_forced_index_in_group_by</td><td><a href="/kb/en/mariadb-10-6-18-release-notes/">10.6.18</a></td><td>Use a rule-based choice when deciding to use an index to resolve GROUP BY</td><td>The choice is now cost based</td></tr>
 <tr><td>fix_innodb_cardinality</td><td><a href="/kb/en/mariadb-10-6-19-release-notes/">10.6.19</a></td><td>By default InnoDB doubles the cardinality for indexes in an effort to force index usage over table scans. This can cause the optimizer to create sub-optimal plans for ranges or index entries that cover a big part of the table.</td><td>Using this option removes the doubling of cardinality in InnoDB.  <code>fix_innodb_cardinality</code> is recommended to be used only as a server startup option, as it is enabled for a table at first usage. See <a href="https://jira.mariadb.org/browse/MDEV-34664">MDEV-34664</a> for details.</td></tr>
+<tr><td>fix_reuse_range_for_ref</td><td><a href="/kb/en/mariadb-10-6-20-release-notes/">10.6.20</a></td><td>Number of estimated rows for 'ref' did not always match costs from range optimizer</td><td>Use cost from range optimizer for 'ref' if all used key parts are constants. The old code did not always do this</td></tr>
+<tr><td>fix_card_multiplier</td><td><a href="/kb/en/mariadb-10-6-20-release-notes/">10.6.20</a></td><td>Index selectivity can be bigger than 1.0 if index statistics is not up to date. Not on by default.</td><td>Ensure that the calculated index selectivity is never bigger than 1.0. Having index selectivity bigger than 1.0 causes MariaDB to believe that there is more rows in the table than in reality, which can cause wrong plans. This option is on by default.</td></tr>
 </table>
 </div><p>One can set all options with:</p>
 <pre class="fixed">set @@optimizer_adjust_secondary_key_costs='all';
