@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-02-03 11:00">6 days, 14 hours ago</span></dd>
+<span class="datetime" title="2025-02-11 10:08">14 hours, 54 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -435,11 +435,17 @@
 <p>The initial implementation uses the modified HNSW algorithm for searching in the vector index (to solve the so-called Approximate Nearest Neighbor problem), and defaults to Euclidean distance. Concurrent reads/writes and all <a href="/kb/en/set-transaction/#isolation-level">transaction isolation levels</a> are supported.</p>
 <p>MariaDB uses int16 for indexes, which gives 15 bits to store the value, rather than 10 bits for float16.</p>
 <h2 class="anchored_heading" id="creating">Creating</h2>
-<p>Vectors are defined using <code>VECTOR INDEX</code> for the index definition in the <a href="/kb/en/create-table-with-vectors/">CREATE TABLE with vectors</a> statement. </p>
+<p>Vectors can be defined using <code>VECTOR INDEX</code> for the index definition, and using the <a href="/kb/en/vector/">VECTOR data type</a> in the <a href="/kb/en/create-table-with-vectors/">CREATE TABLE</a> statement. </p>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">v</span> <span class="p">(</span>
      <span class="n">id</span> <span class="nb">INT</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span>
      <span class="n">v</span> <span class="n">VECTOR</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
      <span class="n">VECTOR</span> <span class="k">INDEX</span> <span class="p">(</span><span class="n">v</span><span class="p">)</span>
+<span class="p">);</span>
+</pre><p>The distance function used to build the vector index can be <code>euclidean</code> (the default), or <code>cosine</code>. An additional option, <code>M</code>, can also be used to configure the vector index. Larger values mean slower SELECTs and INSERTs, larger index size and higher memory consumption but more accurate results. The valid range is from 3 to 200. </p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">embeddings</span> <span class="p">(</span>
+        <span class="n">doc_id</span> <span class="nb">BIGINT</span> <span class="n">UNSIGNED</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span>
+        <span class="n">embedding</span> <span class="n">VECTOR</span><span class="p">(</span><span class="mi">1536</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+        <span class="n">VECTOR</span> <span class="k">INDEX</span> <span class="p">(</span><span class="n">embedding</span><span class="p">)</span> <span class="n">M</span><span class="o">=</span><span class="mi">8</span> <span class="n">DISTANCE</span><span class="o">=</span><span class="n">cosine</span>
 <span class="p">);</span>
 </pre><h2 class="anchored_heading" id="inserting">Inserting</h2>
 <p>Vector columns store <a href="https://en.wikipedia.org/wiki/Single-precision_floating-point_format">32-bit IEEE 754 floating point numbers</a>.</p>
@@ -467,7 +473,7 @@
   <span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="n">Vec_FromText</span><span class="p">(</span><span class="s1">&#39;[0.186956,0.69666,0.0356002,0.668875,0.84722]&#39;</span><span class="p">)),</span>
   <span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="n">Vec_FromText</span><span class="p">(</span><span class="s1">&#39;[0.415294,0.609278,0.426765,0.988832,0.475556]&#39;</span><span class="p">));</span>
 </pre><h2 class="anchored_heading" id="querying">Querying</h2>
-<p><a href="/kb/en/vec_distance_euclidean/">VEC_DISTANCE_EUCLIDEAN</a> is a function that calculates a Euclidean (L2) distance between two points.</p>
+<p>For vector indexes built with the <code>euclidean</code> function, <a href="/kb/en/vec_distance_euclidean/">VEC_DISTANCE_EUCLIDEAN</a> can be used. It calculates a Euclidean (L2) distance between two points.</p>
 <pre class="fixed"><span class="k">SELECT</span> <span class="n">id</span> <span class="k">FROM</span> <span class="n">v</span> <span class="k">ORDER</span> <span class="k">BY</span> 
   <span class="n">VEC_DISTANCE_EUCLIDEAN</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">x</span><span class="s1">&#39;6ca1d43e9df91b3fe580da3e1c247d3f147cf33e&#39;</span><span class="p">);</span>
 <span class="o">+</span><span class="c1">----+</span>
@@ -492,6 +498,25 @@
 <span class="o">+</span><span class="c1">----+</span>
 <span class="o">|</span> <span class="mi">10</span> <span class="o">|</span>
 <span class="o">|</span>  <span class="mi">7</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+</span>
+</pre><p>For vector indexes built with the <code>cosine</code> function, <a href="/kb/en/vec_distance_cosine/">VEC_DISTANCE_COSINE</a> can be used. It calculates a <a href="https://en.wikipedia.org/wiki/Cosine_similarity#Cosine_distance">Cosine distance</a>  between two vectors</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="n">VEC_DISTANCE_COSINE</span><span class="p">(</span><span class="n">VEC_FROMTEXT</span><span class="p">(</span><span class="s1">&#39;[1,2,3]&#39;</span><span class="p">),</span> <span class="n">VEC_FROMTEXT</span><span class="p">(</span><span class="s1">&#39;[3,5,7]&#39;</span><span class="p">));</span>
+</pre><p>The <a href="/kb/en/vector-functions-vec_distance/">VEC_DISTANCE</a> function is a generic function that behaves either as <a href="/kb/en/vec_distance_euclidean/">VEC_DISTANCE_EUCLIDEAN</a> or <a href="/kb/en/vec_distance_cosine/">VEC_DISTANCE_COSINE</a>, depending on the underlying index type.</p>
+<pre class="fixed"><span class="k">SELECT</span> <span class="n">id</span> <span class="k">FROM</span> <span class="n">v</span> 
+  <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">VEC_DISTANCE</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">x</span><span class="s1">&#39;6ca1d43e9df91b3fe580da3e1c247d3f147cf33e&#39;</span><span class="p">);</span>
+<span class="o">+</span><span class="c1">----+</span>
+<span class="o">|</span> <span class="n">id</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----+</span>
+<span class="o">|</span> <span class="mi">10</span> <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">7</span> <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">3</span> <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">9</span> <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">2</span> <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">1</span> <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">5</span> <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">4</span> <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">6</span> <span class="o">|</span>
+<span class="o">|</span>  <span class="mi">8</span> <span class="o">|</span>
 <span class="o">+</span><span class="c1">----+</span>
 </pre><h2 class="anchored_heading" id="system-variables">System Variables</h2>
 <p>There are a number of system variables used for vectors. See <a href="/kb/en/vector-system-variables/">Vector System Variables</a>. </p>

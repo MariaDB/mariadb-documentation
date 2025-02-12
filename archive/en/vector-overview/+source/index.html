@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/vector-overview/+r/146587/">146587</a></dd>
+            <dd><a href="/kb/en/vector-overview/+r/147140/">147140</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-02-03 11:00">2025-02-03 11:00</span></dd>
+<span class="datetime" title="2025-02-11 10:08">2025-02-11 10:08</span></dd>
         </dl>
     </div>
     
@@ -345,7 +345,7 @@ The initial implementation uses the modified HNSW algorithm for searching in the
 MariaDB uses int16 for indexes, which gives 15 bits to store the value, rather than 10 bits for float16.
 
 ==Creating
-Vectors are defined using ##VECTOR INDEX## for the index definition in the [[create-table-with-vectors|CREATE TABLE with vectors]] statement. 
+Vectors can be defined using ##VECTOR INDEX## for the index definition, and using the [[vector|VECTOR data type]] in the [[create-table-with-vectors|CREATE TABLE]] statement. 
 
 &lt;&lt;sql&gt;&gt;
 CREATE TABLE v (
@@ -354,6 +354,16 @@ CREATE TABLE v (
      VECTOR INDEX (v)
 );
 &lt;&lt;/sql&gt;&gt;
+
+The distance function used to build the vector index can be ##euclidean## (the default), or ##cosine##. An additional option, ##M##, can also be used to configure the vector index. Larger values mean slower SELECTs and INSERTs, larger index size and higher memory consumption but more accurate results. The valid range is from 3 to 200. 
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE embeddings (
+        doc_id BIGINT UNSIGNED PRIMARY KEY,
+        embedding VECTOR(1536) NOT NULL,
+        VECTOR INDEX (embedding) M=8 DISTANCE=cosine
+);
+&lt;&lt;/sql&gt;&gt;
+
 
 ==Inserting
 Vector columns store [[https://en.wikipedia.org/wiki/Single-precision_floating-point_format|32-bit IEEE 754 floating point numbers]].
@@ -388,7 +398,7 @@ INSERT INTO v VALUES
 &lt;&lt;/sql&gt;&gt;
 ==Querying
 
-[[vec_distance_euclidean|VEC_DISTANCE_EUCLIDEAN]] is a function that calculates a Euclidean (L2) distance between two points.
+For vector indexes built with the ##euclidean## function, [[vec_distance_euclidean|VEC_DISTANCE_EUCLIDEAN]] can be used. It calculates a Euclidean (L2) distance between two points.
 
 &lt;&lt;sql&gt;&gt;
 SELECT id FROM v ORDER BY 
@@ -418,6 +428,32 @@ SELECT id FROM v
 +----+
 | 10 |
 |  7 |
++----+
+&lt;&lt;/sql&gt;&gt;
+
+For vector indexes built with the ##cosine## function, [[vec_distance_cosine|VEC_DISTANCE_COSINE]] can be used. It calculates a [[https://en.wikipedia.org/wiki/Cosine_similarity#Cosine_distance|Cosine distance]]  between two vectors
+&lt;&lt;sql&gt;&gt;
+SELECT VEC_DISTANCE_COSINE(VEC_FROMTEXT(&#39;[1,2,3]&#39;), VEC_FROMTEXT(&#39;[3,5,7]&#39;));
+&lt;&lt;/sql&gt;&gt;
+
+The [[vector-functions-vec_distance|VEC_DISTANCE]] function is a generic function that behaves either as [[vec_distance_euclidean|VEC_DISTANCE_EUCLIDEAN]] or [[vec_distance_cosine|VEC_DISTANCE_COSINE]], depending on the underlying index type.
+
+&lt;&lt;sql&gt;&gt;
+SELECT id FROM v 
+  ORDER BY VEC_DISTANCE(v, x&#39;6ca1d43e9df91b3fe580da3e1c247d3f147cf33e&#39;);
++----+
+| id |
++----+
+| 10 |
+|  7 |
+|  3 |
+|  9 |
+|  2 |
+|  1 |
+|  5 |
+|  4 |
+|  6 |
+|  8 |
 +----+
 &lt;&lt;/sql&gt;&gt;
 
