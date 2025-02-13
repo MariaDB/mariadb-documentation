@@ -307,7 +307,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/changes-improvements-in-mariadb-11-8/+r/147137/">147137</a></dd>
+            <dd><a href="/kb/en/changes-improvements-in-mariadb-11-8/+r/147242/">147242</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -316,7 +316,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-02-11 09:55">2025-02-11 09:55</span></dd>
+<span class="datetime" title="2025-02-12 11:31">2025-02-12 11:31</span></dd>
         </dl>
     </div>
     
@@ -330,7 +330,9 @@
 
 &lt;&lt;toc&gt;&gt;
 
-MariaDB 11.8 is currently in development.
+MariaDB 11.8 will be a long-term release, and is currently in development.
+
+This list includes all features since the previous long-term release, MariaDB 11.4 (those introduced in the MariaDB 11.5, MariaDB 11.6 and MariaDB 11.7 rolling releases).
 
 &lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 == Upgrading
@@ -343,15 +345,56 @@ MariaDB 11.8 is currently in development.
 * New function [[vector-functions-vec_distance|VEC_DISTANCE]] for calculating either a Euclidean or Cosine distance between two vectors, depending on the underlying index type (MDEV-35450)
 * aarch64 SIMD instructions now supported (MDEV-34699)
 
+=== Character Sets
+* The default [[character-sets|character set]] has been changed from ##latin1## to ##utf8mb4## (MDEV-19123, MariaDB 11.6)
+* Change [[supported-character-sets-and-collations|default Unicode collation]] to uca1400_ai_ci, a modern Unicode collation with proper support for SMP characters (including emoji)(MDEV-25829, MariaDB 11.5)
+
 === Optimizer
 * Optimizer can now take advantage of queries of the format [[substring|SUBSTR(col, 1, n) = const_str]] (MDEV-34911) 
 * Add basic optimizer support for [[generated-columns|virtual columns]] - see [[virtual-column-support-in-the-optimizer/|Virtual Column Support in the Optimizer]] (MDEV-35616)
+* Improve selectivity computations for multi-part keys (MDEV-33697, MariaDB 11.6)
+* [[index-condition-pushdown|Index condition pushdown]] is now supported for partitioned tables (MDEV-12404, MariaDB 11.5)
+* ANALYZE for statement should show selectivity of pushed index condition (MDEV-18478, MariaDB 11.5)
+
+=== Temporary files and tables
+* [[limiting-size-of-created-disk-temporary-files-and-tables-overview/|Limit size of created disk temporary files and tables]] (MDEV-9101, MariaDB 11.5)
+* There are two system variables used for controlling this feature (MariaDB 11.5):
+** [[max_tmp_session_space_usage-system-variable|max_tmp_session_space_usage]]: Limits the the temporary space allowance per user
+** [[max_tmp_total_space_usage-system-variable|max_tmp_total_space_usage]]: Limits the temporary space allowance for all users.
+
+=== Data Types
+* The [[timestamp|TIMESTAMP]] range of values was extended. The maximal allowed value for timestamps was &#39;2038-01-19 03:14:07 UTC&#39;, and is now &#39;2106-02-07 06:28:15 UTC&#39;. This does not change the storage format, and new tables can be read by old MariaDB servers as long as timestamp values are within the old timestamp range. At the moment this is only supported on 64-bit platforms (MDEV-32188, MariaDB 11.5)
+
+=== Authentication
+* [[authentication-plugin-parsec|New authentication plugin]] (MDEV-32618, MariaDB 11.6)
+* Extend [[authentication-plugin-unix-socket|Unix socket authentication]] to support authentication_string (MDEV-33479, MariaDB 11.6)
 
 === InnoDB
 * Fix [[innodb-system-variables/#innodb_adaptive_hash_index|innodb-adaptive-hash-index]] scalability with multiple threads (MDEV-35049)
 
-=== Importing
+=== Backup and Restore
+* Added the ##--dir## option to [[mariadb-import]], allowing one to restore all tables from a backup directory created using [[mariadb-dump|mariadb-dump --dir]] (MDEV-33627, MariaDB 11.6)
+** Added the related ##--database##, ##--ignore-database##, ##--table## and ##--ignore-table## options.
+** Refactor [[mariadb-import]] threading
+* Automatic SST user account management (MDEV-31809, MariaDB 11.6)
 * The [[mariadb-dump]] ##--no-autocommit## option is now set by default to allow faster data loading by InnoDB, writing only one undo log for the whole operation (MDEV-32250)
+* [[mariadb-import]] has a new option, ##--innodb-optimize-keys## to delay creation of secondary indexes until after data load, resulting in faster loads. On by default. (MDEV-34740)
+* Parallel dump of multiple databases via [[mariadb-dump]] with the ##--dir## option (MDEV-33625, MariaDB 11.5)
+
+=== Replication
+* When [[binary-log|binlogging]] is enabled, committing a large transaction no longer freezes all other transactions until completed (MDEV-32014, MariaDB 11.7)
+* [[replication-and-binary-log-system-variables/#binlog_optimize_thread_scheduling|binlog_optimize_thread_scheduling]] has been deprecated (MDEV-33756, MariaDB 11.7)
+* Async rollback prepared transactions during binlog crash recovery (MDEV-33853, MariaDB 11.7)
+* New variable, [[replication-and-binary-log-system-variables/#slave_abort_blocking_timeout|slave_abort_blocking_timeout]], for aborting long-running queries on a replica (MDEV-34857, MariaDB 11.7)
+* New variable, [[replication-and-binary-log-system-variables/#binlog_large_commit_threshold|binlog_large_commit_threshold]], for increasing transaction concurrency for large transactions (MDEV-32014, MariaDB 11.7)
+* [[replication-and-binary-log-system-variables/#binlog_optimize_thread_scheduling|binlog_optimize_thread_scheduling]] deprecated (MDEV-33756, MariaDB 11.7)
+* New definition for Seconds_Behind_Master (MDEV-33856, MariaDB 11.6)
+** Added three variables to [[show-replica-status|SHOW ALL REPLICAS STATUS]]
+** New [[information-schema-slave_status-table|Information Schema SLAVE_STATUS Table]]
+
+=== UUID
+* New function for generating version 4 UUIDs [[uuid_v4|UUID_v4]] (MDEV-11339, MariaDB 11.7)
+* New function for generating version 7 UUIDs [[uuid_v7|UUID_v7]] (MDEV-32637, MariaDB 11.7)
 
 ===GIS
 New GIS functions. These functions improve compatibility with MySQL 8. 
@@ -365,14 +408,74 @@ New GIS functions. These functions improve compatibility with MySQL 8.
 * [[st_isvalid|ST_IsValid]] (MDEV-34276)
 * [[st_collect|ST_Collect]] (MDEV-34278)
 
-=== Functions
+=== Other Functions
 * New [[miscellaneous-functions-format_bytes|FORMAT_BYTES]] function. Given a byte count, returns a string consisting of a value and the units in a human-readable format (MDEV-31736)
 
 === Referential Integrity
 * [[check-table|CHECK TABLE ... EXTENDED]] now also checks for referential integrity (MDEV-34309)
 
+=== Protocol
+* Permit bulk implementation to return ALL individual results (MDEV-30366, MariaDB 11.5)
+* Send initial values of system variables in first OK packet (MDEV-31609, MariaDB 11.5)
+
+=== Observability
+* New [[information-schema-users-table|USERS table]] in the Information Schema for storing information about users, [[user-password-expiry|password expiry]], and the limits set by [[server-system-variables/#max_password_errors|max_password_errors]] (MDEV-23729, MDEV-32218, MariaDB 11.5)
+* Add more columns to Information Schema [[information-schema-table_statistics-table|TABLE_STATISTICS]], [[information-schema-client_statistics-table|CLIENT_STATISTICS]] and [[information-schema-user_statistics-table|USER STATISTICS]] tables (MDEV-33151, MariaDB 11.5)
+* Add QUERIES column to Information Schema  [[information-schema-index_statistics-table|INDEX_STATISTICS]] table (MDEV-33152, MariaDB 11.5)
+* Add [[flush/#flush-status|FLUSH GLOBAL STATUS]] (MDEV-33145, MariaDB 11.5)
+* Provide InnoDB async IO statistics (MDEV-32841, MariaDB 11.5)
+* Show variable deprecation for [[mariadbd-options/#-help|mariadbd --help]] output (MDEV-28671, MariaDB 11.5)
+* Extend [[query-response-time-plugin|Query Response Time plugin]] to be compatible with Percona server (MDEV-33501, MariaDB 11.5)
+
+===[[sequences|Sequences]]
+* Additional features for Sequences (MDEV-28152, MariaDB 11.5)
+** [[create-sequence|CREATE SEQUENCE ... AS]] permits creating as any [[int|INT]] type (including [[bigint|BIGINT UNSIGNED]]), extending the range
+** [[information-schema-sequences-table/|Information Schema Sequences table]]
+** Parser accepts larger and smaller values for [[create-sequence/#minvalue|MINVALUE]] and [[create-sequence/#maxvalue|MAXVALUE]]
+* [[analyze-table|ANALYZE TABLE]] on [[sequences]] no longer attempts to collect statistics (MDEV-33938)
+
+=== System-Versioned Tables
+* Allow a [[system-versioned-tables|system-versioned table]] to be converted from implicit to explicit row_start/row_end columns (MDEV-27293, MariaDB 11.7)
+
+=== Stored Routines
+* ROW data type for stored function return values (MDEV-12252, MariaDB 11.7)
+
+=== Derived Tables
+* Add optional correlation column list for [[subqueries-in-a-from-clause-derived-tables|derived tables]] (MDEV-31466, MariaDB 11.7)
+
+=== [SHOW] CREATE SERVER
+* Implement [[show-create-server|SHOW CREATE SERVER]] (MDEV-15696, MariaDB 11.7)
+* Allow arbitrary options in [[create-server|CREATE SERVER]] (MDEV-34716, MariaDB 11.7)
+
+=== Slow Query Log
+* New variable, [[log_slow_always_query_time-system-variable|log_slow_always_query_time]], for specifying that all queries longer than this time are logged to the [[slow-query-log|slow query log]], regardless of [[server-system-variables/#log_slow_min_examined_row_limit|log_slow_min_examined_row_limit]] and [[server-system-variables/#log_slow_rate_limit|log_slow_rate_limit]] (MDEV-33144, MariaDB 11.7)
+
 === Information Schema
 * When querying the [[information-schema|information Schema]], [[stored-functions|stored functions]] that have the same name as a native function no longer generate a warning (MDEV-35437)
+
+=== Spider
+* The Spider variables [[spider-system-variables/#spider_table_crd_thread_count|spider_table_crd_thread_count]] and [[spider-system-variables/#spider_table_sts_thread_count|spider_table_sts_thread_count]] have been deprecated (MDEV-28009, MariaDB 11.7)
+* Deprecate [[spider-system-variables/#spider_casual_read|spider_casual_read]] (MDEV-31789, MariaDB 11.5)
+
+=== General
+* [[session_user|SESSION_USER()]], which used to be an alias for [[user|USER()]] now shows the value of [[current_user|CURRENT_USER()]] when the session was created (MDEV-30908, MariaDB 11.7)
+* CURRENT_TIMESTAMP should return a TIMESTAMP (WITH TIME ZONE?) (MDEV-15751, MariaDB 11.7)
+* A warning has been added when [[server-system-variables/#max_sort_length|max_sort_length]] is exceeded. (MDEV-27277, MariaDB 11.7)
+* Single-table [[delete|DELETEs]] now support table aliases (MDEV-33988, MariaDB 11.6)
+* Set thread names for MariaDB Server threads (MDEV-32537, MariaDB 11.6)
+* [[repair-table|REPAIR TABLE ... FORCE]] (MDEV-33449, MariaDB 11.5)
+* Deprecate and ignore the [[server-system-variables/#alter_algorithm|alter_algorithm]] system variable (MDEV-33655, MariaDB 11.5)
+
+=== Variables
+* For a list of all new variables, see [[system-variables-added-in-mariadb-11-8|System Variables Added in MariaDB 11.8]] and [[status-variables-added-in-mariadb-11-8|Status Variables Added in MariaDB 11.8]].
+
+==Removed Features
+The following deprecated features have been removed:
+
+* &lt;data type&gt; &lt;character set clause&gt; ... COMPRESSED... (MariaDB 11.5)
+** the correct syntax is &lt;data type&gt; COMPRESSED... &lt;character set clause&gt; ...
+* [[galera-cluster-system-variables/#wsrep_load_data_splitting|wsrep_load_data_splitting]] (MariaDB 11.5)
+* [[oqgraph-overview|integer latches in OQGraph]] (and the related [[oqgraph-system-and-status-variables/#oqgraph_allow_create_integer_latch|oqgraph_allow_create_integer_latch]] variable). (MariaDB 11.5)
 
 &lt;&lt;style2 class=&#34;hidden&#34;&gt;&gt;
 == Security Vulnerabilities Fixed in MariaDB 11.8
