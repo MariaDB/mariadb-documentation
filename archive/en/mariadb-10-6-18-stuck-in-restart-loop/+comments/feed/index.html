@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments for: MariaDB 10.6.18 stuck in restart loop</title><link>https://mariadb.com/kb/en/mariadb-10-6-18-stuck-in-restart-loop/+comments/feed/</link><description></description><atom:link href="https://mariadb.com/kb/en/mariadb-10-6-18-stuck-in-restart-loop/+comments/feed/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Mon, 17 Feb 2025 14:54:22 +0000</lastBuildDate><item><title>Re: MariaDB 10.6.18 stuck in restart loop</title><link>https://mariadb.com/kb/en/mariadb-10-6-18-stuck-in-restart-loop/+comments/7020</link><description>&lt;p&gt;Thank you for the reply -&lt;/p&gt;
+&lt;p&gt;You are correct that I mentioned the new version incorrectly- I should have said 10.11.4 and not 10.11.44. We chose that version simply because it is the next major version that AWS supports, beyond 10.6.*.&lt;/p&gt;
+&lt;p&gt;As for more log details:&lt;/p&gt;
+&lt;p&gt;Each time the database instance starts, the following warning is logged in AWS Logs &amp;amp; events:&lt;/p&gt;
+&lt;p&gt;"Binlog position from crash recovery is mysql-bin-changelog.312191 663"&lt;/p&gt;
+&lt;p&gt;3 to 4 minutes later, this event is logged:&lt;/p&gt;
+&lt;p&gt;"The database is using the doublewrite buffer. RDS Optimized Writes is incompatible with the storage configuration. For more information, see the RDS Optimized Writes for MARIADB documentation."&lt;/p&gt;
+&lt;p&gt;To my knowledge the above is more of a warning than an error, but it always coincides with the imminent DB Instance restart.&lt;/p&gt;
+&lt;p&gt;Here is the content of mysql-error-running.log. (The most recent incident anyway - the instance has been restarting now for a couple days.)&lt;/p&gt;
+&lt;p&gt;250213 4:01:07 [ERROR] mysqld got signal 11 ;
+Sorry, we probably made a mistake, and this is a bug.
+Your assistance in bug reporting will enable us to fix this for the next release.
+To report this bug, see &lt;a href="https://mariadb.com/kb/en/reporting-bugs"&gt;https://mariadb.com/kb/en/reporting-bugs&lt;/a&gt;
+We will try our best to scrape up some info that will hopefully help
+diagnose the problem, but since we have already crashed,
+something is definitely wrong and this may fail.
+Server version: 10.6.18-MariaDB-log source revision:
+key_buffer_size=16777216
+read_buffer_size=262144
+max_used_connections=3
+max_threads=1313
+thread_count=3
+It is possible that mysqld could use up to
+key_buffer_size + (read_buffer_size + sort_buffer_size)*max_threads = 3074192 K bytes of memory
+Hope that's ok; if not, decrease some variables in the equation.
+Thread pointer: 0x400048296758
+Attempting backtrace. You can use the following information to find out
+where mysqld died. If you see no messages after this, something went
+terribly wrong...
+stack_bottom = 0x40003e809f28 thread_stack 0x40000
+mysys/stacktrace.c:215(my_print_stacktrace)[0xaaaadacec14c]
+sql/signal_handler.cc:235(handle_fatal_signal)[0xaaaada57b710]
+addr2line: 'linux-vdso.so.1': No such file
+linux-vdso.so.1(&lt;u&gt;kernel_rt_sigreturn+0x0)[0x40002c8c1850]
+include/rem0rec.h:605(rec_offs_n_fields(unsigned short const*))[0xaaaadab7e6e0]
+btr/btr0btr.cc:3758(btr_compress(btr_cur_t*, bool, mtr_t*))[0xaaaadab845a8]
+btr/btr0cur.cc:4517(btr_cur_compress_if_useful(btr_cur_t*, bool, mtr_t*))[0xaaaadab95628]
+btr/btr0cur.cc:4977(btr_cur_pessimistic_delete(dberr_t*, unsigned long, btr_cur_t*, unsigned long, bool, mtr_t*))[0xaaaadab9b67c]
+row/row0purge.cc:417(row_purge_remove_sec_if_poss_tree(purge_node_t*, dict_index_t*, dtuple_t const*))[0xaaaadab25bac]
+row/row0purge.cc:585(row_purge_remove_sec_if_poss)[0xaaaadab25ee4]
+row/row0purge.cc:1188(row_purge)[0xaaaadab268a8]
+que/que0que.cc:588(que_thr_step)[0xaaaadaaede88]
+psi/mysql_thread.h:745(inline_mysql_mutex_lock)[0xaaaadab470cc]
+tpool/task_group.cc:56(tpool::task_group::execute(tpool::task*))[0xaaaadac60b54]
+tpool/tpool_generic.cc:581(tpool::thread_pool_generic::worker_main(tpool::worker_data*))[0xaaaadac5eb64]
+bits/unique_ptr.h:78(std::default_delete&amp;lt;std::thread::_State&amp;gt;::operator()(std::thread::_State*) const)[0xaaaadadcae3c]
+/lib64/libpthread.so.0(+0x7230)[0x40002ca9c230]
+/lib64/libc.so.6(+0xdb7dc)[0x40002cba57dc]
+Trying to get some variables.
+Some pointers may be invalid and cause the dump to abort.
+Query (0x0): (null)
+Connection ID (thread ID): 0
+Status: NOT_KILLED
+Optimizer switch: index_merge=on,index_merge_union=on,index_merge_sort_union=on,index_merge_intersection=on,index_merge_sort_intersection=off,engine_condition_pushdown=off,index_condition_pushdown=on,derived_merge=on,derived_with_keys=on,firstmatch=on,loosescan=on,materialization=on,in_to_exists=on,semijoin=on,partial_match_rowid_merge=on,partial_match_table_scan=on,subquery_cache=on,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=on,semijoin_with_cache=on,join_cache_incremental=on,join_cache_hashed=on,join_cache_bka=on,optimize_join_buffer_size=on,table_elimination=on,extended_keys=on,exists_to_in=on,orderby_uses_equalities=on,condition_pushdown_for_derived=on,split_materialized=on,condition_pushdown_for_subquery=on,rowid_filter=on,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=off,cset_narrowing=off
+The manual page at &lt;a href="https://mariadb.com/kb/en/how-to-produce-a-full-stack-trace-for-mariadbd/"&gt;https://mariadb.com/kb/en/how-to-produce-a-full-stack-trace-for-mariadbd/&lt;/a&gt; contains
+information that should help you find out what is causing the crash.
+We think the query pointer is invalid, but we will try to print it anyway.
+Query:
+Writing a core file...
+Working directory at /rdsdbdata/db
+Resource Limits:
+Limit Soft Limit Hard Limit Units
+Max cpu time unlimited unlimited seconds
+Max file size unlimited unlimited bytes
+Max data size unlimited unlimited bytes
+Max stack size unlimited unlimited bytes
+Max core file size 0 unlimited bytes
+Max resident set unlimited unlimited bytes
+Max processes unlimited unlimited processes
+Max open files 1048576 1048576 files
+Max locked memory 65536 65536 bytes
+Max address space unlimited unlimited bytes
+Max file locks unlimited unlimited locks
+Max pending signals 126359 126359 signals
+Max msgqueue size 819200 819200 bytes
+Max nice priority 0 0
+Max realtime priority 0 0
+Max realtime timeout unlimited unlimited us
+Core pattern: /rdsdbdata/tmp/core-%e-%p
+Kernel version: Linux version 5.10.227-219.884.amzn2.aarch64 (mockbuild@ip-10-0-34-123) (gcc10-gcc (GCC) 10.5.0 20230707 (Red Hat 10.5.0-1), GNU ld version 2.35.2-9.amzn2.0.1) #1 SMP Tue Oct 22 16:38:25 UTC 2024&lt;/u&gt;&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Ross Metcalf</dc:creator><guid>https://mariadb.com/kb/en/mariadb-10-6-18-stuck-in-restart-loop/+comments/7020</guid></item><item><title>Re: MariaDB 10.6.18 stuck in restart loop</title><link>https://mariadb.com/kb/en/mariadb-10-6-18-stuck-in-restart-loop/+comments/7019</link><description>&lt;p&gt;without logs its hard to say what the original problem was.&lt;/p&gt;
+&lt;p&gt;I can't see any InnoDB crash recovery bug fixes in the last release notes. There are a couple of crash prevention fixes however.&lt;/p&gt;
+&lt;p&gt;I can't tell what version you mean by 10.11.44 (10.11.4? or 11.4 something?), however in general, 10.6 is a maintained version so sticking with that series will get all bug fixes. A newer version might avoid the bug if it was 10.6 only, but this is just speculation. Create a bug report, especially if producible in the latest 10.6.20 RDS version.&lt;/p&gt;
+&lt;p&gt;&lt;a href="/kb/en/innodb-recovery-modes/"&gt;InnoDB Recovery Modes&lt;/a&gt; has options for limiting crash recovery (which will loose potential data).&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/mariadb-10-6-18-stuck-in-restart-loop/+comments/7019</guid></item></channel></rss>

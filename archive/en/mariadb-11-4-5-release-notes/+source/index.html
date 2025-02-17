@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-11-4-5-release-notes/+r/146865/">146865</a></dd>
+            <dd><a href="/kb/en/mariadb-11-4-5-release-notes/+r/147399/">147399</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-02-05 18:11">2025-02-05 18:11</span></dd>
+<span class="datetime" title="2025-02-14 13:59">2025-02-14 13:59</span></dd>
         </dl>
     </div>
     
@@ -363,6 +363,8 @@ Thanks, and enjoy MariaDB!
 * New parameter --skip-freed-pages for [[Innochecksum]]. Use this parameter to not get freed undo logs reported as existing undo log pages. (MDEV-35394) 
 * Cloning of table statistics while saving the InnoDB table stats is now avoided (MDEV-35363) 
 * InnoDB deadlock output query length increased to improve visibility of deadlocked statements. (MDEV-32576)
+* ALTER TABLE...IMPORT TABLESPACE does not work with INDEX DESC (MDEV-35169) 
+* The recovery of a Multi-batch operation with InnoDB occasionally fails on startup (MDEV-35699) 
 
 ==== [[Memory]]
 
@@ -373,12 +375,23 @@ Thanks, and enjoy MariaDB!
 * Fix possible Spider thread hang in &#39;Update&#39; state on 2nd INSERT  (MDEV-35064) 
 * Fix possible crash on bootup in spider_sys_open_table  «ext-issue»«MDEV-32822», «ext-issue»«MDEV-34302» (MDEV-34925) 
 
+=== [[character-sets|Character Sets and Collations]] 
+
+* 44 new [[supported-character-sets-and-collations/#collations|collations]] added. These are aliases for MySQL collations to make it easier to replicate from MySQL to MariaDB (MDEV-35256)
+* Added support for utf8mb4_0900_* collations, improving accent handling and compatibility with MySQL 8.0 for replication. (MDEV-20912) 
+** The [[information-schema-collations-table|Information Schema Collations table]] includes a new column, ##COMMENT## which contains information about which collation the alias refers to. 
+* Fix assertion falilure and possible index corruption with unique key and nopad collation without DESC or HASH keys (MDEV-30111) 
+* Fix client crash the command after client sets character set to utf32 (MDEV-34090) 
+* Fix possible runtime error caused by XA RECOVER applying a zero offset to a null pointer (MDEV-35549) 
+* Fix issue where functions in default values in tables with certain character sets could break SHOW CREATE and mariadb-dump (MDEV-29968) 
+
 === [[standard-replication|Replication]]
 
-* Fix incorrect writing of timestamp into binary log, causing discrepancy upon binlog replaying (MDEV-31761) 
+* Fix incorrect formatting of timestamp during [[mariadb-binlog|mariadb-binlog]] parsing of a binary log, causing point in time recovery discrepancies  (MDEV-31761)
 * [[mariadb-binlog-options|mariadb-binlog]] can now correctly process more than one logfile when --stop-datetime is specified (MDEV-35528)
 * Setting `pseudo_thread_id` to a value exceeding 4 bytes previously resulted in truncation when written to the binary log (MDEV-35646) 
 * MariaDB now supports MySQL 8.0 binlog events, including PARTIAL_UPDATE_ROWS_EVENT, TRANSACTION_PAYLOAD_EVENT, and HEARTBEAT_LOG_EVENT_V2. (MDEV-35643) 
+* START/STOP ALL REPLICAS errors without returning an error if the command could be executed due to wrong privileges.  (MDEV-21858) 
 
 === Optimizer
 
@@ -394,13 +407,6 @@ Thanks, and enjoy MariaDB!
 * Fix possible hang or crash during InnoDB purge with HASH indexes during ALTER TABLE (MDEV-25654) 
 * EXCHANGE PARTITION now works for tables with unique blobs (MDEV-35612) 
 * algorithm = instant can now correctly be used  if a table has partitions and one tries to change a column with an index which is not the partitions key. This previously gave error &#34;ERROR 1846 (0A000): ALGORITHM=INSTANT is not supported. Reason: ADD INDEX. Try ALGORITHM=NOCOPY&#34;. (MDEV-34813) 
-
-=== [[character-sets|Character Sets]]
-
-* Fix assertion falilure and possible index corruption with unique key and nopad collation without DESC or HASH keys (MDEV-30111) 
-* Fix client crash the command after client sets character set to utf32 (MDEV-34090) 
-* Fix possible runtime error caused by XA RECOVER applying a zero offset to a null pointer (MDEV-35549) 
-* Fix issue where functions in default values in tables with certain character sets could break SHOW CREATE and mariadb-dump (MDEV-29968) 
 
 === [[Galera]]
 
@@ -455,6 +461,9 @@ conflict when applied concurrently. (MDEV-35018)
 * A BEFORE INSERT Trigger previously returned with error &#34;&#34;Field &#39;xxx&#39; doesn&#39;t have a default value&#34;, if a NULL value is added for a column defined NOT NULL without explicit value and no DEFAULT specified (MDEV-19761) 
 * Calling a stored routine that executes a join on three or more tables and referencing not-existent column name in the USING clause could previously result in a crash on its second invocation. (MDEV-24935) 
 * Fix rare cases where binlog entries could receive incorrect timestamps on secondary nodes of a  Galera cluster, potentially impacting replication accuracy (MDEV-35157) 
+* Table flags, preserved from the old storage engine after changing the storage engine of a table, can break replication (MDEV-31794) 
+* Comparison of UUID v1 and V6 could return incorrect results (MDEV-35468) 
+* Validation of SSL certificate fails for mariadb-backup. For a MariaDB Cluster (Galera) SST operations can be affected (MDEV-35368) 
 
 === Security
 * Fixes for the following [[cve|security vulnerabilities]]:
