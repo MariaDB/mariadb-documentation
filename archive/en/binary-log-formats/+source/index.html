@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/binary-log-formats/+r/135875/">135875</a></dd>
+            <dd><a href="/kb/en/binary-log-formats/+r/147444/">147444</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-03-05 12:38">2024-03-05 12:38</span></dd>
+<span class="datetime" title="2025-02-17 09:18">2025-02-17 09:18</span></dd>
         </dl>
     </div>
     
@@ -384,6 +384,9 @@ See [[unsafe-statements-for-statement-based-replication|Unsafe Statements for St
 
 If you need to execute non-deterministic statements, then it is safer to use mixed logging or row-based.
 
+==== Things to be aware of with statement-based logging
+Note that some tables, like temporary tables created in row mode, does not support statement based logging (as the data is not in the binary log).  Any statement that uses a table that does not support statement logging will use row based logging. This is to ensure that the data on master and the slave are consistent.
+
 === Mixed Logging
 
 Mixed logging is the default binary log format.
@@ -403,6 +406,12 @@ Row-based logging uses more storage than the other log formats but is the safest
 If one wants to be able to see the original query that was logged, one can enable [[annotate_rows_event|annotated rows events]], that is shown with [[mariadb-binlog]], with [[replication-and-binary-log-server-system-variables/#binlog_annotate_row_events|--binlog-annotate-row-events]]. This option is on by default.
 
 This mode can be enabled by setting the [[replication-and-binary-log-server-system-variables#binlog_format|binlog_format]] system variable to ##ROW##.
+
+==== Things to be aware of with row-based logging
+When using row base logging, some statement works different on the master.
+* DELETE FROM table_name
+** In row base mode the table will always use deletion row-by-row which can take a long time if the table is big.  It can also use a lot of space in the binary log.
+** In STATEMENT or MIXED mode, [[truncate]] will be used, if possible (no triggers, no foreign keys etc).  This is much faster and uses less space in the binary log.
 
 == Compression of the Binary Log
 
