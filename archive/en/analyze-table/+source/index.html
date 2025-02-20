@@ -319,7 +319,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/analyze-table/+r/147378/">147378</a></dd>
+            <dd><a href="/kb/en/analyze-table/+r/147733/">147733</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-7">
@@ -328,7 +328,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-02-13 15:34">2025-02-13 15:34</span></dd>
+<span class="datetime" title="2025-02-19 13:47">2025-02-19 13:47</span></dd>
         </dl>
     </div>
     
@@ -355,7 +355,7 @@ ANALYZE [NO_WRITE_TO_BINLOG | LOCAL] TABLE tbl_name [,tbl_name ...]
 ##ANALYZE TABLE## analyzes and stores the key distribution for a
 table ([[index-statistics|index statistics]]). This statement works with [[MyISAM]], [[Aria]] and [[InnoDB]] tables. During the analysis, InnoDB will allow reads/writes, and MyISAM/Aria reads/inserts. For MyISAM tables, this statement is equivalent to using [[myisamchk|myisamchk --analyze]].
 
-For more information on how the analysis works within InnoDB, see
+ANALYZE uses histograms, which can provide a better selectivity than InnoDB statistics offer. InnoDB statistics work with a limited sample set and is therefore not as accurate as persistent statistics can be. For more information on how the analysis works within InnoDB, see
 [[innodb-limitations/#table-analysis|InnoDB Limitations]].
 
 MariaDB uses the stored key distribution to decide the order in which
@@ -369,11 +369,25 @@ By default, ANALYZE TABLE statements are written to the [[binary-log|binary log]
 
 From MariaDB 10.3.19, ##ANALYZE TABLE## statements are not logged to the binary log if [[server-system-variables/#read_only|read_only]] is set. See also [[read-only-replicas|Read-Only Replicas]].
 
+From MariaDB 10.6.16 ##ANALYZE TABLE## is non-blocking and non-intrusive. A connection will start using new statistics for the query following the completion of the ##ANALYZE TABLE##.
+
 ##ANALYZE TABLE## is also supported for partitioned tables. You
 can use ##[[alter-table|ALTER TABLE]] ... ANALYZE PARTITION## to analyze one or
 more partitions.
 
 The [[aria|Aria]] storage engine supports [[progress-reporting|progress reporting]] for the ##ANALYZE TABLE## statement.
+
+== Performance Impact
+
+Note that analyzing tables with ANALYZE can have a performance impact and can use a lot of disk space for big tables. As column statistics usually do not change much over time, even when the table grows, there is no benefit to running ANALYZE very often.  
+
+Running ANALYZE is indicated:
+* for newly populated tables,
+* for tables that have additional columns added that are used in WHERE clauses,
+* when a table has doubled in size,
+* when you note that a query becomes slow because the table order has changed and you can see from [[explain|EXPLAIN]] or [[analyze-format-json|ANALYZE FORMAT=JSON]] that the selectivity is wrong for a table.
+
+ANALYZE isn’t useful for table columns of type UNIQUE, PRIMARY KEY, TIME, or CURRENT_TIME. In ANALYZE queries, you should omit columns of those types.
 
 == Engine-Independent Statistics / PERSISTENT FOR
 
