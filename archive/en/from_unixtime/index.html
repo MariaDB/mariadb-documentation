@@ -287,7 +287,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-02-20 12:21">12 hours, 43 minutes ago</span></dd>
+<span class="datetime" title="2025-02-21 14:57">10 hours, 5 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -366,14 +366,24 @@
 
         <ul id="product_chooser">
             
-                <li class="mariadb_from_11_7">
-                    <label><input type="checkbox" data-product-class="mariadb_from_11_7"
-                            >MariaDB starting with 11.7</label>
+                <li class="mariadb_to_11_7">
+                    <label><input type="checkbox" data-product-class="mariadb_to_11_7"
+                            >MariaDB until 11.7</label>
                 </li>
             
-                <li class="mariadb_from_11_7">
-                    <label><input type="checkbox" data-product-class="mariadb_from_11_7"
-                            >MariaDB starting with 11.7</label>
+                <li class="mariadb_to_11_5">
+                    <label><input type="checkbox" data-product-class="mariadb_to_11_5"
+                            >MariaDB until 11.5</label>
+                </li>
+            
+                <li class="mariadb_to_11_7">
+                    <label><input type="checkbox" data-product-class="mariadb_to_11_7"
+                            >MariaDB until 11.7</label>
+                </li>
+            
+                <li class="mariadb_to_11_5">
+                    <label><input type="checkbox" data-product-class="mariadb_to_11_5"
+                            >MariaDB until 11.5</label>
                 </li>
             
         </ul>
@@ -458,7 +468,8 @@
     
     <div class="answer formatted">
         <h2 class="anchored_heading" id="syntax">Syntax</h2>
-<pre class="fixed">FROM_UNIXTIME(unix_timestamp), FROM_UNIXTIME(unix_timestamp,format)
+<pre class="fixed">FROM_UNIXTIME(unix_timestamp)
+FROM_UNIXTIME(unix_timestamp,format)
 </pre><div class="table_of_contents well well-small">
 <h3>Contents</h3>
  <ol class="toc">
@@ -475,16 +486,16 @@
 </li>
 </div>
 <h2 class="anchored_heading" id="description">Description</h2>
-<p>Returns a representation of the unix_timestamp argument as a value in
-'YYYY-MM-DD HH:MM:SS' or YYYYMMDDHHMMSS.uuuuuu format, depending on
-whether the function is used in a string or numeric context. The value
-is expressed in the current <a href="/kb/en/time-zones/">time zone</a>. unix_timestamp is an internal
-timestamp value such as is produced by the <a href="/kb/en/unix_timestamp/">UNIX_TIMESTAMP()</a> function.</p>
-<p>If format is given, the result is formatted according to the format
-string, which is used the same way as listed in the entry for the
-<a href="/kb/en/date_format/">DATE_FORMAT()</a> function.</p>
-<div class="cstm-style greenbox"><p>Timestamps in MariaDB have a maximum value of 4294967295 (2147483647 before 11.5), equivalent to 2106-02-07 06:28:15 (2038-01-19 05:14:07 before 11.5). This is due to the underlying 32-bit limitation. Using the function on a timestamp beyond this will result in NULL being returned. Use <a href="/kb/en/datetime/">DATETIME</a> as a storage type if you require dates beyond this.</p>
-</div><p>The options that can be used by FROM_UNIXTIME(), as well as <a href="/kb/en/date_format/">DATE_FORMAT()</a> and <a href="/kb/en/str_to_date/">STR_TO_DATE()</a>, are:</p>
+<p>Converts the number of seconds from the epoch (1970-01-01 00:00:00 UTC) to a
+<code>TIMESTAMP</code> value, the opposite of what <code><a href="/kb/en/unix_timestamp/">UNIX_TIMESTAMP()</a></code> is doing. Returns NULL if the result would be outside of the valid range of <code>TIMESTAMP</code> values.</p>
+<p>If format is given, the result is exactly equivalent to</p>
+<pre class="fixed">DATE_FORMAT(FROM_UNIXTIME(unix_timestamp), format)
+</pre><div class="mariadb_to_11_7 mariadb to_11_7 product"><h5 class="product_title">MariaDB until <a href="/kb/en/what-is-mariadb-117/">11.7</a></h5><p>Before <a href="/kb/en/what-is-mariadb-117/">MariaDB 11.7</a>, the one-argument form of <code>FROM_UNIXTIME()</code> was returning a
+<code>DATETIME</code>. Meaning, it could return values outside of valid <code>TIMESTAMP</code> range,
+in particular 1970-01-01 00:00:00. And it could return the same result for different values of unix_timestamp (around DST changes).</p>
+</div><div class="cstm-style greenbox"><p>Timestamps in MariaDB have a maximum value of 4294967295, equivalent to 2106-02-07 06:28:15. This is due to the underlying 32-bit limitation. Using the function on a timestamp beyond this will result in NULL being returned. Use <a href="/kb/en/datetime/">DATETIME</a> as a storage type if you require dates beyond this.</p>
+<div class="mariadb_to_11_5 mariadb to_11_5 product"><h5 class="product_title">MariaDB until <a href="/kb/en/what-is-mariadb-115/">11.5</a></h5><p>Before <a href="/kb/en/what-is-mariadb-115/">MariaDB 11.5</a>, the maximum value was 2147483647, equivalent to 2038-01-19 05:14:07.</p>
+</div></div><p>The options that can be used by FROM_UNIXTIME(), as well as <a href="/kb/en/date_format/">DATE_FORMAT()</a> and <a href="/kb/en/str_to_date/">STR_TO_DATE()</a>, are:</p>
 <div class="cstm-style darkheader-nospace-borders"><table><tr><th>Option</th><th>Description</th></tr>
 <tr><td><code>%a</code></td><td>Short weekday name in current locale (Variable <a href="/kb/en/server-system-variables/#lc_time_names">lc_time_names</a>).</td></tr>
 <tr><td><code>%b</code></td><td>Short form month name in current locale. For locale en_US this is one of: Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov or Dec.</td></tr>
@@ -525,8 +536,7 @@ string, which is used the same way as listed in the entry for the
 </div><h2 class="anchored_heading" id="performance-considerations">Performance Considerations</h2>
 <p>If your <a href="/kb/en/server-system-variables/#time_zone">session time zone</a> is set to <code>SYSTEM</code> (the default), <code>FROM_UNIXTIME()</code> will call the OS function to convert the data using the system time zone. At least on Linux, the corresponding function (<code>localtime_r</code>) uses a global mutex inside glibc that can cause contention under high concurrent load.</p>
 <p>Set your time zone to a named time zone to avoid this issue. See <a href="/kb/en/time-zones/#mysql-time-zone-tables">mysql time zone tables</a> for details on how to do this.</p>
-<div class="mariadb_from_11_7 mariadb from_11_7 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-117/">11.7</a></h5><p>From <a href="/kb/en/what-is-mariadb-117/">MariaDB 11.7</a>, FROM_UNIXTIME(0) now returns NULL instead of '1970-01-01 00:00:00' (assuming time_zone='+00:00'). See <a href="https://jira.mariadb.org/browse/MDEV-15751">MDEV-15751</a>.</p>
-</div><h2 class="anchored_heading" id="examples">Examples</h2>
+<h2 class="anchored_heading" id="examples">Examples</h2>
 <pre class="fixed"><span class="k">SELECT</span> <span class="n">FROM_UNIXTIME</span><span class="p">(</span><span class="mi">1196440219</span><span class="p">);</span>
 <span class="o">+</span><span class="c1">---------------------------+</span>
 <span class="o">|</span> <span class="n">FROM_UNIXTIME</span><span class="p">(</span><span class="mi">1196440219</span><span class="p">)</span> <span class="o">|</span>

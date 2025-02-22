@@ -323,7 +323,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/from_unixtime/+r/147784/">147784</a></dd>
+            <dd><a href="/kb/en/from_unixtime/+r/147793/">147793</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -332,7 +332,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-02-20 12:21">2025-02-20 12:21</span></dd>
+<span class="datetime" title="2025-02-21 14:57">2025-02-21 14:57</span></dd>
         </dl>
     </div>
     
@@ -345,23 +345,31 @@
         <textarea id="answer_source" class="creole_source autogrow">== Syntax
 
 &lt;&lt;code&gt;&gt;
-FROM_UNIXTIME(unix_timestamp), FROM_UNIXTIME(unix_timestamp,format)
+FROM_UNIXTIME(unix_timestamp)
+FROM_UNIXTIME(unix_timestamp,format)
 &lt;&lt;/code&gt;&gt;
 &lt;&lt;toc&gt;&gt;
 == Description
 
-Returns a representation of the unix_timestamp argument as a value in
-&#39;YYYY-MM-DD HH:MM:SS&#39; or YYYYMMDDHHMMSS.uuuuuu format, depending on
-whether the function is used in a string or numeric context. The value
-is expressed in the current [[time-zones|time zone]]. unix_timestamp is an internal
-timestamp value such as is produced by the [[unix_timestamp|UNIX_TIMESTAMP()]] function.
+Converts the number of seconds from the epoch (1970-01-01 00:00:00 UTC) to a
+##TIMESTAMP## value, the opposite of what ##[[unix_timestamp|UNIX_TIMESTAMP()]]## is doing. Returns NULL if the result would be outside of the valid range of ##TIMESTAMP## values.
 
-If format is given, the result is formatted according to the format
-string, which is used the same way as listed in the entry for the
-[[date_format|DATE_FORMAT()]] function.
+If format is given, the result is exactly equivalent to
+&lt;&lt;code&gt;&gt;
+DATE_FORMAT(FROM_UNIXTIME(unix_timestamp), format)
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;product mariadb to=&#34;11.7&#34;&gt;&gt;
+Before MariaDB 11.7, the one-argument form of ##FROM_UNIXTIME()## was returning a
+##DATETIME##. Meaning, it could return values outside of valid ##TIMESTAMP## range,
+in particular 1970-01-01 00:00:00. And it could return the same result for different values of unix_timestamp (around DST changes).
+&lt;&lt;/product&gt;&gt;
 
 &lt;&lt;style class=&#34;greenbox&#34;&gt;&gt;
-Timestamps in MariaDB have a maximum value of 4294967295 (2147483647 before 11.5), equivalent to 2106-02-07 06:28:15 (2038-01-19 05:14:07 before 11.5). This is due to the underlying 32-bit limitation. Using the function on a timestamp beyond this will result in NULL being returned. Use [[datetime|DATETIME]] as a storage type if you require dates beyond this.
+Timestamps in MariaDB have a maximum value of 4294967295, equivalent to 2106-02-07 06:28:15. This is due to the underlying 32-bit limitation. Using the function on a timestamp beyond this will result in NULL being returned. Use [[datetime|DATETIME]] as a storage type if you require dates beyond this.
+&lt;&lt;product mariadb to=&#34;11.5&#34;&gt;&gt;
+Before MariaDB 11.5, the maximum value was 2147483647, equivalent to 2038-01-19 05:14:07.
+&lt;&lt;/product&gt;&gt;
 &lt;&lt;/style&gt;&gt;
 
 The options that can be used by FROM_UNIXTIME(), as well as [[date_format|DATE_FORMAT()]] and [[str_to_date|STR_TO_DATE()]], are:
@@ -410,10 +418,6 @@ The options that can be used by FROM_UNIXTIME(), as well as [[date_format|DATE_F
 If your [[server-system-variables/#time_zone|session time zone]] is set to ##SYSTEM## (the default), ##FROM_UNIXTIME()## will call the OS function to convert the data using the system time zone. At least on Linux, the corresponding function (##localtime_r##) uses a global mutex inside glibc that can cause contention under high concurrent load.
 
 Set your time zone to a named time zone to avoid this issue. See [[time-zones/#mysql-time-zone-tables|mysql time zone tables]] for details on how to do this.
-
-&lt;&lt;product mariadb from=&#34;11.7&#34;&gt;&gt;
-From MariaDB 11.7, FROM_UNIXTIME(0) now returns NULL instead of &#39;1970-01-01 00:00:00&#39; (assuming time_zone=&#39;+00:00&#39;). See MDEV-15751.
-&lt;&lt;/product&gt;&gt;
 
 == Examples
 
