@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-11-7-2-release-notes/+r/147386/">147386</a></dd>
+            <dd><a href="/kb/en/mariadb-11-7-2-release-notes/+r/147685/">147685</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-02-13 19:20">2025-02-13 19:20</span></dd>
+<span class="datetime" title="2025-02-19 09:16">2025-02-19 09:16</span></dd>
         </dl>
     </div>
     
@@ -332,7 +332,7 @@
         
         <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;button target=&#34;https://mariadb.com/downloads&#34; class=&#34;btn-primary&#34;&gt;&gt;Download&lt;&lt;/button&gt;&gt;
 &lt;&lt;button target=&#34;mariadb-11-7-2-release-notes&#34; class=&#34;btn-info disabled&#34;&gt;&gt;Release Notes&lt;&lt;/button&gt;&gt;
-&lt;&lt;button target=&#34;mariadb-11-7-2-changelog&#34; class=&#34;btn-info disabled&#34;&gt;&gt;Changelog&lt;&lt;/button&gt;&gt;
+&lt;&lt;button target=&#34;mariadb-11-7-2-changelog&#34; class=&#34;btn-info&#34;&gt;&gt;Changelog&lt;&lt;/button&gt;&gt;
 &lt;&lt;button target=&#34;what-is-mariadb-11-7&#34; class=&#34;btn-info&#34;&gt;&gt;Overview of 11.7&lt;&lt;/button&gt;&gt;
 
 ^^//[[https://downloads.mariadb.org/mariadb/11.7.2/|Alternate download from mariadb.org]]//^^
@@ -363,8 +363,8 @@ Thanks, and enjoy MariaDB!
 * New parameter --skip-freed-pages for [[Innochecksum]]. Use this parameter to not get freed undo logs reported as existing undo log pages. (MDEV-35394) 
 * Cloning of table statistics while saving the InnoDB table stats is now avoided (MDEV-35363) 
 * InnoDB deadlock output query length increased to improve visibility of deadlocked statements. (MDEV-32576)
-* ALTER TABLE...IMPORT TABLESPACE does not work with INDEX DESC (MDEV-35169) 
-* The recovery of a multi-batch operation with InnoDB occasionally fails on startup (MDEV-35699) 
+* [[alter-table/#import-tablespace|ALTER TABLE...IMPORT TABLESPACE]] now works with INDEX DESC (MDEV-35169) 
+* Fix occasional failure of recovery of a multi-batch operation with InnoDB on startup (MDEV-35699) 
 
 ==== [[Memory]]
 
@@ -386,13 +386,13 @@ Thanks, and enjoy MariaDB!
 
 === [[standard-replication|Replication]]
 
-* Fix incorrect formatting of timestamp during [[mariadb-binlog|mariadb-binlog]] parsing of a binary log, causing point in time recovery discrepancies  (MDEV-31761)
+* Fix incorrect formatting of timestamp during [[mariadb-binlog]] parsing of a binary log, causing point in time recovery discrepancies  (MDEV-31761)
 * [[mariadb-binlog-options|mariadb-binlog]] can now correctly process more than one logfile when --stop-datetime is specified (MDEV-35528)
 * Setting `pseudo_thread_id` to a value exceeding 4 bytes previously resulted in truncation when written to the binary log (MDEV-35646) 
 * MariaDB now supports MySQL 8.0 binlog events, including PARTIAL_UPDATE_ROWS_EVENT, TRANSACTION_PAYLOAD_EVENT, and HEARTBEAT_LOG_EVENT_V2. (MDEV-35643) 
-* Mariadb-binlog ignores binary log events written with system timestamp 4294967295 and possibly all following events. This can potentially causing data loss during recovery from binlogs (MDEV-33239) 
-* Table flags, preserved from the old storage engine after changing the storage engine of a table, can break replication (MDEV-31794) 
-* START/STOP ALL REPLICAS errors without returning an error if the command could be executed due to wrong privileges.  (MDEV-21858) 
+* [[mariadb-binlog]] no longer ignores binary log events written with system timestamp 4294967295 and possibly all following events, avoiding potential data loss during recovery from binlogs (MDEV-33239) 
+* Table flags, preserved from the old storage engine after changing the storage engine of a table, can no longer break replication (MDEV-31794) 
+* Fix issue where [[start-replica|START]]/[[stop-replica|STOP]] ALL REPLICAS errors without returning an error if the command could be executed due to wrong privileges.  (MDEV-21858) 
 
 === Optimizer
 
@@ -433,16 +433,16 @@ conflict when applied concurrently. (MDEV-35018)
 * For an authentication with the [[authentication-plugin-ed25519|ed25519 authentication plugin]] the password of the CREATE USER statement is now masked in the audit log (MDEV-35507) 
 * MariaDB Audit now detects all DCLs forms for masking a password (MDEV-35522) 
 
-=== Vector search
+=== [[vectors|Vector search]]
 
 * Adding a regular index on a vector column leads to invalid table structure (MDEV-35792) 
-* Vector values become zero after mariadb-dump / restore, impacting data integrity for vector columns. (MDEV-35221) 
+* Vector values become zero after [[mariadb-dump]] / restore, impacting data integrity for vector columns. (MDEV-35221) 
 * Server can crash when a SELECT query is including a DISTINCT and ORDER BY, and a vector index is used (MDEV-35793) 
 
 === General
 
 * Fix possible crash where server could not construct a geomery object from the input (MDEV-33987) 
-* Fix trigger created with &#34;CREATE TRIGGER `table1_after_insert` AFTER INSERT&#34; which is adding rows to another table using &#34;FOR EACH ROW insert into table2(`id`, `name`) values (NEW.`id`, NEW.`name`);&#34; that did not work correctly when if bulk inserts are used by the application. Only the first row of the bulk insert would be added to the table (MDEV-34958) 
+* Fix trigger created with &#34;[[create-trigger|CREATE TRIGGER `table1_after_insert` AFTER INSERT]]&#34; which is adding rows to another table using &#34;FOR EACH ROW insert into table2(`id`, `name`) values (NEW.`id`, NEW.`name`);&#34; that did not work correctly when if bulk inserts are used by the application. Only the first row of the bulk insert would be added to the table (MDEV-34958) 
 * After changing the table definition for the system table &#39;mysql.servers&#39;, a following execution of CREATE SERVER would previously lead to a server crash.
 ** NOTE: System tables should never be modified by a user anyhow (MDEV-33783)
 * Fix connection hang after query on a partitioned table with UNION and LIMIT ROWS EXAMINED (MDEV-35571) 
@@ -481,10 +481,8 @@ conflict when applied concurrently. (MDEV-35018)
 For a complete list of changes made in MariaDB 11.7.2, with links to detailed
 information on each push, see the [[mariadb-11-7-2-changelog|changelog]].
 
-&lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 == Contributors
-For a full list of contributors to MariaDB 11.7.2, see the [[https://mariadb.org/mariadb-10-7-1-rc-and-mariadb-10-6-5-10-5-13-10-4-22-10-3-32-and-10-2-41-now-available/|MariaDB Foundation release announcement]].
-&lt;&lt;/style&gt;&gt;
+For a full list of contributors to MariaDB 11.7.2, see the [[For a full list of contributors to MariaDB 11.8.1, see the [[https://mariadb.org/mariadb-11-7-2-and-mariadb-11-8-1-now-available/|MariaDB Foundation release announcement]].|MariaDB Foundation release announcement]].
 
 &lt;&lt;include slug=&#34;release-notification&#34;&gt;&gt;</textarea>
     
