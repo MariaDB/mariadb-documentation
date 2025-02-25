@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/authentication-plugin-unix-socket/+r/144418/">144418</a></dd>
+            <dd><a href="/kb/en/authentication-plugin-unix-socket/+r/147850/">147850</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-27">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2020-12-01 13:36">2020-12-01 13:36</span></dd>
+<span class="datetime" title="2025-02-24 16:15">2025-02-24 16:15</span></dd>
         </dl>
     </div>
     
@@ -334,9 +334,7 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;product mariadb from=10.4.3&gt;&gt;
-In MariaDB 10.4.3 and later, the ##unix_socket## authentication plugin is installed by default, and it is used by the ##&#39;root&#39;@&#39;localhost&#39;## user account by default. See [[authentication-from-mariadb-104|Authentication from MariaDB 10.4]] for more information.
-&lt;&lt;/product&gt;&gt;
+        <textarea id="answer_source" class="creole_source autogrow">In MariaDB 10.4.3 and later, the ##unix_socket## authentication plugin is installed by default, and it is used by the ##&#39;root&#39;@&#39;localhost&#39;## user account by default. See [[authentication-from-mariadb-104|Authentication from MariaDB 10.4]] for more information.
 
 The ##unix_socket## authentication plugin allows the user to use operating system credentials when connecting to MariaDB via the local Unix socket file. This Unix socket file is defined by the [[server-system-variables/#socket|socket]] system variable.
 
@@ -373,9 +371,7 @@ In some of these scenarios a database password may prevent these security exploi
 
 == Disabling the Plugin
 
-&lt;&lt;product mariadb from=&#34;10.4.3&#34;&gt;&gt;
 In MariaDB 10.4.3 and later, the ##unix_socket## authentication plugin is installed by default, so **if you do not want it to be available by default on those versions, then you will need to disable it**.
-&lt;&lt;/product&gt;&gt;
 
 &lt;&lt;style class=&#34;greenbox&#34;&gt;&gt;
 The ##unix_socket## authentication plugin is also installed by default in **new installations** that use the ##[[installing-mariadb-deb-files|.deb]]## packages provided by Debian&#39;s default repositories in Debian 9 and later and Ubuntu&#39;s default repositories in Ubuntu 15.10 and later, so **if you do not want it to be available by default on those systems when those packages are used, then you will need to disable it**. See [[differences-in-mariadb-in-debian-and-ubuntu|Differences in MariaDB in Debian (and Ubuntu)]] for more information.
@@ -399,9 +395,7 @@ disable_unix_socket
 
 == Installing the Plugin
 
-&lt;&lt;product mariadb from=&#34;10.4.3&#34;&gt;&gt;
 In MariaDB 10.4.3 and later, the ##unix_socket## authentication plugin is installed by default, so **this step can be skipped on those versions**.
-&lt;&lt;/product&gt;&gt;
 
 &lt;&lt;style class=&#34;greenbox&#34;&gt;&gt;
 The ##unix_socket## authentication plugin is also installed by default in **new installations** that use the ##[[installing-mariadb-deb-files|.deb]]## packages provided by Debian&#39;s default repositories in Debian 9 and later and Ubuntu&#39;s default repositories in Ubuntu 15.10 and later, so **this step can be skipped on those systems when those packages are used**. See [[differences-in-mariadb-in-debian-and-ubuntu|Differences in MariaDB in Debian (and Ubuntu)]] for more information.
@@ -446,6 +440,37 @@ If ##[[sql-mode|SQL_MODE]]## does not have ##NO_AUTO_CREATE_USER## set, then you
 &lt;&lt;sql&gt;&gt;
 GRANT SELECT ON db.* TO username@hostname IDENTIFIED VIA unix_socket;
 &lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;product mariadb from=&#34;11.6&#34;&gt;&gt;
+Prior to MariaDB 11.6, the plugin only checked whether the OS socket user id matched the MariaDB user name, and ignored the authentication string.
+
+From MariaDB 11.6, the authentication string, if present, will be compared with the socket&#39;s user name, and authentication can proceed if there&#39;s a match. The [[server-system-variables/#external_user|external_user]] system variable will contain the OS user in this case.
+
+For example, assuming an OS user of &#39;bob&#39;: 
+&lt;&lt;code&gt;&gt;
+CREATE USER A identified via unix_socket as &#39;bob&#39;;
+&lt;&lt;/code&gt;&gt;
+
+To connect:
+&lt;&lt;code&gt;&gt;
+mariadb -uA
+&lt;&lt;/code&gt;&gt;
+
+or, to access the sock file directly, something like:
+&lt;&lt;code&gt;&gt;
+mariadb -uA -S /var/run/mysqld/mysqld.sock
+&lt;&lt;/code&gt;&gt;
+
+Once connected:
+&lt;&lt;sql&gt;&gt;
+select user(),@@external_user;
++-------------+-----------------+
+| user()      | @@external_user |
++-------------+-----------------+
+| A@localhost | bob             |
++-------------+-----------------+
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/product&gt;&gt;
 
 == Switching to Password-based Authentication
 
