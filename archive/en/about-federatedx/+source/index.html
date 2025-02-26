@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/about-federatedx/+r/128607/">128607</a></dd>
+            <dd><a href="/kb/en/about-federatedx/+r/147884/">147884</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-08-08 10:17">2023-08-08 10:17</span></dd>
+<span class="datetime" title="2025-02-25 11:46">2025-02-25 11:46</span></dd>
         </dl>
     </div>
     
@@ -452,10 +452,11 @@ create server &#39;server_one&#39; foreign data wrapper &#39;mysql&#39; options
   OWNER &#39;root&#39;);
 &lt;&lt;/code&gt;&gt;
 
-Then the FederatedX table is created specifying the newly created Federated server:
+Then the FederatedX table is created specifying the newly created Federated server.
+The following statements creates a federated table, &lt;&lt;fixed&gt;&gt;federated.t1&lt;&lt;/fixed&gt;&gt; against the table &lt;&lt;fixed&gt;&gt;db1.t1&lt;&lt;/fixed&gt;&gt; on the remote server.
 
 &lt;&lt;code lang=sql inline=false&gt;&gt;
-CREATE TABLE federatedx.t1 (
+CREATE TABLE federated.t1 (
   `id` int(20) NOT NULL,
   `name` varchar(64) NOT NULL default &#39;&#39;
   )
@@ -480,7 +481,7 @@ You can also change the server to point to a new schema:
 ALTER SERVER &#39;server_one&#39; options(DATABASE &#39;db2&#39;);
 &lt;&lt;/code&gt;&gt;
 
-All subsequent calls to any FederatedX table using the &#39;server_one&#39; will now be against db2.t1! Guess what? You no longer have to perform an alter table in order to point one or more FederatedX tables to a new server!
+All subsequent calls to any FederatedX table using the &#39;server_one&#39; will now be against tables in &lt;&lt;fixed&gt;&gt;db2&lt;&lt;/fixed&gt;&gt;! Guess what? You no longer have to perform an alter table in order to point one or more FederatedX tables to a new server!
 
 This &lt;&lt;fixed&gt;&gt;connection=&#34;connection string&#34;&lt;&lt;/fixed&gt;&gt; is necessary 
 for the handler to be able to connect to the foreign server, either
@@ -563,7 +564,7 @@ To use this handler, it&#39;s very simple. You must have two databases running, 
 First, on the foreign database you create a table, for example:
 
 &lt;&lt;code wrap=true lang=sql&gt;&gt;
-CREATE TABLE test_table (
+CREATE TABLE federated.test_table (
   id     int(20) NOT NULL auto_increment,
   name   varchar(32) NOT NULL default &#39;&#39;,
   other  int(20) NOT NULL default &#39;0&#39;,
@@ -576,8 +577,8 @@ DEFAULT CHARSET=latin1;
 Then, on the server that will be connecting to the foreign host (client), you create a federated table without specifying the table structure:
 
 &lt;&lt;sql&gt;&gt;
-CREATE TABLE test_table ENGINE=FEDERATED 
-  CONNECTION=&#39;mysql://root@127.0.0.1:9306/federatedx/test_federatedx&#39;;
+CREATE TABLE federated_test_table ENGINE=FEDERATED 
+  CONNECTION=&#39;mysql://root@127.0.0.1:9306/federated/test_table&#39;;
 &lt;&lt;/sql&gt;&gt;
 
 Notice the &#34;ENGINE&#34; and &#34;CONNECTION&#34; fields? This is where you
@@ -592,7 +593,7 @@ for FederatedX, and port 5555 for the foreign database.
 Alternatively (or if you&#39;re using MariaDB before version 10.0.2) you specify the federated table structure explicitly:
 
 &lt;&lt;sql&gt;&gt;
-CREATE TABLE test_table (
+CREATE TABLE federated_test_table (
   id     int(20) NOT NULL auto_increment,
   name   varchar(32) NOT NULL default &#39;&#39;,
   other  int(20) NOT NULL default &#39;0&#39;,
@@ -601,7 +602,7 @@ CREATE TABLE test_table (
   KEY other_key (other))
 ENGINE=FEDERATED
 DEFAULT CHARSET=latin1
-CONNECTION=&#39;mysql://root@127.0.0.1:9306/federatedx/test_federatedx&#39;;
+CONNECTION=&#39;mysql://root@127.0.0.1:9306/federated/test_table&#39;;
 &lt;&lt;/sql&gt;&gt;
 
 In this case the table structure must match exactly the table on the foreign server.
@@ -669,13 +670,13 @@ Both should display the federatedx storage handler.
 
 A federated server is a way to have a foreign data source defined-- with all connection parameters-- so that you don&#39;t have to specify explicitly the connection parameters in a string.
 
-For instance, if you wanted to connect to a table, t1, using this definition: 
+For instance, if you wanted to connect to a table, &lt;&lt;fixed&gt;&gt;first_db.test_table&lt;&lt;/fixed&gt;&gt;, using this definition: 
 
 &lt;&lt;sql&gt;&gt;
-CREATE TABLE test_table ENGINE=FEDERATED 
-  CONNECTION=&#39;mysql://patg@192.168.1.123/first_db/t1&#39;;
+CREATE TABLE federated_test_table ENGINE=FEDERATED 
+  CONNECTION=&#39;mysql://patg@192.168.1.123/first_db/test_table&#39;;
 &lt;&lt;/sql&gt;&gt;
-	
+
 You could instead create this with a server:
 
 &lt;&lt;sql&gt;&gt;
@@ -692,11 +693,11 @@ create server &#39;server_one&#39; foreign data wrapper &#39;mysql&#39; options
 You could now specify the server instead of the full URL in the connection string:
 
 &lt;&lt;sql&gt;&gt;
-CREATE TABLE test_table ENGINE=FEDERATED 
-  CONNECTION=&#39;server_one/t1&#39;;
+CREATE TABLE federated_test_table ENGINE=FEDERATED 
+  CONNECTION=&#39;server_one/test_table&#39;;
 &lt;&lt;/sql&gt;&gt;
 
-On the server where you create this &lt;&lt;fixed&gt;&gt;test_table&lt;&lt;/fixed&gt;&gt; you will now have access to the tabel &lt;&lt;fixed&gt;&gt;t1&lt;&lt;/fixed&gt;&gt; on the remote server found on 192.168.1.123.
+On the server where you create this &lt;&lt;fixed&gt;&gt;federated_test_table&lt;&lt;/fixed&gt;&gt; you will now have access to the table &lt;&lt;fixed&gt;&gt;test_table&lt;&lt;/fixed&gt;&gt; in the &lt;&lt;fixed&gt;&gt;first_db&lt;&lt;/fixed&gt;&gt; database on the remote server found on 192.168.1.123.
 
 == How does FederatedX differ from the old Federated Engine?
 

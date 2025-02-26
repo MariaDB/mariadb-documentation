@@ -307,7 +307,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/getting-data-from-mariadb/+r/145329/">145329</a></dd>
+            <dd><a href="/kb/en/getting-data-from-mariadb/+r/147909/">147909</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-4254">
@@ -316,7 +316,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-12-18 14:22">2024-12-18 14:22</span></dd>
+<span class="datetime" title="2025-02-25 13:31">2025-02-25 13:31</span></dd>
         </dl>
     </div>
     
@@ -329,16 +329,76 @@
         <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
 The simplest way to retrieve data from MariaDB is to use the [[select|SELECT]] statement. Since the [[select|SELECT]] statement is an essential SQL statement, it has many options available with it. It&#39;s not necessary to know or use them all&lt;&lt;entity&gt;&gt;mdash&lt;&lt;/entity&gt;&gt;you could execute very basic [[select|SELECT]] statements if that satisfies your needs. However, as you use MariaDB more, you may need more powerful [[select|SELECT]] statements. In this article we will go through the basics of [[select|SELECT]] and will progress to more involved [[select|SELECT]] statements;we will move from the beginner level to the more intermediate and hopefully you will find some benefit from this article regardless of your skill level. For absolute beginners who are just starting with MariaDB, you may want to read the [[mariadb-basics|MariaDB Basics article]].
 
+====Creating and Populating the Tables
+In order to follow the examples that follow, you can create and pre-populate the tables, as follows:
+&lt;&lt;sql&gt;&gt;
+CREATE OR REPLACE TABLE books (
+isbn CHAR(20) PRIMARY KEY, 
+title VARCHAR(50),
+author_id INT,
+publisher_id INT,
+year_pub CHAR(4),
+description TEXT );
+
+CREATE OR REPLACE TABLE authors
+(author_id INT AUTO_INCREMENT PRIMARY KEY,
+name_last VARCHAR(50),
+name_first VARCHAR(50),
+country VARCHAR(50) );
+
+INSERT INTO authors (name_last, name_first, country) VALUES
+  (&#39;Kafka&#39;, &#39;Franz&#39;, &#39;Czech Republic&#39;),
+  (&#39;Dostoevsky&#39;, &#39;Fyodor&#39;, &#39;Russia&#39;);
+  
+INSERT INTO books (title, author_id, isbn, year_pub) VALUES
+ (&#39;The Trial&#39;, 1, &#39;0805210407&#39;, &#39;1995&#39;),
+ (&#39;The Metamorphosis&#39;, 1, &#39;0553213695&#39;, &#39;1995&#39;),
+ (&#39;America&#39;, 2, &#39;0805210644&#39;, &#39;1995&#39;),
+ (&#39;Brothers Karamozov&#39;, 2, &#39;0553212168&#39;, &#39;&#39;),
+ (&#39;Crime &amp; Punishment&#39;, 2, &#39;0679420290&#39;, &#39;&#39;),
+ (&#39;Crime &amp; Punishment&#39;, 2, &#39;0553211757&#39;, &#39;&#39;),
+ (&#39;Idiot&#39;, 2, &#39;0192834118&#39;, &#39;&#39;),
+ (&#39;Notes from Underground&#39;, 2, &#39;067973452X&#39;, &#39;&#39;);
+&lt;&lt;/sql&gt;&gt;
+
+If you are unclear what these statements do, review the [[a-mariadb-primer|MariaDB Primer]] and [[mariadb-basics|MariaDB Basics]] tutorials.
+
 ==== Basic Elements
 The basic, minimal elements of the [[select|SELECT]] statement call for the keyword ##SELECT##, of course, the columns to select or to retrieve, and the table from which to retrieve rows of data. Actually, for the columns to select, we can use the asterisk as a wildcard to select all columns in a particular table. Using a database from a fictitious bookstore, we might enter the following SQL statement to get a list of all columns and rows in a table containing information on books:
 &lt;&lt;sql inline=false&gt;&gt;
 SELECT * FROM books;
++------------+------------------------+-----------+--------------+----------+-------------+
+| isbn       | title                  | author_id | publisher_id | year_pub | description |
++------------+------------------------+-----------+--------------+----------+-------------+
+| 0192834118 | Idiot                  |         2 |         NULL |          | NULL        |
+| 0553211757 | Crime &amp; Punishment     |         2 |         NULL |          | NULL        |
+| 0553212168 | Brothers Karamozov     |         2 |         NULL |          | NULL        |
+| 0553213695 | The Metamorphosis      |         1 |         NULL | 1995     | NULL        |
+| 0679420290 | Crime &amp; Punishment     |         2 |         NULL |          | NULL        |
+| 067973452X | Notes from Underground |         2 |         NULL |          | NULL        |
+| 0805210407 | The Trial              |         1 |         NULL | 1995     | NULL        |
+| 0805210644 | America                |         2 |         NULL | 1995     | NULL        |
++------------+------------------------+-----------+--------------+----------+-------------+
+8 rows in set (0.001 sec)
 &lt;&lt;/sql&gt;&gt;
 
-This will retrieve all of the data contained in the ##books## table. If we want to retrieve only certain columns, we would list them in place of the asterisk in a comma-separated list like so:
+This will retrieve all of the data contained in the ##books## table. As you can see, not all values have been populated. If we want to retrieve only certain columns, we would list them in place of the asterisk in a comma-separated list like so:
 &lt;&lt;sql inline=false&gt;&gt;
 SELECT isbn, title, author_id
 FROM books;
++------------+------------------------+-----------+
+| isbn       | title                  | author_id |
++------------+------------------------+-----------+
+| 0192834118 | Idiot                  |         2 |
+| 0553211757 | Crime &amp; Punishment     |         2 |
+| 0553212168 | Brothers Karamozov     |         2 |
+| 0553213695 | The Metamorphosis      |         1 |
+| 0679420290 | Crime &amp; Punishment     |         2 |
+| 067973452X | Notes from Underground |         2 |
+| 0805210407 | The Trial              |         1 |
+| 0805210644 | America                |         2 |
++------------+------------------------+-----------+
+8 rows in set (0.001 sec)
 &lt;&lt;/sql&gt;&gt;
 
 This narrows the width of the results set by retrieving only three columns, but it still retrieves all of the rows in the table. If the table contains thousands of rows of data, this may be more data than we want. If we want to limit the results to just a few books, say five, we would include what is known as a [[select/#limit|LIMIT]] clause:
@@ -346,6 +406,16 @@ This narrows the width of the results set by retrieving only three columns, but 
 SELECT isbn, title, author_id
 FROM books 
 LIMIT 5;
++------------+--------------------+-----------+
+| isbn       | title              | author_id |
++------------+--------------------+-----------+
+| 0192834118 | Idiot              |         2 |
+| 0553211757 | Crime &amp; Punishment |         2 |
+| 0553212168 | Brothers Karamozov |         2 |
+| 0553213695 | The Metamorphosis  |         1 |
+| 0679420290 | Crime &amp; Punishment |         2 |
++------------+--------------------+-----------+
+5 rows in set (0.001 sec)
 &lt;&lt;/sql&gt;&gt;
 
 This will give us the first five rows found in the table. If we want to get the next ten found, we would add a starting point parameter just before the number of rows to display, separated by a comma:
@@ -353,15 +423,34 @@ This will give us the first five rows found in the table. If we want to get the 
 SELECT isbn, title, author_id
 FROM books 
 LIMIT 5, 10;
++------------+------------------------+-----------+
+| isbn       | title                  | author_id |
++------------+------------------------+-----------+
+| 067973452X | Notes from Underground |         2 |
+| 0805210407 | The Trial              |         1 |
+| 0805210644 | America                |         2 |
++------------+------------------------+-----------+
+3 rows in set (0.001 sec)
 &lt;&lt;/sql&gt;&gt;
+In this case, there are only three further records.
 
 ==== Selectivity and Order
-The previous statements have narrowed the number of columns and rows retrieved, but they haven&#39;t been very selective. Suppose that we want only books written by a certain author, say Dostoevsky. Looking in the authors table we find that his author identification number is 4729. Using a ##WHERE## clause, we can retrieve a list of books from the database for this particular author like so:
+The previous statements have narrowed the number of columns and rows retrieved, but they haven&#39;t been very selective. Suppose that we want only books written by a certain author, say Dostoevsky. Looking in the authors table we find that his author identification number is 2. Using a ##WHERE## clause, we can retrieve a list of books from the database for this particular author like so:
 &lt;&lt;sql inline=false&gt;&gt;
 SELECT isbn, title
 FROM books
-WHERE author_id = 4729
+WHERE author_id = 2
 LIMIT 5;
++------------+------------------------+
+| isbn       | title                  |
++------------+------------------------+
+| 0192834118 | Idiot                  |
+| 0553211757 | Crime &amp; Punishment     |
+| 0553212168 | Brothers Karamozov     |
+| 0679420290 | Crime &amp; Punishment     |
+| 067973452X | Notes from Underground |
++------------+------------------------+
+5 rows in set (0.000 sec)
 &lt;&lt;/sql&gt;&gt;
 
 I removed the author_id from the list of columns to select, but left the basic [[select/#limit|LIMIT]] clause in because we want to point out that the syntax is fairly strict on ordering of clauses and flags. You can&#39;t enter them in any order. You&#39;ll get an error in return.
@@ -370,9 +459,19 @@ The SQL statements we&#39;ve looked at thus far will display the titles of books
 &lt;&lt;sql inline=false&gt;&gt;
 SELECT isbn, title
 FROM books
-WHERE author_id = 4729
+WHERE author_id = 2
 ORDER BY title ASC
 LIMIT 5;
++------------+--------------------+
+| isbn       | title              |
++------------+--------------------+
+| 0805210644 | America            |
+| 0553212168 | Brothers Karamozov |
+| 0553211757 | Crime &amp; Punishment |
+| 0679420290 | Crime &amp; Punishment |
+| 0192834118 | Idiot              |
++------------+--------------------+
+5 rows in set (0.001 sec)
 &lt;&lt;/sql&gt;&gt;
 
 Notice that the [[select/#order-by|ORDER BY]] clause goes after the ##WHERE## clause and before the [[select/#limit|LIMIT]] clause. Not only will this statement display the rows in order by book title, but it will retrieve only the first five based on the ordering. That is to say, MariaDB will first retrieve all of the rows based on the ##WHERE## clause, order the data based on the [[select/#order-by|ORDER BY]] clause, and then display a limited number of rows based on the [[select/#limit|LIMIT]] clause. Hence the reason for the order of clauses. You may have noticed that we slipped in the ASC flag. It tells MariaDB to order the rows in ascending order for the column name it follows. It&#39;s not necessary, though, since ascending order is the default. However, if we want to display data in descending order, we would replace the flag with ##DESC##. To order by more than one column, additional columns may be given in the [[select/#order-by|ORDER BY]] clause in a comma separated list, each with the ##ASC## or ##DESC## flags if preferred.
@@ -387,20 +486,19 @@ JOIN authors USING (author_id)
 WHERE name_last = &#39;Dostoevsky&#39;
 ORDER BY title ASC
 LIMIT 5;
-
-+-------------+------------------------+-------------------+
-| isbn        | title                  | author            |
-+-------------+------------------------+-------------------+
-|  0553212168 | Brothers Karamozov     | Fyodor Dostoevsky |
-|  0679420290 | Crime &amp; Punishment     | Fyodor Dostoevsky |
-|  0553211757 | Crime &amp; Punishment     | Fyodor Dostoevsky |
-|  0192834118 | Idiot                  | Fyodor Dostoevsky |
-|  067973452X | Notes from Underground | Fyodor Dostoevsky |
-+-------------+------------------------+-------------------+
++------------+--------------------+-------------------+
+| isbn       | title              | author            |
++------------+--------------------+-------------------+
+| 0805210644 | America            | Fyodor Dostoevsky |
+| 0553212168 | Brothers Karamozov | Fyodor Dostoevsky |
+| 0553211757 | Crime &amp; Punishment | Fyodor Dostoevsky |
+| 0679420290 | Crime &amp; Punishment | Fyodor Dostoevsky |
+| 0192834118 | Idiot              | Fyodor Dostoevsky |
++------------+--------------------+-------------------+
 5 rows in set (0.00 sec) 
 &lt;&lt;/sql&gt;&gt;
 
-Our [[select|SELECT]] statement is getting hefty, but it&#39;s the same one to which we&#39;ve been adding. Don&#39;t let the clutter fluster you. Looking for the new elements, let&#39;s focus on the [[join-syntax|JOIN]] clause first. There are a few possible ways to construct a join. This method works if you&#39;re using a newer version of MariaDB and if both tables contain a column of the same name and value. Otherwise you&#39;ll have to redo the [[join-syntax|JOIN]] clause to look something like this:
+Our [[select|SELECT]] statement is getting hefty, but it&#39;s the same one to which we&#39;ve been adding. Don&#39;t let the clutter fluster you. Looking for the new elements, let&#39;s focus on the [[join-syntax|JOIN]] clause first. There are a few possible ways to construct a join. This method works if both tables contain a column of the same name and value. Otherwise you&#39;ll have to redo the [[join-syntax|JOIN]] clause to look something like this:
 &lt;&lt;sql inline=false&gt;&gt;
 ...
 JOIN authors ON author_id = row_id
@@ -409,9 +507,9 @@ JOIN authors ON author_id = row_id
 
 This excerpt is based on the assumption that the key field in the authors table is not called author_id, but row_id instead. There&#39;s much more that can be said about joins, but that would make for a much longer article. If you want to learn more on joins, look at MariaDB&#39;s documentation page on [[join-syntax|JOIN]] syntax.
 
-Looking again at the last full SQL statement above, you must have spotted the [[concat|CONCAT()]] function that we added to the on-going example statement. This string function takes the values of the columns and strings given and pastes them together, to give one neat field in the results. We also employed the AS parameter to change the heading of the results set for the field to author. This is much tider. Since we joined the books and the authors tables together, we were able to search for books based on the author&#39;s last name rather than having to look up the author ID first. This is a much friendlier method, albeit more complicated. Incidentally, we can have MariaDB check columns from both tables to narrow our search. We would just add //column = value// pairs, separated by commas in the WHERE clause. Notice that the string containing the author&#39;s name is wrapped in quotes—otherwise, the string would be considered a column name and we&#39;d get an error.
+Looking again at the last full SQL statement above, you must have spotted the [[concat|CONCAT()]] function that we added to the on-going example statement. This string function takes the values of the columns and strings given and pastes them together, to give one neat field in the results. We also employed the AS parameter to change the heading of the results set for the field to author. This is much tidier. Since we joined the books and the authors tables together, we were able to search for books based on the author&#39;s last name rather than having to look up the author ID first. This is a much friendlier method, albeit more complicated. Incidentally, we can have MariaDB check columns from both tables to narrow our search. We would just add //column = value// pairs, separated by commas in the WHERE clause. Notice that the string containing the author&#39;s name is wrapped in quotes—otherwise, the string would be considered a column name and we&#39;d get an error.
 
-The name Dostoevsky is sometimes spelled Dostoevskii, as well as a few other ways. If we&#39;re not sure how it&#39;s spelled in the authors table, we could use the [[like|LIKE]] operator instead of the equal-sign, along with a wildcard. If we think the author&#39;s name is probably spelled either of the two ways mentioned, we could enter something like this:
+The name Dostoevsky is sometimes spelled Dostoevskii, as well as a few other ways. If we&#39;re not sure how it&#39;s spelled in the authors table, we could use the [[like|LIKE]] operator instead of the equal sign, along with a wildcard. If we think the author&#39;s name is probably spelled either of the two ways mentioned, we could enter something like this:
 &lt;&lt;sql inline=false&gt;&gt;
 SELECT isbn, title, 
 CONCAT(name_first, &#39; &#39;, name_last) AS author
@@ -420,6 +518,16 @@ JOIN authors USING (author_id)
 WHERE name_last LIKE &#39;Dostoevsk%&#39;
 ORDER BY title ASC
 LIMIT 5;
++------------+--------------------+-------------------+
+| isbn       | title              | author            |
++------------+--------------------+-------------------+
+| 0805210644 | America            | Fyodor Dostoevsky |
+| 0553212168 | Brothers Karamozov | Fyodor Dostoevsky |
+| 0553211757 | Crime &amp; Punishment | Fyodor Dostoevsky |
+| 0679420290 | Crime &amp; Punishment | Fyodor Dostoevsky |
+| 0192834118 | Idiot              | Fyodor Dostoevsky |
++------------+--------------------+-------------------+
+5 rows in set (0.001 sec)
 &lt;&lt;/sql&gt;&gt;
 
 This will match any author last name starting with Dostoevsk. Notice that the wildcard here is not an asterisk, but a percent-sign.
@@ -429,22 +537,40 @@ There are many flags or parameters that can be used in a [[select|SELECT]] state
 
 The first flag that may be given, it goes immediately after the ##SELECT## keyword, is ##ALL##. By default, all rows that meet the requirements of the various clauses given are selected, so this isn&#39;t necessary. If instead we would only want the first occurrence of a particular criteria to be displayed, we could add the [[select/#distinct|DISTINCT]] option. For instance, for authors like Dostoevsky there will be several printings of a particular title. In the results shown earlier you may have noticed that there were two copies of //Crime &amp; Punishment// listed, however they have different ISBN numbers and different publishers. Suppose that for our search we only want one row displayed for each title. We could do that like so:
 &lt;&lt;sql inline=false&gt;&gt;
-SELECT DISTINCT isbn, title
+SELECT DISTINCT title
 FROM books
 JOIN authors USING (author_id)
 WHERE name_last = &#39;Dostoevsky&#39;
 ORDER BY title;
++------------------------+
+| title                  |
++------------------------+
+| America                |
+| Brothers Karamozov     |
+| Crime &amp; Punishment     |
+| Idiot                  |
+| Notes from Underground |
++------------------------+
 &lt;&lt;/sql&gt;&gt;
 
 We&#39;ve thinned out the ongoing SQL statement a bit for clarity. This statement will result in only one row displayed for //Crime &amp; Punishment// and it will be the first one found.
 
 If we&#39;re retrieving data from an extremely busy database, by default any other SQL statements entered simultaneously which are changing or updating data will be executed before a [[select|SELECT]] statement. [[select|SELECT]] statements are considered to be of lower priority. However, if we would like a particular [[select|SELECT]] statement to be given a higher priority, we can add the keyword HIGH_PRIORITY. Modifying the previous SQL statement for this factor, we would enter it like this:
 &lt;&lt;sql inline=false&gt;&gt;
-SELECT DISTINCT HIGH_PRIORITY isbn, title
+SELECT DISTINCT HIGH_PRIORITY title
 FROM books
 JOIN authors USING (author_id)
 WHERE name_last = &#39;Dostoevsky&#39;
 ORDER BY title;
++------------------------+
+| title                  |
++------------------------+
+| America                |
+| Brothers Karamozov     |
+| Crime &amp; Punishment     |
+| Idiot                  |
+| Notes from Underground |
++------------------------+
 &lt;&lt;/sql&gt;&gt;
 
 You may have noticed in the one example earlier in which the results are shown, that there&#39;s a status line displayed that specifies the number of rows in the results set. This is less than the number of rows that were found in the database that met the statement&#39;s criteria. It&#39;s less because we used a [[select/#limit|LIMIT]] clause. If we add the [[optimizer-hints/#sql_calc_found_rows|SQL_CALC_FOUND_ROWS]] flag just before the column list, MariaDB will calculate the number of columns found even if there is a [[select/#limit|LIMIT]] clause.
@@ -454,17 +580,27 @@ FROM books
 JOIN authors USING (author_id)
 WHERE name_last = &#39;Dostoevsky&#39;
 LIMIT 5;
++------------+------------------------+
+| isbn       | title                  |
++------------+------------------------+
+| 0192834118 | Idiot                  |
+| 0553211757 | Crime &amp; Punishment     |
+| 0553212168 | Brothers Karamozov     |
+| 0679420290 | Crime &amp; Punishment     |
+| 067973452X | Notes from Underground |
++------------+------------------------+
+5 rows in set (0.001 sec)
 &lt;&lt;/sql&gt;&gt;
 
 To retrieve this information, though, we will have to use the [[found_rows|FOUND_ROWS()]] function like so:
 &lt;&lt;sql inline=false&gt;&gt;
 SELECT FOUND_ROWS();
-
 +--------------+
 | FOUND_ROWS() |
 +--------------+
-|           26 |
+|            6 |
 +--------------+
+1 row in set (0.000 sec
 &lt;&lt;/sql&gt;&gt;
 
 This value is temporary and will be lost if the connection is terminated. It cannot be retrieved by any other client session. It relates only to the current session and the value for the variable when it was last calculated.

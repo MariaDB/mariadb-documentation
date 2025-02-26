@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-08-08 10:17">1 year, 6 months ago</span></dd>
+<span class="datetime" title="2025-02-25 11:46">13 hours, 17 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -546,8 +546,9 @@ connection=&#34;connection_one/table_foo&#34;
   <span class="n">PORT</span> <span class="mi">3306</span><span class="p">,</span>
   <span class="n">SOCKET</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
   <span class="k">OWNER</span> <span class="s1">&#39;root&#39;</span><span class="p">);</span>
-</pre><p>Then the FederatedX table is created specifying the newly created Federated server:</p>
-<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">federatedx</span><span class="p">.</span><span class="n">t1</span> <span class="p">(</span>
+</pre><p>Then the FederatedX table is created specifying the newly created Federated server.
+The following statements creates a federated table, <code class="highlight fixed" style="white-space:pre-wrap">federated.t1</code> against the table <code class="highlight fixed" style="white-space:pre-wrap">db1.t1</code> on the remote server.</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">federated</span><span class="p">.</span><span class="n">t1</span> <span class="p">(</span>
   <span class="o">`</span><span class="n">id</span><span class="o">`</span> <span class="nb">int</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
   <span class="o">`</span><span class="n">name</span><span class="o">`</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">default</span> <span class="s1">&#39;&#39;</span>
   <span class="p">)</span>
@@ -558,10 +559,10 @@ the new FederatedX storage engine. And for backward compatibility, the old
 name "FEDERATED" is used in create table. So in MariaDB, the engine type
 should be given as "FEDERATED" without an extra "X", not "FEDERATEDX").</p>
 <p>The equivalent of above, if done specifying all the connection parameters</p>
-<pre class="fixed"><span class="k">CONNECTION</span><span class="o">=</span><span class="ss">&quot;mysql://<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d2a0bdbda692e3e0e5fce2fce2fce3">[email&#160;protected]</a>:3306/db1/t1&quot;</span>
+<pre class="fixed"><span class="k">CONNECTION</span><span class="o">=</span><span class="ss">&quot;mysql://<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="afddc0c0dbef9e9d98819f819f819e">[email&#160;protected]</a>:3306/db1/t1&quot;</span>
 </pre><p>You can also change the server to point to a new schema:</p>
 <pre class="fixed"><span class="k">ALTER</span> <span class="n">SERVER</span> <span class="s1">&#39;server_one&#39;</span> <span class="k">options</span><span class="p">(</span><span class="k">DATABASE</span> <span class="s1">&#39;db2&#39;</span><span class="p">);</span>
-</pre><p>All subsequent calls to any FederatedX table using the 'server_one' will now be against db2.t1! Guess what? You no longer have to perform an alter table in order to point one or more FederatedX tables to a new server!</p>
+</pre><p>All subsequent calls to any FederatedX table using the 'server_one' will now be against tables in <code class="highlight fixed" style="white-space:pre-wrap">db2</code>! Guess what? You no longer have to perform an alter table in order to point one or more FederatedX tables to a new server!</p>
 <p>This <code class="highlight fixed" style="white-space:pre-wrap">connection="connection string"</code> is necessary 
 for the handler to be able to connect to the foreign server, either
 by URL, or by server name. </p>
@@ -615,7 +616,7 @@ ha_federatedx::reset
 <h2 class="anchored_heading" id="how-do-you-use-federatedx">How do you use FederatedX?</h2>
 <p>To use this handler, it's very simple. You must have two databases running, either both on the same host, or on different hosts.</p>
 <p>First, on the foreign database you create a table, for example:</p>
-<pre class="fixed wrap"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test_table</span> <span class="p">(</span>
+<pre class="fixed wrap"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">federated</span><span class="p">.</span><span class="n">test_table</span> <span class="p">(</span>
   <span class="n">id</span>     <span class="nb">int</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="n">auto_increment</span><span class="p">,</span>
   <span class="n">name</span>   <span class="nb">varchar</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">default</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
   <span class="n">other</span>  <span class="nb">int</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">default</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span>
@@ -624,8 +625,8 @@ ha_federatedx::reset
   <span class="k">KEY</span> <span class="n">other_key</span> <span class="p">(</span><span class="n">other</span><span class="p">))</span>
 <span class="k">DEFAULT</span> <span class="n">CHARSET</span><span class="o">=</span><span class="n">latin1</span><span class="p">;</span>
 </pre><p>Then, on the server that will be connecting to the foreign host (client), you create a federated table without specifying the table structure:</p>
-<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test_table</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">FEDERATED</span> 
-  <span class="k">CONNECTION</span><span class="o">=</span><span class="s1">&#39;mysql://<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7a0815150e3a4b484d544a544a544b">[email&#160;protected]</a>:9306/federatedx/test_federatedx&#39;</span><span class="p">;</span>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">federated_test_table</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">FEDERATED</span> 
+  <span class="k">CONNECTION</span><span class="o">=</span><span class="s1">&#39;mysql://<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bbc9d4d4cffb8a898c958b958b958a">[email&#160;protected]</a>:9306/federated/test_table&#39;</span><span class="p">;</span>
 </pre><p>Notice the "ENGINE" and "CONNECTION" fields? This is where you
 respectively set the engine type, "FEDERATED" and foreign
 host information, this being the database your 'client' database
@@ -635,7 +636,7 @@ database so that it is indeed on port 9306, and your FederatedX
 database on a port other than that. In my setup, I use port 5554
 for FederatedX, and port 5555 for the foreign database.</p>
 <p>Alternatively (or if you're using MariaDB before version 10.0.2) you specify the federated table structure explicitly:</p>
-<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test_table</span> <span class="p">(</span>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">federated_test_table</span> <span class="p">(</span>
   <span class="n">id</span>     <span class="nb">int</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="n">auto_increment</span><span class="p">,</span>
   <span class="n">name</span>   <span class="nb">varchar</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">default</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
   <span class="n">other</span>  <span class="nb">int</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">default</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span>
@@ -644,7 +645,7 @@ for FederatedX, and port 5555 for the foreign database.</p>
   <span class="k">KEY</span> <span class="n">other_key</span> <span class="p">(</span><span class="n">other</span><span class="p">))</span>
 <span class="n">ENGINE</span><span class="o">=</span><span class="n">FEDERATED</span>
 <span class="k">DEFAULT</span> <span class="n">CHARSET</span><span class="o">=</span><span class="n">latin1</span>
-<span class="k">CONNECTION</span><span class="o">=</span><span class="s1">&#39;mysql://<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5a2835352e1a6b686d746a746a746b">[email&#160;protected]</a>:9306/federatedx/test_federatedx&#39;</span><span class="p">;</span>
+<span class="k">CONNECTION</span><span class="o">=</span><span class="s1">&#39;mysql://<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a6d4c9c9d2e6979491889688968897">[email&#160;protected]</a>:9306/federated/test_table&#39;</span><span class="p">;</span>
 </pre><p>In this case the table structure must match exactly the table on the foreign server.</p>
 <h3 class="anchored_heading" id="how-to-see-the-storage-engine-in-action">How to see the storage engine in action</h3>
 <p>When developing this handler, I compiled the FederatedX database with debugging:</p>
@@ -675,9 +676,9 @@ support for FederatedX handler support:</p>
 </pre><p>Both should display the federatedx storage handler.</p>
 <h2 class="anchored_heading" id="how-do-i-create-a-federated-server">How do I create a federated server?</h2>
 <p>A federated server is a way to have a foreign data source defined-- with all connection parameters-- so that you don't have to specify explicitly the connection parameters in a string.</p>
-<p>For instance, if you wanted to connect to a table, t1, using this definition: </p>
-<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test_table</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">FEDERATED</span> 
-  <span class="k">CONNECTION</span><span class="o">=</span><span class="s1">&#39;mysql://<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7a0a1b0e1d3a4b4348544b4c42544b544b4849">[email&#160;protected]</a>/first_db/t1&#39;</span><span class="p">;</span>
+<p>For instance, if you wanted to connect to a table, <code class="highlight fixed" style="white-space:pre-wrap">first_db.test_table</code>, using this definition: </p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">federated_test_table</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">FEDERATED</span> 
+  <span class="k">CONNECTION</span><span class="o">=</span><span class="s1">&#39;mysql://<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7e0e1f0a193e4f474c504f4846504f504f4c4d">[email&#160;protected]</a>/first_db/test_table&#39;</span><span class="p">;</span>
 </pre><p>You could instead create this with a server:</p>
 <pre class="fixed"><span class="k">create</span> <span class="n">server</span> <span class="s1">&#39;server_one&#39;</span> <span class="k">foreign</span> <span class="k">data</span> <span class="n">wrapper</span> <span class="s1">&#39;mysql&#39;</span> <span class="k">options</span>
   <span class="p">(</span><span class="k">HOST</span> <span class="s1">&#39;192.168.1.123&#39;</span><span class="p">,</span>		
@@ -688,9 +689,9 @@ support for FederatedX handler support:</p>
   <span class="n">SOCKET</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>		
   <span class="k">OWNER</span> <span class="s1">&#39;root&#39;</span><span class="p">);</span>
 </pre><p>You could now specify the server instead of the full URL in the connection string:</p>
-<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test_table</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">FEDERATED</span> 
-  <span class="k">CONNECTION</span><span class="o">=</span><span class="s1">&#39;server_one/t1&#39;</span><span class="p">;</span>
-</pre><p>On the server where you create this <code class="highlight fixed" style="white-space:pre-wrap">test_table</code> you will now have access to the tabel <code class="highlight fixed" style="white-space:pre-wrap">t1</code> on the remote server found on 192.168.1.123.</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">federated_test_table</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">FEDERATED</span> 
+  <span class="k">CONNECTION</span><span class="o">=</span><span class="s1">&#39;server_one/test_table&#39;</span><span class="p">;</span>
+</pre><p>On the server where you create this <code class="highlight fixed" style="white-space:pre-wrap">federated_test_table</code> you will now have access to the table <code class="highlight fixed" style="white-space:pre-wrap">test_table</code> in the <code class="highlight fixed" style="white-space:pre-wrap">first_db</code> database on the remote server found on 192.168.1.123.</p>
 <h2 class="anchored_heading" id="how-does-federatedx-differ-from-the-old-federated-engine">How does FederatedX differ from the old Federated Engine?</h2>
 <p>FederatedX from a user point of view is the same for the most part. What is different with FederatedX and Federated is the following:</p>
 <ul start="1"><li>Rewrite of the main Federated source code from one single ha_federated.cc file into three main abstracted components:
