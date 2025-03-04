@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
     <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
 
-    <title>Full Backup and Restore with Mariabackup - MariaDB Knowledge Base</title>
+    <title>Full Backup and Restore with Mariadb-backup - MariaDB Knowledge Base</title>
 
     <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
 
@@ -19,7 +19,7 @@
     
 
     <!-- FB Open Graph tags -->
-    <meta property="og:title" content="Full Backup and Restore with Mariabackup" />
+    <meta property="og:title" content="Full Backup and Restore with Mariadb-backup" />
     <meta property="og:type" content="article" />
     <meta property="og:url" content="https://mariadb.com/kb/en/full-backup-and-restore-with-mariabackup/" />
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
@@ -209,7 +209,7 @@
     
 
 
-    » <a class="node_link crumb" href="/kb/en/full-backup-and-restore-with-mariabackup/">Full Backup and Restore with Mariabackup</a>
+    » <a class="node_link crumb" href="/kb/en/full-backup-and-restore-with-mariabackup/">Full Backup and Restore with Mariadb-backup</a>
 
 
                 </div>
@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-10-06 05:19">1 year, 4 months ago</span></dd>
+<span class="datetime" title="2025-03-03 17:25">7 hours, 37 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -388,7 +388,7 @@
             
             <section id="content" class="limited_width col-md-8 clearfix">
                 
-                    <h1>Full Backup and Restore with Mariabackup</h1>
+                    <h1>Full Backup and Restore with Mariadb-backup</h1>
                 
 
                 
@@ -417,7 +417,10 @@
 
     <li class=""><a href="#backing-up-the-database-server" title="Backing up the Database Server">Backing up the Database Server</a></li>
 
-    <li class=""><a href="#preparing-the-backup-for-restoration" title="Preparing the Backup for Restoration">Preparing the Backup for Restoration</a></li>
+    <li class=""><a href="#preparing-the-backup-for-restoration" title="Preparing the Backup for Restoration">Preparing the Backup for Restoration</a>    <ol class="toc">
+
+        <li class=""><a href="#backup-preparation-steps" title="Backup Preparation Steps">Backup Preparation Steps</a>    </ol>
+</li>
 
     <li class=""><a href="#restoring-the-backup" title="Restoring the Backup">Restoring the Backup</a>    <ol class="toc">
 
@@ -425,15 +428,15 @@
  </ol>
 </li>
 </div><p>
-When using Mariabackup, you have the option of performing a full or an incremental backup. Full backups create a complete backup of the database server in an empty directory while incremental backups update a previous backup with whatever changes to the data have occurred since the backup. This page documents how to perform full backups.</p>
+When using mariadb-backup, you have the option of performing a full or an incremental backup. Full backups create a complete backup of the database server in an empty directory while incremental backups update a previous backup with whatever changes to the data have occurred since the backup. This page documents how to perform full backups.</p>
 <h2 class="anchored_heading" id="backing-up-the-database-server">Backing up the Database Server</h2>
-<p>In order to back up the database, you need to run Mariabackup with the <code><a href="/kb/en/mariabackup-options/#-backup">--backup</a></code> option to tell it to perform a backup and with the <code><a href="/kb/en/mariabackup-options/#-target-dir">--target-dir</a></code> option to tell it where to place the backup files. When taking a full backup, the target directory must be empty or it must not exist.</p>
+<p>In order to back up the database, you need to run mariadb-backup with the <code><a href="/kb/en/mariabackup-options/#-backup">--backup</a></code> option to tell it to perform a backup and with the <code><a href="/kb/en/mariabackup-options/#-target-dir">--target-dir</a></code> option to tell it where to place the backup files. When taking a full backup, the target directory must be empty or it must not exist.</p>
 <p>To take a backup, run the following command:</p>
-<pre class="fixed">$ mariabackup --backup \
+<pre class="fixed">$ mariadb-backup --backup \
    --target-dir=/var/mariadb/backup/ \
-   --user=mariabackup --password=mypassword
+   --user=mariadb-backup --password=mypassword
 </pre><p>The time the backup takes depends on the size of the databases or tables you're backing up. You can cancel the backup if you need to, as the backup process does not modify the database.</p>
-<p>Mariabackup writes the backup files the target directory. If the target directory doesn't exist, then it creates it. If the target directory exists and contains files, then it raises an error and aborts.</p>
+<p>Mariadb-backup writes the backup files the target directory. If the target directory doesn't exist, then it creates it. If the target directory exists and contains files, then it raises an error and aborts.</p>
 <p>Here is an example backup directory:</p>
 <pre class="fixed">$ ls /var/mariadb/backup/
 
@@ -442,23 +445,27 @@ aria_log_control  performance_schema      xtrabackup_info
 backup-my.cnf     test                    xtrabackup_logfile
 ibdata1           xtrabackup_binlog_info
 </pre><h2 class="anchored_heading" id="preparing-the-backup-for-restoration">Preparing the Backup for Restoration</h2>
-<p>The data files that Mariabackup creates in the target directory are not point-in-time consistent, given that the data files are copied at different times during the backup operation. If you try to restore from these files, InnoDB notices the inconsistencies and crashes to protect you from corruption</p>
+<p>The data files that mariadb-backup creates in the target directory are not point-in-time consistent, given that the data files are copied at different times during the backup operation. If you try to restore from these files, InnoDB notices the inconsistencies and crashes to protect you from corruption</p>
 <p>Before you can restore from a backup, you first need to <strong>prepare</strong> it to make the data files consistent. You can do so with the <code><a href="/kb/en/mariabackup-options/#-prepare">--prepare</a></code> option. </p>
-<pre class="fixed">$ mariabackup --prepare \
+<pre class="fixed">$ mariadb-backup --prepare \
    --target-dir=/var/mariadb/backup/
-</pre><h2 class="anchored_heading" id="restoring-the-backup">Restoring the Backup</h2>
+</pre><h3 class="anchored_heading" id="backup-preparation-steps">Backup Preparation Steps</h3>
+<ol start="1"><li>Run mariadb-backup --backup. You must use a version of mariadb-backup that is compatible with the server version you are planning to upgrade from. For instance, when upgrading from <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a> to 10.5, you must use the 10.4 version of mariadb-backup, Another example: When upgrading from <a href="/kb/en/what-is-mariadb-106/">MariaDB 10.6</a> to 10.11, you must use the 10.6 version of mariadb-backup.
+</li><li>Run mariadb-backup --prepare, again using a compatible version of mariadb-backup, as described in the previous step.
+</li></ol>
+<h2 class="anchored_heading" id="restoring-the-backup">Restoring the Backup</h2>
 <p>Once the backup is complete and you have prepared the backup for restoration (previous step), you can restore the backup using either the <code><a href="/kb/en/mariabackup-options/#-copy-back">--copy-back</a></code> or the <code><a href="/kb/en/mariabackup-options/#-move-back">--move-back</a></code> options. The <code><a href="/kb/en/mariabackup-options/#-copy-back">--copy-back</a></code> option allows you to keep the original backup files. The <code><a href="/kb/en/mariabackup-options/#-move-back">--move-back</a></code> option actually moves the backup files to the <code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code>, so the original backup files are lost.</p>
 <ul start="1"><li>First, <a href="/kb/en/starting-and-stopping-mariadb/">stop the MariaDB Server process</a>.
 </li></ul>
 <ul start="1"><li>Then, ensure that the <code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code> is empty.
 </li></ul>
-<ul start="1"><li>Then, run Mariabackup with one of the options mentioned above:
+<ul start="1"><li>Then, run mariadb-backup with one of the options mentioned above:
 </li></ul>
-<pre class="fixed">$ mariabackup --copy-back \
+<pre class="fixed">$ mariadb-backup --copy-back \
    --target-dir=/var/mariadb/backup/
 </pre><ul start="1"><li>Then, you may need to fix the file permissions.
 </li></ul>
-<p>When Mariabackup restores a database, it preserves the file and directory privileges of the backup.  However, it writes the files to disk as the user and group restoring the database.  As such, after restoring a backup, you may need to adjust the owner of the data directory to match the user and group for the MariaDB Server, typically <code>mysql</code> for both.  For example, to recursively change ownership of the files to the <code>mysql</code> user and group, you could execute:</p>
+<p>When mariadb-backup restores a database, it preserves the file and directory privileges of the backup.  However, it writes the files to disk as the user and group restoring the database.  As such, after restoring a backup, you may need to adjust the owner of the data directory to match the user and group for the MariaDB Server, typically <code>mysql</code> for both.  For example, to recursively change ownership of the files to the <code>mysql</code> user and group, you could execute:</p>
 <pre class="fixed">$ chown -R mysql:mysql /var/lib/mysql/
 </pre><ul start="1"><li>Finally, <a href="/kb/en/starting-and-stopping-mariadb/">start the MariaDB Server process</a>.
 </li></ul>
@@ -561,7 +568,7 @@ $ chown -R mysql:mysql /var/lib/mysql/
             
                 
                     <li class="active">
-                        <span>Full Backup and Restore with Mariabackup</span>
+                        <span>Full Backup and Restore with Mariadb-backup</span>
                         
                     </li>
                 
