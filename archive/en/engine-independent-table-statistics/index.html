@@ -283,7 +283,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-10-19 08:33">4 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2025-03-04 13:36">11 hours, 27 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -460,26 +460,27 @@ fixed to some degree with the introduction of <a href="/kb/en/innodb-persistent-
 </li></ul>
 </li><li>More data is collected/used.
 </li></ul>
+<p><a href="/kb/en/histogram-based-statistics/">Histogram-based statistics</a> are a subset of engine-independent table statistics that can improve the query plan chosen by the optimizer in certain situations.</p>
 <p>Statistics are stored in three tables, <a href="/kb/en/mysqltable_stats-table/">mysql.table_stats</a>, <a href="/kb/en/mysqlcolumn_stats-table/">mysql.column_stats</a> and <a href="/kb/en/mysqlindex_stats-table/">mysql.index_stats</a>.</p>
 <p>Use or update of data from these tables is controlled by <a href="/kb/en/server-system-variables/#use_stat_tables">use_stat_tables</a> variable. Possible values are listed below:</p>
 <div class="cstm-style darkheader-nospace-borders"><table><tr><th>Value</th><th>Meaning</th></tr>
-<tr><td>'never'</td><td>The optimizer doesn't use data from statistics tables. Default for <a href="/kb/en/mariadb-1040-release-notes/">MariaDB 10.4.0</a> and below.</td></tr>
+<tr><td>'never'</td><td>The optimizer doesn't use data from statistics tables.</td></tr>
 <tr><td>'complementary'</td><td>The optimizer uses data from statistics tables if the same kind of data is not provided by the storage engine.</td></tr>
 <tr><td>'preferably'</td><td>Prefer the data from statistics tables, if it's not available there, use the data from the storage engine.</td></tr>
-<tr><td>'complementary_for_queries'</td><td>Same as <code>complementary</code>, but for queries only (to avoid needlessly collecting for <a href="/kb/en/analyze-table/">ANALYZE TABLE</a>). From <a href="/kb/en/mariadb-1041-release-notes/">MariaDB 10.4.1</a>.</td></tr>
-<tr><td>'preferably_for_queries'</td><td>Same as <code>preferably</code>, but for queries only (to avoid needlessly collecting for <a href="/kb/en/analyze-table/">ANALYZE TABLE</a>). Available and default from <a href="/kb/en/mariadb-1041-release-notes/">MariaDB 10.4.1</a>.</td></tr>
+<tr><td>'complementary_for_queries'</td><td>Same as <code>complementary</code>, but for queries only (to avoid needlessly collecting for <a href="/kb/en/analyze-table/">ANALYZE TABLE</a>).</td></tr>
+<tr><td>'preferably_for_queries'</td><td>Same as <code>preferably</code>, but for queries only (to avoid needlessly collecting for <a href="/kb/en/analyze-table/">ANALYZE TABLE</a>). Default.</td></tr>
 </table>
 </div><h2 class="anchored_heading" id="collecting-statistics-with-the-analyze-table-statement">Collecting Statistics with the ANALYZE TABLE Statement</h2>
-<p>The <a href="/kb/en/analyze-table/">ANALYZE TABLE</a> statement can be used to collect table statistics. For example:</p>
-<pre class="fixed"><span class="k">ANALYZE</span> <span class="k">TABLE</span> <span class="k">table_name</span><span class="p">;</span>
-</pre><p>When the <a href="/kb/en/analyze-table/">ANALYZE TABLE</a> statement is executed, MariaDB makes a call to the table's storage engine, and the storage engine collects its own statistics for the table. The specific behavior depends on the storage engine. For <a href="/kb/en/innodb/">InnoDB</a>, see <a href="/kb/en/innodb-persistent-statistics/">InnoDB Persistent Statistics</a> for more information.</p>
-<p>When the <a href="/kb/en/analyze-table/">ANALYZE TABLE</a> statement is executed, MariaDB may also collect engine-independent statistics for the table. The specific behavior depends on the value of the <a href="/kb/en/server-system-variables/#use_stat_tables">use_stat_tables</a> system variable. Engine-independent statistics will only be collected by the <a href="/kb/en/analyze-table/">ANALYZE TABLE</a> statement if one of the following is true:</p>
+<div class="cstm-style bluebox"><p>Engine-independent statistics are collected by doing full table and full index scans, and this process can be quite expensive.</p>
+</div><p>The <a href="/kb/en/analyze-table/">ANALYZE TABLE</a> statement can be used to collect table statistics. However, simply running <code>ANALYZE TABLE table_name</code> does not collect engine-independent (or histogram) statistics by default.</p>
+<p>When the <a href="/kb/en/analyze-table/">ANALYZE TABLE</a> statement is executed, MariaDB makes a call to the table's storage engine, and the storage engine collects its own statistics for the table. The specific behavior depends on the storage engine. For the default <a href="/kb/en/innodb/">InnoDB</a> storage engine, see <a href="/kb/en/innodb-persistent-statistics/">InnoDB Persistent Statistics</a> for more information.</p>
+<p><a href="/kb/en/analyze-table/">ANALYZE TABLE</a> may also collect engine-independent statistics for the table. The specific behavior depends on the value of the <a href="/kb/en/server-system-variables/#use_stat_tables">use_stat_tables</a> system variable. Engine-independent statistics will only be collected if one of the following is true:</p>
 <ul start="1"><li>The <a href="/kb/en/server-system-variables/#use_stat_tables">use_stat_tables</a> system variable is set to <code>complementary</code> or <code>preferably</code>.
 </li><li>The <a href="/kb/en/analyze-table/">ANALYZE TABLE</a> statement includes the <code>PERSISTENT FOR</code> clause.
 </li></ul>
-<p>From <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a>, the <a href="/kb/en/server-system-variables/#use_stat_tables">use_stat_tables</a> system variable is set to <code>preferably_for_queries</code> by default. With this value, engine-independent statistics are used by default, but they are not collected by default. If you want to use engine-independent statistics with the default configuration, then you will have to collect them by executing the <a href="/kb/en/analyze-table/">ANALYZE TABLE</a> statement and by specifying the <code>PERSISTENT FOR</code> clause. It is recommended to collect engine-independent statistics on as-needed basis, so typically one will not have engine-independent statistics for all indexes/all columns. </p>
-<div class="cstm-style bluebox"><p>Engine-independent statistics are collected by doing full table and full index scans, and this process can be quite expensive.</p>
-</div><h3 class="anchored_heading" id="collecting-statistics-for-specific-columns-or-indexes">Collecting Statistics for Specific Columns or Indexes</h3>
+<p>The <a href="/kb/en/server-system-variables/#use_stat_tables">use_stat_tables</a> system variable is set to <code>preferably_for_queries</code> by default. With this value, engine-independent statistics are used by default if available, but they are not collected by default. If you want to use engine-independent statistics with the default configuration, then you will have to collect them by executing the <a href="/kb/en/analyze-table/">ANALYZE TABLE</a> statement and by specifying the <code>PERSISTENT FOR</code> clause. It is recommended to collect engine-independent statistics on as-needed basis, so typically one will not have engine-independent statistics for all indexes/all columns. </p>
+<p>When to collect statistics is very dependent on the dataset. If data changes frequently it may be necessary to collect statistics more frequently, and the benefits may be very noticeable (see <a href="https://mariadb.org/mariadb-30x-faster/">This one trick can make MariaDB 30x faster!</a>). If the data distribution is relatively static, the costs of collecting may outweigh any benefits.</p>
+<h3 class="anchored_heading" id="collecting-statistics-for-specific-columns-or-indexes">Collecting Statistics for Specific Columns or Indexes</h3>
 <p>The syntax for the <a href="/kb/en/analyze-table/">ANALYZE TABLE</a> statement has been extended with the <code>PERSISTENT FOR</code> clause. This clause allows one to collect engine-independent statistics only for particular columns or indexes. This clause also allows one to collect engine-independent statistics, regardless of the value of the <a href="/kb/en/server-system-variables/#use_stat_tables">use_stat_tables</a> system variable. For example:</p>
 <pre class="fixed"><span class="k">ANALYZE</span> <span class="k">TABLE</span> <span class="k">table_name</span> <span class="n">PERSISTENT</span> <span class="k">FOR</span> <span class="k">ALL</span><span class="p">;</span>
 </pre><div class="cstm-style bluebox"><p>Statistics for columns using the <a href="/kb/en/blob/">BLOB</a> and <a href="/kb/en/text/">TEXT</a> data types are not collected. If a column using one of these types is explicitly specified, then a warning is returned.</p>
@@ -513,7 +514,8 @@ fixed to some degree with the introduction of <a href="/kb/en/innodb-persistent-
 <ul start="1"><li><a href="/kb/en/index-statistics/">Index Statistics</a>
 </li><li><a href="/kb/en/innodb-persistent-statistics/">InnoDB Persistent Statistics</a>
 </li><li><a href="/kb/en/histogram-based-statistics/">Histogram-based Statistics</a>
-</li><li><a href="https://mariadb.org/10-7-preview-feature-json-histograms/">JSON histograms</a> (mariadb.org blog)</li></ul>
+</li><li><a href="https://mariadb.org/10-7-preview-feature-json-histograms/">JSON histograms</a> (mariadb.org blog)
+</li><li><a href="https://www.youtube.com/watch?v=bsl7Fis0onE">Improving MariaDB’s optimizer with better selectivity estimates - Sergey Petrunia - Server Fest 2021</a> (video)</li></ul>
 
     </div>
 
