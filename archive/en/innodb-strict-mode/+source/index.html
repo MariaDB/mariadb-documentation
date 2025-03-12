@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-strict-mode/+r/119884/">119884</a></dd>
+            <dd><a href="/kb/en/innodb-strict-mode/+r/148592/">148592</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-10-18 10:54">2022-10-18 10:54</span></dd>
+<span class="datetime" title="2025-03-11 08:41">2025-03-11 08:41</span></dd>
         </dl>
     </div>
     
@@ -708,83 +708,6 @@ SHOW WARNINGS;
 +---------+------+--------------------------------------------------------------------+
 3 rows in set (0.000 sec)
 &lt;&lt;/sql&gt;&gt;
-
-&lt;&lt;product mariadb to=10.2&gt;&gt;
-In MariaDB 10.2 and before, the error is raised in the following additional cases:
-
-* The [[create-table/#key_block_size|KEY_BLOCK_SIZE]] table option is set to a non-zero value, but the [[innodb-system-variables/#innodb_file_format|innodb_file_format]] system variable is not set to ##Barracuda##.
-
-&lt;&lt;sql&gt;&gt;
-SET GLOBAL innodb_file_format=&#39;Antelope&#39;;
-SET SESSION innodb_strict_mode=ON;
-
-CREATE OR REPLACE TABLE tab (
-   id int PRIMARY KEY,
-   str varchar(50)
-)
-KEY_BLOCK_SIZE=4;
-ERROR 1005 (HY000): Can&#39;t create table `db1`.`tab` (errno: 140 &#34;Wrong create options&#34;)
-
-SHOW WARNINGS;
-+---------+------+--------------------------------------------------------------------+
-| Level   | Code | Message                                                            |
-+---------+------+--------------------------------------------------------------------+
-| Warning | 1478 | InnoDB: KEY_BLOCK_SIZE requires innodb_file_format &gt; Antelope.     |
-| Error   | 1005 | Can&#39;t create table `db1`.`tab` (errno: 140 &#34;Wrong create options&#34;) |
-| Warning | 1030 | Got error 140 &#34;Wrong create options&#34; from storage engine InnoDB    |
-+---------+------+--------------------------------------------------------------------+
-3 rows in set (0.00 sec)
-&lt;&lt;/sql&gt;&gt;
-
-* The [[create-table/#row_format|ROW_FORMAT]] table option is set to either the [[innodb-compressed-row-format|COMPRESSED]] or the [[innodb-dynamic-row-format|DYNAMIC]] row format, but the [[innodb-system-variables/#innodb_file_format|innodb_file_format]] system variable is not set to ##Barracuda##.
-
-&lt;&lt;sql&gt;&gt;
-SET GLOBAL innodb_file_format=&#39;Antelope&#39;;
-SET SESSION innodb_strict_mode=ON;
-
-CREATE OR REPLACE TABLE tab (
-   id int PRIMARY KEY,
-   str varchar(50)
-)
-ROW_FORMAT=COMPRESSED;
-ERROR 1005 (HY000): Can&#39;t create table `db1`.`tab` (errno: 140 &#34;Wrong create options&#34;)
-
-SHOW WARNINGS;
-+---------+------+-----------------------------------------------------------------------+
-| Level   | Code | Message                                                               |
-+---------+------+-----------------------------------------------------------------------+
-| Warning | 1478 | InnoDB: ROW_FORMAT=COMPRESSED requires innodb_file_format &gt; Antelope. |
-| Error   | 1005 | Can&#39;t create table `db1`.`tab` (errno: 140 &#34;Wrong create options&#34;)    |
-| Warning | 1030 | Got error 140 &#34;Wrong create options&#34; from storage engine InnoDB       |
-+---------+------+-----------------------------------------------------------------------+
-3 rows in set (0.00 sec)
-&lt;&lt;/sql&gt;&gt;
-
-* The [[#page_compressed|PAGE_COMPRESSED]] table option is set to ##1##, so [[compression|InnoDB page compression]] is enabled, but the [[innodb-system-variables/#innodb_file_format|innodb_file_format]] system variable is not set to ##Barracuda##.
-
-&lt;&lt;sql&gt;&gt;
-SET GLOBAL innodb_file_format=&#39;Antelope&#39;;
-SET SESSION innodb_strict_mode=ON;
-
-CREATE OR REPLACE TABLE tab (
-   id int PRIMARY KEY,
-   str varchar(50)
-)
-PAGE_COMPRESSED=1;
-SHOW WARNINGS;
-ERROR 1005 (HY000): Can&#39;t create table `db1`.`tab` (errno: 140 &#34;Wrong create options&#34;)
-
-SHOW WARNINGS;
-+---------+------+--------------------------------------------------------------------+
-| Level   | Code | Message                                                            |
-+---------+------+--------------------------------------------------------------------+
-| Warning |  140 | InnoDB: PAGE_COMPRESSED requires innodb_file_format &gt; Antelope.    |
-| Error   | 1005 | Can&#39;t create table `db1`.`tab` (errno: 140 &#34;Wrong create options&#34;) |
-| Warning | 1030 | Got error 140 &#34;Wrong create options&#34; from storage engine InnoDB    |
-+---------+------+--------------------------------------------------------------------+
-3 rows in set (0.00 sec)
-&lt;&lt;/sql&gt;&gt;
-&lt;&lt;/product&gt;&gt;
 
 === COMPRESSED Row Format
 

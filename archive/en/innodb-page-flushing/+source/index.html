@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-page-flushing/+r/117512/">117512</a></dd>
+            <dd><a href="/kb/en/innodb-page-flushing/+r/148607/">148607</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-06-29 10:13">2022-06-29 10:13</span></dd>
+<span class="datetime" title="2025-03-11 11:53">2025-03-11 11:53</span></dd>
         </dl>
     </div>
     
@@ -350,16 +350,14 @@ The [[innodb-system-variables/#innodb_max_dirty_pages_pct_lwm|innodb_max_dirty_p
 * the last checkpoint age (LSN difference since the latest checkpoint) does not exceed [[innodb-system-variables/#innodb_log_file_size|innodb_log_file_size]] (minus some safety margin)
 * the [[innodb-buffer-pool/|buffer pool]] is not running out of space, which could trigger eviction flushing
 
-Note that in MariaDB 10.5.7 and MariaDB 10.5.8 only, flushing was more aggressive, and the page cleaner thread would always run in the background, as long as dirty pages exist in the buffer pool. To make flushing more eager, set to a higher value, for example ##SET GLOBAL innodb_max_dirty_pages_pct_lwm=0.001;## (the default until MariaDB 10.2.1).
+To make flushing more eager, set to a higher value, for example ##SET GLOBAL innodb_max_dirty_pages_pct_lwm=0.001;## 
 
 
 === Page Flushing with Multiple InnoDB Page Cleaner Threads 
 
-&lt;&lt;product mariadb from=10.2.2 to=10.5.1&gt;&gt;
-The [[innodb-system-variables#innodb_page_cleaners|innodb_page_cleaners]] system variable was added in MariaDB 10.2.2, and makes it possible to use multiple InnoDB page cleaner threads. It is deprecated and ignored from MariaDB 10.5.1, as the original reasons for for splitting the buffer pool have mostly gone away.  
-&lt;&lt;/product&gt;&gt;
+The [[innodb-system-variables#innodb_page_cleaners|innodb_page_cleaners]] system variable makes it possible to use multiple InnoDB page cleaner threads. It is deprecated and ignored now as the original reasons for splitting the buffer pool have mostly gone away.
 
-The number of InnoDB page cleaner threads can be configured by setting the [[innodb-system-variables#innodb_page_cleaners|innodb_page_cleaners]] system variable. This system variable can be set in a server [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]] prior to starting up the server. For example:
+The number of InnoDB page cleaner threads can be configured by setting the [[innodb-system-variables#innodb_page_cleaners|innodb_page_cleaners]] system variable. The system variable can be set in a server [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]] prior to starting up the server. For example:
 
 &lt;&lt;code&gt;&gt;
 [mariadb]
@@ -367,7 +365,7 @@ The number of InnoDB page cleaner threads can be configured by setting the [[inn
 innodb_page_cleaners=8
 &lt;&lt;/code&gt;&gt;
 
-In MariaDB 10.3.3 and later, this system variable can also be changed dynamically with [[set/#global-session|SET GLOBAL]]. For example:
+The system variable can be changed dynamically with [[set/#global-session|SET GLOBAL]]. For example:
 
 &lt;&lt;sql&gt;&gt;
 SET GLOBAL innodb_page_cleaners=8;
@@ -377,15 +375,9 @@ This system variable&#39;s default value is either ##4## or the configured value
 
 === Page Flushing with a Single InnoDB Page Cleaner Thread
 
-In MariaDB 10.2.1 and before, and from MariaDB 10.5.1, when the original reasons for splitting the buffer pool have mostly gone away, only a single InnoDB page cleaner thread is supported.
+Since the original reasons for splitting the buffer pool have mostly gone away, only a single InnoDB page cleaner thread is supported.
 
 == Page Flushing with Multi-threaded Flush Threads
-
-&lt;&lt;product mariadb from=10.1.0 to=10.3.2&gt;&gt;
-InnoDB&#39;s multi-thread flush feature was first added in MariaDB 10.1.0. It was deprecated in MariaDB 10.2.9 and removed in MariaDB 10.3.2.
-&lt;&lt;/product&gt;&gt;
-
-In MariaDB 10.3.1 and before, InnoDB&#39;s multi-thread flush feature can be used. This is especially useful in MariaDB 10.1, which only supports a single page cleaner thread.
 
 InnoDB&#39;s multi-thread flush feature can be enabled by setting the [[innodb-system-variables#innodb_use_mtflush|innodb_use_mtflush]] system variable. The number of threads cane be configured by setting the [[innodb-system-variables#innodb_mtflush_threads|innodb_mtflush_threads]] system variable. This system variable can be set in a server [[configuring-mariadb-with-option-files/#option-groups|option group]] in an [[configuring-mariadb-with-option-files|option file]] prior to starting up the server. For example:
 
@@ -397,9 +389,10 @@ innodb_mtflush_threads = 8
 &lt;&lt;/code&gt;&gt;
 
 The [[innodb-system-variables#innodb_mtflush_threads|innodb_mtflush_threads]] system variable&#39;s default value is ##8##. The maximum value is ##64##.  In multi-core systems, it is recommended to set its value close to the configured value of the [[innodb-system-variables#innodb_buffer_pool_instances|innodb_buffer_pool_instances]] system variable. However, it is also recommended to use your own benchmarks to find a suitable value for your particular application.
-
-InnoDB&#39;s multi-thread flush feature was deprecated in MariaDB 10.2.9 and removed from MariaDB 10.3.2. In later versions of MariaDB, use multiple InnoDB page cleaner threads instead.
-
+&lt;&lt;style class=bluebox&gt;&gt;
+==== **Note**
+InnoDB&#39;s multi-thread flush feature is deprecated. Use multiple InnoDB page cleaner threads instead.
+&lt;&lt;/style&gt;&gt;
 == Configuring the InnoDB I/O Capacity
 
 Increasing the amount of I/O capacity available to InnoDB can also help increase the performance of page flushing.
