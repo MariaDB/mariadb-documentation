@@ -319,7 +319,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/authentication-plugin-pam/+r/138887/">138887</a></dd>
+            <dd><a href="/kb/en/authentication-plugin-pam/+r/148645/">148645</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-27">
@@ -328,7 +328,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-05-02 09:27">2024-05-02 09:27</span></dd>
+<span class="datetime" title="2025-03-12 10:34">2025-03-12 10:34</span></dd>
         </dl>
     </div>
     
@@ -385,11 +385,9 @@ plugin_load_add = auth_pam
 
 === Installing the v1 Plugin
 
-&lt;&lt;product mariadb from=&#34;10.4.0&#34;&gt;&gt;
-Starting in MariaDB 10.4.0, the ##auth_pam## shared library actually refers to version ##2.0## of the ##pam## authentication plugin. MariaDB 10.4.0 and later also provides version ##1.0## of the plugin as the ##auth_pam_v1## shared library.
-&lt;&lt;/product&gt;&gt;
+The ##auth_pam## shared library actually refers to version ##2.0## of the ##pam## authentication plugin. Version ##1.0## of the plugin as the ##auth_pam_v1## shared library is also available.
 
-In MariaDB 10.4.0 and later, if you need to install version ##1.0## of the authentication plugin instead of version ##2.0##, then you can do so. For example, with [[install-soname|INSTALL SONAME]] or [[install-plugin|INSTALL PLUGIN]]:
+If you need to install version ##1.0## of the authentication plugin instead of version ##2.0##, then you can do so. For example, with [[install-soname|INSTALL SONAME]] or [[install-plugin|INSTALL PLUGIN]]:
 
 &lt;&lt;sql&gt;&gt;
 INSTALL SONAME &#39;auth_pam_v1&#39;;
@@ -481,8 +479,7 @@ And then you would have to [[starting-and-stopping-mariadb-starting-and-stopping
 
 At that point, the server should be able to read ##/etc/shadow##.
 
-&lt;&lt;product mariadb from=&#34;10.4.0&#34;&gt;&gt;
-Starting in MariaDB 10.4.0, the ##pam## authentication plugin uses a [[https://linux.die.net/man/2/setuid|setuid]] wrapper to perform its PAM checks, so it should not need any special workarounds to perform privileged operations, such as reading ##/etc/shadow## when using the ##pam_unix## PAM module. See MDEV-7032 for more information.
+The ##pam## authentication plugin uses a [[https://linux.die.net/man/2/setuid|setuid]] wrapper to perform its PAM checks, so it should not need any special workarounds to perform privileged operations, such as reading ##/etc/shadow## when using the ##pam_unix## PAM module. See MDEV-7032 for more information.
 &lt;&lt;/product&gt;&gt;
 
 == Creating Users
@@ -744,7 +741,7 @@ For an example of how to use this PAM module, see the blog post: [[https://maria
 
 The ##pam_securid## PAM module provides support for multi-factor authentication. It is part of the commercial [[https://www.rsa.com/en-us/products/rsa-securid-suite|RSA SecurID Suite]].
 
-Note that current versions of this module are not [[#multi-threaded-issues|safe for multi-threaded environments]], and the vendor does not officially support the product on MariaDB. See MDEV-10361 about that. However, the module may work with MariaDB 10.4.0 and above.
+Note that current versions of this module are not [[#multi-threaded-issues|safe for multi-threaded environments]], and the vendor does not officially support the product on MariaDB. See MDEV-10361 about that. However, the module may work with a current version of MariaDB.
 
 === pam_ssh
 
@@ -760,9 +757,7 @@ The [[https://linux.die.net/man/8/pam_time|pam_time]] PAM module provides time-c
 
 MariaDB is a multi-threaded program, which means that different connections concurrently run in different threads. Current versions of MariaDB&#39;s ##pam## authentication plugin execute PAM module code in the server address space. This means that any PAM modules used with MariaDB must be safe for multi-threaded environments. Otherwise, if multiple clients try to authenticate with the same PAM module in parallel, undefined behavior can occur. For example, the ##pam_fprintd## PAM module is not safe for multi-threaded environments, and if you use it with MariaDB, you may experience server crashes.
 
-&lt;&lt;product mariadb from=&#34;10.4.0&#34;&gt;&gt;
-Starting in MariaDB 10.4.0, the ##pam## authentication plugin isolates PAM module code from the server address space, so even PAM modules that are known to be unsafe for multi-threaded environments should not cause issues with MariaDB. See MDEV-15473 for more information.
-&lt;&lt;/product&gt;&gt;
+The ##pam## authentication plugin isolates PAM module code from the server address space, so even PAM modules that are known to be unsafe for multi-threaded environments should not cause issues with MariaDB. See MDEV-15473 for more information.
 
 === Conflicts with Password Validation
 
@@ -791,9 +786,10 @@ INSTALL PLUGIN simple_password_check SONAME &#39;simple_password_check&#39;;
 Query OK, 0 rows affected (0.001 sec)
 &lt;&lt;/code&gt;&gt;
 
-&lt;&lt;product mariadb from=&#34;10.4.0&#34;&gt;&gt;
-Starting in MariaDB 10.4.0, accounts that authenticate with the ##pam## authentication plugin should be exempt from password validation checks. See MDEV-12321 and MDEV-10457 for more information.
-&lt;&lt;/product&gt;&gt;
+&lt;&lt;style class=bluebox&gt;&gt;
+==== **Note**: 
+Accounts that authenticate with the ##pam## authentication plugin should be exempt from password validation checks. See MDEV-12321 and MDEV-10457 for more information.
+&lt;&lt;/style&gt;&gt;
 
 === SELinux
 
@@ -821,7 +817,7 @@ If you can&#39;t get the ##pam## authentication plugin to work with SELinux at a
 
 === Memory Overcommit 
 
-On MariaDB 10.4 and later you may run into authentication failures with the following log message in the MariaDB error log:
+You may run into authentication failures with the following log message in the MariaDB error log:
 
 &lt;&lt;code&gt;&gt;
 pam: cannot exec /usr/lib64/mysql/plugin/auth_pam_tool_dir/auth_pam_tool (errno: 12 &#34;Cannot allocate memory&#34;) 
@@ -829,7 +825,7 @@ pam: cannot exec /usr/lib64/mysql/plugin/auth_pam_tool_dir/auth_pam_tool (errno:
 
 This can happen on operating system setups that are configured to prevent memory overcommit. When the MariaDB server process spawns the ##auth_pam_tool## helper process there&#39;s a brief period where the new process inherits the memory of the MariaDB process before releasing that memory and executing the new command. When having a MariaDB server configured to use more than 50% of the server machnines RAM -- which is common for dedicated database servers -- this duplication would lead to an over-commit situation.
 
-Starting with MariaDB 10.4.25, MariaDB 10.5.16, MariaDB 10.6.8, and MariaDB 10.7.4, we changed to use ##posix_spawn()## instead of the classic ##fork();exec()## to prevent this, but systems with older glibc versions prior to 2.26 still use ##fork();exec()## to implement ##posix_spawn()## internally and so are still affected; this is for example still the case on RedHat Enterprise Linux 7.
+Starting with MariaDB 10.5.16, MariaDB 10.6.8, and MariaDB 10.7.4, we changed to use ##posix_spawn()## instead of the classic ##fork();exec()## to prevent this, but systems with older glibc versions prior to 2.26 still use ##fork();exec()## to implement ##posix_spawn()## internally and so are still affected; this is for example still the case on RedHat Enterprise Linux 7.
 
 To solve this you can either:
 

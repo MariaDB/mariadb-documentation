@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/oqgraph-examples/+r/70742/">70742</a></dd>
+            <dd><a href="/kb/en/oqgraph-examples/+r/148637/">148637</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2018-06-27 11:15">2018-06-27 11:15</span></dd>
+<span class="datetime" title="2025-03-12 08:43">2025-03-12 08:43</span></dd>
         </dl>
     </div>
     
@@ -353,29 +353,12 @@ INSERT INTO oq_backing(origid, destid)
 
 Now the read-only [[oqgraph|OQGRAPH]] table is created. 
 
-From MariaDB 10.1.2 onwards you can use the following syntax:
+You can use the following syntax:
 &lt;&lt;code&gt;&gt;
 CREATE TABLE oq_graph
 ENGINE=OQGRAPH 
 data_table=&#39;oq_backing&#39; origid=&#39;origid&#39; destid=&#39;destid&#39;;
 &lt;&lt;/code&gt;&gt;
-
-Prior to MariaDB 10.1.2, the [[create-table|CREATE]] statement must match the format below - any difference will result in an error.
-&lt;&lt;code&gt;&gt;
-CREATE TABLE oq_graph (
-  latch VARCHAR(32) NULL,
-  origid BIGINT UNSIGNED NULL,
-  destid BIGINT UNSIGNED NULL,
-  weight DOUBLE NULL,
-  seq BIGINT UNSIGNED NULL,
-  linkid BIGINT UNSIGNED NULL,
-  KEY (latch, origid, destid) USING HASH,
-  KEY (latch, destid, origid) USING HASH
-) 
-ENGINE=OQGRAPH 
-data_table=&#39;oq_backing&#39; origid=&#39;origid&#39; destid=&#39;destid&#39;;
-&lt;&lt;/code&gt;&gt;
-
 
 == Creating a Table with Weight
 
@@ -464,10 +447,8 @@ SELECT GROUP_CONCAT(linkid) AS dests FROM oq_graph WHERE latch=&#39;dijkstras&#3
 Note that this returns all possible destinations along the path, not just immediate links.
 
 ==Leaf Nodes
-&lt;&lt;product mariadb version=10.3.3&gt;&gt;
-Support for the ##leaves## latch value was introduced in MariaDB 10.3.3.
-&lt;&lt;/product&gt;&gt;
-A ##latch## value of ##&#39;leaves&#39;## and either ##origid## or ##destid## is used for finding leaf nodes at the beginning or end of a graph.
+
+MariaDB supports the ##leaves## latch value. A ##latch## value of ##&#39;leaves&#39;## and either ##origid## or ##destid## is used for finding leaf nodes at the beginning or end of a graph.
 
 &lt;&lt;code&gt;&gt;
 INSERT INTO oq_backing(origid, destid)  
@@ -509,13 +490,15 @@ SELECT * FROM oq_graph WHERE latch=&#39;leaves&#39; AND destid=5;
 |breadth_first | 2 | origid | List vertices reachable from origid in linkid column|
 |breadth_first | 2 | destid | List vertices from which a path can be found to destid in linkid column|
 |breadth_first | 2 | origid, destid | Find shortest path between origid and destid, report in linkid column|
-|leaves | 4 | origid | List vertices reachable from origid, that only have incoming edges (from MariaDB 10.3.3) |
-|leaves | 4 | destid | List vertices from which a path can be found to destid, that only have outgoing edges (from MariaDB 10.3.3) |
+|leaves | 4 | origid | List vertices reachable from origid, that only have incoming edges |
+|leaves | 4 | destid | List vertices from which a path can be found to destid, that only have outgoing edges|
 |leaves | 4 | origid, destid | Not supported, will return an empty result |
 
 ----
-Note: the use of integer latch commands is deprecated and may be phased out in a future release. Currently, numeric values in the strings are interpreted as aliases, and use of an integer column can be optionally allowed, for the latch commands column.
-
+&lt;&lt;style class=bluebox&gt;&gt;
+==== **Note**
+The use of integer latch commands is deprecated and may be phased out in a future release. Currently, numeric values in the strings are interpreted as aliases, and use of an integer column can be optionally allowed, for the latch commands column.
+&lt;&lt;/style&gt;&gt;
 The use of integer latches is controlled using the [[oqgraph-system-and-status-variables#oqgraph_allow_create_integer_latch|oqgraph_allow_create_integer_latch]] system variable.
 
 == See Also

@@ -319,7 +319,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-online-ddl-overview/+r/115647/">115647</a></dd>
+            <dd><a href="/kb/en/innodb-online-ddl-overview/+r/148628/">148628</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -328,7 +328,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-04-27 14:40">2022-04-27 14:40</span></dd>
+<span class="datetime" title="2025-03-12 08:00">2025-03-12 08:00</span></dd>
         </dl>
     </div>
     
@@ -392,12 +392,11 @@ CREATE OR REPLACE TABLE tab (
 ALTER TABLE tab ADD COLUMN c varchar(50), ALGORITHM=INPLACE;
 &lt;&lt;/sql&gt;&gt;
 
-In MariaDB 10.3 and later, the above operation would actually use the ##INSTANT## algorithm, because the ##ADD COLUMN## operation supports the ##INSTANT## algorithm, and the ##INSTANT## algorithm is more efficient than the ##INPLACE## algorithm.
+The above operation should use the ##INSTANT## algorithm, because the ##ADD COLUMN## operation supports the ##INSTANT## algorithm, and the ##INSTANT## algorithm is more efficient than the ##INPLACE## algorithm.
 
-===  Specifying an Alter Algorithm Using System Variables
+=== Specifying an Alter Algorithm Using System Variables
 
-&lt;&lt;product mariadb from=10.3&gt;&gt;
-In MariaDB 10.3 and later, the [[server-system-variables/#alter_algorithm|alter_algorithm]] system variable can be used to pick the //least efficient// algorithm that the user is willing to accept.
+The [[server-system-variables/#alter_algorithm|alter_algorithm]] system variable can be used to pick the //least efficient// algorithm that the user is willing to accept.
 
 For example, if a user wanted to add a column to a table, but only if the operation used an algorithm that is at least as efficient as the ##INPLACE##, then they could execute the following:
 
@@ -411,22 +410,7 @@ SET SESSION alter_algorithm=&#39;INPLACE&#39;;
 ALTER TABLE tab ADD COLUMN c varchar(50);
 &lt;&lt;/sql&gt;&gt;
 
-In MariaDB 10.3 and later, the above operation would actually use the ##INSTANT## algorithm, because the ##ADD COLUMN## operation supports the ##INSTANT## algorithm, and the ##INSTANT## algorithm is more efficient than the ##INPLACE## algorithm.
-&lt;&lt;/product&gt;&gt;
-&lt;&lt;product mariadb to=10.2&gt;&gt;
-In MariaDB 10.2 and before, the [[server-system-variables#old_alter_table|old_alter_table]] system variable can be used to specify whether the ##COPY## algorithm should be used.
-
-For example, if a user wanted to add a column to a table, but they wanted to use the ##COPY## algorithm instead of the default algorithm for the operation, then they could execute the following:
-
-&lt;&lt;sql&gt;&gt;
-CREATE OR REPLACE TABLE tab (
-   a int PRIMARY KEY,
-   b varchar(50)
-);
-
-SET SESSION old_alter_table=1;
-ALTER TABLE tab ADD COLUMN c varchar(50);
-&lt;&lt;/sql&gt;&gt;
+The above operation would actually use the ##INSTANT## algorithm, because the ##ADD COLUMN## operation supports the ##INSTANT## algorithm, and the ##INSTANT## algorithm is more efficient than the ##INPLACE## algorithm.
 &lt;&lt;/product&gt;&gt;
 
 == Supported Alter Algorithms
@@ -479,7 +463,7 @@ If the ##COPY## algorithm is used with an [[innodb|InnoDB]] table, then the foll
 
 * InnoDB does not use a sort buffer.
 
-* In MariaDB 10.2.13, MariaDB 10.3.5 and later, the table copy operation creates a lot fewer [[xtradbinnodb-undo-log|InnoDB undo log]] writes. See MDEV-11415 for more information.
+* The table copy operation creates a lot fewer [[xtradbinnodb-undo-log|InnoDB undo log]] writes. See MDEV-11415 for more information.
 
 * The table copy operation creates a lot of [[innodb-redo-log|InnoDB redo log]] writes.
 
@@ -516,11 +500,9 @@ If the ##INPLACE## algorithm is used with an [[innodb|InnoDB]] table, then the f
 
 * If the operation requires the table to be rebuilt, then the operation might have to create temporary tables.
 ** It may have to create a temporary intermediate table for the actual table rebuild operation.
-*** In MariaDB 10.2.19 and later, this temporary table will be in the same directory as the original table, and it&#39;s file name will be in the format ##{{{#}}}sql${PID}_${THREAD_ID}_${TMP_TABLE_COUNT}##, where ##${PID}## is the process ID of ##mysqld##, ##${THREAD_ID}## is the connection ID, and ##${TMP_TABLE_COUNT}## is the number of temporary tables that the connection has open. Therefore, the [[server-system-variables/#datadir|datadir]] may contain files with file names like ##{{{#}}}sql1234_12_1.ibd##.
-*** In MariaDB 10.2.18 and before, this temporary table will be in the same directory as the original table, and it&#39;s file name will be in the format ##{{{#}}}sql-ib${TABLESPACE_ID}-${RAND}##, where ##${TABLESPACE_ID}## is the table&#39;s tablespace ID within InnoDB and ##${RAND}## is a randomly initialized number. Therefore, the [[server-system-variables/#datadir|datadir]] may contain files with file names like ##{{{#}}}sql-ib230291-1363966925.ibd##.
+*** This temporary table will be in the same directory as the original table, and it&#39;s file name will be in the format ##{{{#}}}sql${PID}_${THREAD_ID}_${TMP_TABLE_COUNT}##, where ##${PID}## is the process ID of ##mysqld##, ##${THREAD_ID}## is the connection ID, and ##${TMP_TABLE_COUNT}## is the number of temporary tables that the connection has open. Therefore, the [[server-system-variables/#datadir|datadir]] may contain files with file names like ##{{{#}}}sql1234_12_1.ibd##.
 ** When it replaces the original table with the rebuilt table, it may also have to rename the original table using a temporary table name.
-*** If the server is MariaDB 10.3 or later or if it is running MariaDB 10.2 and the [[innodb-system-variables/#innodb_safe_truncate|innodb_safe_truncate]] system variable is set to ##OFF##, then the format will actually be ##{{{#}}}sql-ib${TABLESPACE_ID}-${RAND}##, where ##${TABLESPACE_ID}## is the table&#39;s tablespace ID within InnoDB and ##${RAND}## is a randomly initialized number. Therefore, the [[server-system-variables/#datadir|datadir]] may contain files with file names like ##{{{#}}}sql-ib230291-1363966925.ibd##.
-*** If the server is running MariaDB 10.1 or before or if it is running MariaDB 10.2 and the [[innodb-system-variables/#innodb_safe_truncate|innodb_safe_truncate]] system variable is set to ##ON##, then the renamed table will have a temporary table name in the format ##{{{#}}}sql-ib${TABLESPACE_ID}##, where ##${TABLESPACE_ID}## is the table&#39;s tablespace ID within InnoDB. Therefore, the [[server-system-variables/#datadir|datadir]] may contain files with file names like ##{{{#}}}sql-ib230291.ibd##.
+*** The [[innodb-system-variables/#innodb_safe_truncate|innodb_safe_truncate]] system variable is set to ##OFF##, then the format will actually be ##{{{#}}}sql-ib${TABLESPACE_ID}-${RAND}##, where ##${TABLESPACE_ID}## is the table&#39;s tablespace ID within InnoDB and ##${RAND}## is a randomly initialized number. Therefore, the [[server-system-variables/#datadir|datadir]] may contain files with file names like ##{{{#}}}sql-ib230291-1363966925.ibd##.
 
 * The storage needed for the above items can add up to the size of the original table, or more in some cases.
 
@@ -533,12 +515,7 @@ With respect to the allowed operations, the ##INPLACE## algorithm supports a sub
 See [[innodb-online-ddl-operations-with-algorithminplace|InnoDB Online DDL Operations with ALGORITHM=INPLACE]] for more information.
 
 === NOCOPY Algorithm
-
-&lt;&lt;product mariadb from=10.3&gt;&gt;
-In MariaDB 10.3 and later, the ##NOCOPY## algorithm is supported.
-&lt;&lt;/product&gt;&gt;
-
-The ##INPLACE## algorithm can sometimes be surprisingly slow in instances where it has to rebuild the clustered index, because when the clustered index has to be rebuilt, the whole table has to be rebuilt. The ##NOCOPY## algorithm was introduced as a way to avoid this. 
+The ##NOCOPY## algorithm is supported. The ##INPLACE## algorithm can sometimes be surprisingly slow in instances where it has to rebuild the clustered index, because when the clustered index has to be rebuilt, the whole table has to be rebuilt. The ##NOCOPY## algorithm was introduced as a way to avoid this. 
 
 If an [[alter-table|ALTER TABLE]] operation supports the ##NOCOPY## algorithm, then it can be performed without rebuilding the clustered index.
 
@@ -560,12 +537,7 @@ With respect to the allowed operations, the ##NOCOPY## algorithm supports a subs
 See [[innodb-online-ddl-operations-with-algorithmnocopy|InnoDB Online DDL Operations with ALGORITHM=NOCOPY]] for more information.
 
 === INSTANT Algorithm
-
-&lt;&lt;product mariadb from=10.3&gt;&gt;
-In MariaDB 10.3 and later, the ##INSTANT## algorithm is supported.
-&lt;&lt;/product&gt;&gt;
-
-The ##INPLACE## algorithm can sometimes be surprisingly slow in instances where it has to modify data files. The ##INSTANT## algorithm was introduced as a way to avoid this.
+The ##INSTANT## algorithm is supported. The ##INPLACE## algorithm can sometimes be surprisingly slow in instances where it has to modify data files. The ##INSTANT## algorithm was introduced as a way to avoid this.
 
 If an [[alter-table|ALTER TABLE]] operation supports the ##INSTANT## algorithm, then it can be performed without modifying any data files.
 
