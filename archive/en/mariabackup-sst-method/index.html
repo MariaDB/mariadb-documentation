@@ -279,7 +279,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-05-03 02:13">10 months ago</span></dd>
+<span class="datetime" title="2025-03-17 11:16">5 hours, 27 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -334,40 +334,6 @@
 
     
     
-
-
-
-    
-    
-
-<div class="well well-small box"><div><h5>Product Versions</h5></div><div>
-
-        <ul id="product_chooser">
-            
-                <li class="mariadb_from_10_3_13">
-                    <label><input type="checkbox" data-product-class="mariadb_from_10_3_13"
-                            >MariaDB starting with 10.3.13</label>
-                </li>
-            
-                <li class="mariadb_to_10_3_13">
-                    <label><input type="checkbox" data-product-class="mariadb_to_10_3_13"
-                            >MariaDB until 10.3.13</label>
-                </li>
-            
-                <li class="mariadb_from_10_3_13">
-                    <label><input type="checkbox" data-product-class="mariadb_from_10_3_13"
-                            >MariaDB starting with 10.3.13</label>
-                </li>
-            
-                <li class="mariadb_to_10_3_13">
-                    <label><input type="checkbox" data-product-class="mariadb_to_10_3_13"
-                            >MariaDB until 10.3.13</label>
-                </li>
-            
-        </ul>
-    
-</div>
-</div>
 
 
 
@@ -528,7 +494,7 @@ wsrep_sst_auth = mariabackup:mypassword
 <pre class="fixed">[mariadb]
 ...
 wsrep_sst_auth = mariabackup:
-</pre><p>The user account that performs the backup for the SST needs to have <a href="/kb/en/mariabackup-overview/#authentication-and-privileges">the same privileges as Mariabackup</a>, which are the <code>RELOAD</code> , <code>PROCESS</code>, <code>LOCK TABLES</code> and <code>BINLOG MONITOR</code> (or <code>REPLICATION CLIENT</code> for <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a> or earlier), <code>REPLICA MONITOR</code> (not required for <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a> or earlier) <a href="/kb/en/grant/#global-privileges">global privileges</a>. To be safe, you should ensure that these privileges are set on each node in your cluster.  <a href="/kb/en/backup-restore-and-import-clients-mariadb-backup/">Mariabackup</a> connects locally on the donor node to perform the backup, so the following user should be sufficient:</p>
+</pre><p>The user account that performs the backup for the SST needs to have <a href="/kb/en/mariabackup-overview/#authentication-and-privileges">the same privileges as Mariabackup</a>, which are the <code>RELOAD</code> , <code>PROCESS</code>, <code>LOCK TABLES</code> and <code>BINLOG MONITOR</code>, <code>REPLICA MONITOR</code> <a href="/kb/en/grant/#global-privileges">global privileges</a>. To be safe, you should ensure that these privileges are set on each node in your cluster.  <a href="/kb/en/backup-restore-and-import-clients-mariadb-backup/">Mariabackup</a> connects locally on the donor node to perform the backup, so the following user should be sufficient:</p>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">USER</span> <span class="s1">&#39;mariabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span> <span class="n">IDENTIFIED</span> <span class="k">BY</span> <span class="s1">&#39;mypassword&#39;</span><span class="p">;</span>
 <span class="k">GRANT</span> <span class="n">RELOAD</span><span class="p">,</span> <span class="n">PROCESS</span><span class="p">,</span> <span class="k">LOCK</span> <span class="n">TABLES</span><span class="p">,</span> <span class="n">BINLOG</span> <span class="n">MONITOR</span> <span class="k">ON</span> <span class="o">*</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;mariabackup&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
 </pre><h3 class="anchored_heading" id="passwordless-authentication-unix-socket">Passwordless Authentication - Unix Socket</h3>
@@ -559,7 +525,7 @@ wsrep_sst_auth = mysql:
 ...
 wsrep_sst_auth = mariabackup:
 </pre><h2 class="anchored_heading" id="choosing-a-donor-node">Choosing a Donor Node</h2>
-<p>When Mariabackup is used to create the backup for the SST on the donor node, Mariabackup briefly requires a system-wide lock at the end of the backup. In <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a> and before, this is done with <code><a href="/kb/en/flush/">FLUSH TABLES WITH READ LOCK</a></code>. In <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a> and later, this is done with <code><a href="/kb/en/backup-stage/">BACKUP STAGE BLOCK_COMMIT</a></code>.</p>
+<p>When Mariabackup is used to create the backup for the SST on the donor node, Mariabackup briefly requires a system-wide lock at the end of the backup. This is done with <code><a href="/kb/en/backup-stage/">BACKUP STAGE BLOCK_COMMIT</a></code>.</p>
 <p>If a specific node in your cluster is acting as the <em>primary</em> node by receiving all of the application's write traffic, then this node should not usually be used as the donor node, because the system-wide lock could interfere with the application. In this case, you can define one or more preferred donor nodes by setting the <code><a href="/kb/en/galera-cluster-system-variables/#wsrep_sst_donor">wsrep_sst_donor</a></code> system variable.</p>
 <p>For example, let's say that we have a 5-node cluster with the nodes <code>node1</code>, <code>node2</code>,  <code>node3</code>, <code>node4</code>, and <code>node5</code>, and let's say that <code>node1</code> is acting as the <em>primary</em> node. The preferred donor nodes for <code>node2</code> could be configured by setting the following in a server <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a> prior to starting up a node:</p>
 <pre class="fixed">[mariadb]
@@ -631,19 +597,16 @@ tcert=/etc/my.cnf.d/certificates/server1-cert.pem
 <h2 class="anchored_heading" id="logs">Logs</h2>
 <p>The <code>mariabackup</code> SST method has its own logging outside of the MariaDB Server logging.</p>
 <h3 class="anchored_heading" id="logging-to-sst-logs">Logging to SST Logs</h3>
-<div class="mariadb_from_10_3_13 mariadb from_10_3_13 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/mariadb-10313-release-notes/">10.3.13</a></h5><p>Starting with <a href="/kb/en/mariadb-10138-release-notes/">MariaDB 10.1.38</a>, <a href="/kb/en/mariadb-10222-release-notes/">MariaDB 10.2.22</a>, and <a href="/kb/en/mariadb-10313-release-notes/">MariaDB 10.3.13</a>, logging for <code>mariabackup</code> SSTs works the following way.</p>
+<p>Logging for <code>mariabackup</code> SSTs works the following way.</p>
 <p>By default, on the donor node, it logs to <code>mariabackup.backup.log</code>. This log file is located in the <code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code>.</p>
 <p>By default, on the joiner node, it logs to <code>mariabackup.prepare.log</code> and <code>mariabackup.move.log</code> These log files are also located in the <code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code>.</p>
 <p>By default, before a new SST is started, existing <code>mariabackup</code> SST log files are compressed and moved to <code>/tmp/sst_log_archive</code>. This behavior can be disabled by setting <code>sst-log-archive=0</code> in the <code>[sst]</code> <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>. Similarly, the archive directory can be changed by setting <code>sst-log-archive-dir</code>. For example:</p>
 <pre class="fixed">[sst]
 sst-log-archive=1
 sst-log-archive-dir=/var/log/mysql/sst/
-</pre><p>See <a href="https://jira.mariadb.org/browse/MDEV-17973">MDEV-17973</a> for more information.</p>
-</div><div class="mariadb_to_10_3_13 mariadb to_10_3_13 product"><h5 class="product_title">MariaDB until <a href="/kb/en/mariadb-10313-release-notes/">10.3.13</a></h5><p>Prior to <a href="/kb/en/mariadb-10138-release-notes/">MariaDB 10.1.38</a>, <a href="/kb/en/mariadb-10222-release-notes/">MariaDB 10.2.22</a>, and <a href="/kb/en/mariadb-10313-release-notes/">MariaDB 10.3.13</a>, logging for <code>mariabackup</code> SSTs works the following way.</p>
-<p>By default, on the donor node, it logs to <code>innobackup.backup.log</code>. This log file is located in the <code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code>.</p>
-<p>By default, on the joiner node, it logs to <code>innobackup.prepare.log</code> and <code>innobackup.move.log</code>. These log files are located in the <code>.sst</code> directory, which is a hidden directory inside the <code><a href="/kb/en/server-system-variables/#datadir">datadir</a></code>.</p>
-<p>These log files are overwritten by each subsequent SST, so if an SST fails, it is best to copy them somewhere safe before starting another SST, so that the log files can be analyzed. </p>
-</div><h3 class="anchored_heading" id="logging-to-syslog">Logging to Syslog</h3>
+</pre><p>See <a href="https://jira.mariadb.org/browse/MDEV-17973">MDEV-17973</a> for more information.
+&lt;&lt;/product&gt;&gt;</p>
+<h3 class="anchored_heading" id="logging-to-syslog">Logging to Syslog</h3>
 <p>You can redirect the SST logs to the syslog instead by setting the following in the <code>[sst]</code> <a href="/kb/en/configuring-mariadb-with-option-files/#option-groups">option group</a> in an <a href="/kb/en/configuring-mariadb-with-option-files/">option file</a>:</p>
 <pre class="fixed">[sst]
 sst-syslog=1
