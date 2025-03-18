@@ -298,7 +298,7 @@ param..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/21.06.18/Documentation/Routers/ReadWriteSplit.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/21.06.19/Documentation/Routers/ReadWriteSplit.md">GitHub</a></dd>
         
     </dl>
 
@@ -1139,6 +1139,12 @@ modifications done by the client itself.</p>
 <p><strong>Note:</strong> This feature requires MariaDB 10.2.16 or newer to function. In
   addition to this, the <code>session_track_system_variables</code> parameter must include
   <code>last_gtid</code> in its list of tracked system variables.</p>
+<p><strong>Note:</strong> This feature also enables multi-statement execution of SQL in the
+  protocol. This is equivalent to using <code>allowMultiQueries=true</code> in
+  <a href="https://mariadb.com/kb/en/about-mariadb-connector-j/#allowmultiqueries">Connector/J</a>
+  or using <code>CLIENT_MULTI_STATEMENTS</code> and <code>CLIENT_MULTI_RESULTS</code> in the
+  Connector/C. The <em>Implementation of causal_reads</em> section explains why this is
+  necessary.</p>
 <p>The possible values for this parameter are:</p>
 <ul>
 <li>
@@ -1231,19 +1237,21 @@ sacrificing consistency.</p>
 <p>The set of example SQL above will be translated by MaxScale into the following
 statements.</p>
 <div><pre><span></span><span>INSERT</span> <span>INTO</span> <span>test</span><span>.</span><span>t1</span> <span>(</span><span>id</span><span>)</span> <span>VALUES</span> <span>(</span><span>1</span><span>);</span>
+
+<span>-- These are executed as one multi-query</span>
 <span>SET</span> <span>@</span><span>maxscale_secret_variable</span><span>=</span><span>(</span>
     <span>SELECT</span> <span>CASE</span>
            <span>WHEN</span> <span>MASTER_GTID_WAIT</span><span>(</span><span>'0-3000-8'</span><span>,</span> <span>10</span><span>)</span> <span>=</span> <span>0</span> <span>THEN</span> <span>1</span>
            <span>ELSE</span> <span>(</span><span>SELECT</span> <span>1</span> <span>FROM</span> <span>INFORMATION_SCHEMA</span><span>.</span><span>ENGINES</span><span>)</span>
-    <span>END</span><span>);</span>
-<span>SELECT</span> <span>*</span> <span>FROM</span> <span>test</span><span>.</span><span>t1</span> <span>WHERE</span> <span>id</span> <span>=</span> <span>1</span><span>;</span>
+    <span>END</span><span>);</span> <span>SELECT</span> <span>*</span> <span>FROM</span> <span>test</span><span>.</span><span>t1</span> <span>WHERE</span> <span>id</span> <span>=</span> <span>1</span><span>;</span>
 </pre></div>
 
 
-<p>The <code>SET</code> command will synchronize the slave to a certain logical point in
-the replication stream (see
-<a href="https://mariadb.com/kb/en/library/master_gtid_wait/">MASTER_GTID_WAIT</a>
-for more details).</p>
+<p>The <code>SET</code> command will synchronize the slave to a certain logical point in the
+replication stream (see
+<a href="https://mariadb.com/kb/en/library/master_gtid_wait/">MASTER_GTID_WAIT</a> for more
+details). If the synchronization fails, the query will not run and it will be
+retried on the server where the transaction was originally done.</p>
 <h5 id="prepared-statements">Prepared Statements</h5>
 <p>Binary protocol prepared statements are handled in a different manner. Instead
 of adding the synchronization SQL into the original SQL query, it is sent as a
@@ -1304,7 +1312,54 @@ server which would cause the connection to be closed and a warning to be logged.
   added to it by readwritesplit exceed the maximum packet size (16777213 bytes),
   the causal read will not be attempted and a non-causal read is done instead.</p>
 </li>
+<li>
+<p>SQL like <code>INSERT ... RETURNING</code> that commits a transaction and returns a
+  resultset will only work with causal reads if the connector supports the
+  DEPRECATE_EOF protocol feature. The following table contains a list of MariaDB
+  connectors and whether they support the protocol feature.</p>
+</li>
 </ul>
+<table>
+<thead>
+<tr>
+<th>Connector</th>
+<th>Supported</th>
+<th>Version</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Connector/J</td>
+<td>Yes</td>
+<td>3.5.2</td>
+</tr>
+<tr>
+<td>Connector/Node.js</td>
+<td>Yes</td>
+<td>3.4.0</td>
+</tr>
+<tr>
+<td>Connector/R2DBC</td>
+<td>Yes</td>
+<td>1.3.0</td>
+</tr>
+<tr>
+<td>Connector/C</td>
+<td>No</td>
+<td>3.4.4</td>
+</tr>
+<tr>
+<td>Connector/C++</td>
+<td>No</td>
+<td>1.1.5</td>
+</tr>
+<tr>
+<td>Connector/ODBC</td>
+<td>No</td>
+<td>3.2.5</td>
+</tr>
+</tbody>
+</table>
 <h3 id="causal_reads_timeout"><code>causal_reads_timeout</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="/kb/en/maxscale-21-06-mariadb-maxscale-configuration-guide/#durations">duration</a></li>

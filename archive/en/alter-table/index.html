@@ -287,7 +287,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-12-12 10:27">3 months ago</span></dd>
+<span class="datetime" title="2025-03-17 12:41">12 hours, 23 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -809,17 +809,8 @@ Dropping a column that is part of a multi-column <code class="highlight fixed" s
 
 ALTER TABLE x DROP COLUMN a;
 [42000][1072] Key column 'A' doesn't exist in table
-</pre><p>The reason is that dropping column <code>a</code> would result in the new constraint that all values in column <code>b</code> be unique. In order to drop the column, an explicit <code>DROP PRIMARY KEY</code> and <code>ADD PRIMARY KEY</code> would be required. Up until <a href="/kb/en/mariadb-1027-release-notes/">MariaDB 10.2.7</a>, the column was dropped and the additional constraint applied, resulting in the following structure:</p>
-<pre class="fixed">ALTER TABLE x DROP COLUMN a;
-Query OK, 0 rows affected (0.46 sec)
-
-DESC x;
-+-------+---------+------+-----+---------+-------+
-| Field | Type    | Null | Key | Default | Extra |
-+-------+---------+------+-----+---------+-------+
-| b     | int(11) | NO   | PRI | NULL    |       |
-+-------+---------+------+-----+---------+-------+
-</pre><p>MariaDB supports instant DROP COLUMN. DROP COLUMN of an indexed column would imply <a href="/kb/en/drop-index/">DROP INDEX</a> (and in the case of a non-UNIQUE multi-column index, possibly ADD INDEX). These will not be allowed with <a href="#algorithm">ALGORITHM=INSTANT</a>, but unlike prior to <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a>, they can be allowed with <a href="#algorithm">ALGORITHM=NOCOPY</a></p>
+</pre><p>The reason is that dropping column <code>a</code> would result in the new constraint that all values in column <code>b</code> be unique. In order to drop the column, an explicit <code>DROP PRIMARY KEY</code> and <code>ADD PRIMARY KEY</code> would be required. </p>
+<p>MariaDB supports instant DROP COLUMN. DROP COLUMN of an indexed column would imply <a href="/kb/en/drop-index/">DROP INDEX</a> (and in the case of a non-UNIQUE multi-column index, possibly ADD INDEX). These will not be allowed with <a href="#algorithm">ALGORITHM=INSTANT</a>, but unlike prior versions, they can be allowed with <a href="#algorithm">ALGORITHM=NOCOPY</a></p>
 <p><code class="highlight fixed" style="white-space:pre-wrap">RESTRICT</code> and <code class="highlight fixed" style="white-space:pre-wrap">CASCADE</code> are allowed to make porting from other database systems easier. In MariaDB, they do nothing.</p>
 <h3 class="anchored_heading" id="modify-column">MODIFY COLUMN</h3>
 <p>Allows you to modify the type of a column. The column will be at the same place as the original column and all indexes on the column will be kept.  Note that when modifying column, you should specify all attributes for the new column.</p>
@@ -926,8 +917,8 @@ ADD CONSTRAINT [constraint_name] CHECK(expression);</p></pre><p>Before a row is 
 <span class="o">|</span> <span class="n">is_balanced</span>     <span class="o">|</span> <span class="n">account_ledger</span> <span class="o">|</span> <span class="k">CHECK</span>           <span class="o">|</span>
 <span class="o">+</span><span class="c1">-----------------+----------------+-----------------+</span>
 </pre><h3 class="anchored_heading" id="drop-constraint">DROP CONSTRAINT</h3>
-<p><code>DROP CONSTRAINT</code> for <code>UNIQUE</code> and <code>FOREIGN KEY</code> <a href="/kb/en/constraint/">constraints</a> was introduced in <a href="/kb/en/mariadb-10222-release-notes/">MariaDB 10.2.22</a> and <a href="/kb/en/mariadb-10313-release-notes/">MariaDB 10.3.13</a>.</p>
-<p><code>DROP CONSTRAINT</code> for <code>CHECK</code> constraints was introduced in <a href="/kb/en/mariadb-1021-release-notes/">MariaDB 10.2.1</a></p>
+<p><code>DROP CONSTRAINT</code> for <code>UNIQUE</code> and <code>FOREIGN KEY</code> <a href="/kb/en/constraint/">constraints</a> 
+and <code>DROP CONSTRAINT</code> for <code>CHECK</code> constraints were introduced in an earlier version of MariaD</p>
 <p>Modifies the table, removing the given constraint.</p>
 <pre class="fixed">ALTER TABLE table_name
 DROP CONSTRAINT constraint_name;
@@ -1017,14 +1008,13 @@ DROP CONSTRAINT constraint_name;
 <ul start="1"><li><code>ALGORITHM=DEFAULT</code> - This implies the default behavior for the specific statement, such as if no <code>ALGORITHM</code> clause is specified.
 </li><li><code>ALGORITHM=COPY</code>
 </li><li><code>ALGORITHM=INPLACE</code>
-</li><li><code>ALGORITHM=NOCOPY</code> - This was added in <a href="/kb/en/mariadb-1037-release-notes/">MariaDB 10.3.7</a>.
-</li><li><code>ALGORITHM=INSTANT</code> - This was added in <a href="/kb/en/mariadb-1037-release-notes/">MariaDB 10.3.7</a>.
+</li><li><code>ALGORITHM=NOCOPY</code>
+</li><li><code>ALGORITHM=INSTANT</code>
 </li></ul>
 <p>See <a href="/kb/en/innodb-online-ddl-overview/#algorithm">InnoDB Online DDL Overview: ALGORITHM</a> for information on how the <code>ALGORITHM</code> clause affects InnoDB.</p>
 <h4 class="anchored_heading" id="algorithmdefault">ALGORITHM=DEFAULT</h4>
 <p>The default behavior, which occurs if <code>ALGORITHM=DEFAULT</code> is specified, or if <code>ALGORITHM</code> is not specified at all, usually only makes a copy if the operation doesn't support being done in-place at all. In this case, the most efficient available algorithm will usually be used.</p>
-<p>However, in <a href="/kb/en/mariadb-1036-release-notes/">MariaDB 10.3.6</a> and before, if the value of the <a href="/kb/en/server-system-variables/#old_alter_table">old_alter_table</a> system variable is set to <code>ON</code>, then the default behavior is to perform <code>ALTER TABLE</code> operations by making a copy of the table using the old algorithm.</p>
-<p>In <a href="/kb/en/mariadb-1037-release-notes/">MariaDB 10.3.7</a> and later, the <a href="/kb/en/server-system-variables/#old_alter_table">old_alter_table</a> system variable is deprecated. Instead, the <a href="/kb/en/server-system-variables/#alter_algorithm">alter_algorithm</a> system variable defines the default algorithm for <code>ALTER TABLE</code> operations. This was removed in <a href="/kb/en/what-is-mariadb-115/">MariaDB 11.5</a> for the following reasons:</p>
+<p>The <a href="/kb/en/server-system-variables/#old_alter_table">old_alter_table</a> system variable is deprecated. Instead, the <a href="/kb/en/server-system-variables/#alter_algorithm">alter_algorithm</a> system variable defines the default algorithm for <code>ALTER TABLE</code> operations. This was removed in <a href="/kb/en/what-is-mariadb-115/">MariaDB 11.5</a> for the following reasons:</p>
 <ul start="1"><li>alter_algorithm was introduced as a replacement for the old_alter_table that was used to force the usage of the original alter table algorithm (copy) in cases where the new alter algorithm did not work. The new option was added as a way to force the usage of a specific algorithm when it should instead have made it possible to disable algorithms that would not work for some reason.
 </li><li>alter_algorithm introduced some cases where ALTER TABLE would not work without specifying the ALGORITHM=XXX option together with ALTER TABLE.
 </li><li>Having different values of alter_algorithm on the primary and replica could cause replicas to stop unexpectedly.
@@ -1058,13 +1048,11 @@ DROP CONSTRAINT constraint_name;
 <p>If an <a href="/kb/en/alter-table/">ALTER TABLE</a> operation supports <code>ALGORITHM=INPLACE</code>, then it can be performed using optimizations by the underlying storage engine, but it may rebuilt.</p>
 <p>See <a href="/kb/en/innodb-online-ddl-operations-with-the-inplace-alter-algorithm/">InnoDB Online DDL Operations with ALGORITHM=INPLACE</a> for more.</p>
 <h4 class="anchored_heading" id="algorithmnocopy">ALGORITHM=NOCOPY</h4>
-<p><code>ALGORITHM=NOCOPY</code> was introduced in <a href="/kb/en/mariadb-1037-release-notes/">MariaDB 10.3.7</a>.</p>
 <p><code>ALGORITHM=INPLACE</code> can sometimes be surprisingly slow in instances where it has to rebuild the clustered index, because when the clustered index has to be rebuilt, the whole table has to be rebuilt. <code>ALGORITHM=NOCOPY</code> was introduced as a way to avoid this. </p>
 <p>If an <code>ALTER TABLE</code> operation supports <code>ALGORITHM=NOCOPY</code>, then it can be performed without rebuilding the clustered index.</p>
 <p>If <code>ALGORITHM=NOCOPY</code> is specified for an <code>ALTER TABLE</code> operation that does not support <code>ALGORITHM=NOCOPY</code>, then an error will be raised. In this case, raising an error is preferable, if the alternative is for the operation to rebuild the clustered index, and perform unexpectedly slowly.</p>
 <p>See <a href="/kb/en/innodb-online-ddl-operations-with-algorithmnocopy/">InnoDB Online DDL Operations with ALGORITHM=NOCOPY</a> for more.</p>
 <h4 class="anchored_heading" id="algorithminstant">ALGORITHM=INSTANT</h4>
-<p><code>ALGORITHM=INSTANT</code> was introduced in <a href="/kb/en/mariadb-1037-release-notes/">MariaDB 10.3.7</a>.</p>
 <p><code>ALGORITHM=INPLACE</code> can sometimes be surprisingly slow in instances where it has to modify data files. <code>ALGORITHM=INSTANT</code> was introduced as a way to avoid this.</p>
 <p>If an <code>ALTER TABLE</code> operation supports <code>ALGORITHM=INSTANT</code>, then it can be performed without modifying any data files.</p>
 <p>If <code>ALGORITHM=INSTANT</code> is specified for an <code>ALTER TABLE</code> operation that does not support <code>ALGORITHM=INSTANT</code>, then an error will be raised. In this case, raising an error is preferable, if the alternative is for the operation to modify data files, and perform unexpectedly slowly.</p>
@@ -1094,7 +1082,7 @@ Stage: 1 of 2 'copy to tmp table'    46% of stage
 <p>See <a href="/kb/en/progress-reporting/">Progress Reporting</a> for more information.</p>
 <h2 class="anchored_heading" id="aborting-alter-table-operations">Aborting ALTER TABLE Operations</h2>
 <p>If an <code>ALTER TABLE</code> operation is being performed and the connection is killed, the changes will be rolled back in a controlled manner. The rollback can be a slow operation as the time it takes is relative to how far the operation has progressed.</p>
-<p>Aborting <code>ALTER TABLE ... ALGORITHM=COPY</code>  was made faster in <a href="/kb/en/mariadb-10213-release-notes/">MariaDB 10.2.13</a> by removing excessive undo logging (<a href="https://jira.mariadb.org/browse/MDEV-11415">MDEV-11415</a>). This significantly shortened the time it takes to abort a running ALTER TABLE operation, compared with earlier releases.</p>
+<p>Aborting <code>ALTER TABLE ... ALGORITHM=COPY</code>  was made faster by removing excessive undo logging (<a href="https://jira.mariadb.org/browse/MDEV-11415">MDEV-11415</a>). This significantly shortened the time it takes to abort a running ALTER TABLE operation, compared with earlier releases.</p>
 <h2 class="anchored_heading" id="atomic-alter-table">Atomic ALTER TABLE</h2>
 <div class="mariadb_from_10_6_1 mariadb from_10_6_1 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/mariadb-1061-release-notes/">10.6.1</a></h5><p>From <a href="/kb/en/what-is-mariadb-106/">MariaDB 10.6</a>, <code>ALTER TABLE</code> is atomic for most engines, including InnoDB, MyRocks, MyISAM and  Aria (<a href="https://jira.mariadb.org/browse/MDEV-25180">MDEV-25180</a>).
 This means that if there is a crash (server down or power outage) during an <code>ALTER TABLE</code> operation, after

@@ -283,7 +283,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-10-26 08:27">4 months, 3 weeks ago</span></dd>
+<span class="datetime" title="2025-03-17 20:36">5 hours, 8 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -484,14 +484,14 @@
 
         <li class=""><a href="#mariadb-galera-cluster" title="MariaDB Galera Cluster">MariaDB Galera Cluster</a></li>
 
-        <li class=""><a href="#incompatibility-with-104-xa-behaviour" title="Incompatibility with 10.4 XA behaviour">Incompatibility with 10.4 XA behaviour</a>    </ol>
+        <li class=""><a href="#incompatibility-with-xa-behaviour" title="Incompatibility with XA behaviour">Incompatibility with XA behaviour</a>    </ol>
  </ol>
 </li>
 </div>
 <h2 class="anchored_heading" id="overview">Overview</h2>
 <p>The MariaDB XA implementation is based on the X/Open CAE document Distributed Transaction Processing: The XA Specification. This document is published by The Open Group and available at <a href="http://www.opengroup.org/public/pubs/catalog/c193.htm">http://www.opengroup.org/public/pubs/catalog/c193.htm</a>.</p>
 <p>XA transactions are designed to allow distributed transactions, where a transaction manager (the application) controls a transaction which involves multiple resources. Such resources are usually DBMSs, but could be resources of any type. The whole set of required transactional operations is called a global transaction. Each subset of operations which involve a single resource is called a local transaction. XA used a 2-phases commit (2PC). With the first commit, the transaction manager tells each resource to prepare an effective commit, and waits for a confirm message. The changes are not still made effective at this point. If any of the resources encountered an error, the transaction manager will rollback the global transaction. If all resources communicate that the first commit is successful, the transaction manager can require a second commit, which makes the changes effective.</p>
-<p>In MariaDB, XA transactions can only be used with storage engines that support them. At least <a href="/kb/en/innodb/">InnoDB</a>, <a href="/kb/en/tokudb/">TokuDB</a>, <a href="/kb/en/spider/">SPIDER</a> and <a href="/kb/en/myrocks/">MyRocks</a> support them. For InnoDB, until <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>, XA transactions can be disabled by setting the <a href="/kb/en/innodb-system-variables/#innodb_support_xa">innodb_support_xa</a> server system variable to 0. From <a href="/kb/en/what-is-mariadb-103/">MariaDB 10.3</a>, XA transactions are always supported.</p>
+<p>In MariaDB, XA transactions can only be used with storage engines that support them. At least <a href="/kb/en/innodb/">InnoDB</a>, <a href="/kb/en/tokudb/">TokuDB</a>, <a href="/kb/en/spider/">SPIDER</a> and <a href="/kb/en/myrocks/">MyRocks</a> support them. XA transactions are always supported.</p>
 <p>Like regular transactions, XA transactions create <a href="/kb/en/metadata-locking/">metadata locks</a> on accessed tables.</p>
 <p>XA transactions require <a href="/kb/en/set-transaction/#repeatable-read">REPEATABLE READ</a> as a minimum isolation level. However, distributed transactions should always use <a href="/kb/en/set-transaction/#serializable">SERIALIZABLE</a>.</p>
 <p>Trying to start more than one XA transaction at the same time produces a 1400 error (<a href="/kb/en/sqlstate/">SQLSTATE</a> 'XAE09'). The same error is produced when attempting to start an XA transaction while a regular transaction is in effect. Trying to start a regular transaction while an XA transaction is in effect produces a 1399 error (<a href="/kb/en/sqlstate/">SQLSTATE</a> 'XAE07').</p>
@@ -624,11 +624,10 @@ form that can be directly copy-pasted into <code>XA COMMIT</code> or <code>XA RO
 </pre><h2 class="anchored_heading" id="known-issues">Known Issues</h2>
 <h3 class="anchored_heading" id="mariadb-galera-cluster">MariaDB Galera Cluster</h3>
 <p><a href="/kb/en/galera-cluster/">MariaDB Galera Cluster</a> does not support XA transactions.</p>
-<p>However, <a href="/kb/en/galera-cluster/">MariaDB Galera Cluster</a> builds include a built-in plugin called <code>wsrep</code>. Prior to <a href="/kb/en/mariadb-1043-release-notes/">MariaDB 10.4.3</a>, this plugin was internally considered an <a href="/kb/en/xa-transactions/">XA-capable</a> <a href="/kb/en/storage-engines/">storage engine</a>. Consequently, these <a href="/kb/en/galera-cluster/">MariaDB Galera Cluster</a> builds have multiple XA-capable storage engines by default, even if the only "real" storage engine that supports external <a href="/kb/en/xa-transactions/">XA transactions</a> enabled on these builds by default is <a href="/kb/en/innodb/">InnoDB</a>. Therefore, when using one these builds MariaDB would be forced to use a <a href="/kb/en/transaction-coordinator-log/">transaction coordinator log</a> by default, which could have performance implications.</p>
+<p>However, <a href="/kb/en/galera-cluster/">MariaDB Galera Cluster</a> builds include a built-in plugin called <code>wsrep</code>. Consequently, these <a href="/kb/en/galera-cluster/">MariaDB Galera Cluster</a> builds have multiple XA-capable storage engines by default, even if the only "real" storage engine that supports external <a href="/kb/en/xa-transactions/">XA transactions</a> enabled on these builds by default is <a href="/kb/en/innodb/">InnoDB</a>. Therefore, when using one these builds MariaDB would be forced to use a <a href="/kb/en/transaction-coordinator-log/">transaction coordinator log</a> by default, which could have performance implications.</p>
 <p>See <a href="/kb/en/transaction-coordinator-log-overview/#mariadb-galera-cluster">Transaction Coordinator Log Overview: MariaDB Galera Cluster</a> for more information.</p>
-<h3 class="anchored_heading" id="incompatibility-with-104-xa-behaviour">Incompatibility with 10.4 XA behaviour</h3>
-<p>In 10.4 and earlier, an XA transaction was still tied to the connection
-until COMMIT, and would be rolled back on disconnect. From <a href="/kb/en/what-is-mariadb-105/">MariaDB 10.5</a>, <code>XA PREPARE</code>
+<h3 class="anchored_heading" id="incompatibility-with-xa-behaviour">Incompatibility with XA behaviour</h3>
+<p>From <a href="/kb/en/what-is-mariadb-105/">MariaDB 10.5</a>, <code>XA PREPARE</code>
 persists the XA transaction following the XA Specification. If an existing
 application relies on the previous behavior, upgrading to 10.5 or later can
 leave XA transactions in the PREPAREd state indefinitely after disconnect,

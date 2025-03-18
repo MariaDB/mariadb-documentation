@@ -315,7 +315,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariabackup-sst-method/+r/141400/">141400</a></dd>
+            <dd><a href="/kb/en/mariabackup-sst-method/+r/148882/">148882</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3487">
@@ -324,7 +324,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-05-03 02:13">2024-05-03 02:13</span></dd>
+<span class="datetime" title="2025-03-17 11:16">2025-03-17 11:16</span></dd>
         </dl>
     </div>
     
@@ -388,7 +388,7 @@ Some [[authentication-plugins|authentication plugins]] do not require a password
 wsrep_sst_auth = mariabackup:
 &lt;&lt;/code&gt;&gt;
 
-The user account that performs the backup for the SST needs to have [[mariabackup-overview/#authentication-and-privileges|the same privileges as Mariabackup]], which are the ##RELOAD## , ##PROCESS##, ##LOCK TABLES## and ##BINLOG MONITOR## (or ##REPLICATION CLIENT## for MariaDB 10.4 or earlier), ##REPLICA MONITOR## (not required for MariaDB 10.4 or earlier) [[grant/#global-privileges|global privileges]]. To be safe, you should ensure that these privileges are set on each node in your cluster.  [[backup-restore-and-import-clients-mariadb-backup|Mariabackup]] connects locally on the donor node to perform the backup, so the following user should be sufficient:
+The user account that performs the backup for the SST needs to have [[mariabackup-overview/#authentication-and-privileges|the same privileges as Mariabackup]], which are the ##RELOAD## , ##PROCESS##, ##LOCK TABLES## and ##BINLOG MONITOR##, ##REPLICA MONITOR## [[grant/#global-privileges|global privileges]]. To be safe, you should ensure that these privileges are set on each node in your cluster.  [[backup-restore-and-import-clients-mariadb-backup|Mariabackup]] connects locally on the donor node to perform the backup, so the following user should be sufficient:
 
 &lt;&lt;sql&gt;&gt;
 CREATE USER &#39;mariabackup&#39;@&#39;localhost&#39; IDENTIFIED BY &#39;mypassword&#39;;
@@ -446,7 +446,7 @@ wsrep_sst_auth = mariabackup:
 
 == Choosing a Donor Node
 
-When Mariabackup is used to create the backup for the SST on the donor node, Mariabackup briefly requires a system-wide lock at the end of the backup. In MariaDB 10.3 and before, this is done with ##[[flush|FLUSH TABLES WITH READ LOCK]]##. In MariaDB 10.4 and later, this is done with ##[[backup-stage|BACKUP STAGE BLOCK_COMMIT]]##.
+When Mariabackup is used to create the backup for the SST on the donor node, Mariabackup briefly requires a system-wide lock at the end of the backup. This is done with ##[[backup-stage|BACKUP STAGE BLOCK_COMMIT]]##.
 
 If a specific node in your cluster is acting as the //primary// node by receiving all of the application&#39;s write traffic, then this node should not usually be used as the donor node, because the system-wide lock could interfere with the application. In this case, you can define one or more preferred donor nodes by setting the ##[[galera-cluster-system-variables/#wsrep_sst_donor|wsrep_sst_donor]]## system variable.
 
@@ -563,8 +563,7 @@ The ##mariabackup## SST method has its own logging outside of the MariaDB Server
 
 === Logging to SST Logs
 
-&lt;&lt;product mariadb from=&#34;10.3.13&#34;&gt;&gt;
-Starting with MariaDB 10.1.38, MariaDB 10.2.22, and MariaDB 10.3.13, logging for ##mariabackup## SSTs works the following way.
+Logging for ##mariabackup## SSTs works the following way.
 
 By default, on the donor node, it logs to ##mariabackup.backup.log##. This log file is located in the ##[[server-system-variables/#datadir|datadir]]##.
 
@@ -581,15 +580,6 @@ sst-log-archive-dir=/var/log/mysql/sst/
 See MDEV-17973 for more information.
 &lt;&lt;/product&gt;&gt;
 
-&lt;&lt;product mariadb to=&#34;10.3.13&#34;&gt;&gt;
-Prior to MariaDB 10.1.38, MariaDB 10.2.22, and MariaDB 10.3.13, logging for ##mariabackup## SSTs works the following way.
-
-By default, on the donor node, it logs to ##innobackup.backup.log##. This log file is located in the ##[[server-system-variables/#datadir|datadir]]##.
-
-By default, on the joiner node, it logs to ##innobackup.prepare.log## and ##innobackup.move.log##. These log files are located in the ##.sst## directory, which is a hidden directory inside the ##[[server-system-variables/#datadir|datadir]]##.
-
-These log files are overwritten by each subsequent SST, so if an SST fails, it is best to copy them somewhere safe before starting another SST, so that the log files can be analyzed. 
-&lt;&lt;/product&gt;&gt;
 
 === Logging to Syslog
 

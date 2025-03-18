@@ -283,7 +283,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2019-06-02 08:56">5 years, 9 months ago</span></dd>
+<span class="datetime" title="2025-03-17 11:51">13 hours, 12 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -338,40 +338,6 @@
 
     
     
-
-
-
-    
-    
-
-<div class="well well-small box"><div><h5>Product Versions</h5></div><div>
-
-        <ul id="product_chooser">
-            
-                <li class="mariadb_from_10_5">
-                    <label><input type="checkbox" data-product-class="mariadb_from_10_5"
-                            >MariaDB starting with 10.5</label>
-                </li>
-            
-                <li class="mariadb_to_10_4">
-                    <label><input type="checkbox" data-product-class="mariadb_to_10_4"
-                            >MariaDB until 10.4</label>
-                </li>
-            
-                <li class="mariadb_from_10_5">
-                    <label><input type="checkbox" data-product-class="mariadb_from_10_5"
-                            >MariaDB starting with 10.5</label>
-                </li>
-            
-                <li class="mariadb_to_10_4">
-                    <label><input type="checkbox" data-product-class="mariadb_to_10_4"
-                            >MariaDB until 10.4</label>
-                </li>
-            
-        </ul>
-    
-</div>
-</div>
 
 
 
@@ -493,7 +459,7 @@ thread_pool_size=32
 </pre><p>If you do not want MariaDB to use all CPUs on the system for some reason, then you can set it to a lower value than the number of CPUs. For example, this would make sense if the MariaDB Server process is limited to certain CPUs with the <code><a href="https://linux.die.net/man/1/taskset">taskset</a></code> utility on Linux.</p>
 <p>If you set the value to the number of CPUs and if you find that the CPUs are still underutilized, then try increasing the value.</p>
 <p>The <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_size">thread_pool_size</a></code> system variable tends to have the most visible performance effect. It is roughly equivalent to the number of threads that can run at the same time. In this case, run means use CPU, rather than sleep or wait. If a client connection needs to sleep or wait for some reason, then it wakes up another client connection in the thread group before it does so.</p>
-<div class="cstm-style greenbox"><p>One reason that CPU underutilization may occur in rare cases is that the thread pool is not always informed when a thread is going to wait. For example, some waits, such as a page fault or a miss in the OS buffer cache, cannot be detected by MariaDB. Prior to <a href="/kb/en/what-is-mariadb-100/">MariaDB 10.0</a>, network I/O related waits could also be missed.</p>
+<div class="cstm-style greenbox"><p>One reason that CPU underutilization may occur in rare cases is that the thread pool is not always informed when a thread is going to wait. For example, some waits, such as a page fault or a miss in the OS buffer cache, cannot be detected by MariaDB.</p>
 </div><h2 class="anchored_heading" id="distributing-client-connections-between-thread-groups">Distributing Client Connections Between Thread Groups</h2>
 <p>When a new client connection is created, its thread group is determined using the following calculation:</p>
 <pre class="fixed">thread_group_id = connection_id %  thread_pool_size
@@ -571,22 +537,16 @@ thread_pool_size=32
 </li></ul>
 <h3 class="anchored_heading" id="thread-creation-throttling">Thread Creation Throttling</h3>
 <p>In some of the scenarios listed above, a thread is only created within a thread group if no new threads have been created for the thread group within the <em>throttling interval</em>. The throttling interval depends on the number of threads that are already in the thread group.</p>
-<div class="mariadb_from_10_5 mariadb from_10_5 product"><h5 class="product_title">MariaDB starting with <a href="/kb/en/what-is-mariadb-105/">10.5</a></h5><p>In <a href="/kb/en/what-is-mariadb-105/">MariaDB 10.5</a> and later, thread creation is not throttled until a thread group has more than 1 + <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_oversubscribe">thread_pool_oversubscribe</a></code> threads:</p>
+<p>In <a href="/kb/en/what-is-mariadb-105/">MariaDB 10.5</a> and later, thread creation is not throttled until a thread group has more than 1 + <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_oversubscribe">thread_pool_oversubscribe</a></code> threads:</p>
 <div class="cstm-style darkheader-nospace-borders centered"><table><tr><th>Number of Threads in Thread Group</th><th>Throttling Interval (milliseconds)</th></tr>
 <tr><td>0-(1 + <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_oversubscribe">thread_pool_oversubscribe</a></code>)</td><td>0</td></tr>
 <tr><td>4-7</td><td>50 * <code>THROTTLING_FACTOR</code></td></tr>
 <tr><td>8-15</td><td>100 * <code>THROTTLING_FACTOR</code></td></tr>
 <tr><td>16-65536</td><td>20 * <code>THROTTLING_FACTOR</code></td></tr>
 </table>
-</div><p><code>THROTTLING_FACTOR = (<a href="/kb/en/thread-pool-system-status-variables/#thread_pool_stall_limit">thread_pool_stall_limit</a> / MAX (500,<a href="/kb/en/thread-pool-system-status-variables/#thread_pool_stall_limit">thread_pool_stall_limit</a>))</code></p>
-</div><div class="mariadb_to_10_4 mariadb to_10_4 product"><h5 class="product_title">MariaDB until <a href="/kb/en/what-is-mariadb-104/">10.4</a></h5><p>In <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a> and before, thread creation is throttled when a thread group has more than 3 threads:</p>
-<div class="cstm-style darkheader-nospace-borders centered"><table><tr><th>Number of Threads in Thread Group</th><th>Throttling Interval (milliseconds)</th></tr>
-<tr><td>0-3</td><td>0</td></tr>
-<tr><td>4-7</td><td>50</td></tr>
-<tr><td>8-15</td><td>100</td></tr>
-<tr><td>16-65536</td><td>200</td></tr>
-</table>
-</div></div><h2 class="anchored_heading" id="thread-group-stalls">Thread Group Stalls</h2>
+</div><p><code>THROTTLING_FACTOR = (<a href="/kb/en/thread-pool-system-status-variables/#thread_pool_stall_limit">thread_pool_stall_limit</a> / MAX (500,<a href="/kb/en/thread-pool-system-status-variables/#thread_pool_stall_limit">thread_pool_stall_limit</a>))</code>
+&lt;&lt;/product&gt;&gt;</p>
+<h2 class="anchored_heading" id="thread-group-stalls">Thread Group Stalls</h2>
 <p>The thread pool has a feature that allows it to detect if a client connection is executing a long-running query that may be monopolizing its thread group. If a client connection were to monopolize its thread group, then that could prevent other client connections in the thread group from running their queries. In other words, the thread group would appear to be <em>stalled</em>.</p>
 <p>This stall detection feature is implemented by creating a <strong>timer thread</strong> that periodically checks if any of the thread groups are stalled. There is only a single <strong>timer thread</strong> for the entire thread pool. The <code><a href="/kb/en/thread-pool-system-status-variables/#thread_pool_stall_limit">thread_pool_stall_limit</a></code> system variable defines the number of milliseconds between each stall check performed by the timer thread. The default value is <code>500</code>. It can be changed dynamically with <code><a href="/kb/en/set/#global-session">SET GLOBAL</a></code>. For example:</p>
 <pre class="fixed">SET GLOBAL thread_pool_stall_limit=300;

@@ -323,7 +323,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/alter-table/+r/145238/">145238</a></dd>
+            <dd><a href="/kb/en/alter-table/+r/148904/">148904</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -332,7 +332,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-12-12 10:27">2024-12-12 10:27</span></dd>
+<span class="datetime" title="2025-03-17 12:41">2025-03-17 12:41</span></dd>
         </dl>
     </div>
     
@@ -570,20 +570,9 @@ CREATE TABLE a (
 ALTER TABLE x DROP COLUMN a;
 [42000][1072] Key column &#39;A&#39; doesn&#39;t exist in table
 &lt;&lt;/code&gt;&gt;
-The reason is that dropping column ##a## would result in the new constraint that all values in column ##b## be unique. In order to drop the column, an explicit ##DROP PRIMARY KEY## and ##ADD PRIMARY KEY## would be required. Up until MariaDB 10.2.7, the column was dropped and the additional constraint applied, resulting in the following structure:
-&lt;&lt;code&gt;&gt;
-ALTER TABLE x DROP COLUMN a;
-Query OK, 0 rows affected (0.46 sec)
+The reason is that dropping column ##a## would result in the new constraint that all values in column ##b## be unique. In order to drop the column, an explicit ##DROP PRIMARY KEY## and ##ADD PRIMARY KEY## would be required. 
 
-DESC x;
-+-------+---------+------+-----+---------+-------+
-| Field | Type    | Null | Key | Default | Extra |
-+-------+---------+------+-----+---------+-------+
-| b     | int(11) | NO   | PRI | NULL    |       |
-+-------+---------+------+-----+---------+-------+
-&lt;&lt;/code&gt;&gt;
-
-MariaDB supports instant DROP COLUMN. DROP COLUMN of an indexed column would imply [[drop-index|DROP INDEX]] (and in the case of a non-UNIQUE multi-column index, possibly ADD INDEX). These will not be allowed with [[#algorithm|ALGORITHM=INSTANT]], but unlike prior to MariaDB 10.4, they can be allowed with [[#algorithm|ALGORITHM=NOCOPY]]
+MariaDB supports instant DROP COLUMN. DROP COLUMN of an indexed column would imply [[drop-index|DROP INDEX]] (and in the case of a non-UNIQUE multi-column index, possibly ADD INDEX). These will not be allowed with [[#algorithm|ALGORITHM=INSTANT]], but unlike prior versions, they can be allowed with [[#algorithm|ALGORITHM=NOCOPY]]
 
 &lt;&lt;fixed&gt;&gt;RESTRICT&lt;&lt;/fixed&gt;&gt; and &lt;&lt;fixed&gt;&gt;CASCADE&lt;&lt;/fixed&gt;&gt; are allowed to make porting from other database systems easier. In MariaDB, they do nothing.
 
@@ -786,9 +775,8 @@ WHERE TABLE_NAME = &#39;account_ledger&#39;;
 
 === DROP CONSTRAINT
 
-##DROP CONSTRAINT## for ##UNIQUE## and ##FOREIGN KEY## [[constraint|constraints]] was introduced in MariaDB 10.2.22 and MariaDB 10.3.13.
-
-##DROP CONSTRAINT## for ##CHECK## constraints was introduced in MariaDB 10.2.1
+##DROP CONSTRAINT## for ##UNIQUE## and ##FOREIGN KEY## [[constraint|constraints]] 
+and ##DROP CONSTRAINT## for ##CHECK## constraints were introduced in an earlier version of MariaD
 
 Modifies the table, removing the given constraint.
 
@@ -947,8 +935,8 @@ The ##ALTER TABLE## statement supports the ##ALGORITHM## clause. This clause is 
 * ##ALGORITHM=DEFAULT## - This implies the default behavior for the specific statement, such as if no ##ALGORITHM## clause is specified.
 * ##ALGORITHM=COPY##
 * ##ALGORITHM=INPLACE##
-* ##ALGORITHM=NOCOPY## - This was added in MariaDB 10.3.7.
-* ##ALGORITHM=INSTANT## - This was added in MariaDB 10.3.7.
+* ##ALGORITHM=NOCOPY##
+* ##ALGORITHM=INSTANT##
 
 See [[innodb-online-ddl-overview/#algorithm|InnoDB Online DDL Overview: ALGORITHM]] for information on how the ##ALGORITHM## clause affects InnoDB.
 
@@ -956,9 +944,7 @@ See [[innodb-online-ddl-overview/#algorithm|InnoDB Online DDL Overview: ALGORITH
 
 The default behavior, which occurs if ##ALGORITHM=DEFAULT## is specified, or if ##ALGORITHM## is not specified at all, usually only makes a copy if the operation doesn&#39;t support being done in-place at all. In this case, the most efficient available algorithm will usually be used.
 
-However, in MariaDB 10.3.6 and before, if the value of the [[server-system-variables#old_alter_table|old_alter_table]] system variable is set to ##ON##, then the default behavior is to perform ##ALTER TABLE## operations by making a copy of the table using the old algorithm.
-
-In MariaDB 10.3.7 and later, the [[server-system-variables#old_alter_table|old_alter_table]] system variable is deprecated. Instead, the [[server-system-variables/#alter_algorithm|alter_algorithm]] system variable defines the default algorithm for ##ALTER TABLE## operations. This was removed in MariaDB 11.5 for the following reasons:
+The [[server-system-variables#old_alter_table|old_alter_table]] system variable is deprecated. Instead, the [[server-system-variables/#alter_algorithm|alter_algorithm]] system variable defines the default algorithm for ##ALTER TABLE## operations. This was removed in MariaDB 11.5 for the following reasons:
 * alter_algorithm was introduced as a replacement for the old_alter_table that was used to force the usage of the original alter table algorithm (copy) in cases where the new alter algorithm did not work. The new option was added as a way to force the usage of a specific algorithm when it should instead have made it possible to disable algorithms that would not work for some reason.
 * alter_algorithm introduced some cases where ALTER TABLE would not work without specifying the ALGORITHM=XXX option together with ALTER TABLE.
 * Having different values of alter_algorithm on the primary and replica could cause replicas to stop unexpectedly.
@@ -1008,7 +994,6 @@ See [[innodb-online-ddl-operations-with-the-inplace-alter-algorithm|InnoDB Onlin
 
 ==== ALGORITHM=NOCOPY
 
-##ALGORITHM=NOCOPY## was introduced in MariaDB 10.3.7.
 
 ##ALGORITHM=INPLACE## can sometimes be surprisingly slow in instances where it has to rebuild the clustered index, because when the clustered index has to be rebuilt, the whole table has to be rebuilt. ##ALGORITHM=NOCOPY## was introduced as a way to avoid this. 
 
@@ -1019,8 +1004,6 @@ If ##ALGORITHM=NOCOPY## is specified for an ##ALTER TABLE## operation that does 
 See [[innodb-online-ddl-operations-with-algorithmnocopy|InnoDB Online DDL Operations with ALGORITHM=NOCOPY]] for more.
 
 ==== ALGORITHM=INSTANT
-
-##ALGORITHM=INSTANT## was introduced in MariaDB 10.3.7.
 
 ##ALGORITHM=INPLACE## can sometimes be surprisingly slow in instances where it has to modify data files. ##ALGORITHM=INSTANT## was introduced as a way to avoid this.
 
@@ -1076,7 +1059,7 @@ See [[progress-reporting|Progress Reporting]] for more information.
 
 If an ##ALTER TABLE## operation is being performed and the connection is killed, the changes will be rolled back in a controlled manner. The rollback can be a slow operation as the time it takes is relative to how far the operation has progressed.
 
-Aborting ##ALTER TABLE ... ALGORITHM=COPY##  was made faster in MariaDB 10.2.13 by removing excessive undo logging (MDEV-11415). This significantly shortened the time it takes to abort a running ALTER TABLE operation, compared with earlier releases.
+Aborting ##ALTER TABLE ... ALGORITHM=COPY##  was made faster by removing excessive undo logging (MDEV-11415). This significantly shortened the time it takes to abort a running ALTER TABLE operation, compared with earlier releases.
 
 == Atomic ALTER TABLE
 &lt;&lt;product mariadb from=10.6.1&gt;&gt;

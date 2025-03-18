@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-install-db/+r/141572/">141572</a></dd>
+            <dd><a href="/kb/en/mariadb-install-db/+r/148893/">148893</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-08-01 09:32">2024-08-01 09:32</span></dd>
+<span class="datetime" title="2025-03-17 12:05">2025-03-17 12:05</span></dd>
         </dl>
     </div>
     
@@ -378,7 +378,7 @@ $ scripts/mariadb-install-db --user=mysql \
 
 &lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
 |= Option             |= Description
-| ##--auth-root-authentication-method={normal {{{|}}} socket}## | If set to ##normal##, it creates a ##root@localhost## account that authenticates with the ##[[authentication-plugin-mysql_native_password|mysql_native_password]]## authentication plugin and that has no initial password set, which can be insecure. If set to ##socket##, it creates a ##root@localhost## account that authenticates with the ##[[authentication-plugin-unix-socket|unix_socket]]## authentication plugin. Set to ##socket## by default from MariaDB 10.4 (see [[authentication-from-mariadb-104|Authentication from MariaDB 10.4]]), or ##normal## by default in earlier versions. Available since MariaDB 10.1. |
+| ##--auth-root-authentication-method={normal {{{|}}} socket}## | If set to ##normal##, it creates a ##root@localhost## account that authenticates with the ##[[authentication-plugin-mysql_native_password|mysql_native_password]]## authentication plugin and that has no initial password set, which can be insecure. If set to ##socket##, it creates a ##root@localhost## account that authenticates with the ##[[authentication-plugin-unix-socket|unix_socket]]## authentication plugin. Set to ##socket## by default (see [[authentication-from-mariadb-104|Authentication from MariaDB 10.4]]), or ##normal## by default in earlier versions. |
 | ##--auth-root-socket-user=USER## | Used with ##--auth-root-authentication-method=socket##. It specifies the name of the second account to create with ##[[grant/#global-privileges|SUPER]]## privileges in addition to ##root##, as well as of the system account allowed to access it. Defaults to the value of ##--user##. |
 |  ##--basedir=path## | The path to the MariaDB installation directory.
 | ##--builddir=path## | If using ##--srcdir## with out-of-directory builds, you will need to set this to the location of the build directory where built files reside.
@@ -474,8 +474,7 @@ Another possible solution is to use the ##defaults-file## option, so that you ca
 
 == User Accounts Created by Default
 
-&lt;&lt;product mariadb from=&#34;10.4&#34;&gt;&gt;
-In MariaDB 10.4 and later, ##mariadb-install-db## sets ##--auth-root-authentication-method=socket## by default. When this is set, the default ##root@localhost## user account is created with the ability to use two [[authentication-plugins|authentication plugins]]:
+##mariadb-install-db## sets ##--auth-root-authentication-method=socket## by default. When this is set, the default ##root@localhost## user account is created with the ability to use two [[authentication-plugins|authentication plugins]]:
 
 * First, it is configured to try to use the [[authentication-plugin-unix-socket|unix_socket]] authentication plugin. This allows the the ##root@localhost## user to login without a password via the local Unix socket file defined by the [[server-system-variables/#socket|socket]] system variable, as long as the login is attempted from a process owned by the operating system ##root## user account.
 * Second, if authentication fails with the [[authentication-plugin-unix-socket|unix_socket]] authentication plugin, then it is configured to try to use the [[authentication-plugin-mysql_native_password|mysql_native_password]] authentication plugin.
@@ -518,39 +517,6 @@ MariaDB&gt; SET PASSWORD = PASSWORD(&#39;XH4VmT3_jt&#39;);
 &lt;&lt;/code&gt;&gt;
 
 You may notice in the above example that the [[mariadb-command-line-client|mariadb]] command-line client is executed via [[https://linux.die.net/man/8/sudo|sudo]]. This allows the ##root@localhost## user account to successfully authenticate via the [[authentication-plugin-unix-socket|unix_socket]] authentication plugin.
-&lt;&lt;/product&gt;&gt;
-
-&lt;&lt;product mariadb to=&#34;10.3&#34;&gt;&gt;
-In MariaDB 10.3 and before, ##mariadb-install-db## sets ##--auth-root-authentication-method=normal## by default. When this is set, the following default accounts are created with no password:
-
-* ##root@localhost##
-* ##root@127.0.0.1##
-* ##root@::1##
-* ##root@${current_hostname}##
-
-The definition of the default ##root@localhost## user account is:
-
-&lt;&lt;sql&gt;&gt;
-CREATE USER &#39;root&#39;@&#39;localhost&#39;;
-GRANT ALL PRIVILEGES ON *.* TO &#39;root&#39;@&#39;localhost&#39; WITH GRANT OPTION;
-GRANT PROXY ON &#39;&#39;@&#39;%&#39; TO &#39;root&#39;@&#39;localhost&#39; WITH GRANT OPTION;
-&lt;&lt;/sql&gt;&gt;
-
-The definition of the other default ##root## accounts is similar.
-
-A password should be set for these user accounts immediately after installation. This can be done either by executing the [[set-password|SET PASSWORD]] statement or by running [[mysql_secure_installation]].
-
-For example, here is an example of setting the password for the ##root@localhost## user account immediately after installation:
-
-&lt;&lt;code&gt;&gt;
-$ sudo yum install MariaDB-server
-$ sudo systemctl start mariadb
-$ mysql -u root
-...
-MariaDB&gt; SET PASSWORD = PASSWORD(&#39;XH4VmT3_jt&#39;);
-&lt;&lt;/code&gt;&gt;
-
-Since ##mariadb-install-db## sets ##--auth-root-authentication-method=normal## by default, the ##--auth-root-socket-user## option is ignored by default.
 &lt;&lt;/product&gt;&gt;
 
 == Troubleshooting Issues
