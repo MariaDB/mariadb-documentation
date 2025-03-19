@@ -451,7 +451,13 @@ JSON Web Tokens
 <li><a href="#resource-relationships">Resource Relationships</a></li>
 </ul>
 </li>
-<li><a href="#common-request-parameters">Common Request Parameters</a></li>
+<li><a href="#common-request-parameters">Common Request Parameters</a><ul>
+<li><a href="#filter-expressions">Filter Expressions</a><ul>
+<li><a href="#filter-expression-examples">Filter Expression Examples</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a href="#http-headers">HTTP Headers</a><ul>
 <li><a href="#request-headers">Request Headers</a><ul>
 <li><a href="#authorization">Authorization</a></li>
@@ -730,7 +736,7 @@ nested value <code>data.attributes.statistics.connections</code>, the correspond
 parameter would be <code>fields[servers]=statistics/connections</code>.</p>
 </li>
 <li>
-<p><code>filter=json_ptr=json_value</code></p>
+<p><code>filter=json_ptr=expr</code></p>
 </li>
 <li>
 <p>Filter the output of the result</p>
@@ -738,17 +744,58 @@ parameter would be <code>fields[servers]=statistics/connections</code>.</p>
 returns an array in the <code>data</code> member (i.e. a request to a resource
 collection). Requests to individual resources are not filtered.</p>
 <p>The argument to the filter parameter must be a key-value pair with a valid
-<a href="https://tools.ietf.org/html/rfc6901">JSON Pointer</a> as the key and a valid
-JSON type as the value. The comparison is done for each individual object in
-the <code>data</code> array of the result. For example, if the object stored in
-<code>data[0]</code> has a value pointed by the given JSON pointer and that value
-compares equal to the given value, the array row is kept in the result.</p>
+<a href="https://tools.ietf.org/html/rfc6901">JSON Pointer</a> as the key and either a
+valid JSON type as the value or a
+<a href="#filter-expressions">filter-expression</a>. The comparison is done for each
+individual object in the <code>data</code> array of the result. If given only a JSON
+value, the stored value is compared for equality. If an expression is used,
+the expression is evaluated and only rows that match are returned.</p>
+<p>For example, if the object stored in <code>data[0]</code> has a value pointed by the
+given JSON pointer and that value compares equal to the given JSON value,
+the array row is kept in the result. Examples for filtering expression can
+be found <a href="#filter-expression-examples">here</a>.</p>
 <p>A practical use for this parameter is to return only sessions for a
 particular service. For example, to return sessions for the
 <code>RW-Split-Router</code> service, the
 <code>filter=/relationships/services/data/0/id="RW-Split-Router"</code> parameter can
 be used. Note the double quotes around the <code>"RW-Split-Router"</code>, they are
 required to correctly convert strings into JSON values.</p>
+</li>
+<li>
+<p><code>filter[json_path]=expr</code></p>
+</li>
+<li>
+<p>Filter based on a JSONPath and a filtering expression.</p>
+<p>Similar to the <code>filter</code> parameter that takes a JSON Pointer, this version of
+the <code>filter</code> controls which rows are returned in a REST API response for a
+resource collection. Requests to individual resources are never filtered.</p>
+<p>The value inside the brackets must be a valid
+<a href="https://www.ietf.org/archive/id/draft-ietf-jsonpath-base-21.html">JSONPath</a>
+expression that MaxScale supports. The currently supported syntax is:</p>
+<ul>
+<li>dot notation: <code>$.store.book</code></li>
+<li>bracket notation: <code>$['store']['book']</code></li>
+<li>array values: <code>$.store.book[0]</code></li>
+<li>multiple array values: <code>$.store.book[0,1,2]</code></li>
+<li>array wildcards: <code>$.store.book[*].price</code></li>
+<li>object wildcards: <code>$.store.bicycle.*</code></li>
+<li>optional root object: <code>store.book</code></li>
+</ul>
+<p>The root object being optional is an extension to the JSONPath specification
+that MaxScale implements.</p>
+<p>The <code>expr</code> value must be a
+<a href="#filter-expressions">filter-expression</a>. Similarly to the other <code>filter</code>
+parameter, the comparison is done for each individual object in the <code>data</code>
+array of the result.</p>
+<p>If the JSONPath expression returns multiple objects, the comparison is done
+for each element and if any of them matches, the object is considered to
+match. In other words, wildcard JSONPath expressions are ORed together.</p>
+<p>If multiple <code>filter[json_path]=expr</code> parameters are found in the request,
+all returned values must match all of them. In other words, the filter
+parameters are all combined into an AND expression. For example, the
+following filter will only return all values whose <code>id</code> field is <code>"srv1</code> and
+the <code>attributes.parameters.port</code> field is 3306:
+<code>filter[id]=eq("srv1")&amp;filter[attributes.parameters.port]=eq(3306)</code></p>
 </li>
 <li>
 <p><code>page[size]</code></p>
@@ -783,6 +830,98 @@ overwritten when the next modification to the cluster's configuration is
 done which means this should only be used to perform temporary fixes.</p>
 </li>
 </ul>
+<h3 id="filter-expressions">Filter Expressions</h3>
+<p>MaxScale 24.02 added support for expressions in the <code>filter</code> request
+parameter. Each resource in a resource collection that evaluates to a true value
+will be kept in the returned result. All rows that evaluate to false are
+removed.</p>
+<p>Equality and inequality is defined for all JSON types but ordering is defined
+only for numbers and strings. The logical operators allow one or more
+sub-expressions.</p>
+<p>The following table lists the supported operations in the filter expressions. In
+it, the stored value is marked as <code>S</code> and the literal JSON value in the
+expression as <code>V</code>. For the logical operators, the sub-expression is marked as
+<code>expr</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Expression</th>
+<th>Logic</th>
+<th>Types</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>eq(json)</code></td>
+<td><code>S == V</code></td>
+<td>All JSON types</td>
+</tr>
+<tr>
+<td><code>ne(json)</code></td>
+<td><code>S != V</code></td>
+<td>All JSON types</td>
+</tr>
+<tr>
+<td><code>lt(json)</code></td>
+<td><code>S &lt; V</code></td>
+<td>Numbers and strings</td>
+</tr>
+<tr>
+<td><code>le(json)</code></td>
+<td><code>S &lt;= V</code></td>
+<td>Numbers and strings</td>
+</tr>
+<tr>
+<td><code>ge(json)</code></td>
+<td><code>S &gt;= V</code></td>
+<td>Numbers and strings</td>
+</tr>
+<tr>
+<td><code>gt(json)</code></td>
+<td><code>S &gt; V</code></td>
+<td>Numbers and strings</td>
+</tr>
+<tr>
+<td><code>and(expr...)</code></td>
+<td><code>expr &amp;&amp; expr</code></td>
+<td>Expressions</td>
+</tr>
+<tr>
+<td><code>or(expr...)</code></td>
+<td><code>expr \|\| expr</code></td>
+<td>Expressions</td>
+</tr>
+<tr>
+<td><code>not(expr...)</code></td>
+<td><code>!expr</code></td>
+<td>Expressions</td>
+</tr>
+</tbody>
+</table>
+<h4 id="filter-expression-examples">Filter Expression Examples</h4>
+<p>Ranges of values can be defined using an <code>and()</code> expression with the range
+limits defined with the ordering operators <code>ge()</code> and <code>le()</code>.  To filter the
+sessions in MaxScale to ones that have an ID between 50 and 100, the following
+filtering expression can be used.</p>
+<div><pre><span></span>filter=id=and(ge(50),le(100))
+</pre></div>
+
+
+<p>Limiting the result to only the given values can be done with an <code>or()</code>
+expression that uses <code>eq()</code> expressions to select the rows to return. To only
+return sessions with IDs 1, 5, 10 the following filtering expression can be
+used.</p>
+<div><pre><span></span>filter=id=or(eq(1),eq(5),eq(10))
+</pre></div>
+
+
+<p>Similarly, excluding certain rows from the result can be done by simply
+replacing <code>or()</code> with <code>not()</code>. This expression would exclude sessions with the
+IDs 1, 5 and 10 from the result.</p>
+<div><pre><span></span>filter=id=not(eq(1),eq(5),eq(10))
+</pre></div>
+
+
 <h2 id="http-headers">HTTP Headers</h2>
 <h3 id="request-headers">Request Headers</h3>
 <p>REST makes use of the HTTP protocols in its aim to provide a natural way to

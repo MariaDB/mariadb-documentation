@@ -906,14 +906,14 @@ servers or just over running servers. See
 for more details on how this feature works and which value to use.</p>
 <p>Allowed values:
 1. <code>none</code> Default value, no locking.
-2. <code>majority_of_all</code> Primary monitor requires majority of locks, even counting
+2. <code>majority_of_all</code> Primary monitor requires a majority of locks, even counting
 servers which are [Down].
-3. <code>majority_of_running</code> Primary monitor requires majority of locks over
+3. <code>majority_of_running</code> Primary monitor requires a majority of locks over
 [Running] servers.</p>
 <p>This setting is separate from the global MaxScale setting <em>passive</em>. If
-<em>passive</em> is set, cluster operations are disabled even if monitor has
+<em>passive</em> is set to <code>true</code>, cluster operations are disabled even if monitor has
 acquired the locks. Generally, it's best not to mix cooperative monitoring with
-the <em>passive</em>-setting.</p>
+<em>passive</em>. Either set <code>passive=false</code> or do not set it at all.</p>
 <h3 id="script_max_replication_lag"><code>script_max_replication_lag</code></h3>
 <ul>
 <li><strong>Type</strong>: number</li>
@@ -1273,13 +1273,18 @@ master.</p>
 <li><strong>Dynamic</strong>: Yes</li>
 <li><strong>Default</strong>: <code>false</code></li>
 </ul>
-<p>Enable automated master failover. When automatic failover is enabled,
-traditional MariaDB Master-Slave clusters
-will automatically elect a new master if the old master goes down and stays down
-a number of iterations given in <code>failcount</code>. Failover will not take place when
-MaxScale is configured as a passive instance. For details on how MaxScale
-behaves in passive mode, see the documentation on <code>failover_timeout</code> below.</p>
-<p>The monitor user must have the SUPER and RELOAD privileges for failover to work.</p>
+<p>Enable automatic master failover. When automatic failover is enabled, MaxScale
+will elect a new master server for the cluster if the old master goes down. A
+server is assumed <em>Down</em> if it cannot be connected to, even if this is caused by
+incorrect credentials. Failover triggers if the master stays down for
+<a href="#failcount">failcount</a> monitor intervals. Failover will not take place if
+MaxScale is set <a href="/kb/en/maxscale-21-06-mariadb-maxscale-configuration-guide/#passive">passive</a>.</p>
+<p>As failover alters replication, it requires more privileges than normal
+monitoring. See <a href="#cluster-manipulation-grants">here</a> for a list of grants.</p>
+<p>Failover is designed to be used with simple master-slave topologies. More
+complicated topologies, such as multilayered or circular replication, are not
+guaranteed to always work correctly. Test before using failover with such
+setups.</p>
 <h4 id="auto_rejoin"><code>auto_rejoin</code></h4>
 <ul>
 <li><strong>Type</strong>: <a href="/kb/en/maxscale-21-06-mariadb-maxscale-configuration-guide/#booleans">boolean</a></li>
@@ -1287,19 +1292,31 @@ behaves in passive mode, see the documentation on <code>failover_timeout</code> 
 <li><strong>Dynamic</strong>: Yes</li>
 <li><strong>Default</strong>: <code>false</code></li>
 </ul>
-<p>Enable automatic joining of server to the cluster. When enabled, the monitor
-will attempt to direct standalone servers and servers
-replicating from a relay master to the main cluster master server, enforcing a
-1-master-N-slaves configuration.</p>
-<p>For example, consider the following event series.</p>
+<p>Enable automatic joining of servers to the cluster. When enabled, MaxScale will
+attempt to direct servers to replicate from the current cluster master if they
+are not currently doing so. Replication will be started on any standalone
+servers. Servers that are replicating from another server will be redirected.
+This effectively enforces a 1-master-N-slaves topology. The current master
+itself is not redirected, so it can continue to replicate from an external
+master. Rejoin is also not performed on any server that is replicating from
+multiple sources, as this indicates a complicated topology (this rule is
+overridden by <a href="#enforce_simple_topology">enforce_simple_topology</a>).</p>
+<p>This feature is often paired with <a href="#auto_failover">auto_failover</a> to redirect
+the former master when it comes back online. Sometimes this kind of rejoin will
+fail as the old master may have transactions that were never replicated to the
+current one. See <a href="#limitations-and-requirements">limitations</a> for more
+information.</p>
+<p>As an example, consider the following series of events:</p>
 <ol>
 <li>Slave A goes down</li>
 <li>Master goes down and a failover is performed, promoting Slave B</li>
 <li>Slave A comes back</li>
+<li>Old master comes back</li>
 </ol>
 <p>Slave A is still trying to replicate from the downed master, since it wasn't
-online during failover. If <code>auto_rejoin</code> is on, Slave A will quickly be
-redirected to Slave B, the current master.</p>
+online during failover. If <em>auto_rejoin</em> is on, Slave A will quickly be
+redirected to Slave B, the current master. The old master will also rejoin the
+cluster if possible.</p>
 <h4 id="switchover_on_low_disk_space"><code>switchover_on_low_disk_space</code></h4>
 <ul>
 <li><strong>Type</strong>: <a href="/kb/en/maxscale-21-06-mariadb-maxscale-configuration-guide/#booleans">boolean</a></li>
@@ -1555,7 +1572,7 @@ down. This scenario is depicted in the image below. Only two out of four servers
 are running when three are needed for majority. Although both MaxScales see both
 running servers, neither is certain they have majority and the cluster stays in
 read-only mode. If the primary server is down, no failover is performed either.</p>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/21.06.18/Documentation/Monitors/images/coop_lock_no_majority.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/21.06.19/Documentation/Monitors/images/coop_lock_no_majority.png"></p>
 <p>Setting <code>cooperative_monitoring_locks=majority_of_running</code> changes the way
 <em>n_servers</em> is calculated. Instead of using the total number of servers, only
 servers currently [Running] are considered. This scheme adapts to multiple
@@ -1569,7 +1586,7 @@ does the opposite, claiming servers 3 and 4 and assuming 1 and 2 are down.
 Both MaxScales claim two locks out of two available and assume that they have
 lock majority. Both MaxScales may then promote their own primaries and route
 writes to different servers.</p>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/21.06.18/Documentation/Monitors/images/coop_lock_split_brain.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/21.06.19/Documentation/Monitors/images/coop_lock_split_brain.png"></p>
 <p>The recommended strategy depends on which failure scenario is more likely and/or
 more destructive. If it's unlikely that multiple servers are ever down
 simultaneously, then <em>majority_of_all</em> is likely the safer choice. On the other
@@ -1589,7 +1606,7 @@ MaxScale will eventually wait less time than the others. Conflict probability
 can be further decreased by configuring each monitor with a different
 <em>monitor_interval</em>.</p>
 <p>The flowchart below illustrates the lock handling logic.</p>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/21.06.18/Documentation/Monitors/images/coop_lock_flowchart.svg"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/21.06.19/Documentation/Monitors/images/coop_lock_flowchart.svg"></p>
 <h3 id="releasing-locks">Releasing locks</h3>
 <p>Monitor cooperation depends on the server locks. The locks are
 connection-specific. The owning connection can manually release a lock, allowing

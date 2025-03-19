@@ -276,12 +276,12 @@ param..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2025-01-16 15:18">1 month, 4 weeks ago</span></dd>
+<span class="datetime" title="2025-01-16 15:18">2 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-01-16 15:18">1 month, 4 weeks ago</span></dd>
+<span class="datetime" title="2025-01-16 15:18">2 months ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -298,7 +298,7 @@ param..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/25.01.1-docs/Documentation/Routers/ReadWriteSplit.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/25.01.2-docs/Documentation/Routers/ReadWriteSplit.md">GitHub</a></dd>
         
     </dl>
 
@@ -633,7 +633,7 @@ disqualified from routing because of replication lag, a warning is logged. Simil
 when the server has caught up enough to be a valid routing target, another warning
 is logged. These messages are only logged when a query is being routed and the
 replication state changes.</p>
-<p>Starting with MaxScale versions 23.08.7, 24.02.3 and 24.08.1, readwritesplit
+<p>Starting with MaxScale versions 23.08.7, 24.02.3 and 25.01.1, readwritesplit
 will discard connections to any servers that have excessive replication lag. The
 connection will be discarded if a server is lagging behind by more than twice
 the amount of <code>max_replication_lag</code> and the server is behind by more than 300
@@ -936,7 +936,7 @@ behavior and returns an error.</p>
 outside of transactions can be hidden from the client connection. This allows a
 primary to be replaced while writes are being sent.</p>
 <p>Starting with MaxScale 21.06.18, 22.08.15, 23.02.12, 23.08.8, 24.02.4 and
-24.08.1, <code>delayed_retry</code> will no longer attempt to retry a query if it was
+25.01.1, <code>delayed_retry</code> will no longer attempt to retry a query if it was
 already sent to the database. If a query is received while a valid target server
 is not available, the execution of the query is delayed until a valid target is
 found or the delayed retry timeout is hit. If a query was already sent, it will
@@ -1073,11 +1073,11 @@ commit.</p>
 <p>This parameter was added in MaxScale 23.08.0 and is enabled by default. The
 older version of MaxScale always attempted to replay the transaction even if
 there was a risk of duplicating the transaction.</p>
-<p>In MaxScale 24.08.0, this parameter also disabled the replaying of individual
+<p>In MaxScale 25.01.0, this parameter also disabled the replaying of individual
 DML statements that <code>delayed_retry</code> enabled. The result of this was that only
 statements done inside of an explicit transactions or with autocommit disabled
 were replayed and writes done with autocommit enabled were never replayed.</p>
-<p>In MaxScale 24.08.1 and newer versions, where <code>delayed_retry no longer attempts
+<p>In MaxScale 25.01.1 and newer versions, where <code>delayed_retry no longer attempts
 to retry a query if it was already sent to the database, write queries outside
 of transactions are delayed if no valid target is found but they are never
 retried. Thus</code>transaction_replay_safe_commit<code>again only affects how the</code>COMMIT` of a transaction is handled.</p>
@@ -1147,7 +1147,7 @@ that ends with an <code>INSERT</code> into a table with an <code>AUTO_INCREMENT<
 </ul>
 <h3 id="optimistic_trx"><code>optimistic_trx</code></h3>
 <p>This feature has been moved into the
-<a href="/kb/en/maxscale-25-01-optimistic-transaction-execution-filter/">OptimisticTrx</a> filter in MaxScale 24.08 and the
+<a href="/kb/en/maxscale-25-01-optimistic-transaction-execution-filter/">OptimisticTrx</a> filter in MaxScale 25.01 and the
 parameter has been removed from readwritesplit.</p>
 <h3 id="causal_reads"><code>causal_reads</code></h3>
 <ul>
@@ -1211,6 +1211,12 @@ low latency is more important than proper distribution of reads. These modes
 should only be used when the workload is mostly read-only with only occasional
 writes. If used with a mixed or a write-heavy workload, the traffic will end up
 being routed almost exclusively to the primary server.</p>
+<p><strong>Note:</strong> This feature also enables multi-statement execution of SQL in the
+  protocol. This is equivalent to using <code>allowMultiQueries=true</code> in
+  <a href="https://mariadb.com/kb/en/about-mariadb-connector-j/#allowmultiqueries">Connector/J</a>
+  or using <code>CLIENT_MULTI_STATEMENTS</code> and <code>CLIENT_MULTI_RESULTS</code> in the
+  Connector/C. The <em>Implementation of causal_reads</em> section explains why this is
+  necessary.</p>
 <p>The possible values for this parameter are:</p>
 <ul>
 <li>
@@ -1349,19 +1355,21 @@ sacrificing consistency.</p>
 <p>The set of example SQL above will be translated by MaxScale into the following
 statements.</p>
 <div><pre><span></span><span>INSERT</span> <span>INTO</span> <span>test</span><span>.</span><span>t1</span> <span>(</span><span>id</span><span>)</span> <span>VALUES</span> <span>(</span><span>1</span><span>);</span>
+
+<span>-- These are executed as one multi-query</span>
 <span>SET</span> <span>@</span><span>maxscale_secret_variable</span><span>=</span><span>(</span>
     <span>SELECT</span> <span>CASE</span>
            <span>WHEN</span> <span>MASTER_GTID_WAIT</span><span>(</span><span>'0-3000-8'</span><span>,</span> <span>10</span><span>)</span> <span>=</span> <span>0</span> <span>THEN</span> <span>1</span>
            <span>ELSE</span> <span>(</span><span>SELECT</span> <span>1</span> <span>FROM</span> <span>INFORMATION_SCHEMA</span><span>.</span><span>ENGINES</span><span>)</span>
-    <span>END</span><span>);</span>
-<span>SELECT</span> <span>*</span> <span>FROM</span> <span>test</span><span>.</span><span>t1</span> <span>WHERE</span> <span>id</span> <span>=</span> <span>1</span><span>;</span>
+    <span>END</span><span>);</span> <span>SELECT</span> <span>*</span> <span>FROM</span> <span>test</span><span>.</span><span>t1</span> <span>WHERE</span> <span>id</span> <span>=</span> <span>1</span><span>;</span>
 </pre></div>
 
 
-<p>The <code>SET</code> command will synchronize the replica to a certain logical point in
-the replication stream (see
-<a href="https://mariadb.com/kb/en/library/master_gtid_wait/">MASTER_GTID_WAIT</a>
-for more details).</p>
+<p>The <code>SET</code> command will synchronize the replica to a certain logical point in the
+replication stream (see
+<a href="https://mariadb.com/kb/en/library/master_gtid_wait/">MASTER_GTID_WAIT</a> for more
+details). If the synchronization fails, the query will not run and it will be
+retried on the server where the transaction was originally done.</p>
 <h5 id="prepared-statements">Prepared Statements</h5>
 <p>Binary protocol prepared statements are handled in a different manner. Instead
 of adding the synchronization SQL into the original SQL query, it is sent as a
@@ -1422,7 +1430,54 @@ server which would cause the connection to be closed and a warning to be logged.
   This applies only to text protocol queries as the binary protocol queries use
   a different synchronization mechanism.</p>
 </li>
+<li>
+<p>SQL like <code>INSERT ... RETURNING</code> that commits a transaction and returns a
+  resultset will only work with causal reads if the connector supports the
+  DEPRECATE_EOF protocol feature. The following table contains a list of MariaDB
+  connectors and whether they support the protocol feature.</p>
+</li>
 </ul>
+<table>
+<thead>
+<tr>
+<th>Connector</th>
+<th>Supported</th>
+<th>Version</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Connector/J</td>
+<td>Yes</td>
+<td>3.5.2</td>
+</tr>
+<tr>
+<td>Connector/Node.js</td>
+<td>Yes</td>
+<td>3.4.0</td>
+</tr>
+<tr>
+<td>Connector/R2DBC</td>
+<td>Yes</td>
+<td>1.3.0</td>
+</tr>
+<tr>
+<td>Connector/C</td>
+<td>No</td>
+<td>3.4.4</td>
+</tr>
+<tr>
+<td>Connector/C++</td>
+<td>No</td>
+<td>1.1.5</td>
+</tr>
+<tr>
+<td>Connector/ODBC</td>
+<td>No</td>
+<td>3.2.5</td>
+</tr>
+</tbody>
+</table>
 <h3 id="causal_reads_timeout"><code>causal_reads_timeout</code></h3>
 <ul>
 <li><strong>Type</strong>: <a href="/kb/en/maxscale-25-01-mariadb-maxscale-configuration-guide/#durations">duration</a></li>
@@ -1463,7 +1518,7 @@ workloads which are mostly reads with infrequent writes should disable
 primary node if one was available.</p>
 <h3 id="reuse_prepared_statements"><code>reuse_prepared_statements</code></h3>
 <p>This feature has been moved into the <a href="/kb/en/maxscale-25-01-psreuse/">PsReuse</a> filter in
-MaxScale 24.08 and the parameter has been removed from readwritesplit.</p>
+MaxScale 25.01 and the parameter has been removed from readwritesplit.</p>
 <h2 id="router-diagnostics">Router Diagnostics</h2>
 <p>The <code>router_diagnostics</code> output for a readwritesplit service contains the
 following fields.</p>

@@ -889,14 +889,14 @@ servers or just over running servers. See
 for more details on how this feature works and which value to use.</p>
 <p>Allowed values:
 1. <code>none</code> Default value, no locking.
-2. <code>majority_of_all</code> Primary monitor requires majority of locks, even counting
+2. <code>majority_of_all</code> Primary monitor requires a majority of locks, even counting
 servers which are [Down].
-3. <code>majority_of_running</code> Primary monitor requires majority of locks over
+3. <code>majority_of_running</code> Primary monitor requires a majority of locks over
 [Running] servers.</p>
 <p>This setting is separate from the global MaxScale setting <em>passive</em>. If
-<em>passive</em> is set, cluster operations are disabled even if monitor has
+<em>passive</em> is set to <code>true</code>, cluster operations are disabled even if monitor has
 acquired the locks. Generally, it's best not to mix cooperative monitoring with
-the <em>passive</em>-setting.</p>
+<em>passive</em>. Either set <code>passive=false</code> or do not set it at all.</p>
 <h3 id="script_max_replication_lag"><code>script_max_replication_lag</code></h3>
 <ul>
 <li><strong>Type</strong>: number</li>
@@ -1561,7 +1561,7 @@ down. This scenario is depicted in the image below. Only two out of four servers
 are running when three are needed for majority. Although both MaxScales see both
 running servers, neither is certain they have majority and the cluster stays in
 read-only mode. If the primary server is down, no failover is performed either.</p>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/22.08.15/Documentation/Monitors/images/coop_lock_no_majority.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/22.08.16/Documentation/Monitors/images/coop_lock_no_majority.png"></p>
 <p>Setting <code>cooperative_monitoring_locks=majority_of_running</code> changes the way
 <em>n_servers</em> is calculated. Instead of using the total number of servers, only
 servers currently [Running] are considered. This scheme adapts to multiple
@@ -1575,7 +1575,7 @@ does the opposite, claiming servers 3 and 4 and assuming 1 and 2 are down.
 Both MaxScales claim two locks out of two available and assume that they have
 lock majority. Both MaxScales may then promote their own primaries and route
 writes to different servers.</p>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/22.08.15/Documentation/Monitors/images/coop_lock_split_brain.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/22.08.16/Documentation/Monitors/images/coop_lock_split_brain.png"></p>
 <p>The recommended strategy depends on which failure scenario is more likely and/or
 more destructive. If it's unlikely that multiple servers are ever down
 simultaneously, then <em>majority_of_all</em> is likely the safer choice. On the other
@@ -1595,7 +1595,7 @@ MaxScale will eventually wait less time than the others. Conflict probability
 can be further decreased by configuring each monitor with a different
 <em>monitor_interval</em>.</p>
 <p>The flowchart below illustrates the lock handling logic.</p>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/22.08.15/Documentation/Monitors/images/coop_lock_flowchart.svg"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/22.08.16/Documentation/Monitors/images/coop_lock_flowchart.svg"></p>
 <h3 id="releasing-locks">Releasing locks</h3>
 <p>Monitor cooperation depends on the server locks. The locks are
 connection-specific. The owning connection can manually release a lock, allowing
