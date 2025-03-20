@@ -882,6 +882,9 @@ reject, handle, alter or log information about a request.</p>
 <code>qlafilter</code> that logs information about requests.</p>
 <p>Filters have sections of their own in the MaxScale configuration file that are
 referred to from <em>services</em>.</p>
+<p>Limitations:
+- MaxScale Enterprise: No limitations.
+- MaxScale Lite: At most 2 filters can be created.</p>
 <h3 id="router">Router</h3>
 <p>A router module is capable of routing requests to backend servers according to
 the characteristics of a request and/or the algorithm the router
@@ -899,6 +902,9 @@ to the client. Depending on what router (e.g. <code>readconnroute</code> or
 way. If the service uses filters, then all requests will be pre-processed in
 some way before they reach the router.</p>
 <p>Services have sections of their own in the MaxScale configuration file.</p>
+<p>Limitations:
+- MaxScale Enterprise: No limitations.
+- MaxScale Lite: At most 1 service can be created.</p>
 <h3 id="listener">Listener</h3>
 <p>A listener defines a port MaxScale listens on. Connection requests arriving on
 that port will be forwarded to the service the listener is associated with. A
@@ -2442,7 +2448,7 @@ Tokens.</p>
 documentation</a>.</p>
 <p>If a symmetric algorithm is used (i.e. <code>HS256</code>, <code>HS384</code> or <code>HS512</code>), MaxScale
 will generate a random encryption key on startup and use that to sign the
-messages. The symmetric key can also be retrieved from an <a href="">Encryption Key
+messages. The symmetric key can also be retrieved from an <a href="#encryption-key-managers">Encryption Key
 Manager</a> if the <code>admin_jwt_key</code> parameter is defined.</p>
 <p>If an asymmetric algorithm (i.e. public key authentication) is used, both the
 <code>admin_ssl_cert</code> and <code>admin_ssl_key</code> parameters must be defined and they must
@@ -3085,17 +3091,18 @@ release build does nothing.</p>
 <li><strong>Type</strong>: <a href="#durations">duration</a></li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
-<li><strong>Default</strong>: <code>0s</code></li>
+<li><strong>Default</strong>: <code>28800s</code> (&gt;= MaxScale 24.02.5, 25.01.2), <code>0s</code> (&lt;= MaxScale 24.02.4, 25.01.1)</li>
 <li><strong>Auto tune</strong>: <a href="#auto_tune">Yes</a></li>
 </ul>
-<p>The wait_timeout parameter is used to disconnect sessions to MariaDB
-MaxScale that have been idle for too long. The session timeouts are disabled by
-default. To enable them, define the timeout in seconds in the service's
-configuration section. A value of zero is interpreted as no timeout, the same
-as if the parameter is not defined.</p>
+<p>The wait_timeout parameter is used to disconnect sessions to MariaDB MaxScale
+that have been idle for too long. The session timeout is set to 28800 seconds by
+default. A value of zero is interpreted as no timeout.</p>
 <p>This parameter used to be called <code>connection_timeout</code> and this name is still
 accepted as an alias for <code>wait_timeout</code>. The old name has been deprecated in
 MaxScale 23.08.</p>
+<p>The default value of <code>wait_timeout</code> changed from <code>0s</code> to <code>28800s</code> in MaxScale
+versions 24.02.5 and 25.01.2 to match the default value of MariaDB
+(<a href="https://jira.mariadb.org/browse/MXS-5530">MXS-5530</a>).</p>
 <p>Note that since the granularity of the timeout is seconds, a timeout specified
 in milliseconds will be rejected, even if the duration is longer than a second.</p>
 <p>This parameter only takes effect in top-level services. A top-level service is
@@ -3123,12 +3130,16 @@ wait_timeout=300s
 <li><strong>Type</strong>: number</li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
-<li><strong>Default</strong>: <code>0</code></li>
+<li><strong>Default</strong>: 0 in MaxScale Enterprise, 15 in MaxScale Lite.</li>
+<li><strong>Minimum</strong>: 0 in MaxScale Enterprise, 1 in MaxScale Lite.</li>
+<li><strong>Maximum</strong>: Unlimited in MaxScale Enterprise, 15 in MaxScale Lite.</li>
 </ul>
 <p>The maximum number of simultaneous connections MaxScale should permit to this
-service. If the parameter is zero or is omitted, there is no limit. Any attempt
-to make more connections after the limit is reached will result in a "Too many
-connections" error being returned.</p>
+service. Any attempt to make more connections after the limit is reached will
+result in a "Too many connections" error being returned.</p>
+<p>A value of 0 means no limit which is the default for the enterprise edition of
+MaxScale. The lite edition is limited to a maximum of 15 connections per
+service.</p>
 <p><strong>Warning</strong>: In MaxScale 2.5, it is possible that the number of concurrent
   connections temporarily exceeds the value of <code>max_connections</code>. This has been
   fixed in MaxScale 6.</p>
@@ -3670,6 +3681,9 @@ port=3000
 </pre></div>
 
 
+<p>Limitations:
+- MaxScale Enterprise: No limitations.
+- MaxScale Lite: At most 3 servers can be created.</p>
 <h3 id="address"><code>address</code></h3>
 <ul>
 <li><strong>Type</strong>: string</li>
@@ -3802,11 +3816,15 @@ the DCB will be discarded and the connection closed.</p>
 <li><strong>Type</strong>: number</li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
-<li><strong>Default</strong>: <code>0</code></li>
+<li><strong>Default</strong>: 0 in MaxScale Enterprise, 15 in MaxScale Lite.</li>
+<li><strong>Minimum</strong>: 0 in MaxScale Enterprise, 1 in MaxScale Lite.</li>
+<li><strong>Maximum</strong>: Unlimited in MaxScale Enterprise, 15 in MaxScale Lite.</li>
 </ul>
 <p>Maximum number of routing connections to this server. Connections held in a pool
 also count towards this maximum. Does not limit monitor connections or user
-account fetching. A value of 0 (default) means no limit.</p>
+account fetching. A value of 0 means no limit which is the default for the
+enterprise edition of MaxScale. The lite edition is limited to a maximum of 15
+connections per server.</p>
 <p>Since every client session can generate a connection to a server, the server may
 run out of memory when the number of clients is high enough. This setting limits
 server memory use caused by MaxScale. The effect depends on if the service
@@ -4667,7 +4685,7 @@ run MariaDB MaxScale without a monitor module. In this case an external
 monitoring system must the status of each server via MaxCtrl or the REST
 API. <strong>Only do this if you know what you are doing.</strong></p>
 <h2 id="filter-modules">Filter Modules</h2>
-<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/25.01.1-docs/Documentation/Getting-Started/images/filter_example.png"></p>
+<p><img src="https://raw.githubusercontent.com/mariadb-corporation/MaxScale/25.01.2-docs/Documentation/Getting-Started/images/filter_example.png"></p>
 <p>Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
 explanation of each filter's functionality can be found in its documentation.</p>
