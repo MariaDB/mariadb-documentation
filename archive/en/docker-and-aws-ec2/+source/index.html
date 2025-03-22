@@ -323,7 +323,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/docker-and-aws-ec2/+r/131792/">131792</a></dd>
+            <dd><a href="/kb/en/docker-and-aws-ec2/+r/149774/">149774</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-14121">
@@ -332,7 +332,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-10-31 05:34">2023-10-31 05:34</span></dd>
+<span class="datetime" title="2025-03-21 15:25">2025-03-21 15:25</span></dd>
         </dl>
     </div>
     
@@ -346,7 +346,7 @@
 
 **Create a VM in AWS EC2**
 
-1. [[https://mariadb.com/docs/server/connect/clients/mariadb-client/|Install MariaDB client]] on your local machine, either bundled with Maria DB server or standalone.
+1. Install [[mariadb-client/|MariaDB client]] on your local machine, either bundled with Maria DB server or standalone.
 
 2. Login to AWS, navigate to [[https://console.aws.amazon.com/ec2/home|EC2 service home]]
 
@@ -361,17 +361,21 @@
 7. Create Key Pair with name (e.g. mrdb-docker-aws-pk.pem if using openSSH at the command line, or  mrdb- docker-aws-pk..ppk for use with programs like PuTTY.)
 
 9. Create or select a security group where SSH is allowed from anywhere 0.0.0.0/0.  If you’d like to make this more secure, it can be restricted to a specific IP address or CIDR block. 
-
+&lt;&lt;code&gt;&gt;
 {{aws-firewall}}
+&lt;&lt;/code&gt;&gt;
 
 10. Accept remaining instance creation defaults and click “launch instance”.
 
 11. Save the *.pem or *.ppk keyfile on your local hard drive when prompted.  You will need it later.   If you’re on  Linux,  don’t forget to change permissions on the downloaded *.pem / *.ppk key file:
+&lt;&lt;code&gt;&gt;
 $ chmod 400 mrdb-docker-pk.pem
+&lt;&lt;/code&gt;&gt;
 
 12. Click into the instance summary (EC2 &gt; Instances &gt; Instance ID) and click on the “security” tab towards the bottom.
-
+&lt;&lt;code&gt;&gt;
 {{security-group}}
+&lt;&lt;/code&gt;&gt;
 
 13. In the relevant security group for your instance, Create an inbound rule so that TCP port 3306 is open, allowing external connections to Maria DB (like your local command line client for MariaDB).  Double check that port 22 is open while you&#39;re there for SSH.
 
@@ -380,12 +384,14 @@ $ chmod 400 mrdb-docker-pk.pem
 For more detailed instructions, refer to [[https://mariadb.com/kb/en/installing-and-using-mariadb-via-docker/|Installing and Using MariaDB via Docker]]
 
 14. Back in the instance summary (EC2 &gt; Instances &gt; Instance ID), copy the public IP (e.g. ww.xx.yyy.zzz)
-
+&lt;&lt;code&gt;&gt;
 {{aws-instance-ip}}
+&lt;&lt;/code&gt;&gt;
 
 15. Open terminal window, navigate to the directory with private key (*.pem or *.ppk) file and start a SSH remote shell session by typing:
-
+&lt;&lt;code&gt;&gt;
 $ ssh -i mrdb-docker-pk.pem ubuntu@ww.xx.yyy.zzz
+&lt;&lt;/code&gt;&gt;
 
 (switch ww.xx.yyy.zzz for your IP address from step 14).
 
@@ -394,64 +400,81 @@ Say yes
 
 17. Escalate to root 
 
+&lt;&lt;code&gt;&gt;
 $ sudo su
+&lt;&lt;/code&gt;&gt;
 
 18. Install Docker
 
+&lt;&lt;code&gt;&gt;
 $ curl -fsSL https://get.docker.com | sudo sh
+&lt;&lt;/code&gt;&gt;
 
 **Pull the MariaDB Docker image and create the container**
 
 19. Pull MariaDB Docker image
 
+&lt;&lt;code&gt;&gt;
 $ docker pull mariadb:lts
+&lt;&lt;/code&gt;&gt;
 
 20. Start MDRB docker process
 
 at your terminal / command line, type:
 
+&lt;&lt;code&gt;&gt;
 $ docker run --detach --name mariadb-docker -v \Users\YouUID\Documents\YourDirName:/var/lib/mysql:Z -p 3306:3306 -e MARIADB_ROOT_PASSWORD=yoursecurepassword mariadb:lts
+&lt;&lt;/code&gt;&gt;
 
 The -v flag mounts a directory that you choose as /var/lib/mysql will ensure that the volume is persistent.
 Windows file paths like C:\Users\YouUID\Documents\YourDirName should be represented as above.
 Linux file paths should also be absolute vs. relative.  Obviously replace the root password with something that is a bit more secure than you see in this example for anything other than development purposes.
 
 21. Shell into container
-
+&lt;&lt;code&gt;&gt;
 $ docker exec -it mariadb-docker bash
+&lt;&lt;/code&gt;&gt;
 
 22. Login to MRDB inside container 
 
 Using the root password specified in step 20, type:
 
+&lt;&lt;code&gt;&gt;
 $ mariadb -pyoursecurepassword 
+&lt;&lt;/code&gt;&gt;
 
 23. Setup admin account with permission for remote connection, configure access control
 
+&lt;&lt;code&gt;&gt;
 MariaDB [(none)]&gt; CREATE USER &#39;admin&#39;@&#39;%&#39; IDENTIFIED BY &#39;admin&#39;;
 
 MariaDB [(none)]&gt; GRANT ALL ON *.* to &#39;admin&#39;@&#39;%&#39; WITH GRANT OPTION;
 
 MariaDB [(none)]&gt; SHOW GRANTS FOR admin;
 
+&lt;&lt;/code&gt;&gt;
+
 Obviously replace these passwords with something that is a bit more secure than you see in this example for anything other than development purposes.
 
 24. Setup service account for your app with permission for remote connection, configure access control
 
+&lt;&lt;code&gt;&gt;
 MariaDB [(none)]&gt; CREATE USER &#39;yourappname&#39;@&#39;%&#39; IDENTIFIED BY &#39;yoursecurepassword&#39;;
 
 MariaDB [(none)]&gt; GRANT INSERT, UPDATE, DELETE ON *.* to &#39;yourappname&#39;@&#39;%&#39;;
 
 MariaDB [(none)]&gt; SHOW GRANTS FOR yourappname;
+&lt;&lt;/code&gt;&gt;
 
 Obviously replace these passwords with something that is a bit more secure than you see in this example for anything other than development purposes.
 
-25. Load up your database from your preexisting SQL script that contains [[https://mariadb.com/docs/server/ref/mdb/sql-statements/CREATE_DATABASE/|CREATE DATABASE]]; [[https://mariadb.com/kb/en/use-database/|USE DATABASE]]; and [[https://mariadb.com/kb/en/create-table/|CREATE TABLE]] statements.
+25. Load up your database from your preexisting SQL script that contains [[create-database|CREATE DATABASE]]; [[use-database|USE DATABASE]]; and [[create-table|CREATE TABLE]] statements.
 
 In a new local terminal window, not your SSH session, change directory to the directory containing your database creation script, say, init.sql in this example. Type: 
 
+&lt;&lt;code&gt;&gt;
 $ mariadb --host=ww.xx.yyy.zzz --port=3306 --user=admin --password=admin -e “SOURCE init.sql”
-
+&lt;&lt;/code&gt;&gt;
 (switch ww.xx.yyy.zzz for your IP address from step 14).</textarea>
     
 
