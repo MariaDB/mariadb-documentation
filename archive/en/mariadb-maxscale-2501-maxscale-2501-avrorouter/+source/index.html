@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-maxscale-2501-maxscale-2501-avrorouter/+r/147040/">147040</a></dd>
+            <dd><a href="/kb/en/mariadb-maxscale-2501-maxscale-2501-avrorouter/+r/149523/">149523</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5571">
@@ -332,9 +332,8 @@
         
         <textarea id="answer_source" class="creole_source autogrow"># Avrorouter
 
-The Avrorouter was deprecated in MaxScale 24.08 and will be removed
+The Avrorouter was deprecated in MaxScale 25.01 and will be removed
 in the next major release. [KafkaCDC](node:maxscale-25-01-kafkacdc) can be used instead.
-
 
 The avrorouter is a MariaDB 10.0 binary log to Avro file converter. It consumes
 binary logs from a local directory and transforms them into a set of Avro files.
@@ -347,7 +346,7 @@ These records can then consumed by the avrorouter directly from the binlog cache
 of the Binlog Server. This allows MariaDB MaxScale to automatically transform
 binlog events on the primary to local Avro format files.
 
-![Binlog-Avro Translator](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/25.01.1-docs/Documentation/Routers/images/Binlog-Avro.png)
+![Binlog-Avro Translator](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/25.01.2-docs/Documentation/Routers/images/Binlog-Avro.png)
 
 The avrorouter can also consume binary logs straight from the primary. This will
 remove the need to configure the Binlog Server but it will increase the disk space
@@ -398,7 +397,7 @@ port=4001
 ```
 
 In direct replication mode, the avrorouter stores the latest replicated GTID in
-the `last_gtid.txt` file located in the `avrodir` (defaults to
+the `current_gtid.txt` file located in the `avrodir` (defaults to
 `/var/lib/maxscale`). To reset the replication process, stop MaxScale and remove
 the file.
 
@@ -428,6 +427,20 @@ the server and the last is the GTID sequence number.
 This parameter has no effect in the traditional mode. If this parameter is
 defined, the replication will start from the implicit GTID that the primary first
 serves.
+
+Starting in MaxScale 24.02, the special values `newest` and `oldest` can be
+used:
+
+- `newest` uses the current value of `@@gtid_binlog_pos` as the GTID where the
+  replication is started from.
+
+- `oldest` uses the oldest binlog that&#39;s available in `SHOW BINARY LOGS` and
+  then extracting the oldest GTID from it with `SHOW BINLOG EVENTS`.
+
+Once the replication has started and a GTID position has been recorded, this
+parameter will be ignored. To reset the recorded GTID position, delete the
+`current_gtid.txt` file located in `/var/lib/maxscale/&lt;SERVICE&gt;/` where
+`&lt;SERVICE&gt;` is the name of the Avrorouter service.
 
 ### `server_id`
 

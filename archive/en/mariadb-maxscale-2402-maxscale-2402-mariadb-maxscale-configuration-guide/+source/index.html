@@ -311,7 +311,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-maxscale-2402-maxscale-2402-mariadb-maxscale-configuration-guide/+r/145098/">145098</a></dd>
+            <dd><a href="/kb/en/mariadb-maxscale-2402-maxscale-2402-mariadb-maxscale-configuration-guide/+r/149825/">149825</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5571">
@@ -320,7 +320,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-03-01 19:51">2024-03-01 19:51</span></dd>
+<span class="datetime" title="2025-03-24 11:44">2025-03-24 11:44</span></dd>
         </dl>
     </div>
     
@@ -794,8 +794,8 @@ The current auto tunable parameters are:
 
 |MaxScale Parameter|Server Variable Dependency|
 |------------------|--------------------------|
-|[connection_keepalive](#connection_keepalive)|80% of the smallest [`wait_timeout`](https://mariadb.com/docs/reference/mdb/system-variables/wait_timeout/) value of the servers used by the service|
-|[wait_timeout](#wait_timeout)|The smallest [`wait_timeout`](https://mariadb.com/docs/reference/mdb/system-variables/wait_timeout/) value of the servers used by the service|
+|[connection_keepalive](#connection_keepalive)|80% of the smallest [`wait_timeout`]server-system-variables/#wait_timeout) value of the servers used by the service|
+|[wait_timeout](server-system-variables/#wait_timeout)|The smallest [`wait_timeout`](server-system-variables/#wait_timeout) value of the servers used by the service|
 
 The values of the server variables are collected by monitors, which means that
 if the servers of a service are not monitored by a monitor, then the parameters
@@ -1723,13 +1723,12 @@ the MaxScale log.
 - **Type**: [size](#size)
 - **Mandatory**: No
 - **Dynamic**: Yes
-- **Default**: `16Mi`
+- **Default**: `65536`
 
 High water mark for network write buffer. When the size of the outbound network
 buffer in MaxScale for a single connection exceeds this value, network traffic
-throttling for that connection is started. The parameter accepts
-[size type values](#sizes). The default value is 65536 bytes (was 16777216 bytes
-before 22.08.4).
+throtting for that connection is started. The parameter accepts [size type
+values](#sizes). The default value was 16777216 bytes before 22.08.4.
 
 More specifically, if the client side write queue is above this value, it will
 block traffic coming from backend servers. If the backend side write queue is
@@ -1748,12 +1747,12 @@ MaxScale 23.02 and earlier, also `writeq_low_water` had to be non-zero.
 - **Type**: [size](#size)
 - **Mandatory**: No
 - **Dynamic**: Yes
-- **Default**: `8Ki`
+- **Default**: `1024`
 
 Low water mark for network write buffer. Once the traffic throttling is enabled,
 it will only be disabled when the network write buffer is below
 `writeq_low_water` bytes. The parameter accepts [size type values](#sizes). The
-default value is 1024 bytes (was 8192 bytes before 22.08.4).
+default value was 8192 bytes before 22.08.4.
 
 The value of `writeq_high_water` must always be greater than the value of
 `writeq_low_water`.
@@ -2783,18 +2782,20 @@ release build does nothing.
 - **Type**: [duration](#durations)
 - **Mandatory**: No
 - **Dynamic**: Yes
-- **Default**: `0s`
+- **Default**: `28800s` (&gt;= MaxScale 24.02.5, 25.01.2), `0s` (&lt;= MaxScale 24.02.4, 25.01.1)
 - **Auto tune**: [Yes](#auto_tune)
 
-The wait_timeout parameter is used to disconnect sessions to MariaDB
-MaxScale that have been idle for too long. The session timeouts are disabled by
-default. To enable them, define the timeout in seconds in the service&#39;s
-configuration section. A value of zero is interpreted as no timeout, the same
-as if the parameter is not defined.
+The wait_timeout parameter is used to disconnect sessions to MariaDB MaxScale
+that have been idle for too long. The session timeout is set to 28800 seconds by
+default. A value of zero is interpreted as no timeout.
 
 This parameter used to be called `connection_timeout` and this name is still
 accepted as an alias for `wait_timeout`. The old name has been deprecated in
 MaxScale 23.08.
+
+The default value of `wait_timeout` changed from `0s` to `28800s` in MaxScale
+versions 24.02.5 and 25.01.2 to match the default value of MariaDB
+([MXS-5530](https://jira.mariadb.org/browse/MXS-5530)).
 
 Note that since the granularity of the timeout is seconds, a timeout specified
 in milliseconds will be rejected, even if the duration is longer than a second.
@@ -4556,7 +4557,7 @@ API. **Only do this if you know what you are doing.**
 
 ## Filter Modules
 
-![Processing pipeline with two filters](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/24.02.4/Documentation/Getting-Started/images/filter_example.png)
+![Processing pipeline with two filters](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/24.02.5/Documentation/Getting-Started/images/filter_example.png)
 
 Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
@@ -5300,8 +5301,7 @@ It is not recommended to use a watchdog timeout less than 30 seconds. When
 enabled MaxScale will check that all threads are running and notify systemd
 with a &#34;keep-alive ping&#34;.
 
-Systemd reference: https://www.freedesktop.org/software/systemd/man/systemd.service.html
-</textarea>
+Systemd reference: https://www.freedesktop.org/software/systemd/man/systemd.service.html</textarea>
     
 
 
