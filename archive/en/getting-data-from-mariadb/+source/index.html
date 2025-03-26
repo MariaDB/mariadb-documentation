@@ -307,7 +307,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/getting-data-from-mariadb/+r/147909/">147909</a></dd>
+            <dd><a href="/kb/en/getting-data-from-mariadb/+r/149893/">149893</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-4254">
@@ -316,7 +316,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-02-25 13:31">2025-02-25 13:31</span></dd>
+<span class="datetime" title="2025-03-25 14:42">2025-03-25 14:42</span></dd>
         </dl>
     </div>
     
@@ -365,8 +365,10 @@ If you are unclear what these statements do, review the [[a-mariadb-primer|Maria
 
 ==== Basic Elements
 The basic, minimal elements of the [[select|SELECT]] statement call for the keyword ##SELECT##, of course, the columns to select or to retrieve, and the table from which to retrieve rows of data. Actually, for the columns to select, we can use the asterisk as a wildcard to select all columns in a particular table. Using a database from a fictitious bookstore, we might enter the following SQL statement to get a list of all columns and rows in a table containing information on books:
-&lt;&lt;sql inline=false&gt;&gt;
+&lt;&lt;sql&gt;&gt;
 SELECT * FROM books;
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;code&gt;&gt;
 +------------+------------------------+-----------+--------------+----------+-------------+
 | isbn       | title                  | author_id | publisher_id | year_pub | description |
 +------------+------------------------+-----------+--------------+----------+-------------+
@@ -380,12 +382,14 @@ SELECT * FROM books;
 | 0805210644 | America                |         2 |         NULL | 1995     | NULL        |
 +------------+------------------------+-----------+--------------+----------+-------------+
 8 rows in set (0.001 sec)
-&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/code&gt;&gt;
 
 This will retrieve all of the data contained in the ##books## table. As you can see, not all values have been populated. If we want to retrieve only certain columns, we would list them in place of the asterisk in a comma-separated list like so:
 &lt;&lt;sql inline=false&gt;&gt;
 SELECT isbn, title, author_id
 FROM books;
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;code&gt;&gt;
 +------------+------------------------+-----------+
 | isbn       | title                  | author_id |
 +------------+------------------------+-----------+
@@ -399,13 +403,15 @@ FROM books;
 | 0805210644 | America                |         2 |
 +------------+------------------------+-----------+
 8 rows in set (0.001 sec)
-&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/code&gt;&gt;
 
 This narrows the width of the results set by retrieving only three columns, but it still retrieves all of the rows in the table. If the table contains thousands of rows of data, this may be more data than we want. If we want to limit the results to just a few books, say five, we would include what is known as a [[select/#limit|LIMIT]] clause:
 &lt;&lt;sql inline=false&gt;&gt;
 SELECT isbn, title, author_id
 FROM books 
 LIMIT 5;
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;code&gt;&gt;
 +------------+--------------------+-----------+
 | isbn       | title              | author_id |
 +------------+--------------------+-----------+
@@ -416,13 +422,15 @@ LIMIT 5;
 | 0679420290 | Crime &amp; Punishment |         2 |
 +------------+--------------------+-----------+
 5 rows in set (0.001 sec)
-&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/code&gt;&gt;
 
 This will give us the first five rows found in the table. If we want to get the next ten found, we would add a starting point parameter just before the number of rows to display, separated by a comma:
 &lt;&lt;sql inline=false&gt;&gt;
 SELECT isbn, title, author_id
 FROM books 
 LIMIT 5, 10;
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;code&gt;&gt;
 +------------+------------------------+-----------+
 | isbn       | title                  | author_id |
 +------------+------------------------+-----------+
@@ -431,7 +439,7 @@ LIMIT 5, 10;
 | 0805210644 | America                |         2 |
 +------------+------------------------+-----------+
 3 rows in set (0.001 sec)
-&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/code&gt;&gt;
 In this case, there are only three further records.
 
 ==== Selectivity and Order
@@ -441,6 +449,8 @@ SELECT isbn, title
 FROM books
 WHERE author_id = 2
 LIMIT 5;
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;code&gt;&gt;
 +------------+------------------------+
 | isbn       | title                  |
 +------------+------------------------+
@@ -451,7 +461,7 @@ LIMIT 5;
 | 067973452X | Notes from Underground |
 +------------+------------------------+
 5 rows in set (0.000 sec)
-&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/code&gt;&gt;
 
 I removed the author_id from the list of columns to select, but left the basic [[select/#limit|LIMIT]] clause in because we want to point out that the syntax is fairly strict on ordering of clauses and flags. You can&#39;t enter them in any order. You&#39;ll get an error in return.
 
@@ -462,6 +472,8 @@ FROM books
 WHERE author_id = 2
 ORDER BY title ASC
 LIMIT 5;
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;code&gt;&gt;
 +------------+--------------------+
 | isbn       | title              |
 +------------+--------------------+
@@ -472,7 +484,7 @@ LIMIT 5;
 | 0192834118 | Idiot              |
 +------------+--------------------+
 5 rows in set (0.001 sec)
-&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/code&gt;&gt;
 
 Notice that the [[select/#order-by|ORDER BY]] clause goes after the ##WHERE## clause and before the [[select/#limit|LIMIT]] clause. Not only will this statement display the rows in order by book title, but it will retrieve only the first five based on the ordering. That is to say, MariaDB will first retrieve all of the rows based on the ##WHERE## clause, order the data based on the [[select/#order-by|ORDER BY]] clause, and then display a limited number of rows based on the [[select/#limit|LIMIT]] clause. Hence the reason for the order of clauses. You may have noticed that we slipped in the ASC flag. It tells MariaDB to order the rows in ascending order for the column name it follows. It&#39;s not necessary, though, since ascending order is the default. However, if we want to display data in descending order, we would replace the flag with ##DESC##. To order by more than one column, additional columns may be given in the [[select/#order-by|ORDER BY]] clause in a comma separated list, each with the ##ASC## or ##DESC## flags if preferred.
 
@@ -486,6 +498,8 @@ JOIN authors USING (author_id)
 WHERE name_last = &#39;Dostoevsky&#39;
 ORDER BY title ASC
 LIMIT 5;
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;code&gt;&gt;
 +------------+--------------------+-------------------+
 | isbn       | title              | author            |
 +------------+--------------------+-------------------+
@@ -496,7 +510,7 @@ LIMIT 5;
 | 0192834118 | Idiot              | Fyodor Dostoevsky |
 +------------+--------------------+-------------------+
 5 rows in set (0.00 sec) 
-&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/code&gt;&gt;
 
 Our [[select|SELECT]] statement is getting hefty, but it&#39;s the same one to which we&#39;ve been adding. Don&#39;t let the clutter fluster you. Looking for the new elements, let&#39;s focus on the [[join-syntax|JOIN]] clause first. There are a few possible ways to construct a join. This method works if both tables contain a column of the same name and value. Otherwise you&#39;ll have to redo the [[join-syntax|JOIN]] clause to look something like this:
 &lt;&lt;sql inline=false&gt;&gt;
@@ -518,6 +532,8 @@ JOIN authors USING (author_id)
 WHERE name_last LIKE &#39;Dostoevsk%&#39;
 ORDER BY title ASC
 LIMIT 5;
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;code&gt;&gt;
 +------------+--------------------+-------------------+
 | isbn       | title              | author            |
 +------------+--------------------+-------------------+
@@ -528,7 +544,7 @@ LIMIT 5;
 | 0192834118 | Idiot              | Fyodor Dostoevsky |
 +------------+--------------------+-------------------+
 5 rows in set (0.001 sec)
-&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/code&gt;&gt;
 
 This will match any author last name starting with Dostoevsk. Notice that the wildcard here is not an asterisk, but a percent-sign.
 
@@ -542,6 +558,8 @@ FROM books
 JOIN authors USING (author_id)
 WHERE name_last = &#39;Dostoevsky&#39;
 ORDER BY title;
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;code&gt;&gt;
 +------------------------+
 | title                  |
 +------------------------+
@@ -551,7 +569,7 @@ ORDER BY title;
 | Idiot                  |
 | Notes from Underground |
 +------------------------+
-&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/code&gt;&gt;
 
 We&#39;ve thinned out the ongoing SQL statement a bit for clarity. This statement will result in only one row displayed for //Crime &amp; Punishment// and it will be the first one found.
 
@@ -562,6 +580,8 @@ FROM books
 JOIN authors USING (author_id)
 WHERE name_last = &#39;Dostoevsky&#39;
 ORDER BY title;
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;code&gt;&gt;
 +------------------------+
 | title                  |
 +------------------------+
@@ -571,7 +591,7 @@ ORDER BY title;
 | Idiot                  |
 | Notes from Underground |
 +------------------------+
-&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/code&gt;&gt;
 
 You may have noticed in the one example earlier in which the results are shown, that there&#39;s a status line displayed that specifies the number of rows in the results set. This is less than the number of rows that were found in the database that met the statement&#39;s criteria. It&#39;s less because we used a [[select/#limit|LIMIT]] clause. If we add the [[optimizer-hints/#sql_calc_found_rows|SQL_CALC_FOUND_ROWS]] flag just before the column list, MariaDB will calculate the number of columns found even if there is a [[select/#limit|LIMIT]] clause.
 &lt;&lt;sql inline=false&gt;&gt;
@@ -580,6 +600,8 @@ FROM books
 JOIN authors USING (author_id)
 WHERE name_last = &#39;Dostoevsky&#39;
 LIMIT 5;
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;code&gt;&gt;
 +------------+------------------------+
 | isbn       | title                  |
 +------------+------------------------+
@@ -590,18 +612,20 @@ LIMIT 5;
 | 067973452X | Notes from Underground |
 +------------+------------------------+
 5 rows in set (0.001 sec)
-&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/code&gt;&gt;
 
 To retrieve this information, though, we will have to use the [[found_rows|FOUND_ROWS()]] function like so:
 &lt;&lt;sql inline=false&gt;&gt;
 SELECT FOUND_ROWS();
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;code&gt;&gt;
 +--------------+
 | FOUND_ROWS() |
 +--------------+
 |            6 |
 +--------------+
 1 row in set (0.000 sec
-&lt;&lt;/sql&gt;&gt;
+&lt;&lt;/code&gt;&gt;
 
 This value is temporary and will be lost if the connection is terminated. It cannot be retrieved by any other client session. It relates only to the current session and the value for the variable when it was last calculated.
 
