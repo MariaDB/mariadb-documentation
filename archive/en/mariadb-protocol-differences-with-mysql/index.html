@@ -270,12 +270,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-09-20 15:56">6 months ago</span></dd>
+<span class="datetime" title="2024-09-20 15:56">6 months, 1 week ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-02-27 13:09">3 weeks, 3 days ago</span></dd>
+<span class="datetime" title="2025-03-26 13:28">11 hours, 33 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -561,25 +561,78 @@ try (PreparedStatement prep = connection.prepareStatement(&#34;INSERT INTO test_
 </li></ul>
 </li></ul>
 <h3 class="anchored_heading" id="zero-configuration-ssl">Zero-Configuration SSL</h3>
-<p><em>since <a href="/kb/en/mariadb-11-4-1-release-notes/">MariaDB 11.4.1</a></em></p>
-<p>Since <a href="https://mariadb.org/mission-impossible-zero-configuration-ssl/">a feature permitting TLS certificate validation without needing to provide certificate client side</a>.</p>
-<h5 class="anchored_heading" id="benefits">Benefits</h5>
-<ul start="1"><li>Simplified Setup: No need to install and manage client certificates, making initial configuration much easier.
+<p> <strong>Note</strong>: This feature is available since <a href="/kb/en/mariadb-11-4-1-release-notes/">MariaDB 11.4.1</a></p>
+<p>A feature that enables TLS certificate validation without requiring client-side certificate configuration.</p>
+<h4 class="anchored_heading" id="limitations">Limitations</h4>
+<ul start="1"><li>required a non empty password
+</li><li>Only supports the following authentication methods:
+<ul start="1"><li>`mysql_native_password`
+</li><li>`client_ed25519`
+</li><li>`parsec`
 </li></ul>
-<h5 class="anchored_heading" id="limitations">Limitations</h5>
-<ul start="1"><li>Password Requirement: To ensure security, this approach requires users to connect with a password.
-</li><li>Authentication Methods: Only mysql_native_password and client_ed25519 authentication methods are currently supported.
 </li></ul>
-<h5 class="anchored_heading" id="how-it-works">How it Works</h5>
-<ul start="1"><li>Self-Signed Certificates: The server can utilize a self-signed certificate, which doesn't require a trusted Certificate Authority (CA).
-</li><li>Fingerprint Storage: The client connector needs to handle self-signed certificates. It first saves the SHA256 fingerprint of the server certificate.
-</li><li>Server Validation: Upon connection, the server sends a special hash within the "OK_Packet" info field.
-</li><li>Local Validation: The client generates a hash by combining the password hash, server seed, and the stored certificate fingerprint.
-</li><li>Comparison: If the client-generated hash matches the server-sent hash, the connection is deemed secure and proceeds. Otherwise, the connection must be terminated for security reasons.
+<h4 class="anchored_heading" id="operational-mechanism">Operational Mechanism</h4>
+<h5 class="anchored_heading" id="server-side-process">Server-Side Process</h5>
+<ol start="1"><li>When no SSL certificates are pre-configured, the server automatically generates a temporary self-signed certificate
+</li><li>During connection establishment, the server embeds a special validation hash in the connection's "OK_Packet" information field
+</li></ol>
+<h5 class="anchored_heading" id="client-side-process">Client-Side Process</h5>
+<ol start="1"><li>The client connector must postpone SSL error handling until the connection phase is complete
+</li><li>The client captures and stores the SHA256 fingerprint of the server's certificate
+</li><li>If SSL errors occur, the client can only use specific authentication plugins (mysql_native_password/ed25519/parsec) to prevent potential password exposure
+</li><li>At connection conclusion, the server sends an OK_Packet with a validation hash
+</li><li>The client generates a hash using:
+<ul start="1"><li>The password hash
+</li><li>The server's seed
+</li><li>Stored certificate fingerprint
+</li></ul>
+</li><li>The SSL-error connection proceeds only if the client-generated hash matches the server-provided hash
+</li></ol>
+<h4 class="anchored_heading" id="password-hash-generation-methods">Password Hash Generation Methods</h4>
+<ul start="1"><li><strong>mysql_native_password</strong>:
+<ul start="1"><li>Hash generation: SHA1(SHA1(password))
+</li></ul>
+</li><li><strong>ed25519</strong>:
+<ul start="1"><li>Uses the Ed25519 cryptographic algorithm for hash generation
+</li></ul>
+</li><li><strong>parsec</strong>:
+<ul start="1"><li>Hash generation involves combining
+<ul start="1"><li>'P' character
+</li><li>Number of iterations
+</li><li>Salt
+</li><li>Raw public key
+</li></ul>
+</li></ul>
 </li></ul>
 <h3 class="anchored_heading" id="initial-session-tracking">Initial Session Tracking</h3>
 <p>MySQL 5.7.0 and <a href="/kb/en/mariadb-1022-release-notes/">MariaDB 10.2.2</a> support session tracking when the CLIENT_SESSION_TRACK capability is set. </p>
 <p>One difference is that since <a href="/kb/en/mariadb-11-5-1-release-notes/">MariaDB 11.5.1</a>, connection ending OK_Packet lists all the current variables of tracked variable. </p>
+<p>This is usefull for connector having method to set transaction type, retrieving database for example to always have the server current value when changed. This permit to avoid executing some queries when not needed</p>
+<p>Example of ending connection OK_Packet : </p>
+<pre class="fixed">       +--------------------------------------------------+
+       |  0  1  2  3  4  5  6  7   8  9  a  b  c  d  e  f |
++------+--------------------------------------------------+------------------+
+|000000| A6 00 00 02 00 00 00 02  40 00 00 00 9D 00 0E 0A | ........@....... |
+|000010| 61 75 74 6F 63 6F 6D 6D  69 74 02 4F 4E 00 11 09 | autocommit.ON... |
+|000020| 74 69 6D 65 5F 7A 6F 6E  65 06 53 59 53 54 45 4D | time_zone.SYSTEM |
+|000030| 00 1D 14 63 68 61 72 61  63 74 65 72 5F 73 65 74 | ...character_set |
+|000040| 5F 63 6C 69 65 6E 74 07  75 74 66 38 6D 62 34 00 | _client.utf8mb4. |
+|000050| 21 18 63 68 61 72 61 63  74 65 72 5F 73 65 74 5F | !.character_set_ |
+|000060| 63 6F 6E 6E 65 63 74 69  6F 6E 07 75 74 66 38 6D | connection.utf8m |
+|000070| 62 34 00 1E 15 63 68 61  72 61 63 74 65 72 5F 73 | b4...character_s |
+|000080| 65 74 5F 72 65 73 75 6C  74 73 07 75 74 66 38 6D | et_results.utf8m |
+|000090| 62 34 00 0E 0C 72 65 64  69 72 65 63 74 5F 75 72 | b4...redirect_ur |
+|0000a0| 6C 00 01 06 05 74 65 73  74 6A                   | l....testj       |
++------+--------------------------------------------------+------------------+
+</pre><p>It indicates:</p>
+<ul start="1"><li>autocommit = ON
+</li><li>time_zone = SYSTEM
+</li><li>character_set_client = utf8mb4
+</li><li>character_set_connection = utf8mb4
+</li><li>character_set_results = utf8mb4
+</li><li>redirect_url =
+</li></ul>
+<p>A connector knows that character_set_client set to utf8mb4, then could avoid executing a command like "SET NAMES utf8mb4" commands for example.</p>
 <h3 class="anchored_heading" id="mysql-features-not-supported">MySQL Features Not Supported</h3>
 <ul start="1"><li>X protocol is not supported
 </li></ul>
