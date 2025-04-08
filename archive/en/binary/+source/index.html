@@ -316,7 +316,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/binary/+r/123153/">123153</a></dd>
+            <dd><a href="/kb/en/binary/+r/150391/">150391</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +325,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2020-11-19 10:38">2020-11-19 10:38</span></dd>
+<span class="datetime" title="2025-04-07 12:59">2025-04-07 12:59</span></dd>
         </dl>
     </div>
     
@@ -356,6 +356,9 @@ It contains no character set, and comparison and sorting are based on the numeri
 If the maximum length is exceeded, and [[sql-mode|SQL strict mode]] is not enabled , the extra characters will be dropped with a warning. If strict mode is enabled, an error will occur.
 
 BINARY values are right-padded with ##0x00## (the zero byte) to the specified length when inserted. The padding is //not// removed on select, so this needs to be taken into account when sorting and comparing, where all bytes are significant. The zero byte, ##0x00## is less than a space for comparison purposes.
+
+
+See also: [[data-types-for-mariadb-enterprise-server-11-4|Data Types for MariaDB Enterprise Server 11.4]], in [[data-types-for-mariadb-enterprise-server-10-6|10.6 ES]], in [[data-types-for-mariadb-enterprise-server-10-5|10.5 ES]], in [[data-types-for-mariadb-enterprise-server-10-4|10.4 ES]], in [[data-types-for-mariadb-enterprise-server-10-3|10.3 ES]], in [[data-types-for-mariadb-enterprise-server-10-2|10.2 ES]], in [[data-types-for-mariadb-community-server-10-6|10.6 CS]], in [[data-types-for-mariadb-community-server-10-5|10.5 CS]], in [[data-types-for-mariadb-community-server-10-4|10.4 CS]], in [[data-types-for-mariadb-community-server-10-3|10.3 CS]], and in [[data-types-for-mariadb-community-server-10-2|10.2 CS]].
 
 == Examples
 
@@ -422,7 +425,49 @@ SELECT a = &#39;12345678&#39;, a = &#39;12345678\0\0&#39; from bins;
 |              0 |                  1 |
 +----------------+--------------------+
 &lt;&lt;/sql&gt;&gt;
+Example of BINARY:
+&lt;&lt;code&gt;&gt;
 
+CREATE TABLE binary_example (
+   description VARCHAR(20),
+   example BINARY(255)
+) DEFAULT CHARSET=latin1; -- One byte per char makes the examples clearer
+
+INSERT INTO binary_example VALUES
+   (&#39;Normal foo&#39;, &#39;foo&#39;),
+   (&#39;Trailing spaces foo&#39;, &#39;foo      &#39;),
+   (&#39;NULLed&#39;, NULL),
+   (&#39;Empty&#39;, &#39;&#39;),
+   (&#39;Maximum&#39;, RPAD(&#39;&#39;, 255, CHAR(7)));
+
+SELECT description, LENGTH(example) AS length
+   FROM binary_example;
+
++---------------------+--------+
+| description         | length |
++---------------------+--------+
+| Normal foo          |    255 |
+| Trailing spaces foo |    255 |
+| NULLed              |   NULL |
+| Empty               |    255 |
+| Maximum             |    255 |
++---------------------+--------+
+&lt;&lt;/code&gt;&gt;
+
+=== Data Too Long
+
+When SQL_MODE is strict (the default) a value is considered &#34;too long&#34; when its length exceeds the size of the data type, and an error is generated.
+
+Example of data too long behavior for BINARY:
+
+&lt;&lt;code&gt;&gt;
+TRUNCATE binary_example;
+
+INSERT INTO binary_example VALUES
+   (&#39;Overflow&#39;, RPAD(&#39;&#39;, 256, CHAR(7)));
+
+ERROR 1406 (22001): Data too long for column &#39;example&#39; at row 1
+&lt;&lt;/code&gt;&gt;
 == See Also
 * [[char|CHAR]]
 * [[data-type-storage-requirements|Data Type Storage Requirements]]</textarea>

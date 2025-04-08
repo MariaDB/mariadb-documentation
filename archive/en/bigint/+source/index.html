@@ -316,7 +316,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/bigint/+r/104248/">104248</a></dd>
+            <dd><a href="/kb/en/bigint/+r/150390/">150390</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +325,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2021-02-25 20:44">2021-02-25 20:44</span></dd>
+<span class="datetime" title="2025-04-07 12:37">2025-04-07 12:37</span></dd>
         </dl>
     </div>
     
@@ -335,13 +335,13 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">== Syntax
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+== Syntax
 
 &lt;&lt;code&gt;&gt;
 BIGINT[(M)] [SIGNED | UNSIGNED | ZEROFILL]
 &lt;&lt;/code&gt;&gt;
-
-== Description
+==Description
 
 A large integer. The signed range is ##-9223372036854775808## to
 ##9223372036854775807##. The unsigned range is ##0## to
@@ -349,7 +349,7 @@ A large integer. The signed range is ##-9223372036854775808## to
 
 If a column has been set to ZEROFILL, all values will be prepended by zeros so that the BIGINT value contains a number of M digits.
 
-**Note:** If the ZEROFILL attribute has been specified, the column will automatically become UNSIGNED.
+**Note:** If the ##ZEROFILL## attribute has been specified, the column will automatically become ##UNSIGNED##.
 
 For more details on the attributes, see [[numeric-data-type-overview|Numeric Data Type Overview]].
 
@@ -357,16 +357,18 @@ For more details on the attributes, see [[numeric-data-type-overview|Numeric Dat
 &lt;&lt;code lang=mysql inline=false&gt;&gt;
 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE
 &lt;&lt;/code&gt;&gt;
-
 ##INT8## is a synonym for ##BIGINT##.
 
-== Examples
-&lt;&lt;sql&gt;&gt;
-CREATE TABLE bigints (a BIGINT,b BIGINT UNSIGNED,c BIGINT ZEROFILL);
-&lt;&lt;/sql&gt;&gt;
+See also: [[data-types-for-mariadb-enterprise-server-11-4|Data Types for MariaDB Enterprise Server 11.4]], in [[data-types-for-mariadb-enterprise-server-10-6|10.6 ES]], in [[data-types-for-mariadb-enterprise-server-10-5|10.5 ES]], in [[data-types-for-mariadb-enterprise-server-10-4|10.4 ES]], in [[data-types-for-mariadb-enterprise-server-10-3|10.3 ES]], in [[data-types-for-mariadb-enterprise-server-10-2|10.2 ES]], in [[data-types-for-mariadb-community-server-10-6|10.6 CS]], in [[data-types-for-mariadb-community-server-10-5|10.5 CS]], in [[data-types-for-mariadb-community-server-10-4|10.4 CS]], in [[data-types-for-mariadb-community-server-10-3|10.3 CS]], and in [[data-types-for-mariadb-community-server-10-2|10.2 CS]].
 
-With [[sql-mode/#strict-mode|strict_mode]] set, the default from MariaDB 10.2.4:
+== EXAMPLES
+
+=== With [[sql-mode/#strict-mode|strict_mode]] set
 &lt;&lt;sql&gt;&gt;
+
+CREATE TABLE bigints (a BIGINT,b BIGINT UNSIGNED,c BIGINT ZEROFILL);
+
+
 INSERT INTO bigints VALUES (-10,-10,-10);
 ERROR 1264 (22003): Out of range value for column &#39;b&#39; at row 1
 
@@ -389,36 +391,139 @@ SELECT * FROM bigints;
 +---------------------+---------------------+----------------------+
 &lt;&lt;/sql&gt;&gt;
 
-With [[sql-mode/#strict-mode|strict_mode]] unset, the default until MariaDB 10.2.3:
-&lt;&lt;sql&gt;&gt;
-INSERT INTO bigints VALUES (-10,-10,-10);
-Query OK, 1 row affected, 2 warnings (0.08 sec)
-Warning (Code 1264): Out of range value for column &#39;b&#39; at row 1
-Warning (Code 1264): Out of range value for column &#39;c&#39; at row 1
+=== SIGNED and UNSIGNED
+The BIGINT data type may be SIGNED (allowing negative values) or UNSIGNED (not allowing negative values).
 
-INSERT INTO bigints VALUES (-10,10,-10);
-Query OK, 1 row affected, 1 warning (0.08 sec)
-Warning (Code 1264): Out of range value for column &#39;c&#39; at row 1
+Example of BIGINT SIGNED (the default):
 
-INSERT INTO bigints VALUES (-10,10,10);
+&lt;&lt;code&gt;&gt;
 
-INSERT INTO bigints VALUES (9223372036854775808,9223372036854775808,9223372036854775808);
-Query OK, 1 row affected, 1 warning (0.07 sec)
-Warning (Code 1264): Out of range value for column &#39;a&#39; at row 1
+CREATE TABLE bigint_signed_example (
+   description VARCHAR(20),
+   example BIGINT SIGNED
+);
+&lt;&lt;/code&gt;&gt;
 
-INSERT INTO bigints VALUES (9223372036854775807,9223372036854775808,9223372036854775808);
+&lt;&lt;code&gt;&gt;
 
-SELECT * FROM bigints;
-+---------------------+---------------------+----------------------+
-| a                   | b                   | c                    |
-+---------------------+---------------------+----------------------+
-|                 -10 |                   0 | 00000000000000000000 |
-|                 -10 |                  10 | 00000000000000000000 |
-|                 -10 |                  10 | 00000000000000000010 |
-| 9223372036854775807 | 9223372036854775808 | 09223372036854775808 |
-| 9223372036854775807 | 9223372036854775808 | 09223372036854775808 |
-+---------------------+---------------------+----------------------+
-&lt;&lt;/sql&gt;&gt;
+INSERT INTO bigint_signed_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, -9223372036854775808),
+   (&#39;Maximum&#39;, 9223372036854775807);
+&lt;&lt;/code&gt;&gt;
+
+Example of BIGINT UNSIGNED:
+
+&lt;&lt;code&gt;&gt;
+CREATE TABLE bigint_unsigned_example (
+   description VARCHAR(20),
+   example BIGINT UNSIGNED
+);
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+INSERT INTO bigint_unsigned_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, 0),
+   (&#39;Maximum&#39;, 18446744073709551615);
+&lt;&lt;/code&gt;&gt;
+
+=== Out-of-Range
+
+A value is considered &#34;out-of-range&#34; when it is too small or too large to be stored in a data type. When ##sql_mode=STRICT_TRANS_TABLES## (the default) is set, an out-of-range value generates an error. If strict mode is not in effect, the value is rounded to the nearest valid value and a warning is generated (which might be hidden, depending on your warning settings).
+
+An example of non-strict out-of-range behavior:
+
+&lt;&lt;code&gt;&gt;
+TRUNCATE bigint_signed_example;
+
+-- Disable strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+
+INSERT INTO bigint_signed_example VALUES
+   (&#39;Underflow&#39;, -9223372036854775809),
+   (&#39;Overflow&#39;, 9223372036854775808);
+
+Warning (Code 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (Code 1264): Out of range value for column &#39;example&#39; at row 2
+
+SELECT * FROM bigint_signed_example;
+
++-------------+----------------------+
+| description | example              |
++-------------+----------------------+
+| Underflow   | -9223372036854775808 |
+| Overflow    |  9223372036854775807 |
++-------------+----------------------+
+
+TRUNCATE bigint_unsigned_example;
+
+-- Disable strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+
+INSERT INTO bigint_unsigned_example VALUES
+   (&#39;Underflow&#39;, -1),
+   (&#39;Overflow&#39;, 18446744073709551616);
+
+Warning (Code 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (Code 1264): Out of range value for column &#39;example&#39; at row 2
+
+SELECT * FROM bigint_unsigned_example;
+
++-------------+----------------------+
+| description | example              |
++-------------+----------------------+
+| Underflow   |                    0 |
+| Overflow    | 18446744073709551615 |
++-------------+----------------------+
+&lt;&lt;/code&gt;&gt;
+
+=== BIGINT ZEROFILL
+
+A special type of ##BIGINT UNSIGNED is BIGINT ZEROFILL##, which pads out the values with leading zeros in SELECT results. The number of leading zeros are just enough to pad the field out to the length of the type&#39;s maximum unsigned value, but the zeros are not included in an expression result or in a ##UNION SELECT## column.
+
+Using ##BIGINT ZEROFILL## works the same way as ##BIGINT UNSIGNED## for most operations except a simple ##SELECT##. For example, with the following test table setup:
+
+&lt;&lt;code&gt;&gt;
+CREATE TABLE bigint_zerofill_example (
+   description VARCHAR(20),
+   example BIGINT ZEROFILL
+);
+
+INSERT INTO bigint_zerofill_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, 0),
+   (&#39;Maximum&#39;, 18446744073709551615);
+
+-- Turn off strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+
+INSERT INTO bigint_zerofill_example VALUES
+   (&#39;Underflow&#39;, -1),
+   (&#39;Overflow&#39;, 18446744073709551616);
+
+Warning (Code 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (Code 1264): Out of range value for column &#39;example&#39; at row 2
+&lt;&lt;/code&gt;&gt;
+The resulting data would look like this:
+
+&lt;&lt;code&gt;&gt;
+SELECT *, example + 0 FROM bigint_zerofill_example;
+
++-------------+----------------------+----------------------+
+| description | example              | example + 0          |
++-------------+----------------------+----------------------+
+| Zero        | 00000000000000000000 |                    0 |
+| Forty-Two   | 00000000000000000042 |                   42 |
+| Minimum     | 00000000000000000000 |                    0 |
+| Maximum     | 18446744073709551615 | 18446744073709551615 |
+| Underflow   | 00000000000000000000 |                    0 |
+| Overflow    | 18446744073709551615 | 18446744073709551615 |
++-------------+----------------------+----------------------+
+&lt;&lt;/code&gt;&gt;
 
 == See Also
 * [[numeric-data-type-overview|Numeric Data Type Overview]]
