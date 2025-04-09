@@ -316,7 +316,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/int/+r/104249/">104249</a></dd>
+            <dd><a href="/kb/en/int/+r/150424/">150424</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +325,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2021-02-25 20:45">2021-02-25 20:45</span></dd>
+<span class="datetime" title="2025-04-08 14:52">2025-04-08 14:52</span></dd>
         </dl>
     </div>
     
@@ -335,12 +335,13 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">== Syntax
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+== Syntax
 
-&lt;&lt;code&gt;&gt;
+&lt;&lt;sql&gt;&gt;
 INT[(M)] [SIGNED | UNSIGNED | ZEROFILL]
 INTEGER[(M)] [SIGNED | UNSIGNED | ZEROFILL]
-&lt;&lt;/code&gt;&gt;
+&lt;&lt;/sql&gt;&gt;
 
 == Description
 
@@ -353,11 +354,10 @@ A normal-size integer. When marked UNSIGNED, it ranges from 0 to 4294967295, oth
 For details on the attributes, see [[numeric-data-type-overview|Numeric Data Type Overview]].
 
 == Examples
+=== With [[sql-mode/#strict-mode|strict_mode]] set
 &lt;&lt;sql&gt;&gt;
 CREATE TABLE ints (a INT,b INT UNSIGNED,c INT ZEROFILL);
 &lt;&lt;/sql&gt;&gt;
-
-With [[sql-mode/#strict-mode|strict_mode]] set, the default from MariaDB 10.2.4:
 &lt;&lt;sql&gt;&gt;
 INSERT INTO ints VALUES (-10,-10,-10);
 ERROR 1264 (22003): Out of range value for column &#39;b&#39; at row 1
@@ -380,36 +380,156 @@ SELECT * FROM ints;
 | 2147483647 | 2147483648 | 2147483648 |
 +------------+------------+------------+
 &lt;&lt;/sql&gt;&gt;
+=== SIGNED and UNSIGNED
 
-With [[sql-mode/#strict-mode|strict_mode]] unset, the default until MariaDB 10.2.3:
+The INT data type may be SIGNED (allowing negative values) or UNSIGNED (not allowing negative values).
+
+Example of INT SIGNED (the default):
+
 &lt;&lt;sql&gt;&gt;
-INSERT INTO ints VALUES (-10,-10,-10);
-Query OK, 1 row affected, 2 warnings (0.10 sec)
-Warning (Code 1264): Out of range value for column &#39;b&#39; at row 1
-Warning (Code 1264): Out of range value for column &#39;c&#39; at row 1
 
-INSERT INTO ints VALUES (-10,10,-10);
-Query OK, 1 row affected, 1 warning (0.08 sec)
-Warning (Code 1264): Out of range value for column &#39;c&#39; at row 1
+CREATE TABLE int_signed_example (
+   description VARCHAR(20),
+   example INT SIGNED
+);
+&lt;&lt;/sql&gt;&gt;
 
-INSERT INTO ints VALUES (-10,10,10);
+&lt;&lt;sql&gt;&gt;
+INSERT INTO int_signed_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, -2147483648),
+   (&#39;Maximum&#39;, 2147483647);
+&lt;&lt;/sql&gt;&gt;
 
-INSERT INTO ints VALUES (2147483648,2147483648,2147483648);
-Query OK, 1 row affected, 1 warning (0.07 sec)
-Warning (Code 1264): Out of range value for column &#39;a&#39; at row 1
+Example of INT UNSIGNED:
 
-INSERT INTO ints VALUES (2147483647,2147483648,2147483648);
+&lt;&lt;sql&gt;&gt;
 
-SELECT * FROM ints;
-+------------+------------+------------+
-| a          | b          | c          |
-+------------+------------+------------+
-|        -10 |          0 | 0000000000 |
-|        -10 |         10 | 0000000000 |
-|        -10 |         10 | 0000000010 |
-| 2147483647 | 2147483648 | 2147483648 |
-| 2147483647 | 2147483648 | 2147483648 |
-+------------+------------+------------+
+CREATE TABLE int_unsigned_example (
+   description VARCHAR(20),
+   example INT UNSIGNED
+);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO int_unsigned_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, 0),
+   (&#39;Maximum&#39;, 4294967295);
+&lt;&lt;/sql&gt;&gt;
+
+=== Out-of-Range
+
+A value is considered &#34;out-of-range&#34; when it is too small or too large to be stored in a data type. When sql_mode=STRICT_TRANS_TABLES (the default) is set, an out-of-range value generates an error. If strict mode is not in effect, the value is rounded to the nearest valid value and a warning is generated (which might be hidden, depending on your warning settings).
+
+An example of non-strict out-of-range behavior:
+
+&lt;&lt;sql&gt;&gt;
+TRUNCATE int_signed_example;
+
+-- Disable strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+
+INSERT INTO int_signed_example VALUES
+   (&#39;Underflow&#39;, -2147483649),
+   (&#39;Overflow&#39;, 2147483648);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 2
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+SELECT * FROM int_signed_example;
+
++-------------+-------------+
+| description | example     |
++-------------+-------------+
+| Underflow   | -2147483648 |
+| Overflow    |  2147483647 |
++-------------+-------------+
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+TRUNCATE int_unsigned_example;
+
+-- Disable strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+
+INSERT INTO int_unsigned_example VALUES
+   (&#39;Underflow&#39;, -1),
+   (&#39;Overflow&#39;, 4294967296);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 2
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+SELECT * FROM int_unsigned_example;
+
++-------------+------------+
+| description | example    |
++-------------+------------+
+| Underflow   |          0 |
+| Overflow    | 4294967295 |
++-------------+------------+
+&lt;&lt;/sql&gt;&gt;
+
+
+=== INT ZEROFILL
+
+A special type of INT UNSIGNED is INT ZEROFILL, which pads out the values with leading zeros in SELECT results. The number of leading zeros are just enough to pad the field out to the length of the type&#39;s maximum unsigned value, but the zeros are not included in an expression result or in a UNION SELECT column.
+
+Using INT ZEROFILL works the same way as INT UNSIGNED for most operations except a simple SELECT. For example, with the following test table setup:
+
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE int_zerofill_example (
+   description VARCHAR(20),
+   example INT ZEROFILL
+);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO int_zerofill_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, 0),
+   (&#39;Maximum&#39;, 4294967295);
+
+
+-- Turn off strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+
+INSERT INTO int_zerofill_example VALUES
+   (&#39;Underflow&#39;, -1),
+   (&#39;Overflow&#39;, 4294967296);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 2
+&lt;&lt;/sql&gt;&gt;
+
+The resulting data would look like this:
+&lt;&lt;sql&gt;&gt;
+
+SELECT *, example + 0 FROM int_zerofill_example;
+
++-------------+------------+-------------+
+| description | example    | example + 0 |
++-------------+------------+-------------+
+| Zero        | 0000000000 |           0 |
+| Forty-Two   | 0000000042 |          42 |
+| Minimum     | 0000000000 |           0 |
+| Maximum     | 4294967295 |  4294967295 |
+| Underflow   | 0000000000 |           0 |
+| Overflow    | 4294967295 |  4294967295 |
++-------------+------------+-------------+
 &lt;&lt;/sql&gt;&gt;
 
 == See Also

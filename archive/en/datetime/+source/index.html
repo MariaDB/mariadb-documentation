@@ -316,7 +316,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/datetime/+r/141252/">141252</a></dd>
+            <dd><a href="/kb/en/datetime/+r/150407/">150407</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +325,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-07-09 10:39">2024-07-09 10:39</span></dd>
+<span class="datetime" title="2025-04-08 10:03">2025-04-08 10:03</span></dd>
         </dl>
     </div>
     
@@ -352,9 +352,11 @@ numbers. For details, see [[date-and-time-literals|date and time literals]].
 
 DATETIME columns also accept [[now|CURRENT_TIMESTAMP]] as the default value.
 
-MariaDB 10.1.2 introduced the [[server-system-variables#mysql56_temporal_format|--mysql56-temporal-format]] option, on by default, which allows MariaDB to store DATETMEs using the same low-level format MySQL 5.6 uses.  For more information, see [[#internal-format|Internal Format]], below.
+The [[server-system-variables#mysql56_temporal_format|--mysql56-temporal-format]] option, on by default, allows MariaDB to store DATETMEs using the same low-level format MySQL 5.6 uses.  For more information, see [[#internal-format|Internal Format]], below.
 
 For storage requirements, see [[data-type-storage-requirements|Data Type Storage Requirements]].
+
+See also: [[data-types-for-mariadb-enterprise-server-11-4|Data Types for MariaDB Enterprise Server 11.4]], in [[data-types-for-mariadb-enterprise-server-10-6|10.6 ES]], in [[data-types-for-mariadb-enterprise-server-10-5|10.5 ES]], in [[data-types-for-mariadb-enterprise-server-10-4|10.4 ES]], in [[data-types-for-mariadb-enterprise-server-10-3|10.3 ES]], in [[data-types-for-mariadb-enterprise-server-10-2|10.2 ES]], in [[data-types-for-mariadb-community-server-10-6|10.6 CS]], in [[data-types-for-mariadb-community-server-10-5|10.5 CS]], in [[data-types-for-mariadb-community-server-10-4|10.4 CS]], in [[data-types-for-mariadb-community-server-10-3|10.3 CS]], and in [[data-types-for-mariadb-community-server-10-2|10.2 CS]].
 
 == Supported Values
 
@@ -370,7 +372,7 @@ In [[sql_modeoracle-from-mariadb-103#synonyms-for-basic-sql-types|Oracle mode]],
 
 == Internal Format
 
-In MariaDB 10.1.2 a new temporal format was introduced from MySQL 5.6 that alters how the ##TIME##, ##DATETIME## and ##TIMESTAMP## columns operate at lower levels.  These changes allow these temporal data types to have fractional parts and negative values.  You can disable this feature using the [[server-system-variables/#mysql56_temporal_format|mysql56_temporal_format]] system variable.
+A new temporal format was introduced from MySQL 5.6 that alters how the ##TIME##, ##DATETIME## and ##TIMESTAMP## columns operate at lower levels.  These changes allow these temporal data types to have fractional parts and negative values.  You can disable this feature using the [[server-system-variables/#mysql56_temporal_format|mysql56_temporal_format]] system variable.
 
 Tables that include ##TIMESTAMP## values that were created on an older version of MariaDB or that were created while the [[server-system-variables/#mysql56_temporal_format|mysql56_temporal_format]] system variable was disabled continue to store data using the older data type format.
 
@@ -456,6 +458,70 @@ SELECT CONVERT(&#39;2007-11-30 10:30:19&#39;,datetime(6));
 +--------------------------------------------+
 | 2007-11-30 10:30:19.000000                 |
 +--------------------------------------------+
+&lt;&lt;/sql&gt;&gt;
+=== DATETIME Format
+
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE datetime_formats_example (
+  description VARCHAR(30),
+  example DATETIME(6)
+);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+-- The time zone has no effect on the values
+SET @@time_zone = &#39;+00:00&#39;;
+
+INSERT INTO datetime_formats_example VALUES
+  (&#39;Date without time&#39;, &#39;2019-12-30&#39;),
+  (&#39;Full year&#39;, &#39;2019-12-30 00:00:00&#39;),
+  (&#39;Short year&#39;, &#39;19-12-30 00:00:00.000&#39;),
+  (&#39;Pipe delimiters&#39;, &#39;19|2|3 19|00|00.123456&#39;),
+  (&#39;Forward slash delimiter&#39;, &#39;19/12/30 00/00/00.0&#39;);
+
+SET @@time_zone = &#39;-07:00&#39;;
+
+INSERT INTO datetime_formats_example VALUES
+  (&#39;Asterisk delimiter&#39;, &#39;19*12*30 8*35*00&#39;),
+  (&#39;Comma delimiter&#39;, &#39;19,2,3 12,34,56.123&#39;);
+&lt;&lt;/sql&gt;&gt;
+
+The resulting data would look like this:
+&lt;&lt;sql&gt;&gt;
+SELECT * FROM datetime_formats_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
++-------------------------+----------------------------+
+| description             | example                    |
++-------------------------+----------------------------+
+| Date without time       | 2019-12-30 00:00:00.000000 |
+| Full year               | 2019-12-30 00:00:00.000000 |
+| Short year              | 2019-12-30 00:00:00.000000 |
+| Pipe delimiters         | 2019-02-03 19:00:00.123456 |
+| Forward slash delimiter | 2019-12-30 00:00:00.000000 |
+| Asterisk delimiter      | 2019-12-30 08:35:00.000000 |
+| Comma delimiter         | 2019-02-03 12:34:56.123000 |
++-------------------------+----------------------------+
+&lt;&lt;/sql&gt;&gt;
+
+The default microsecond precision when unspecified is 0, and you can use that in a cast in order to trim off stored microseconds:
+
+&lt;&lt;sql&gt;&gt;
+SELECT description, CONVERT(example, DATETIME) AS example
+  FROM datetime_formats_example;
+
++-------------------------+---------------------+
+| description             | example             |
++-------------------------+---------------------+
+| Date without time       | 2019-12-30 00:00:00 |
+| Full year               | 2019-12-30 00:00:00 |
+| Short year              | 2019-12-30 00:00:00 |
+| Pipe delimiters         | 2019-02-03 19:00:00 |
+| Forward slash delimiter | 2019-12-30 00:00:00 |
+| Asterisk delimiter      | 2019-12-30 08:35:00 |
+| Comma delimiter         | 2019-02-03 12:34:56 |
++-------------------------+---------------------+
 &lt;&lt;/sql&gt;&gt;
 
 == See Also

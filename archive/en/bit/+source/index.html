@@ -316,7 +316,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/bit/+r/98038/">98038</a></dd>
+            <dd><a href="/kb/en/bit/+r/150397/">150397</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +325,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2020-08-03 09:25">2020-08-03 09:25</span></dd>
+<span class="datetime" title="2025-04-08 09:20">2025-04-08 09:20</span></dd>
         </dl>
     </div>
     
@@ -335,7 +335,8 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">== Syntax
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+== Syntax
 
 &lt;&lt;code&gt;&gt;
 BIT[(M)]
@@ -352,12 +353,44 @@ Bit fields are automatically zero-padded from the left to the full length of the
 
 Bits are returned as binary, so to display them, either add 0, or use a function such as [[HEX]], [[OCT]] or [[BIN]] to convert them.
 
+See also: [[data-types-for-mariadb-enterprise-server-11-4|Data Types for MariaDB Enterprise Server 11.4]], in [[data-types-for-mariadb-enterprise-server-10-6|10.6 ES]], in [[data-types-for-mariadb-enterprise-server-10-5|10.5 ES]], in [[data-types-for-mariadb-enterprise-server-10-4|10.4 ES]], in [[data-types-for-mariadb-enterprise-server-10-3|10.3 ES]], in [[data-types-for-mariadb-enterprise-server-10-2|10.2 ES]], in [[data-types-for-mariadb-community-server-10-6|10.6 CS]], in [[data-types-for-mariadb-community-server-10-5|10.5 CS]], in [[data-types-for-mariadb-community-server-10-4|10.4 CS]], in [[data-types-for-mariadb-community-server-10-3|10.3 CS]], and in [[data-types-for-mariadb-community-server-10-2|10.2 CS]].
 == Examples
+Example of BIT:
+
+&lt;&lt;code&gt;&gt;
+CREATE TABLE bit_example (
+  description VARCHAR(20),
+  b1 BIT,
+  b4 BIT(4),
+  b16 BIT(16)
+);
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+INSERT INTO bit_example VALUES
+  (&#39;Zero&#39;, 0, 0, 0),
+  (&#39;One&#39;, 1, 1, 1),
+  (&#39;Two&#39;, 0, 2, 2),
+  (&#39;Eight&#39;, 0, 8, b&#39;1000&#39;),
+  (&#39;All on&#39;, 1, 15, b&#39;1111111111111111&#39;);
+SELECT description, b1+0, LPAD(BIN(b4), 4, 0) AS b4, HEX(b16)
+  FROM bit_example;
+
++-------------+------+------+----------+
+| description | b1+0 | b4   | HEX(b16) |
++-------------+------+------+----------+
+| Zero        |    0 | 0000 | 0        |
+| One         |    1 | 0001 | 1        |
+| Two         |    0 | 0010 | 2        |
+| Eight       |    0 | 1000 | 8        |
+| All on      |    1 | 1111 | FFFF     |
++-------------+------+------+----------+
+&lt;&lt;/code&gt;&gt;
+
+=== With [[sql-mode/#strict-mode|strict_mode]] set
 &lt;&lt;sql&gt;&gt;
 CREATE TABLE b ( b1 BIT(8) );
 &lt;&lt;/sql&gt;&gt;
-
-With [[sql-mode/#strict-mode|strict_mode]] set, the default from MariaDB 10.2.4:
 &lt;&lt;sql&gt;&gt;
 INSERT INTO b VALUES (b&#39;11111111&#39;);
 
@@ -372,29 +405,6 @@ SELECT b1+0, HEX(b1), OCT(b1), BIN(b1) FROM b;
 +------+---------+---------+----------+
 |  255 | FF      | 377     | 11111111 |
 |   85 | 55      | 125     | 1010101  |
-+------+---------+---------+----------+
-&lt;&lt;/sql&gt;&gt;
-
-With [[sql-mode/#strict-mode|strict_mode]] unset, the default until MariaDB 10.2.3:
-&lt;&lt;sql&gt;&gt;
-INSERT INTO b VALUES (b&#39;11111111&#39;),(b&#39;01010101&#39;),(b&#39;1111111111111&#39;);
-Query OK, 3 rows affected, 1 warning (0.10 sec)
-Records: 3  Duplicates: 0  Warnings: 1
-
-SHOW WARNINGS;
-+---------+------+---------------------------------------------+
-| Level   | Code | Message                                     |
-+---------+------+---------------------------------------------+
-| Warning | 1264 | Out of range value for column &#39;b1&#39; at row 3 |
-+---------+------+---------------------------------------------+
-
-SELECT b1+0, HEX(b1), OCT(b1), BIN(b1) FROM b;
-+------+---------+---------+----------+
-| b1+0 | HEX(b1) | OCT(b1) | BIN(b1)  |
-+------+---------+---------+----------+
-|  255 | FF      | 377     | 11111111 |
-|   85 | 55      | 125     | 1010101  |
-|  255 | FF      | 377     | 11111111 |
 +------+---------+---------+----------+
 &lt;&lt;/sql&gt;&gt;</textarea>
     

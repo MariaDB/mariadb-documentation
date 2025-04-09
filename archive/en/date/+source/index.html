@@ -316,7 +316,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/date/+r/141251/">141251</a></dd>
+            <dd><a href="/kb/en/date/+r/150406/">150406</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +325,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-07-09 10:37">2024-07-09 10:37</span></dd>
+<span class="datetime" title="2025-04-08 09:54">2025-04-08 09:54</span></dd>
         </dl>
     </div>
     
@@ -349,6 +349,8 @@ displays ##DATE## values in &#39;##YYYY-MM-DD##&#39; format, but can be assigned
 
 &#39;##0000-00-00##&#39; is a permitted special value (zero-date), unless the [[sql-mode/#no_zero_date|NO_ZERO_DATE]] [[sql-mode|SQL_MODE]] is used. Also, individual components of a date can be set to 0 (for example: &#39;##2015-00-12##&#39;), unless the [[sql-mode/#no_zero_in_date|NO_ZERO_IN_DATE]] [[sql-mode|SQL_MODE]] is used. In many cases, the result of en expression involving a zero-date, or a date with zero-parts, is ##NULL##. If the [[sql-mode/#allow_invalid_dates|ALLOW_INVALID_DATES]] SQL_MODE is enabled, if the day part is in the range between 1 and 31, the date does not produce any error, even for months that have less than 31 days.
 
+See also: [[data-types-for-mariadb-enterprise-server-11-4|Data Types for MariaDB Enterprise Server 11.4]], in [[data-types-for-mariadb-enterprise-server-10-6|10.6 ES]], in [[data-types-for-mariadb-enterprise-server-10-5|10.5 ES]], in [[data-types-for-mariadb-enterprise-server-10-4|10.4 ES]], in [[data-types-for-mariadb-enterprise-server-10-3|10.3 ES]], in [[data-types-for-mariadb-enterprise-server-10-2|10.2 ES]], in [[data-types-for-mariadb-community-server-10-6|10.6 CS]], in [[data-types-for-mariadb-community-server-10-5|10.5 CS]], in [[data-types-for-mariadb-community-server-10-4|10.4 CS]], in [[data-types-for-mariadb-community-server-10-3|10.3 CS]], and in [[data-types-for-mariadb-community-server-10-2|10.2 CS]].
+
 === Oracle Mode
 
 In [[sql_modeoracle-from-mariadb-103#synonyms-for-basic-sql-types|Oracle mode]], ##DATE## with a time portion is a synonym for [[datetime|DATETIME]]. See also [[mariadb_schema]].
@@ -370,7 +372,156 @@ SELECT * FROM t1;
 | 2013-04-21 |
 +------------+
 &lt;&lt;/sql&gt;&gt;
+=== DATE Format
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE date_formats_example (
+   description VARCHAR(30),
+   example DATE
+);
 
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO date_formats_example VALUES
+   (&#39;Full year&#39;, &#39;2022-12-30&#39;),
+   (&#39;Short year&#39;, &#39;22-12-30&#39;),
+   (&#39;Short year no delimiters&#39;, &#39;221230&#39;),
+   (&#39;No delimiters&#39;, &#39;20221230&#39;),
+   (&#39;Pipe delimiters&#39;, &#39;22|2|3&#39;),
+   (&#39;Forward slash delimiter&#39;, &#39;22/12/30&#39;),
+   (&#39;Backward slash delimiter&#39;, &#39;22\12\30&#39;),
+   (&#39;Asterisk delimiter&#39;, &#39;22*12*30&#39;),
+   (&#39;Comma delimiter&#39;, &#39;22,2,3&#39;);
+
+&lt;&lt;/sql&gt;&gt;
+
+The resulting data would look like this:
+
+&lt;&lt;sql&gt;&gt;
+SELECT * FROM date_formats_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
++--------------------------+------------+
+| description              | example    |
++--------------------------+------------+
+| Full year                | 2022-12-30 |
+| Short year               | 2022-12-30 |
+| Short year no delimiters | 2022-12-30 |
+| No delimiters            | 2022-12-30 |
+| Pipe delimiters          | 2022-02-03 |
+| Forward slash delimiter  | 2022-12-30 |
+| Backward slash delimiter | 2022-12-30 |
+| Asterisk delimiter       | 2022-12-30 |
+| Comma delimiter          | 2022-02-03 |
++--------------------------+------------+
+&lt;&lt;/sql&gt;&gt;
+
+=== DATE Range
+
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE date_range_example (
+   description VARCHAR(30),
+   example DATE
+);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO date_range_example VALUES
+   (&#39;Minimum date&#39;, &#39;0001-01-01&#39;),
+   (&#39;Maximum date&#39;, &#39;9999-12-31&#39;),
+   (&#39;Below minimum range&#39;, &#39;0000*1*1&#39;),
+   (&#39;Above maximum range&#39;, &#39;10000,12,31&#39;);
+&lt;&lt;/sql&gt;&gt;
+
+If SQL_MODE is strict (the default), the example above generates the following error and no values are inserted:
+
+&lt;&lt;sql&gt;&gt;
+ERROR 1292 (22007): Incorrect date value: &#39;10000,12,31&#39; for column `test`.`date_range_example`.`example` at row 4
+&lt;&lt;/sql&gt;&gt;
+
+If SQL_MODE is not strict, the example above generates a warning and (possibly modified) values are inserted. The Below minimum range value is accepted because it contains a zero component. The Above maximum range value is truncated since it is an unacceptable date.
+
+&lt;&lt;sql&gt;&gt;
+Warning (Code 1265): Data truncated for column &#39;example&#39; at row 4
+&lt;&lt;/sql&gt;&gt;
+
+The resulting data would look like this:
+
+&lt;&lt;sql&gt;&gt;
+SELECT * FROM date_range_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
++---------------------+------------+
+| description         | example    |
++---------------------+------------+
+| Minimum date        | 0001-01-01 |
+| Maximum date        | 9999-12-31 |
+| Below minimum range | 0000-01-01 |
+| Above maximum range | 0000-00-00 |
++---------------------+------------+
+&lt;&lt;/sql&gt;&gt;
+
+=== Date Expressions
+
+When using a date value in an expression, such as DATE_ADD(), the following illustrates that a NULL is generated when a date value is not a real date and when a real date overflows:
+
+&lt;&lt;sql&gt;&gt;
+SELECT example, DATE_ADD(example, INTERVAL 1 DAY)
+   FROM date_range_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
++------------+-----------------------------------+
+| example    | DATE_ADD(example, INTERVAL 1 DAY) |
++------------+-----------------------------------+
+| 0001-01-01 | 0001-01-02                        |
+| 9999-12-31 | NULL                              |
+| 0000-01-01 | NULL                              |
+| 0000-00-00 | NULL                              |
++------------+-----------------------------------+
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+Warning (Code 1441): Datetime function: datetime field overflow
+Warning (Code 1441): Datetime function: datetime field overflow
+Warning (Code 1292): Incorrect datetime value: &#39;0000-00-00&#39;
+&lt;&lt;/sql&gt;&gt;
+
+=== Invalid Dates
+
+The following example enhances the SQL_MODE to ensure that ALLOW_INVALID_DATES is set and illustrates the difference between a day that is outside the range of 1 to 31 and one that is just too large for its month:
+
+&lt;&lt;sql&gt;&gt;
+-- Disable STRICT_TRANS_TABLES and enable ALLOW_INVALID_DATES
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+SET sql_mode=(SELECT CONCAT(@@sql_mode, &#39;,ALLOW_INVALID_DATES&#39;));
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO date_range_example VALUES
+  (&#39;day is invalid for all months&#39;, &#39;2019-12-32&#39;),
+  (&#39;day is just large for February&#39;, &#39;2019-02-31&#39;);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+Warning (Code 1265): Data truncated for column &#39;example&#39; at row 1
+&lt;&lt;/sql&gt;&gt;
+The resulting data would look like this:
+&lt;&lt;sql&gt;&gt;
+
+SELECT * FROM date_range_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
++--------------------------------+------------+
+| description                    | example    |
++--------------------------------+------------+
+| day is invalid for all months  | 0000-00-00 |
+| day is just large for February | 2019-02-31 |
++--------------------------------+------------+
+&lt;&lt;/sql&gt;&gt;
 == See Also
 * [[mariadb_schema]] data type qualifier</textarea>
     

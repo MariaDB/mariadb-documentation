@@ -316,7 +316,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/char/+r/117406/">117406</a></dd>
+            <dd><a href="/kb/en/char/+r/150402/">150402</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +325,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2022-06-21 12:42">2022-06-21 12:42</span></dd>
+<span class="datetime" title="2025-04-08 09:45">2025-04-08 09:45</span></dd>
         </dl>
     </div>
     
@@ -335,14 +335,14 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">This article covers the CHAR data type. See [[char-function|CHAR Function]] for the function.
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+This article covers the CHAR data type. See [[char-function|CHAR Function]] for the function.
 
 == Syntax
 
-&lt;&lt;code&gt;&gt;
+&lt;&lt;sql&gt;&gt;
 [NATIONAL] CHAR[(M)] [CHARACTER SET charset_name] [COLLATE collation_name]
-&lt;&lt;/code&gt;&gt;
-&lt;&lt;toc&gt;&gt;
+&lt;&lt;/sql&gt;&gt;
 
 == Description
 
@@ -355,9 +355,9 @@ CHAR(0) columns can contain 2 values: an empty string or NULL. Such columns cann
 **Note:** Trailing spaces are removed when ##CHAR## values are retrieved
 unless the ##PAD_CHAR_TO_FULL_LENGTH## [[sql_mode|SQL mode]] is enabled.
 
-Before MariaDB 10.2, all collations were of type PADSPACE, meaning that CHAR (as well as [[varchar|VARCHAR]] and [[text|TEXT]]) values are compared without regard for trailing spaces. This does not apply to the [[like|LIKE]] pattern-matching operator, which takes into account trailing spaces.
-
 If a unique index consists of a column where trailing pad characters are stripped or ignored, inserts into that column where values differ only by the number of trailing pad characters will result in a duplicate-key error.
+
+See also: [[data-types-for-mariadb-enterprise-server-11-4|Data Types for MariaDB Enterprise Server 11.4]], in [[data-types-for-mariadb-enterprise-server-10-6|10.6 ES]], in [[data-types-for-mariadb-enterprise-server-10-5|10.5 ES]], in [[data-types-for-mariadb-enterprise-server-10-4|10.4 ES]], in [[data-types-for-mariadb-enterprise-server-10-3|10.3 ES]], in [[data-types-for-mariadb-enterprise-server-10-2|10.2 ES]], in [[data-types-for-mariadb-community-server-10-6|10.6 CS]], in [[data-types-for-mariadb-community-server-10-5|10.5 CS]], in [[data-types-for-mariadb-community-server-10-4|10.4 CS]], in [[data-types-for-mariadb-community-server-10-3|10.3 CS]], and in [[data-types-for-mariadb-community-server-10-2|10.2 CS]].
 
 == Examples
 Trailing spaces:
@@ -379,8 +379,54 @@ SELECT c LIKE &#39;Maria&#39;,c LIKE &#39;Maria   &#39; FROM strtest;
 |              1 |                 0 |
 +----------------+-------------------+
 &lt;&lt;/sql&gt;&gt;
+Example of CHAR:
+&lt;&lt;sql&gt;&gt;
 
-== NO PAD Collations
+CREATE TABLE char_example (
+   description VARCHAR(20),
+   example CHAR(255)
+) DEFAULT CHARSET=latin1; -- One byte per char makes the examples clearer
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO char_example VALUES
+   (&#39;Normal foo&#39;, &#39;foo&#39;),
+   (&#39;Trailing spaces foo&#39;, &#39;foo      &#39;),
+   (&#39;NULLed&#39;, NULL),
+   (&#39;Empty&#39;, &#39;&#39;),
+   (&#39;Maximum&#39;, RPAD(&#39;&#39;, 255, &#39;x&#39;));
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+SELECT description, LENGTH(example) AS length
+   FROM char_example;
+
++---------------------+--------+
+| description         | length |
++---------------------+--------+
+| Normal foo          |      3 |
+| Trailing spaces foo |      3 |
+| NULLed              |   NULL |
+| Empty               |      0 |
+| Maximum             |    255 |
++---------------------+--------+
+
+&lt;&lt;/sql&gt;&gt;
+=== Data Too Long
+When SQL_MODE is strict (the default) a value is considered &#34;too long&#34; when its length exceeds the size of the data type, and an error is generated.
+
+Example of data too long behavior for CHAR:
+&lt;&lt;sql&gt;&gt;
+
+TRUNCATE char_example;
+
+INSERT INTO char_example VALUES
+   (&#39;Overflow&#39;, RPAD(&#39;&#39;, 256, &#39;x&#39;));
+
+ERROR 1406 (22001): Data too long for column &#39;example&#39; at row 1
+
+&lt;&lt;/sql&gt;&gt;
+=== NO PAD Collations
 NO PAD collations regard trailing spaces as normal characters. You can get a list of all NO PAD collations by querying the [[information-schema-collations-table|Information Schema Collations table]], for example:
 &lt;&lt;sql&gt;&gt;
 SELECT collation_name FROM information_schema.collations 

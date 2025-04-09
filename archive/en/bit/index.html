@@ -280,7 +280,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2020-08-03 09:25">4 years, 8 months ago</span></dd>
+<span class="datetime" title="2025-04-08 09:20">14 hours, 41 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -426,7 +426,21 @@
 
     
     <div class="answer formatted">
-        <h2 class="anchored_heading" id="syntax">Syntax</h2>
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#syntax" title="Syntax">Syntax</a></li>
+
+    <li class=""><a href="#description" title="Description">Description</a></li>
+
+    <li class=""><a href="#examples" title="Examples">Examples</a>    <ol class="toc">
+
+        <li class=""><a href="#with-sql-modestrict-modestrict_mode-set" title="With strict_mode set">With strict_mode set</a>    </ol>
+ </ol>
+</li>
+</div>
+<h2 class="anchored_heading" id="syntax">Syntax</h2>
 <pre class="fixed">BIT[(M)]
 </pre><h2 class="anchored_heading" id="description">Description</h2>
 <p>A bit-field type. <code>M</code> indicates the number of bits per value, from <code>1</code> to
@@ -434,10 +448,36 @@
 <p>Bit values can be inserted with <code>b'value'</code> notation, where <code>value</code> is the bit value in 0's and 1's.</p>
 <p>Bit fields are automatically zero-padded from the left to the full length of the bit, so for example in a BIT(4) field, '10' is equivalent to '0010'.</p>
 <p>Bits are returned as binary, so to display them, either add 0, or use a function such as <a href="/kb/en/hex/">HEX</a>, <a href="/kb/en/oct/">OCT</a> or <a href="/kb/en/bin/">BIN</a> to convert them.</p>
+<p>See also: <a href="/kb/en/data-types-for-mariadb-enterprise-server-11-4/">Data Types for MariaDB Enterprise Server 11.4</a>, in <a href="/kb/en/data-types-for-mariadb-enterprise-server-10-6/">10.6 ES</a>, in <a href="/kb/en/data-types-for-mariadb-enterprise-server-10-5/">10.5 ES</a>, in <a href="/kb/en/data-types-for-mariadb-enterprise-server-10-4/">10.4 ES</a>, in <a href="/kb/en/data-types-for-mariadb-enterprise-server-10-3/">10.3 ES</a>, in <a href="/kb/en/data-types-for-mariadb-enterprise-server-10-2/">10.2 ES</a>, in <a href="/kb/en/data-types-for-mariadb-community-server-10-6/">10.6 CS</a>, in <a href="/kb/en/data-types-for-mariadb-community-server-10-5/">10.5 CS</a>, in <a href="/kb/en/data-types-for-mariadb-community-server-10-4/">10.4 CS</a>, in <a href="/kb/en/data-types-for-mariadb-community-server-10-3/">10.3 CS</a>, and in <a href="/kb/en/data-types-for-mariadb-community-server-10-2/">10.2 CS</a>.</p>
 <h2 class="anchored_heading" id="examples">Examples</h2>
+<p>Example of BIT:</p>
+<pre class="fixed">CREATE TABLE bit_example (
+  description VARCHAR(20),
+  b1 BIT,
+  b4 BIT(4),
+  b16 BIT(16)
+);
+</pre><pre class="fixed">INSERT INTO bit_example VALUES
+  ('Zero', 0, 0, 0),
+  ('One', 1, 1, 1),
+  ('Two', 0, 2, 2),
+  ('Eight', 0, 8, b'1000'),
+  ('All on', 1, 15, b'1111111111111111');
+SELECT description, b1+0, LPAD(BIN(b4), 4, 0) AS b4, HEX(b16)
+  FROM bit_example;
+
++-------------+------+------+----------+
+| description | b1+0 | b4   | HEX(b16) |
++-------------+------+------+----------+
+| Zero        |    0 | 0000 | 0        |
+| One         |    1 | 0001 | 1        |
+| Two         |    0 | 0010 | 2        |
+| Eight       |    0 | 1000 | 8        |
+| All on      |    1 | 1111 | FFFF     |
++-------------+------+------+----------+
+</pre><h3 class="anchored_heading" id="with-sql-modestrict-modestrict_mode-set">With <a href="/kb/en/sql-mode/#strict-mode">strict_mode</a> set</h3>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">b</span> <span class="p">(</span> <span class="n">b1</span> <span class="nb">BIT</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="p">);</span>
-</pre><p>With <a href="/kb/en/sql-mode/#strict-mode">strict_mode</a> set, the default from <a href="/kb/en/mariadb-1024-release-notes/">MariaDB 10.2.4</a>:</p>
-<pre class="fixed"><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">b</span> <span class="k">VALUES</span> <span class="p">(</span><span class="n">b</span><span class="s1">&#39;11111111&#39;</span><span class="p">);</span>
+</pre><pre class="fixed"><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">b</span> <span class="k">VALUES</span> <span class="p">(</span><span class="n">b</span><span class="s1">&#39;11111111&#39;</span><span class="p">);</span>
 
 <span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">b</span> <span class="k">VALUES</span> <span class="p">(</span><span class="n">b</span><span class="s1">&#39;01010101&#39;</span><span class="p">);</span>
 
@@ -450,26 +490,6 @@
 <span class="o">+</span><span class="c1">------+---------+---------+----------+</span>
 <span class="o">|</span>  <span class="mi">255</span> <span class="o">|</span> <span class="n">FF</span>      <span class="o">|</span> <span class="mi">377</span>     <span class="o">|</span> <span class="mi">11111111</span> <span class="o">|</span>
 <span class="o">|</span>   <span class="mi">85</span> <span class="o">|</span> <span class="mi">55</span>      <span class="o">|</span> <span class="mi">125</span>     <span class="o">|</span> <span class="mi">1010101</span>  <span class="o">|</span>
-<span class="o">+</span><span class="c1">------+---------+---------+----------+</span>
-</pre><p>With <a href="/kb/en/sql-mode/#strict-mode">strict_mode</a> unset, the default until <a href="/kb/en/mariadb-1023-release-notes/">MariaDB 10.2.3</a>:</p>
-<pre class="fixed"><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">b</span> <span class="k">VALUES</span> <span class="p">(</span><span class="n">b</span><span class="s1">&#39;11111111&#39;</span><span class="p">),(</span><span class="n">b</span><span class="s1">&#39;01010101&#39;</span><span class="p">),(</span><span class="n">b</span><span class="s1">&#39;1111111111111&#39;</span><span class="p">);</span>
-<span class="n">Query</span> <span class="n">OK</span><span class="p">,</span> <span class="mi">3</span> <span class="k">rows</span> <span class="n">affected</span><span class="p">,</span> <span class="mi">1</span> <span class="n">warning</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">10</span> <span class="n">sec</span><span class="p">)</span>
-<span class="n">Records</span><span class="p">:</span> <span class="mi">3</span>  <span class="n">Duplicates</span><span class="p">:</span> <span class="mi">0</span>  <span class="n">Warnings</span><span class="p">:</span> <span class="mi">1</span>
-
-<span class="k">SHOW</span> <span class="n">WARNINGS</span><span class="p">;</span>
-<span class="o">+</span><span class="c1">---------+------+---------------------------------------------+</span>
-<span class="o">|</span> <span class="k">Level</span>   <span class="o">|</span> <span class="n">Code</span> <span class="o">|</span> <span class="n">Message</span>                                     <span class="o">|</span>
-<span class="o">+</span><span class="c1">---------+------+---------------------------------------------+</span>
-<span class="o">|</span> <span class="n">Warning</span> <span class="o">|</span> <span class="mi">1264</span> <span class="o">|</span> <span class="k">Out</span> <span class="k">of</span> <span class="n">range</span> <span class="n">value</span> <span class="k">for</span> <span class="k">column</span> <span class="s1">&#39;b1&#39;</span> <span class="k">at</span> <span class="k">row</span> <span class="mi">3</span> <span class="o">|</span>
-<span class="o">+</span><span class="c1">---------+------+---------------------------------------------+</span>
-
-<span class="k">SELECT</span> <span class="n">b1</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">HEX</span><span class="p">(</span><span class="n">b1</span><span class="p">),</span> <span class="n">OCT</span><span class="p">(</span><span class="n">b1</span><span class="p">),</span> <span class="n">BIN</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span> <span class="k">FROM</span> <span class="n">b</span><span class="p">;</span>
-<span class="o">+</span><span class="c1">------+---------+---------+----------+</span>
-<span class="o">|</span> <span class="n">b1</span><span class="o">+</span><span class="mi">0</span> <span class="o">|</span> <span class="n">HEX</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span> <span class="o">|</span> <span class="n">OCT</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span> <span class="o">|</span> <span class="n">BIN</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span>  <span class="o">|</span>
-<span class="o">+</span><span class="c1">------+---------+---------+----------+</span>
-<span class="o">|</span>  <span class="mi">255</span> <span class="o">|</span> <span class="n">FF</span>      <span class="o">|</span> <span class="mi">377</span>     <span class="o">|</span> <span class="mi">11111111</span> <span class="o">|</span>
-<span class="o">|</span>   <span class="mi">85</span> <span class="o">|</span> <span class="mi">55</span>      <span class="o">|</span> <span class="mi">125</span>     <span class="o">|</span> <span class="mi">1010101</span>  <span class="o">|</span>
-<span class="o">|</span>  <span class="mi">255</span> <span class="o">|</span> <span class="n">FF</span>      <span class="o">|</span> <span class="mi">377</span>     <span class="o">|</span> <span class="mi">11111111</span> <span class="o">|</span>
 <span class="o">+</span><span class="c1">------+---------+---------+----------+</span>
 </pre>
     </div>

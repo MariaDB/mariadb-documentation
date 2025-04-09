@@ -316,7 +316,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/decimal/+r/98006/">98006</a></dd>
+            <dd><a href="/kb/en/decimal/+r/150414/">150414</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +325,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2020-07-29 17:54">2020-07-29 17:54</span></dd>
+<span class="datetime" title="2025-04-08 12:36">2025-04-08 12:36</span></dd>
         </dl>
     </div>
     
@@ -335,12 +335,12 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">== Syntax
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+== Syntax
 
-&lt;&lt;code&gt;&gt;
+&lt;&lt;sql&gt;&gt;
 DECIMAL[(M[,D])] [SIGNED | UNSIGNED | ZEROFILL]
-&lt;&lt;/code&gt;&gt;
-&lt;&lt;toc&gt;&gt;
+&lt;&lt;/sql&gt;&gt;
 
 == Description
 
@@ -366,8 +366,9 @@ a precision of 65 digits.
 
 For more details on the attributes, see [[numeric-data-type-overview|Numeric Data Type Overview]].
 
-##DEC##, ##NUMERIC## and ##FIXED## are synonyms, as well as ##NUMBER## in [[sql_modeoracle-from-mariadb-103#synonyms-for-basic-sql-types|Oracle mode from MariaDB 10.3]].
+##DEC##, ##NUMERIC## and ##FIXED## are synonyms, as well as ##NUMBER## in [[sql_modeoracle-from-mariadb-103#synonyms-for-basic-sql-types|Oracle mode]].
 
+See also: [[data-types-for-mariadb-enterprise-server-11-4|Data Types for MariaDB Enterprise Server 11.4]], in [[data-types-for-mariadb-enterprise-server-10-6|10.6 ES]], in [[data-types-for-mariadb-enterprise-server-10-5|10.5 ES]], in [[data-types-for-mariadb-enterprise-server-10-4|10.4 ES]], in [[data-types-for-mariadb-enterprise-server-10-3|10.3 ES]], in [[data-types-for-mariadb-enterprise-server-10-2|10.2 ES]], in [[data-types-for-mariadb-community-server-10-6|10.6 CS]], in [[data-types-for-mariadb-community-server-10-5|10.5 CS]], in [[data-types-for-mariadb-community-server-10-4|10.4 CS]], in [[data-types-for-mariadb-community-server-10-3|10.3 CS]], and in [[data-types-for-mariadb-community-server-10-2|10.2 CS]].
 
 == Examples
 
@@ -378,8 +379,8 @@ INSERT INTO t1 VALUES (1),(2),(3),(4.0),(5.2),(5.7);
 Query OK, 6 rows affected, 2 warnings (0.16 sec)
 Records: 6  Duplicates: 0  Warnings: 2
 
-Note (Code 1265): Data truncated for column &#39;d&#39; at row 5
-Note (Code 1265): Data truncated for column &#39;d&#39; at row 6
+Note (sql 1265): Data truncated for column &#39;d&#39; at row 5
+Note (sql 1265): Data truncated for column &#39;d&#39; at row 6
 
 SELECT * FROM t1;
 +------------+
@@ -394,32 +395,210 @@ SELECT * FROM t1;
 +------------+
 &lt;&lt;/sql&gt;&gt;
 
-With [[sql-mode/#strict-mode|strict_mode]] set, the default from MariaDB 10.2.4:
+=== With [[sql-mode/#strict-mode|strict_mode]] set:
 &lt;&lt;sql&gt;&gt;
 INSERT INTO t1 VALUES (-7);
 ERROR 1264 (22003): Out of range value for column &#39;d&#39; at row 1
 &lt;&lt;/sql&gt;&gt;
+=== SIGNED and UNSIGNED
 
-With [[sql-mode/#strict-mode|strict_mode]] unset, the default until MariaDB 10.2.3:
+The DECIMAL data type may be SIGNED (allowing negative values) or UNSIGNED (not allowing negative values).
+
+Example of DECIMAL SIGNED (SIGNED is the default):
+
 &lt;&lt;sql&gt;&gt;
-INSERT INTO t1 VALUES (-7);
-Query OK, 1 row affected, 1 warning (0.02 sec)
-Warning (Code 1264): Out of range value for column &#39;d&#39; at row 1
+CREATE TABLE decimal_signed_example (
+  description VARCHAR(20),
+  sz10_0 DECIMAL,
+  sz6_2 DECIMAL(6,2),
+  sz20_19 DECIMAL(20,19) SIGNED
+);
 
-SELECT * FROM t1;
-+------------+
-| d          |
-+------------+
-| 0000000001 |
-| 0000000002 |
-| 0000000003 |
-| 0000000004 |
-| 0000000005 |
-| 0000000006 |
-| 0000000000 |
-+------------+
 &lt;&lt;/sql&gt;&gt;
 
+&lt;&lt;sql&gt;&gt;
+SET @pi = 3.1415926535897932384626433832795;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO decimal_signed_example VALUES
+  (&#39;Pi&#39;, @pi, @pi, @pi),
+  (&#39;Series&#39;, 1234.567890123, 1234.567890123, 1.234567890123),
+  (&#39;Negative&#39;, -1234.567890123, -1234.567890123, -1.234567890123),
+  (&#39;Various&#39;, 1234567890, 9999.99, 9.9999999999999999999);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+SELECT * FROM decimal_signed_example;
+
++-------------+------------+----------+------------------------+
+| description | sz10_0     | sz6_2    | sz20_19                |
++-------------+------------+----------+------------------------+
+| Pi          |          3 |     3.14 |  3.1415926535897932385 |
+| Series      |       1235 |  1234.57 |  1.2345678901230000000 |
+| Negative    |      -1235 | -1234.57 | -1.2345678901230000000 |
+| Various     | 1234567890 |  9999.99 |  9.9999999999999999999 |
++-------------+------------+----------+------------------------+
+&lt;&lt;/sql&gt;&gt;
+
+Example of DECIMAL UNSIGNED:
+
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE decimal_unsigned_example (
+  description VARCHAR(20),
+  sz10_0 DECIMAL UNSIGNED,
+  sz6_2 DECIMAL(6,2) UNSIGNED,
+  sz20_19 DECIMAL(20,19) UNSIGNED
+);
+
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+SET @pi = 3.1415926535897932384626433832795;
+&lt;&lt;/sql&gt;&gt;
+
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO decimal_unsigned_example VALUES
+  (&#39;Pi&#39;, @pi, @pi, @pi),
+  (&#39;Series&#39;, 1234.567890123, 1234.567890123, 1.234567890123),
+  (&#39;Various&#39;, 1234567890, 9999.99, 9.9999999999999999999);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+SELECT * FROM decimal_unsigned_example;
+
++-------------+------------+---------+-----------------------+
+| description | sz10_0     | sz6_2   | sz20_19               |
++-------------+------------+---------+-----------------------+
+| Pi          |          3 |    3.14 | 3.1415926535897932385 |
+| Series      |       1235 | 1234.57 | 1.2345678901230000000 |
+| Various     | 1234567890 | 9999.99 | 9.9999999999999999999 |
++-------------+------------+---------+-----------------------+
+
+&lt;&lt;/sql&gt;&gt;
+
+=== Out-of-Range
+
+A value is considered &#34;out-of-range&#34; when it is too small or too large to be stored in a data type. The size specified when creating the column is the strict limit for what values can be represented. When SQL_MODE is strict (the default), an out-of-range value generates an error and the operation fails. If strict mode is not in effect, the value is rounded to the nearest valid value, and a warning is generated (which might be hidden, depending on your warning settings).
+
+A value whose significant digits must be rounded to fit only generates a warning note about data truncation since it is only an out-of-range value if the rounding causes the value to overflow.
+
+&lt;&lt;sql&gt;&gt;
+TRUNCATE decimal_signed_example;
+
+-- Disable strict mode
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+
+INSERT INTO decimal_signed_example VALUES
+  (&#39;OK&#39;, 9999999999.4, NULL, NULL),
+  (&#39;Rounded overflow&#39;, 9999999999.5, NULL, NULL),
+  (&#39;Overflow&#39;, 10000000000, NULL, NULL),
+  (&#39;OK&#39;, -9999999999.4, NULL, NULL),
+  (&#39;Rounded underflow&#39;, -9999999999.5, NULL, NULL),
+  (&#39;Underflow&#39;, -10000000000, NULL, NULL),
+  (&#39;OK&#39;, NULL, 9999.994, NULL),
+  (&#39;Rounded overflow&#39;, NULL, 9999.995, NULL),
+  (&#39;Overflow&#39;, NULL, 10000, NULL),
+  (&#39;OK&#39;, NULL, -9999.994, NULL),
+  (&#39;Rounded underflow&#39;, NULL, -9999.995, NULL),
+  (&#39;Underflow&#39;, NULL, -10000, NULL),
+  (&#39;OK&#39;, NULL, NULL, 9.99999999999999999994),
+  (&#39;Rounded overflow&#39;, NULL, NULL, 9.99999999999999999995),
+  (&#39;Overflow&#39;, NULL, NULL, 10),
+  (&#39;OK&#39;, NULL, NULL, -9.99999999999999999994),
+  (&#39;Rounded underflow&#39;, NULL, NULL, -9.99999999999999999995),
+  (&#39;Underflow&#39;, NULL, NULL, -10);
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;sql&gt;&gt;
+Note (sql 1265): Data truncated for column &#39;sz10_0&#39; at row 1
+Warning (sql 1264): Out of range value for column &#39;sz10_0&#39; at row 2
+Warning (sql 1264): Out of range value for column &#39;sz10_0&#39; at row 3
+Note (sql 1265): Data truncated for column &#39;sz10_0&#39; at row 4
+Warning (sql 1264): Out of range value for column &#39;sz10_0&#39; at row 5
+Warning (sql 1264): Out of range value for column &#39;sz10_0&#39; at row 6
+Note (sql 1265): Data truncated for column &#39;sz6_2&#39; at row 7
+Warning (sql 1264): Out of range value for column &#39;sz6_2&#39; at row 8
+Warning (sql 1264): Out of range value for column &#39;sz6_2&#39; at row 9
+Note (sql 1265): Data truncated for column &#39;sz6_2&#39; at row 10
+Warning (sql 1264): Out of range value for column &#39;sz6_2&#39; at row 11
+Warning (sql 1264): Out of range value for column &#39;sz6_2&#39; at row 12
+Note (sql 1265): Data truncated for column &#39;sz20_19&#39; at row 13
+Warning (sql 1264): Out of range value for column &#39;sz20_19&#39; at row 14
+Warning (sql 1264): Out of range value for column &#39;sz20_19&#39; at row 15
+Note (sql 1265): Data truncated for column &#39;sz20_19&#39; at row 16
+Warning (sql 1264): Out of range value for column &#39;sz20_19&#39; at row 17
+Warning (sql 1264): Out of range value for column &#39;sz20_19&#39; at row 18
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+
+SELECT * FROM decimal_signed_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
++-------------------+-------------+----------+------------------------+
+| description       | sz10_0      | sz6_2    | sz20_19                |
++-------------------+-------------+----------+------------------------+
+| OK                |  9999999999 |     NULL |                   NULL |
+| Rounded overflow  |  9999999999 |     NULL |                   NULL |
+| Overflow          |  9999999999 |     NULL |                   NULL |
+| OK                | -9999999999 |     NULL |                   NULL |
+| Rounded underflow | -9999999999 |     NULL |                   NULL |
+| Underflow         | -9999999999 |     NULL |                   NULL |
+| OK                |        NULL |  9999.99 |                   NULL |
+| Rounded overflow  |        NULL |  9999.99 |                   NULL |
+| Overflow          |        NULL |  9999.99 |                   NULL |
+| OK                |        NULL | -9999.99 |                   NULL |
+| Rounded underflow |        NULL | -9999.99 |                   NULL |
+| Underflow         |        NULL | -9999.99 |                   NULL |
+| OK                |        NULL |     NULL |  9.9999999999999999999 |
+| Rounded overflow  |        NULL |     NULL |  9.9999999999999999999 |
+| Overflow          |        NULL |     NULL |  9.9999999999999999999 |
+| OK                |        NULL |     NULL | -9.9999999999999999999 |
+| Rounded underflow |        NULL |     NULL | -9.9999999999999999999 |
+| Underflow         |        NULL |     NULL | -9.9999999999999999999 |
++-------------------+-------------+----------+------------------------+
+&lt;&lt;/sql&gt;&gt;
+
+=== DECIMAL ZEROFILL
+
+A special type of DECIMAL UNSIGNED is DECIMAL ZEROFILL, which pads out the values with leading zeros in SELECT results. The number of leading zeros are just enough to pad the field out to the length of the type&#39;s field size (not counting the decimal place), but the zeros are not included in an expression result or in a UNION SELECT column.
+
+Using DECIMAL ZEROFILL works the same way as DECIMAL UNSIGNED for most operations except a simple SELECT. For example, with the following test table setup:
+
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE decimal_zerofill_example (
+  description VARCHAR(20),
+  sz10_0 DECIMAL ZEROFILL,
+  sz6_2 DECIMAL(6,2) ZEROFILL,
+  sz20_19 DECIMAL(20,19) ZEROFILL
+);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+SET @pi = 3.1415926535897932384626433832795;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO decimal_zerofill_example VALUES
+  (&#39;Pi&#39;, @pi, @pi, @pi),
+  (&#39;Series&#39;, 1234.567890123, 1234.567890123, 1.234567890123),
+  (&#39;Various&#39;, 1234567890, 9999.99, 9.9999999999999999999);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+SELECT * FROM decimal_zerofill_example;
+
++-------------+------------+---------+-----------------------+
+| description | sz10_0     | sz6_2   | sz20_19               |
++-------------+------------+---------+-----------------------+
+| Pi          | 0000000003 | 0003.14 | 3.1415926535897932385 |
+| Series      | 0000001235 | 1234.57 | 1.2345678901230000000 |
+| Various     | 1234567890 | 9999.99 | 9.9999999999999999999 |
++-------------+------------+---------+-----------------------+
+
+&lt;&lt;/sql&gt;&gt;
 == See Also
 * [[numeric-data-type-overview|Numeric Data Type Overview]]
 * [[sql_modeoracle-from-mariadb-103#synonyms-for-basic-sql-types|Oracle mode from MariaDB 10.3]]</textarea>

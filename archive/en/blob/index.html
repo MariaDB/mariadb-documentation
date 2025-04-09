@@ -280,7 +280,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-03-10 11:24">3 weeks, 6 days ago</span></dd>
+<span class="datetime" title="2025-04-08 09:25">14 hours, 36 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -444,6 +444,13 @@
         <li class=""><a href="#oracle-mode" title="Oracle Mode">Oracle Mode</a>    </ol>
 </li>
 
+    <li class=""><a href="#examples" title="EXAMPLES">EXAMPLES</a>    <ol class="toc">
+
+        <li class=""><a href="#blob" title="BLOB">BLOB</a>    </ol>
+</li>
+
+    <li class=""><a href="#data-too-long" title="Data Too Long">Data Too Long</a></li>
+
     <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
 </li>
 </div>
@@ -456,13 +463,49 @@ MariaDB creates the column as the smallest <code>BLOB</code> type large enough t
 hold values <em><code>M</code></em> bytes long.</p>
 <p>BLOBS can also be used to store <a href="/kb/en/dynamic-columns/">dynamic columns</a>.</p>
 <p><code>BLOB</code> and <code>TEXT</code> columns can both be assigned a <a href="/kb/en/create-table/#default">DEFAULT</a> value.</p>
+<p>See also: <a href="/kb/en/data-types-for-mariadb-enterprise-server-11-4/">Data Types for MariaDB Enterprise Server 11.4</a>, in <a href="/kb/en/data-types-for-mariadb-enterprise-server-10-6/">10.6 ES</a>, in <a href="/kb/en/data-types-for-mariadb-enterprise-server-10-5/">10.5 ES</a>, in <a href="/kb/en/data-types-for-mariadb-enterprise-server-10-4/">10.4 ES</a>, in <a href="/kb/en/data-types-for-mariadb-enterprise-server-10-3/">10.3 ES</a>, in <a href="/kb/en/data-types-for-mariadb-enterprise-server-10-2/">10.2 ES</a>, in <a href="/kb/en/data-types-for-mariadb-community-server-10-6/">10.6 CS</a>, in <a href="/kb/en/data-types-for-mariadb-community-server-10-5/">10.5 CS</a>, in <a href="/kb/en/data-types-for-mariadb-community-server-10-4/">10.4 CS</a>, in <a href="/kb/en/data-types-for-mariadb-community-server-10-3/">10.3 CS</a>, and in <a href="/kb/en/data-types-for-mariadb-community-server-10-2/">10.2 CS</a>.</p>
 <h3 class="anchored_heading" id="indexing">Indexing</h3>
 <p>On a column that uses the <code>BLOB</code> data type, setting a unique index is now possible.</p>
 <div class="cstm-style bluebox"><h4 class="anchored_heading" id="note"><strong>Note</strong></h4>
 <p>In previous releases, setting a unique index on a column that uses the <code>BLOB</code> data type was not possible. Index would only guarantee the uniqueness of a fixed number of characters.</p>
 </div><h3 class="anchored_heading" id="oracle-mode">Oracle Mode</h3>
 <p>In <a href="/kb/en/sql_modeoracle-from-mariadb-103/#synonyms-for-basic-sql-types">Oracle mode</a>, <code>BLOB</code> is a synonym for <code>LONGBLOB</code>.</p>
-<h2 class="anchored_heading" id="see-also">See Also</h2>
+<h2 class="anchored_heading" id="examples">EXAMPLES</h2>
+<h3 class="anchored_heading" id="blob">BLOB</h3>
+<p>Example of BLOB:</p>
+<pre class="fixed">CREATE TABLE blob_example (
+   description VARCHAR(20),
+   example BLOB
+) DEFAULT CHARSET=latin1; -- One byte per char makes the examples clearer
+</pre><pre class="fixed">INSERT INTO blob_example VALUES
+   ('Normal foo', 'foo'),
+   ('Trailing spaces foo', 'foo      '),
+   ('NULLed', NULL),
+   ('Empty', ''),
+   ('Maximum', RPAD('', 65535, CHAR(7)));
+</pre><pre class="fixed">SELECT description, LENGTH(example) AS length
+   FROM blob_example;
+
++---------------------+--------+
+| description         | length |
++---------------------+--------+
+| Normal foo          |      3 |
+| Trailing spaces foo |      9 |
+| NULLed              |   NULL |
+| Empty               |      0 |
+| Maximum             |  65535 |
++---------------------+--------+
+</pre><h2 class="anchored_heading" id="data-too-long">Data Too Long</h2>
+<p>When SQL_MODE is strict (the default) a value is considered "too long" when its length exceeds the size of the data type, and an error is generated.</p>
+<p>Example of data too long behavior for BLOB:</p>
+<pre class="fixed">TRUNCATE blob_example;
+
+INSERT INTO blob_example VALUES
+   ('Overflow', RPAD('', 65536, CHAR(7)));
+
+ERROR 1406 (22001): Data too long for column 'example' at row 1
+
+</pre><h2 class="anchored_heading" id="see-also">See Also</h2>
 <ul start="1"><li><a href="/kb/en/blob-and-text-data-types/">BLOB and TEXT Data Types</a>
 </li><li><a href="/kb/en/data-type-storage-requirements/">Data Type Storage Requirements</a>
 </li><li><a href="/kb/en/sql_modeoracle-from-mariadb-103/#synonyms-for-basic-sql-types">Oracle mode from MariaDB 10.3</a></li></ul>

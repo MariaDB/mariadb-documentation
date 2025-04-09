@@ -316,7 +316,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/blob/+r/148531/">148531</a></dd>
+            <dd><a href="/kb/en/blob/+r/150399/">150399</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +325,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-03-10 11:24">2025-03-10 11:24</span></dd>
+<span class="datetime" title="2025-04-08 09:25">2025-04-08 09:25</span></dd>
         </dl>
     </div>
     
@@ -355,6 +355,8 @@ hold values //##M##// bytes long.
 BLOBS can also be used to store [[dynamic-columns|dynamic columns]].
 
 ##BLOB## and ##TEXT## columns can both be assigned a [[create-table/#default|DEFAULT]] value.
+
+See also: [[data-types-for-mariadb-enterprise-server-11-4|Data Types for MariaDB Enterprise Server 11.4]], in [[data-types-for-mariadb-enterprise-server-10-6|10.6 ES]], in [[data-types-for-mariadb-enterprise-server-10-5|10.5 ES]], in [[data-types-for-mariadb-enterprise-server-10-4|10.4 ES]], in [[data-types-for-mariadb-enterprise-server-10-3|10.3 ES]], in [[data-types-for-mariadb-enterprise-server-10-2|10.2 ES]], in [[data-types-for-mariadb-community-server-10-6|10.6 CS]], in [[data-types-for-mariadb-community-server-10-5|10.5 CS]], in [[data-types-for-mariadb-community-server-10-4|10.4 CS]], in [[data-types-for-mariadb-community-server-10-3|10.3 CS]], and in [[data-types-for-mariadb-community-server-10-2|10.2 CS]].
 === Indexing
 On a column that uses the ##BLOB## data type, setting a unique index is now possible.
 &lt;&lt;style class=bluebox&gt;&gt;
@@ -363,7 +365,56 @@ In previous releases, setting a unique index on a column that uses the ##BLOB## 
 &lt;&lt;/style&gt;&gt;
 === Oracle Mode
 In [[sql_modeoracle-from-mariadb-103#synonyms-for-basic-sql-types|Oracle mode]], ##BLOB## is a synonym for ##LONGBLOB##.
+== EXAMPLES
+=== BLOB
 
+Example of BLOB:
+
+&lt;&lt;code&gt;&gt;
+CREATE TABLE blob_example (
+   description VARCHAR(20),
+   example BLOB
+) DEFAULT CHARSET=latin1; -- One byte per char makes the examples clearer
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+INSERT INTO blob_example VALUES
+   (&#39;Normal foo&#39;, &#39;foo&#39;),
+   (&#39;Trailing spaces foo&#39;, &#39;foo      &#39;),
+   (&#39;NULLed&#39;, NULL),
+   (&#39;Empty&#39;, &#39;&#39;),
+   (&#39;Maximum&#39;, RPAD(&#39;&#39;, 65535, CHAR(7)));
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+SELECT description, LENGTH(example) AS length
+   FROM blob_example;
+
++---------------------+--------+
+| description         | length |
++---------------------+--------+
+| Normal foo          |      3 |
+| Trailing spaces foo |      9 |
+| NULLed              |   NULL |
+| Empty               |      0 |
+| Maximum             |  65535 |
++---------------------+--------+
+&lt;&lt;/code&gt;&gt;
+
+== Data Too Long
+When SQL_MODE is strict (the default) a value is considered &#34;too long&#34; when its length exceeds the size of the data type, and an error is generated.
+
+Example of data too long behavior for BLOB:
+
+&lt;&lt;code&gt;&gt;
+TRUNCATE blob_example;
+
+INSERT INTO blob_example VALUES
+   (&#39;Overflow&#39;, RPAD(&#39;&#39;, 65536, CHAR(7)));
+
+ERROR 1406 (22001): Data too long for column &#39;example&#39; at row 1
+
+&lt;&lt;/code&gt;&gt;
 == See Also
 * [[blob-and-text-data-types|BLOB and TEXT Data Types]]
 * [[data-type-storage-requirements|Data Type Storage Requirements]]
