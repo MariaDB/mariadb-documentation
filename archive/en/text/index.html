@@ -230,8 +230,6 @@
                             <li><a href="/kb/en/">Home</a></li>
                             
                                 
-                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
-                                
                                 <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
                                 <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
                                 <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
@@ -280,7 +278,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-07-09 10:37">9 months ago</span></dd>
+<span class="datetime" title="2025-04-09 09:43">14 hours, 21 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -436,7 +434,14 @@
 
     <li class=""><a href="#description" title="Description">Description</a></li>
 
-    <li class=""><a href="#examples" title="Examples">Examples</a></li>
+    <li class=""><a href="#examples" title="Examples">Examples</a>    <ol class="toc">
+
+        <li class=""><a href="#trailing-spaces" title="Trailing spaces:">Trailing spaces:</a></li>
+
+        <li class=""><a href="#example-of-text" title="Example of TEXT:">Example of TEXT:</a></li>
+
+        <li class=""><a href="#data-too-long" title="Data Too Long">Data Too Long</a>    </ol>
+</li>
 
     <li class=""><a href="#indexing" title="Indexing">Indexing</a></li>
 
@@ -456,26 +461,57 @@ prefix that indicates the number of bytes in the value.  If you need a bigger st
 <p>An optional length <code>M</code> can be given for this type. If this is done, MariaDB
 creates the column as the smallest <code>TEXT</code> type large enough to hold values
 <code>M</code> characters long.</p>
-<p>Before <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>, all MariaDB <a href="/kb/en/character-sets/">collations</a> were of type PADSPACE, meaning that TEXT (as well as <a href="/kb/en/varchar/">VARCHAR</a> and <a href="/kb/en/char/">CHAR</a> values) are compared without regard for trailing spaces. This does not apply to the <a href="/kb/en/like/">LIKE</a> pattern-matching operator, which takes into account trailing spaces.</p>
-<p><code>BLOB</code> and <code>TEXT</code> columns can be assigned a <a href="/kb/en/create-table/#default">DEFAULT</a> value. This was not possible prior to <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>.</p>
+<p><code>BLOB</code> and <code>TEXT</code> columns can be assigned a <a href="/kb/en/create-table/#default">DEFAULT</a> value.</p>
 <h2 class="anchored_heading" id="examples">Examples</h2>
-<p>Trailing spaces:</p>
-<pre class="fixed">CREATE TABLE strtest (d TEXT(10));
-INSERT INTO strtest VALUES('Maria   ');
+<h3 class="anchored_heading" id="trailing-spaces">Trailing spaces:</h3>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">strtest</span> <span class="p">(</span><span class="n">d</span> <span class="nb">TEXT</span><span class="p">(</span><span class="mi">10</span><span class="p">));</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">strtest</span> <span class="k">VALUES</span><span class="p">(</span><span class="s1">&#39;Maria   &#39;</span><span class="p">);</span>
 
-SELECT d='Maria',d='Maria   ' FROM strtest;
-+-----------+--------------+
-| d='Maria' | d='Maria   ' |
-+-----------+--------------+
-|         1 |            1 |
-+-----------+--------------+
+<span class="k">SELECT</span> <span class="n">d</span><span class="o">=</span><span class="s1">&#39;Maria&#39;</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="s1">&#39;Maria   &#39;</span> <span class="k">FROM</span> <span class="n">strtest</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">-----------+--------------+</span>
+<span class="o">|</span> <span class="n">d</span><span class="o">=</span><span class="s1">&#39;Maria&#39;</span> <span class="o">|</span> <span class="n">d</span><span class="o">=</span><span class="s1">&#39;Maria   &#39;</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">-----------+--------------+</span>
+<span class="o">|</span>         <span class="mi">1</span> <span class="o">|</span>            <span class="mi">1</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">-----------+--------------+</span>
 
-SELECT d LIKE 'Maria',d LIKE 'Maria   ' FROM strtest;
-+----------------+-------------------+
-| d LIKE 'Maria' | d LIKE 'Maria   ' |
-+----------------+-------------------+
-|              0 |                 1 |
-+----------------+-------------------+
+<span class="k">SELECT</span> <span class="n">d</span> <span class="k">LIKE</span> <span class="s1">&#39;Maria&#39;</span><span class="p">,</span><span class="n">d</span> <span class="k">LIKE</span> <span class="s1">&#39;Maria   &#39;</span> <span class="k">FROM</span> <span class="n">strtest</span><span class="p">;</span>
+<span class="o">+</span><span class="c1">----------------+-------------------+</span>
+<span class="o">|</span> <span class="n">d</span> <span class="k">LIKE</span> <span class="s1">&#39;Maria&#39;</span> <span class="o">|</span> <span class="n">d</span> <span class="k">LIKE</span> <span class="s1">&#39;Maria   &#39;</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----------------+-------------------+</span>
+<span class="o">|</span>              <span class="mi">0</span> <span class="o">|</span>                 <span class="mi">1</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">----------------+-------------------+</span>
+</pre><h3 class="anchored_heading" id="example-of-text">Example of TEXT:</h3>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">text_example</span> <span class="p">(</span>
+   <span class="n">description</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span>
+   <span class="n">example</span> <span class="nb">TEXT</span>
+<span class="p">)</span> <span class="k">DEFAULT</span> <span class="n">CHARSET</span><span class="o">=</span><span class="n">latin1</span><span class="p">;</span> <span class="c1">-- One byte per char makes the examples clearer</span>
+
+</pre><pre class="fixed"><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">text_example</span> <span class="k">VALUES</span>
+   <span class="p">(</span><span class="s1">&#39;Normal foo&#39;</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">),</span>
+   <span class="p">(</span><span class="s1">&#39;Trailing spaces foo&#39;</span><span class="p">,</span> <span class="s1">&#39;foo      &#39;</span><span class="p">),</span>
+   <span class="p">(</span><span class="s1">&#39;NULLed&#39;</span><span class="p">,</span> <span class="k">NULL</span><span class="p">),</span>
+   <span class="p">(</span><span class="s1">&#39;Empty&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+   <span class="p">(</span><span class="s1">&#39;Maximum&#39;</span><span class="p">,</span> <span class="n">RPAD</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">65535</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">));</span>
+</pre><pre class="fixed"><span class="k">SELECT</span> <span class="n">description</span><span class="p">,</span> <span class="k">LENGTH</span><span class="p">(</span><span class="n">example</span><span class="p">)</span> <span class="k">AS</span> <span class="k">length</span>
+   <span class="k">FROM</span> <span class="n">text_example</span><span class="p">;</span>
+</pre><pre class="fixed"><span class="o">+</span><span class="c1">---------------------+--------+</span>
+<span class="o">|</span> <span class="n">description</span>         <span class="o">|</span> <span class="k">length</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------------+--------+</span>
+<span class="o">|</span> <span class="n">Normal</span> <span class="n">foo</span>          <span class="o">|</span>      <span class="mi">3</span> <span class="o">|</span>
+<span class="o">|</span> <span class="k">Trailing</span> <span class="n">spaces</span> <span class="n">foo</span> <span class="o">|</span>      <span class="mi">9</span> <span class="o">|</span>
+<span class="o">|</span> <span class="n">NULLed</span>              <span class="o">|</span>   <span class="k">NULL</span> <span class="o">|</span>
+<span class="o">|</span> <span class="n">Empty</span>               <span class="o">|</span>      <span class="mi">0</span> <span class="o">|</span>
+<span class="o">|</span> <span class="n">Maximum</span>             <span class="o">|</span>  <span class="mi">65535</span> <span class="o">|</span>
+<span class="o">+</span><span class="c1">---------------------+--------+</span>
+</pre><h3 class="anchored_heading" id="data-too-long">Data Too Long</h3>
+<p>When SQL_MODE is strict (the default) a value is considered "too long" when its length exceeds the size of the data type, and an error is generated.</p>
+<p>Example of data too long behavior for TEXT:</p>
+<pre class="fixed"><span class="k">TRUNCATE</span> <span class="n">text_example</span><span class="p">;</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">text_example</span> <span class="k">VALUES</span>
+   <span class="p">(</span><span class="s1">&#39;Overflow&#39;</span><span class="p">,</span> <span class="n">RPAD</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">65536</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">));</span>
+</pre><pre class="fixed">
+<span class="n">ERROR</span> <span class="mi">1406</span> <span class="p">(</span><span class="mi">22001</span><span class="p">):</span> <span class="k">Data</span> <span class="n">too</span> <span class="n">long</span> <span class="k">for</span> <span class="k">column</span> <span class="s1">&#39;example&#39;</span> <span class="k">at</span> <span class="k">row</span> <span class="mi">1</span>
 </pre><h2 class="anchored_heading" id="indexing">Indexing</h2>
 <p>A <a href="/kb/en/getting-started-with-indexes/#unique-index">unique index</a> can be created on a <code>TEXT</code> column. This was not possible prior to <a href="/kb/en/what-is-mariadb-104/">MariaDB 10.4</a></p>
 <p>Internally, this uses hash indexing to quickly check the values and if a hash collision is found, the actual stored values are compared in order to retain the uniqueness.</p>
@@ -649,7 +685,7 @@ SELECT d LIKE 'Maria',d LIKE 'Maria   ' FROM strtest;
             
                 
                     <li>
-                        <a href="/kb/en/json-data-type/">
+                        <a href="/kb/en/json/">
                             
                             JSON Data Type
                         </a>

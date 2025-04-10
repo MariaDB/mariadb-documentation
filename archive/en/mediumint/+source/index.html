@@ -232,8 +232,6 @@
                             <li><a href="/kb/en/">Home</a></li>
                             
                                 
-                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
-                                
                                 <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
                                 <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
                                 <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
@@ -316,7 +314,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mediumint/+r/104250/">104250</a></dd>
+            <dd><a href="/kb/en/mediumint/+r/150463/">150463</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +323,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2021-02-25 20:45">2021-02-25 20:45</span></dd>
+<span class="datetime" title="2025-04-09 08:33">2025-04-09 08:33</span></dd>
         </dl>
     </div>
     
@@ -335,7 +333,8 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">== Syntax
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+== Syntax
 
 &lt;&lt;code&gt;&gt;
 MEDIUMINT[(M)] [SIGNED | UNSIGNED | ZEROFILL]
@@ -353,7 +352,7 @@ unsigned range is 0 to 16777215.
 For details on the attributes, see [[numeric-data-type-overview|Numeric Data Type Overview]].
 
 == Examples
-
+=== With [[sql-mode/#strict-mode|strict_mode]] set
 &lt;&lt;sql&gt;&gt;
 CREATE TABLE mediumints (a MEDIUMINT,b MEDIUMINT UNSIGNED,c MEDIUMINT ZEROFILL);
 
@@ -366,8 +365,6 @@ DESCRIBE mediumints;
 | c     | mediumint(8) unsigned zerofill | YES  |     | NULL    |       |
 +-------+--------------------------------+------+-----+---------+-------+
 &lt;&lt;/sql&gt;&gt;
-
-With [[sql-mode/#strict-mode|strict_mode]] set, the default from MariaDB 10.2.4:
 &lt;&lt;sql&gt;&gt;
 INSERT INTO mediumints VALUES (-10,-10,-10);
 ERROR 1264 (22003): Out of range value for column &#39;b&#39; at row 1
@@ -391,36 +388,172 @@ SELECT * FROM mediumints;
 +---------+---------+----------+
 &lt;&lt;/sql&gt;&gt;
 
-With [[sql-mode/#strict-mode|strict_mode]] unset, the default until MariaDB 10.2.3:
+=== SIGNED and UNSIGNED
+
+The MEDIUMINT data type may be SIGNED (allowing negative values) or UNSIGNED (not allowing negative values).
+
+Example of MEDIUMINT SIGNED (the default):
+
 &lt;&lt;sql&gt;&gt;
-INSERT INTO mediumints VALUES (-10,-10,-10);
-Query OK, 1 row affected, 2 warnings (0.05 sec)
-Warning (Code 1264): Out of range value for column &#39;b&#39; at row 1
-Warning (Code 1264): Out of range value for column &#39;c&#39; at row 1
+CREATE TABLE mediumint_signed_example (
+   description VARCHAR(20),
+   example MEDIUMINT SIGNED
+);
+&lt;&lt;/sql&gt;&gt;
 
-INSERT INTO mediumints VALUES (-10,10,-10);
-Query OK, 1 row affected, 1 warning (0.08 sec)
-Warning (Code 1264): Out of range value for column &#39;c&#39; at row 1
+&lt;&lt;sql&gt;&gt;
+INSERT INTO mediumint_signed_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, -8388608),
+   (&#39;Maximum&#39;, 8388607);
+&lt;&lt;/sql&gt;&gt;
 
-INSERT INTO mediumints VALUES (-10,10,10);
+Example of MEDIUMINT UNSIGNED:
 
-INSERT INTO mediumints VALUES (8388608,8388608,8388608);
-Query OK, 1 row affected, 1 warning (0.05 sec)
-Warning (Code 1264): Out of range value for column &#39;a&#39; at row 1
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE mediumint_unsigned_example (
+   description VARCHAR(20),
+   example MEDIUMINT UNSIGNED
+);
+&lt;&lt;/sql&gt;&gt;
 
-INSERT INTO mediumints VALUES (8388607,8388608,8388608);
 
-SELECT * FROM mediumints;
-+---------+---------+----------+
-| a       | b       | c        |
-+---------+---------+----------+
-|     -10 |       0 | 00000000 |
-|     -10 |       0 | 00000000 |
-|     -10 |      10 | 00000000 |
-|     -10 |      10 | 00000010 |
-| 8388607 | 8388608 | 08388608 |
-| 8388607 | 8388608 | 08388608 |
-+---------+---------+----------+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO mediumint_unsigned_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, 0),
+   (&#39;Maximum&#39;, 16777215);
+&lt;&lt;/sql&gt;&gt;
+
+=== Out-of-Range
+
+A value is considered &#34;out-of-range&#34; when it is too small or too large to be stored in a data type. When sql_mode=STRICT_TRANS_TABLES (the default) is set, an out-of-range value generates an error. If strict mode is not in effect, the value is rounded to the nearest valid value and a warning is generated (which might be hidden, depending on your warning settings).
+
+An example of non-strict out-of-range behavior:
+
+&lt;&lt;sql&gt;&gt;
+TRUNCATE mediumint_signed_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+-- Disable strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+&lt;&lt;/sql&gt;&gt;
+
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO mediumint_signed_example VALUES
+   (&#39;Underflow&#39;, -8388609),
+   (&#39;Overflow&#39;, 8388608);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 2
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+SELECT * FROM mediumint_signed_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
++-------------+----------+
+| description | example  |
++-------------+----------+
+| Underflow   | -8388608 |
+| Overflow    |  8388607 |
++-------------+----------+
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+TRUNCATE mediumint_unsigned_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+-- Disable strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO mediumint_unsigned_example VALUES
+   (&#39;Underflow&#39;, -1),
+   (&#39;Overflow&#39;, 16777216);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 2
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+SELECT * FROM mediumint_unsigned_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
++-------------+----------+
+| description | example  |
++-------------+----------+
+| Underflow   |        0 |
+| Overflow    | 16777215 |
++-------------+----------+
+&lt;&lt;/sql&gt;&gt;
+
+=== MEDIUMINT ZEROFILL
+
+A special type of MEDIUMINT UNSIGNED is MEDIUMINT ZEROFILL, which pads out the values with leading zeros in SELECT results. The number of leading zeros are just enough to pad the field out to the length of the type&#39;s maximum unsigned value, but the zeros are not included in an expression result or in a UNION SELECT column.
+
+Using MEDIUMINT ZEROFILL works the same way as MEDIUMINT UNSIGNED for most operations except a simple SELECT. For example, with the following test table setup:
+
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE mediumint_zerofill_example (
+   description VARCHAR(20),
+   example MEDIUMINT ZEROFILL
+);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO mediumint_zerofill_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, 0),
+   (&#39;Maximum&#39;, 16777215);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+-- Turn off strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO mediumint_zerofill_example VALUES
+   (&#39;Underflow&#39;, -1),
+   (&#39;Overflow&#39;, 16777216);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 2
+&lt;&lt;/sql&gt;&gt;
+
+The resulting data would look like this:
+
+&lt;&lt;sql&gt;&gt;
+SELECT *, example + 0 FROM mediumint_zerofill_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
++-------------+----------+-------------+
+| description | example  | example + 0 |
++-------------+----------+-------------+
+| Zero        | 00000000 |           0 |
+| Forty-Two   | 00000042 |          42 |
+| Minimum     | 00000000 |           0 |
+| Maximum     | 16777215 |    16777215 |
+| Underflow   | 00000000 |           0 |
+| Overflow    | 16777215 |    16777215 |
++-------------+----------+-------------+
 &lt;&lt;/sql&gt;&gt;
 
 == See Also

@@ -232,8 +232,6 @@
                             <li><a href="/kb/en/">Home</a></li>
                             
                                 
-                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
-                                
                                 <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
                                 <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
                                 <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
@@ -316,7 +314,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/text/+r/141250/">141250</a></dd>
+            <dd><a href="/kb/en/text/+r/150486/">150486</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +323,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-07-09 10:37">2024-07-09 10:37</span></dd>
+<span class="datetime" title="2025-04-09 09:43">2025-04-09 09:43</span></dd>
         </dl>
     </div>
     
@@ -353,14 +351,11 @@ An optional length ##M## can be given for this type. If this is done, MariaDB
 creates the column as the smallest ##TEXT## type large enough to hold values
 ##M## characters long.
 
-Before MariaDB 10.2, all MariaDB [[character-sets|collations]] were of type PADSPACE, meaning that TEXT (as well as [[varchar|VARCHAR]] and [[char|CHAR]] values) are compared without regard for trailing spaces. This does not apply to the [[like|LIKE]] pattern-matching operator, which takes into account trailing spaces.
-
-##BLOB## and ##TEXT## columns can be assigned a [[create-table/#default|DEFAULT]] value. This was not possible prior to MariaDB 10.2.
-
+##BLOB## and ##TEXT## columns can be assigned a [[create-table/#default|DEFAULT]] value.
 == Examples
 
-Trailing spaces:
-&lt;&lt;code&gt;&gt;
+=== Trailing spaces:
+&lt;&lt;sql&gt;&gt;
 CREATE TABLE strtest (d TEXT(10));
 INSERT INTO strtest VALUES(&#39;Maria   &#39;);
 
@@ -377,8 +372,60 @@ SELECT d LIKE &#39;Maria&#39;,d LIKE &#39;Maria   &#39; FROM strtest;
 +----------------+-------------------+
 |              0 |                 1 |
 +----------------+-------------------+
-&lt;&lt;/code&gt;&gt;
+&lt;&lt;/sql&gt;&gt;
+=== Example of TEXT:
 
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE text_example (
+   description VARCHAR(20),
+   example TEXT
+) DEFAULT CHARSET=latin1; -- One byte per char makes the examples clearer
+
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO text_example VALUES
+   (&#39;Normal foo&#39;, &#39;foo&#39;),
+   (&#39;Trailing spaces foo&#39;, &#39;foo      &#39;),
+   (&#39;NULLed&#39;, NULL),
+   (&#39;Empty&#39;, &#39;&#39;),
+   (&#39;Maximum&#39;, RPAD(&#39;&#39;, 65535, &#39;x&#39;));
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+SELECT description, LENGTH(example) AS length
+   FROM text_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
++---------------------+--------+
+| description         | length |
++---------------------+--------+
+| Normal foo          |      3 |
+| Trailing spaces foo |      9 |
+| NULLed              |   NULL |
+| Empty               |      0 |
+| Maximum             |  65535 |
++---------------------+--------+
+&lt;&lt;/sql&gt;&gt;
+
+=== Data Too Long
+
+When SQL_MODE is strict (the default) a value is considered &#34;too long&#34; when its length exceeds the size of the data type, and an error is generated.
+
+Example of data too long behavior for TEXT:
+
+&lt;&lt;sql&gt;&gt;
+TRUNCATE text_example;
+
+INSERT INTO text_example VALUES
+   (&#39;Overflow&#39;, RPAD(&#39;&#39;, 65536, &#39;x&#39;));
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+
+ERROR 1406 (22001): Data too long for column &#39;example&#39; at row 1
+&lt;&lt;/sql&gt;&gt;
 
 == Indexing
 

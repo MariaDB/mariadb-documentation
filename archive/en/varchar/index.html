@@ -280,7 +280,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-08-14 22:27">1 year, 7 months ago</span></dd>
+<span class="datetime" title="2025-04-09 10:45">13 hours, 19 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -426,17 +426,27 @@
 
     
     <div class="answer formatted">
-        <h2 class="anchored_heading" id="syntax">Syntax</h2>
-<pre class="fixed">[NATIONAL] VARCHAR(M) [CHARACTER SET charset_name] [COLLATE collation_name]
-</pre><div class="table_of_contents well well-small">
+        <div class="table_of_contents well well-small">
 <h3>Contents</h3>
  <ol class="toc">
 
     <li class=""><a href="#syntax" title="Syntax">Syntax</a></li>
 
-    <li class=""><a href="#description" title="Description">Description</a></li>
+    <li class=""><a href="#description" title="Description">Description</a>    <ol class="toc">
 
-    <li class=""><a href="#examples" title="Examples">Examples</a></li>
+        <li class=""><a href="#note" title="Note:">Note:</a></li>
+
+        <li class=""><a href="#synonyms" title="SYNONYMS">SYNONYMS</a>    </ol>
+</li>
+
+    <li class=""><a href="#examples" title="Examples">Examples</a>    <ol class="toc">
+
+        <li class=""><a href="#trailing-spaces" title="Trailing spaces">Trailing spaces</a></li>
+
+        <li class=""><a href="#varchar" title="VARCHAR">VARCHAR</a></li>
+
+        <li class=""><a href="#data-too-long" title="Data Too Long">Data Too Long</a>    </ol>
+</li>
 
     <li class=""><a href="#truncation" title="Truncation">Truncation</a></li>
 
@@ -450,16 +460,19 @@
     <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
 </li>
 </div>
-<h2 class="anchored_heading" id="description">Description</h2>
+<h2 class="anchored_heading" id="syntax">Syntax</h2>
+<pre class="fixed">[NATIONAL] VARCHAR(M) [CHARACTER SET charset_name] [COLLATE collation_name]
+</pre><h2 class="anchored_heading" id="description">Description</h2>
 <p>A variable-length string. M represents the maximum column length in
 characters. The range of M is 0 to 65,532. The effective maximum
 length of a VARCHAR is subject to the maximum row size and the character set used. For
 example, utf8 characters can require up to three bytes per character,
 so a VARCHAR column that uses the utf8 character set can be declared
 to be a maximum of 21,844 characters.</p>
-<p><strong>Note:</strong> For the <a href="/kb/en/columnstore/">ColumnStore</a> engine, M represents the maximum column length in
+<div class="cstm-style bluebox"><h4 class="anchored_heading" id="note"><strong>Note:</strong></h4>
+<p>For the <a href="/kb/en/columnstore/">ColumnStore</a> engine, M represents the maximum column length in
 bytes.</p>
-<p>MariaDB stores VARCHAR values as a one-byte or two-byte length prefix
+</div><p>MariaDB stores VARCHAR values as a one-byte or two-byte length prefix
 plus data. The length prefix indicates the number of bytes in the
 value. A VARCHAR column uses one length byte if values require no more
 than 255 bytes, two length bytes if values may require more than 255
@@ -471,8 +484,15 @@ standard SQL way to define that a VARCHAR column should use some
 predefined character set. MariaDB uses utf8 as this
 predefined character set, as does MySQL 4.1 and up.
 NVARCHAR is shorthand for NATIONAL VARCHAR.</p>
-<p>Before <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>, all MariaDB <a href="/kb/en/character-sets/">collations</a> were of type <code>PADSPACE</code>, meaning that VARCHAR (as well as <a href="/kb/en/char/">CHAR</a> and <a href="/kb/en/text/">TEXT</a> values) are compared without regard for trailing spaces. This does not apply to the <a href="/kb/en/like/">LIKE</a> pattern-matching operator, which takes into account trailing spaces. From <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a>, a number of <a href="/kb/en/supported-character-sets-and-collations/#no-pad-collations">NO PAD collations</a> are available.</p>
+<p>For MariaDB, a number of <a href="/kb/en/supported-character-sets-and-collations/#no-pad-collations">NO PAD collations</a> are available.</p>
 <p>If a unique index consists of a column where trailing pad characters are stripped or ignored, inserts into that column where values differ only by the number of trailing pad characters will result in a duplicate-key error.</p>
+<h3 class="anchored_heading" id="synonyms">SYNONYMS</h3>
+<p>The following are synonyms for VARCHAR:</p>
+<ul start="1"><li>CHAR VARYING
+</li><li>CHARACTER VARYING
+</li><li>VARCHAR2
+</li><li>VARCHARACTER
+</li></ul>
 <h2 class="anchored_heading" id="examples">Examples</h2>
 <p>The following are equivalent:</p>
 <pre class="fixed">VARCHAR(30) CHARACTER SET utf8
@@ -481,7 +501,7 @@ NVARCHAR(30)
 NCHAR VARCHAR(30)
 NATIONAL CHARACTER VARYING(30)
 NATIONAL CHAR VARYING(30)
-</pre><p>Trailing spaces:</p>
+</pre><h3 class="anchored_heading" id="trailing-spaces">Trailing spaces</h3>
 <pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">strtest</span> <span class="p">(</span><span class="n">v</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">10</span><span class="p">));</span>
 <span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">strtest</span> <span class="k">VALUES</span><span class="p">(</span><span class="s1">&#39;Maria   &#39;</span><span class="p">);</span>
 
@@ -498,6 +518,38 @@ NATIONAL CHAR VARYING(30)
 <span class="o">+</span><span class="c1">----------------+-------------------+</span>
 <span class="o">|</span>              <span class="mi">0</span> <span class="o">|</span>                 <span class="mi">1</span> <span class="o">|</span>
 <span class="o">+</span><span class="c1">----------------+-------------------+</span>
+</pre><h3 class="anchored_heading" id="varchar">VARCHAR</h3>
+<p>For our example of VARCHAR we picked a maximum size that avoids overflowing the maximum row size (65535). Keep in mind that a multi-byte character set would need more space in the row than a single-byte character set. We also avoid the auto-conversion of a VARCHAR into a TEXT, MEDIUMTEXT, or LONGTEXT that can happen when STRICT_TRANS_TABLES is not set in the SQL_MODE.</p>
+<p>The example:</p>
+<pre class="fixed">CREATE TABLE varchar_example (
+   description VARCHAR(20),
+   example VARCHAR(65511)
+) DEFAULT CHARSET=latin1; -- One byte per char makes the examples clearer
+</pre><pre class="fixed">INSERT INTO varchar_example VALUES
+   ('Normal foo', 'foo'),
+   ('Trailing spaces foo', 'foo      '),
+   ('NULLed', NULL),
+   ('Empty', ''),
+   ('Maximum', RPAD('', 65511, 'x'));
+</pre><pre class="fixed">SELECT description, LENGTH(example) AS length
+   FROM varchar_example;
+</pre><pre class="fixed">+---------------------+--------+
+| description         | length |
++---------------------+--------+
+| Normal foo          |      3 |
+| Trailing spaces foo |      9 |
+| NULLed              |   NULL |
+| Empty               |      0 |
+| Maximum             |  65511 |
++---------------------+--------+
+</pre><h3 class="anchored_heading" id="data-too-long">Data Too Long</h3>
+<p>When SQL_MODE is strict (the default) a value is considered "too long" when its length exceeds the size of the data type, and an error is generated.</p>
+<p>Example of data too long behavior for VARCHAR:</p>
+<pre class="fixed">TRUNCATE varchar_example;
+
+INSERT INTO varchar_example VALUES
+   ('Overflow', RPAD('', 65512, 'x'));
+</pre><pre class="fixed">ERROR 1406 (22001): Data too long for column 'example' at row 1
 </pre><h2 class="anchored_heading" id="truncation">Truncation</h2>
 <ul start="1"><li>Depending on whether or not <a href="/kb/en/sql-mode/#strict-mode">strict sql mode</a> is set, you will either get a warning or an error if you try to insert a string that is too long into a VARCHAR column. If the extra characters are spaces, the spaces that can't fit will be removed and you will always get a warning, regardless of the <a href="/kb/en/sql_mode/">sql mode</a> setting.
 </li></ul>
@@ -506,7 +558,7 @@ NATIONAL CHAR VARYING(30)
 </li><li>Using <a href="/kb/en/text/">TEXT</a> or <a href="/kb/en/blob/">BLOB</a> in a <a href="/kb/en/select/">SELECT</a> query that uses temporary tables for storing intermediate results will force the temporary table to be disk based (using the <a href="/kb/en/aria-storage-engine/">Aria storage engine</a> instead of the <a href="/kb/en/memory-storage-engine/">memory storage engine</a>, which is a bit slower. This is not that bad as the <a href="/kb/en/aria-storage-engine/">Aria storage engine</a> caches the rows in memory. To get the benefit of this, one should ensure that the <a href="/kb/en/aria-system-variables/#aria_pagecache_buffer_size">aria_pagecache_buffer_size</a> variable is big enough to hold most of the row and index data for temporary tables.
 </li></ul>
 <h2 class="anchored_heading" id="oracle-mode">Oracle Mode</h2>
-<p>In <a href="/kb/en/sql_modeoracle-from-mariadb-103/#synonyms-for-basic-sql-types">Oracle mode from MariaDB 10.3</a>, <code>VARCHAR2</code> is a synonym.</p>
+<p>In <a href="/kb/en/sql_modeoracle-from-mariadb-103/#synonyms-for-basic-sql-types">Oracle mode</a>, <code>VARCHAR2</code> is a synonym.</p>
 <h3 class="anchored_heading" id="for-storage-engine-developers">For Storage Engine Developers</h3>
 <ul start="1"><li>Internally the full length of the VARCHAR column is allocated inside each TABLE objects record[] structure. As there are three such buffers, each open table will allocate 3 times max-length-to-store-varchar bytes of memory.
 </li><li><a href="/kb/en/text/">TEXT</a> and <a href="/kb/en/blob/">BLOB</a> columns are stored with a pointer (4 or 8 bytes) + a 1-4 bytes length.  The <a href="/kb/en/text/">TEXT</a> data is only stored once. This means that internally <code>TEXT</code> uses less memory for each open table but instead has the additional overhead that each <code>TEXT</code> object needs to be allocated and freed for each row access (with some caching in between).
@@ -676,7 +728,7 @@ NATIONAL CHAR VARYING(30)
             
                 
                     <li>
-                        <a href="/kb/en/json-data-type/">
+                        <a href="/kb/en/json/">
                             
                             JSON Data Type
                         </a>

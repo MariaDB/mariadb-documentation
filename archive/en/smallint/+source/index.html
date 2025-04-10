@@ -232,8 +232,6 @@
                             <li><a href="/kb/en/">Home</a></li>
                             
                                 
-                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
-                                
                                 <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
                                 <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
                                 <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
@@ -316,7 +314,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/smallint/+r/104251/">104251</a></dd>
+            <dd><a href="/kb/en/smallint/+r/150484/">150484</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +323,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2021-02-25 20:45">2021-02-25 20:45</span></dd>
+<span class="datetime" title="2025-04-09 09:37">2025-04-09 09:37</span></dd>
         </dl>
     </div>
     
@@ -335,7 +333,8 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">== Syntax
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+== Syntax
 
 &lt;&lt;code&gt;&gt;
 SMALLINT[(M)] [SIGNED | UNSIGNED | ZEROFILL]
@@ -346,19 +345,20 @@ SMALLINT[(M)] [SIGNED | UNSIGNED | ZEROFILL]
 A small [[sql_language-data_types-int|integer]]. The signed range is -32768 to 32767. The unsigned range is 0 to 65535.
 
 If a column has been set to ZEROFILL, all values will be prepended by zeros so that the SMALLINT value contains a number of M digits.
-
-**Note:** If the ZEROFILL attribute has been specified, the column will automatically become UNSIGNED.
-
+&lt;&lt;style class=bluebox&gt;&gt;
+====**Note:** 
+If the ##ZEROFILL## attribute has been specified, the column will automatically become ##UNSIGNED##.
+&lt;&lt;/style&gt;&gt;
 ##INT2## is a synonym for ##SMALLINT##.
 
 For more details on the attributes, see [[numeric-data-type-overview|Numeric Data Type Overview]].
 
 == Examples
+
+=== With [[sql-mode/#strict-mode|strict_mode]] set
 &lt;&lt;sql&gt;&gt;
 CREATE TABLE smallints (a SMALLINT,b SMALLINT UNSIGNED,c SMALLINT ZEROFILL);
 &lt;&lt;/sql&gt;&gt;
-
-With [[sql-mode/#strict-mode|strict_mode]] set, the default from MariaDB 10.2.4:
 &lt;&lt;sql&gt;&gt;
 INSERT INTO smallints VALUES (-10,-10,-10);
 ERROR 1264 (22003): Out of range value for column &#39;b&#39; at row 1
@@ -381,38 +381,158 @@ SELECT * FROM smallints;
 | 32767 | 32768 | 32768 |
 +-------+-------+-------+
 &lt;&lt;/sql&gt;&gt;
+=== SIGNED and UNSIGNED
 
-With [[sql-mode/#strict-mode|strict_mode]] unset, the default until MariaDB 10.2.3:
-&lt;&lt;sql&gt;&gt;
-INSERT INTO smallints VALUES (-10,-10,-10);
-Query OK, 1 row affected, 2 warnings (0.09 sec)
-Warning (Code 1264): Out of range value for column &#39;b&#39; at row 1
-Warning (Code 1264): Out of range value for column &#39;c&#39; at row 1
+The SMALLINT data type may be SIGNED (allowing negative values) or UNSIGNED (not allowing negative values).
 
-INSERT INTO smallints VALUES (-10,10,-10);
-Query OK, 1 row affected, 1 warning (0.08 sec)
-Warning (Code 1264): Out of range value for column &#39;c&#39; at row 1
+Example of SMALLINT SIGNED (the default):
 
-INSERT INTO smallints VALUES (-10,10,10);
+&lt;&lt;code&gt;&gt;
+CREATE TABLE smallint_signed_example (
+   description VARCHAR(20),
+   example SMALLINT SIGNED
+);
+&lt;&lt;/code&gt;&gt;
 
-INSERT INTO smallints VALUES (32768,32768,32768);
-Query OK, 1 row affected, 1 warning (0.04 sec)
-Warning (Code 1264): Out of range value for column &#39;a&#39; at row 1
+&lt;&lt;code&gt;&gt;
+INSERT INTO smallint_signed_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, -32768),
+   (&#39;Maximum&#39;, 32767);
 
-INSERT INTO smallints VALUES (32767,32768,32768);
+&lt;&lt;/code&gt;&gt;
+Example of SMALLINT UNSIGNED:
 
-SELECT * FROM smallints;
-+-------+-------+-------+
-| a     | b     | c     |
-+-------+-------+-------+
-|   -10 |     0 | 00000 |
-|   -10 |    10 | 00000 |
-|   -10 |    10 | 00010 |
-| 32767 | 32768 | 32768 |
-| 32767 | 32768 | 32768 |
-+-------+-------+-------+
-&lt;&lt;/sql&gt;&gt;
 
+&lt;&lt;code&gt;&gt;
+CREATE TABLE smallint_unsigned_example (
+   description VARCHAR(20),
+   example SMALLINT UNSIGNED
+);
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+INSERT INTO smallint_unsigned_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, 0),
+   (&#39;Maximum&#39;, 65535);
+&lt;&lt;/code&gt;&gt;
+
+
+=== Out-of-Range
+
+A value is considered &#34;out-of-range&#34; when it is too small or too large to be stored in a data type. When sql_mode=STRICT_TRANS_TABLES (the default) is set, an out-of-range value generates an error. If strict mode is not in effect, the value is rounded to the nearest valid value and a warning is generated (which might be hidden, depending on your warning settings).
+
+An example of non-strict out-of-range behavior:
+&lt;&lt;code&gt;&gt;
+TRUNCATE smallint_signed_example;
+
+-- Disable strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+
+INSERT INTO smallint_signed_example VALUES
+   (&#39;Underflow&#39;, -32769),
+   (&#39;Overflow&#39;, 32768);
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+Warning (Code 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (Code 1264): Out of range value for column &#39;example&#39; at row 2
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+SELECT * FROM smallint_signed_example;
+
++-------------+---------+
+| description | example |
++-------------+---------+
+| Underflow   |  -32768 |
+| Overflow    |   32767 |
++-------------+---------+
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+TRUNCATE smallint_unsigned_example;
+
+-- Disable strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+
+INSERT INTO smallint_unsigned_example VALUES
+   (&#39;Underflow&#39;, -1),
+   (&#39;Overflow&#39;, 65536);
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+Warning (Code 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (Code 1264): Out of range value for column &#39;example&#39; at row 2
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+SELECT * FROM smallint_unsigned_example;
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
++-------------+---------+
+| description | example |
++-------------+---------+
+| Underflow   |       0 |
+| Overflow    |   65535 |
++-------------+---------+
+&lt;&lt;/code&gt;&gt;
+
+=== SMALLINT ZEROFILL
+
+A special type of SMALLINT UNSIGNED is SMALLINT ZEROFILL, which pads out the values with leading zeros in SELECT results. The number of leading zeros are just enough to pad the field out to the length of the type&#39;s maximum unsigned value, but the zeros are not included in an expression result or in a UNION SELECT column.
+
+Using SMALLINT ZEROFILL works the same way as SMALLINT UNSIGNED for most operations except a simple SELECT. For example, with the following test table setup:
+
+&lt;&lt;code&gt;&gt;
+CREATE TABLE smallint_zerofill_example (
+   description VARCHAR(20),
+   example SMALLINT ZEROFILL
+);
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+INSERT INTO smallint_zerofill_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, 0),
+   (&#39;Maximum&#39;, 65535);
+
+-- Turn off strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+
+INSERT INTO smallint_zerofill_example VALUES
+   (&#39;Underflow&#39;, -1),
+   (&#39;Overflow&#39;, 65536);
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+Warning (Code 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (Code 1264): Out of range value for column &#39;example&#39; at row 2
+&lt;&lt;/code&gt;&gt;
+
+The resulting data would look like this:
+
+&lt;&lt;code&gt;&gt;
+SELECT *, example + 0 FROM smallint_zerofill_example;
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
++-------------+---------+-------------+
+| description | example | example + 0 |
++-------------+---------+-------------+
+| Zero        |   00000 |           0 |
+| Forty-Two   |   00042 |          42 |
+| Minimum     |   00000 |           0 |
+| Maximum     |   65535 |       65535 |
+| Underflow   |   00000 |           0 |
+| Overflow    |   65535 |       65535 |
++-------------+---------+-------------+
+&lt;&lt;/code&gt;&gt;
 == See Also
 * [[numeric-data-type-overview|Numeric Data Type Overview]]
 * [[tinyint|TINYINT]]

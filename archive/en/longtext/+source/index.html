@@ -232,8 +232,6 @@
                             <li><a href="/kb/en/">Home</a></li>
                             
                                 
-                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
-                                
                                 <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
                                 <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
                                 <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
@@ -316,7 +314,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/longtext/+r/128806/">128806</a></dd>
+            <dd><a href="/kb/en/longtext/+r/150460/">150460</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +323,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-08-14 22:27">2023-08-14 22:27</span></dd>
+<span class="datetime" title="2025-04-09 08:17">2025-04-09 08:17</span></dd>
         </dl>
     </div>
     
@@ -335,22 +333,69 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">== Syntax
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+== Syntax
 
 &lt;&lt;code&gt;&gt;
 LONGTEXT [CHARACTER SET charset_name] [COLLATE collation_name]
 &lt;&lt;/code&gt;&gt;
-&lt;&lt;toc&gt;&gt;
+
 
 == Description
 
 A [[text|TEXT]] column with a maximum length of 4,294,967,295 or 4GB (##2^^32^^ - 1##) characters. The effective maximum length is less if the value contains multi-byte characters. The effective maximum length of LONGTEXT columns also depends on the configured maximum packet size in the client/server protocol and available memory. Each LONGTEXT value is stored using a four-byte length prefix that indicates the number of bytes in the value.
 
-From MariaDB 10.2.7, JSON is an alias for LONGTEXT. See [[json-data-type|JSON Data Type]] for details.
+JSON is an alias for LONGTEXT. See [[json-data-type|JSON Data Type]] for details.
 
 == Oracle Mode
-In [[sql_modeoracle-from-mariadb-103#synonyms-for-basic-sql-types|Oracle mode from MariaDB 10.3]], ##CLOB## is a synonym for ##LONGTEXT##.
+In [[sql_modeoracle-from-mariadb-103#synonyms-for-basic-sql-types|Oracle mode]], [[clob|##CLOB##]] is a synonym for ##LONGTEXT##.
 
+== EXAMPLES
+
+=== LONGTEXT
+
+Example of LONGTEXT:
+
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE longtext_example (
+   description VARCHAR(20),
+   example LONGTEXT
+) DEFAULT CHARSET=latin1; -- One byte per char makes the examples clearer
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;style class=bluebox&gt;&gt;
+====**Note**: 
+The maximum size of a ##LONGTEXT## is so large that it cannot be sent to the server without breaking the value up into chunks (something that the command-line client cannot do). For values larger than ##16M##, you can increase the ##max_allowed_packet## size up to a maximum of ##1024M## to increase the allowed size of non-chunked values.
+&lt;&lt;/style&gt;&gt;
+&lt;&lt;sql&gt;&gt;
+INSERT INTO longtext_example VALUES
+   (&#39;Normal foo&#39;, &#39;foo&#39;),
+   (&#39;Trailing spaces foo&#39;, &#39;foo      &#39;),
+   (&#39;NULLed&#39;, NULL),
+   (&#39;Empty&#39;, &#39;&#39;),
+   (&#39;Maximum&#39;, RPAD(&#39;&#39;, 4294967295, &#39;x&#39;));
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+ERROR 1301 (HY000): Result of rpad() was larger than max_allowed_packet (16777216) - truncated
+&lt;&lt;/sql&gt;&gt;
+
+=== Data Too Long
+
+When SQL_MODE is strict (the default) a value is considered &#34;too long&#34; when its length exceeds the size of the data type, and an error is generated.
+
+Example of data too long behavior for LONGTEXT:
+
+&lt;&lt;sql&gt;&gt;
+TRUNCATE longtext_example;
+
+INSERT INTO longtext_example VALUES
+   (&#39;Overflow&#39;, RPAD(&#39;&#39;, 4294967296, &#39;x&#39;));
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+ERROR 1301 (HY000): Result of rpad() was larger than max_allowed_packet (16777216) - truncated
+&lt;&lt;/sql&gt;&gt;
 == See Also
 * [[text|TEXT]]
 * [[blob-and-text-data-types|BLOB and TEXT Data Types]]

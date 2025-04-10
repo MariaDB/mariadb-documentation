@@ -316,7 +316,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/varchar/+r/128808/">128808</a></dd>
+            <dd><a href="/kb/en/varchar/+r/150501/">150501</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +325,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2023-08-14 22:27">2023-08-14 22:27</span></dd>
+<span class="datetime" title="2025-04-09 10:45">2025-04-09 10:45</span></dd>
         </dl>
     </div>
     
@@ -335,12 +335,12 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">== Syntax
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+== Syntax
 
 &lt;&lt;code&gt;&gt;
 [NATIONAL] VARCHAR(M) [CHARACTER SET charset_name] [COLLATE collation_name]
 &lt;&lt;/code&gt;&gt;
-&lt;&lt;toc&gt;&gt;
 == Description
 
 A variable-length string. M represents the maximum column length in
@@ -349,10 +349,11 @@ length of a VARCHAR is subject to the maximum row size and the character set use
 example, utf8 characters can require up to three bytes per character,
 so a VARCHAR column that uses the utf8 character set can be declared
 to be a maximum of 21,844 characters.
-
-**Note:** For the [[columnstore|ColumnStore]] engine, M represents the maximum column length in
+&lt;&lt;style class=bluebox&gt;&gt;
+==== **Note:** 
+For the [[columnstore|ColumnStore]] engine, M represents the maximum column length in
 bytes.
-
+&lt;&lt;/style&gt;&gt;
 MariaDB stores VARCHAR values as a one-byte or two-byte length prefix
 plus data. The length prefix indicates the number of bytes in the
 value. A VARCHAR column uses one length byte if values require no more
@@ -369,11 +370,18 @@ predefined character set. MariaDB uses utf8 as this
 predefined character set, as does MySQL 4.1 and up.
 NVARCHAR is shorthand for NATIONAL VARCHAR.
 
-Before MariaDB 10.2, all MariaDB [[character-sets|collations]] were of type ##PADSPACE##, meaning that VARCHAR (as well as [[char|CHAR]] and [[text|TEXT]] values) are compared without regard for trailing spaces. This does not apply to the [[like|LIKE]] pattern-matching operator, which takes into account trailing spaces. From MariaDB 10.2, a number of [[supported-character-sets-and-collations/#no-pad-collations|NO PAD collations]] are available.
+For MariaDB, a number of [[supported-character-sets-and-collations/#no-pad-collations|NO PAD collations]] are available.
 
 If a unique index consists of a column where trailing pad characters are stripped or ignored, inserts into that column where values differ only by the number of trailing pad characters will result in a duplicate-key error.
 
+=== SYNONYMS
+The following are synonyms for VARCHAR:
+* CHAR VARYING
+* CHARACTER VARYING
+* VARCHAR2
+* VARCHARACTER
 == Examples
+
 The following are equivalent:
 &lt;&lt;code&gt;&gt;
 VARCHAR(30) CHARACTER SET utf8
@@ -384,7 +392,7 @@ NATIONAL CHARACTER VARYING(30)
 NATIONAL CHAR VARYING(30)
 &lt;&lt;/code&gt;&gt;
 
-Trailing spaces:
+=== Trailing spaces
 &lt;&lt;sql&gt;&gt;
 CREATE TABLE strtest (v VARCHAR(10));
 INSERT INTO strtest VALUES(&#39;Maria   &#39;);
@@ -403,6 +411,61 @@ SELECT v LIKE &#39;Maria&#39;,v LIKE &#39;Maria   &#39; FROM strtest;
 |              0 |                 1 |
 +----------------+-------------------+
 &lt;&lt;/sql&gt;&gt;
+=== VARCHAR
+
+For our example of VARCHAR we picked a maximum size that avoids overflowing the maximum row size (65535). Keep in mind that a multi-byte character set would need more space in the row than a single-byte character set. We also avoid the auto-conversion of a VARCHAR into a TEXT, MEDIUMTEXT, or LONGTEXT that can happen when STRICT_TRANS_TABLES is not set in the SQL_MODE.
+
+The example:
+
+&lt;&lt;code&gt;&gt;
+CREATE TABLE varchar_example (
+   description VARCHAR(20),
+   example VARCHAR(65511)
+) DEFAULT CHARSET=latin1; -- One byte per char makes the examples clearer
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+INSERT INTO varchar_example VALUES
+   (&#39;Normal foo&#39;, &#39;foo&#39;),
+   (&#39;Trailing spaces foo&#39;, &#39;foo      &#39;),
+   (&#39;NULLed&#39;, NULL),
+   (&#39;Empty&#39;, &#39;&#39;),
+   (&#39;Maximum&#39;, RPAD(&#39;&#39;, 65511, &#39;x&#39;));
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+SELECT description, LENGTH(example) AS length
+   FROM varchar_example;
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
++---------------------+--------+
+| description         | length |
++---------------------+--------+
+| Normal foo          |      3 |
+| Trailing spaces foo |      9 |
+| NULLed              |   NULL |
+| Empty               |      0 |
+| Maximum             |  65511 |
++---------------------+--------+
+&lt;&lt;/code&gt;&gt;
+
+=== Data Too Long
+
+When SQL_MODE is strict (the default) a value is considered &#34;too long&#34; when its length exceeds the size of the data type, and an error is generated.
+
+Example of data too long behavior for VARCHAR:
+
+&lt;&lt;code&gt;&gt;
+TRUNCATE varchar_example;
+
+INSERT INTO varchar_example VALUES
+   (&#39;Overflow&#39;, RPAD(&#39;&#39;, 65512, &#39;x&#39;));
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+ERROR 1406 (22001): Data too long for column &#39;example&#39; at row 1
+&lt;&lt;/code&gt;&gt;
 
 == Truncation
 
@@ -413,7 +476,7 @@ SELECT v LIKE &#39;Maria&#39;,v LIKE &#39;Maria   &#39; FROM strtest;
 * Using [[text|TEXT]] or [[blob|BLOB]] in a [[select|SELECT]] query that uses temporary tables for storing intermediate results will force the temporary table to be disk based (using the [[aria-storage-engine|Aria storage engine]] instead of the [[memory-storage-engine|memory storage engine]], which is a bit slower. This is not that bad as the [[aria-storage-engine|Aria storage engine]] caches the rows in memory. To get the benefit of this, one should ensure that the [[aria-system-variables/#aria_pagecache_buffer_size|aria_pagecache_buffer_size]] variable is big enough to hold most of the row and index data for temporary tables.
 
 == Oracle Mode
-In [[sql_modeoracle-from-mariadb-103#synonyms-for-basic-sql-types|Oracle mode from MariaDB 10.3]], ##VARCHAR2## is a synonym.
+In [[sql_modeoracle-from-mariadb-103#synonyms-for-basic-sql-types|Oracle mode]], ##VARCHAR2## is a synonym.
 
 === For Storage Engine Developers
 

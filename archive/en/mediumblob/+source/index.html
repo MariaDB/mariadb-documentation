@@ -232,8 +232,6 @@
                             <li><a href="/kb/en/">Home</a></li>
                             
                                 
-                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
-                                
                                 <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
                                 <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
                                 <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
@@ -316,7 +314,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mediumblob/+r/67057/">67057</a></dd>
+            <dd><a href="/kb/en/mediumblob/+r/150461/">150461</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +323,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2018-03-14 08:42">2018-03-14 08:42</span></dd>
+<span class="datetime" title="2025-04-09 08:26">2025-04-09 08:26</span></dd>
         </dl>
     </div>
     
@@ -348,6 +346,65 @@ length of 16,777,215 (2^^24^^ - 1) bytes.
 Each MEDIUMBLOB value is stored using a three-byte length prefix that
 indicates the number of bytes in the value. 
 
+##LONG VARBINARY## is a synonym for ##MEDIUMBLOB##
+
+== EXAMPLES
+
+=== MEDIUMBLOB
+
+Example of MEDIUMBLOB:
+
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE mediumblob_example (
+   description VARCHAR(20),
+   example MEDIUMBLOB
+) DEFAULT CHARSET=latin1; -- One byte per char makes the examples clearer
+
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO mediumblob_example VALUES
+   (&#39;Normal foo&#39;, &#39;foo&#39;),
+   (&#39;Trailing spaces foo&#39;, &#39;foo      &#39;),
+   (&#39;NULLed&#39;, NULL),
+   (&#39;Empty&#39;, &#39;&#39;),
+   (&#39;Maximum&#39;, RPAD(&#39;&#39;, 16777215, CHAR(7)));
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+SELECT description, LENGTH(example) AS length
+   FROM mediumblob_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
++---------------------+----------+
+| description         | length   |
++---------------------+----------+
+| Normal foo          |        3 |
+| Trailing spaces foo |        9 |
+| NULLed              |     NULL |
+| Empty               |        0 |
+| Maximum             | 16777215 |
++---------------------+----------+
+&lt;&lt;/sql&gt;&gt;
+
+=== Data Too Long
+
+When SQL_MODE is strict (the default) a value is considered &#34;too long&#34; when its length exceeds the size of the data type, and an error is generated.
+
+Example of data too long behavior for MEDIUMBLOB:
+&lt;&lt;sql&gt;&gt;
+
+TRUNCATE mediumblob_example;
+&lt;&lt;/sql&gt;&gt;
+&lt;&lt;sql&gt;&gt;
+INSERT INTO mediumblob_example VALUES
+   (&#39;Overflow&#39;, RPAD(&#39;&#39;, 16777216, CHAR(7)));
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+ERROR 1406 (22001): Data too long for column &#39;example&#39; at row 1
+&lt;&lt;/sql&gt;&gt;
 == See Also
 * [[blob|BLOB]]
 * [[blob-and-text-data-types|BLOB and TEXT Data Types]]

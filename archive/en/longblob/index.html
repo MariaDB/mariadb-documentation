@@ -230,8 +230,6 @@
                             <li><a href="/kb/en/">Home</a></li>
                             
                                 
-                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
-                                
                                 <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
                                 <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
                                 <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
@@ -280,7 +278,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-08-14 22:26">1 year, 7 months ago</span></dd>
+<span class="datetime" title="2025-04-09 08:04">15 hours, 59 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -426,7 +424,28 @@
 
     
     <div class="answer formatted">
-        <h2 class="anchored_heading" id="syntax">Syntax</h2>
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#syntax" title="Syntax">Syntax</a></li>
+
+    <li class=""><a href="#description" title="Description">Description</a>    <ol class="toc">
+
+        <li class=""><a href="#oracle-mode" title="Oracle Mode">Oracle Mode</a>    </ol>
+</li>
+
+    <li class=""><a href="#examples" title="EXAMPLES">EXAMPLES</a>    <ol class="toc">
+
+        <li class=""><a href="#longblob" title="LONGBLOB">LONGBLOB</a></li>
+
+        <li class=""><a href="#data-too-long" title="Data Too Long">Data Too Long</a>    </ol>
+</li>
+
+    <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
+</li>
+</div>
+<h2 class="anchored_heading" id="syntax">Syntax</h2>
 <pre class="fixed">LONGBLOB
 </pre><h2 class="anchored_heading" id="description">Description</h2>
 <p>A <a href="/kb/en/blob/">BLOB</a> column with a 
@@ -435,8 +454,32 @@ configured maximum packet size in the client/server protocol and
 available memory. Each LONGBLOB value is stored using a four-byte
 length prefix that indicates the number of bytes in the value.</p>
 <h3 class="anchored_heading" id="oracle-mode">Oracle Mode</h3>
-<p>In <a href="/kb/en/sql_modeoracle-from-mariadb-103/#synonyms-for-basic-sql-types">Oracle mode from MariaDB 10.3</a>, <code>BLOB</code> is a synonym for <code>LONGBLOB</code>.</p>
-<h2 class="anchored_heading" id="see-also">See Also</h2>
+<p>In <a href="/kb/en/sql_modeoracle-from-mariadb-103/#synonyms-for-basic-sql-types">Oracle mode</a>, <code>BLOB</code> is a synonym for <code>LONGBLOB</code>.</p>
+<h2 class="anchored_heading" id="examples">EXAMPLES</h2>
+<h3 class="anchored_heading" id="longblob">LONGBLOB</h3>
+<p>Example of LONGBLOB:</p>
+<pre class="fixed"><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">longblob_example</span> <span class="p">(</span>
+   <span class="n">description</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span>
+   <span class="n">example</span> <span class="n">LONGBLOB</span>
+<span class="p">)</span> <span class="k">DEFAULT</span> <span class="n">CHARSET</span><span class="o">=</span><span class="n">latin1</span><span class="p">;</span> <span class="c1">-- One byte per char makes the examples clearer</span>
+</pre><p>Note that the maximum size of a LONGBLOB is so large that it cannot be sent to the server without breaking the value up into chunks (something that the command-line client cannot do). For values larger than 16M you can increase the max_allowed_packet size up to a maximum of 1024M to increase the allowed size of non-chunked values.</p>
+<pre class="fixed"><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">longblob_example</span> <span class="k">VALUES</span>
+   <span class="p">(</span><span class="s1">&#39;Normal foo&#39;</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">),</span>
+   <span class="p">(</span><span class="s1">&#39;Trailing spaces foo&#39;</span><span class="p">,</span> <span class="s1">&#39;foo      &#39;</span><span class="p">),</span>
+   <span class="p">(</span><span class="s1">&#39;NULLed&#39;</span><span class="p">,</span> <span class="k">NULL</span><span class="p">),</span>
+   <span class="p">(</span><span class="s1">&#39;Empty&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+   <span class="p">(</span><span class="s1">&#39;Maximum&#39;</span><span class="p">,</span> <span class="n">RPAD</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">4294967295</span><span class="p">,</span> <span class="nb">CHAR</span><span class="p">(</span><span class="mi">7</span><span class="p">)));</span>
+</pre><pre class="fixed"><span class="n">ERROR</span> <span class="mi">1301</span> <span class="p">(</span><span class="n">HY000</span><span class="p">):</span> <span class="k">Result</span> <span class="k">of</span> <span class="n">rpad</span><span class="p">()</span> <span class="n">was</span> <span class="n">larger</span> <span class="k">than</span> <span class="n">max_allowed_packet</span> <span class="p">(</span><span class="mi">16777216</span><span class="p">)</span> <span class="o">-</span> <span class="n">truncated</span>
+</pre><h3 class="anchored_heading" id="data-too-long">Data Too Long</h3>
+<p>When SQL_MODE is strict (the default) a value is considered "too long" when its length exceeds the size of the data type, and an error is generated.</p>
+<p>Example of data too long behavior for LONGBLOB:</p>
+<pre class="fixed"><span class="k">TRUNCATE</span> <span class="n">longblob_example</span><span class="p">;</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">longblob_example</span> <span class="k">VALUES</span>
+   <span class="p">(</span><span class="s1">&#39;Overflow&#39;</span><span class="p">,</span> <span class="n">RPAD</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">4294967296</span><span class="p">,</span> <span class="nb">CHAR</span><span class="p">(</span><span class="mi">7</span><span class="p">)));</span>
+</pre><pre class="fixed"><span class="n">ERROR</span> <span class="mi">1301</span> <span class="p">(</span><span class="n">HY000</span><span class="p">):</span> <span class="k">Result</span> <span class="k">of</span> <span class="n">rpad</span><span class="p">()</span> <span class="n">was</span> <span class="n">larger</span> <span class="k">than</span> <span class="n">max_allowed_packet</span> <span class="p">(</span><span class="mi">16777216</span><span class="p">)</span> <span class="o">-</span> <span class="n">truncated</span>
+
+</pre><h2 class="anchored_heading" id="see-also">See Also</h2>
 <ul start="1"><li><a href="/kb/en/blob/">BLOB</a>
 </li><li><a href="/kb/en/blob-and-text-data-types/">BLOB and TEXT Data Types</a>
 </li><li><a href="/kb/en/data-type-storage-requirements/">Data Type Storage Requirements</a>
@@ -599,7 +642,7 @@ length prefix that indicates the number of bytes in the value.</p>
             
                 
                     <li>
-                        <a href="/kb/en/json-data-type/">
+                        <a href="/kb/en/json/">
                             
                             JSON Data Type
                         </a>

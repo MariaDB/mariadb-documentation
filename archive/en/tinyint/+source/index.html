@@ -232,8 +232,6 @@
                             <li><a href="/kb/en/">Home</a></li>
                             
                                 
-                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
-                                
                                 <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
                                 <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
                                 <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
@@ -316,7 +314,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/tinyint/+r/104252/">104252</a></dd>
+            <dd><a href="/kb/en/tinyint/+r/150493/">150493</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +323,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2021-02-25 20:46">2021-02-25 20:46</span></dd>
+<span class="datetime" title="2025-04-09 10:23">2025-04-09 10:23</span></dd>
         </dl>
     </div>
     
@@ -335,25 +333,25 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">== Syntax
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+== Syntax
 
 &lt;&lt;code&gt;&gt;
 TINYINT[(M)] [SIGNED | UNSIGNED | ZEROFILL]
 &lt;&lt;/code&gt;&gt;
-&lt;&lt;toc&gt;&gt;
+
 
 == Description
 
 A very small [[sql_language-data_types-int|integer]]. The signed range is -128 to 127. The unsigned range is 0 to 255. For details on the attributes, see [[numeric-data-type-overview|Numeric Data Type Overview]].
 
-[[int1|INT1]] is a synonym for ##TINYINT##. [[boolean|BOOL and BOOLEAN]] are synonyms for ##TINYINT(1)##.
-
+[[int1|INT1]], [[boolean|BOOL, and BOOLEAN]] are synonyms for ##TINYINT##.
 == Examples
 &lt;&lt;sql&gt;&gt;
 CREATE TABLE tinyints (a TINYINT,b TINYINT UNSIGNED,c TINYINT ZEROFILL);
 &lt;&lt;/sql&gt;&gt;
 
-With [[sql-mode/#strict-mode|strict_mode]] set, the default from MariaDB 10.2.4:
+=== With [[sql-mode/#strict-mode|strict_mode]] set
 &lt;&lt;sql&gt;&gt;
 INSERT INTO tinyints VALUES (-10,-10,-10);
 ERROR 1264 (22003): Out of range value for column &#39;b&#39; at row 1
@@ -383,45 +381,165 @@ SELECT * FROM tinyints;
 |  127 |  128 |  128 |
 +------+------+------+
 &lt;&lt;/sql&gt;&gt;
+=== SIGNED and UNSIGNED
 
-With [[sql-mode/#strict-mode|strict_mode]] unset, the default until MariaDB 10.2.3:
+The ##TINYINT## data type may be ##SIGNED## (allowing negative values) or ##UNSIGNED## (not allowing negative values).
+
+Example of TINYINT SIGNED (the default):
+
 &lt;&lt;sql&gt;&gt;
-INSERT INTO tinyints VALUES (-10,-10,-10);
-Query OK, 1 row affected, 2 warnings (0.08 sec)
-Warning (Code 1264): Out of range value for column &#39;b&#39; at row 1
-Warning (Code 1264): Out of range value for column &#39;c&#39; at row 1
+CREATE TABLE tinyint_signed_example (
+   description VARCHAR(20),
+   example TINYINT SIGNED
+);
+&lt;&lt;/sql&gt;&gt;
 
-INSERT INTO tinyints VALUES (-10,10,-10);
-Query OK, 1 row affected, 1 warning (0.11 sec)
-Warning (Code 1264): Out of range value for column &#39;c&#39; at row 1
+&lt;&lt;sql&gt;&gt;
+INSERT INTO tinyint_signed_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, -128),
+   (&#39;Maximum&#39;, 127);
+&lt;&lt;/sql&gt;&gt;
 
-INSERT INTO tinyints VALUES (-10,10,10);
+Example of TINYINT UNSIGNED:
 
-SELECT * FROM tinyints;
-+------+------+------+
-| a    | b    | c    |
-+------+------+------+
-|  -10 |    0 |  000 |
-|  -10 |   10 |  000 |
-|  -10 |   10 |  010 |
-+------+------+------+
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE tinyint_unsigned_example (
+   description VARCHAR(20),
+   example TINYINT UNSIGNED
+);
+&lt;&lt;/sql&gt;&gt;
 
-INSERT INTO tinyints VALUES (128,128,128);
-Query OK, 1 row affected, 1 warning (0.19 sec)
-Warning (Code 1264): Out of range value for column &#39;a&#39; at row 1
 
-INSERT INTO tinyints VALUES (127,128,128);
+&lt;&lt;sql&gt;&gt;
+INSERT INTO tinyint_unsigned_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, 0),
+   (&#39;Maximum&#39;, 255);
+&lt;&lt;/sql&gt;&gt;
 
-SELECT * FROM tinyints;
-+------+------+------+
-| a    | b    | c    |
-+------+------+------+
-|  -10 |    0 |  000 |
-|  -10 |   10 |  000 |
-|  -10 |   10 |  010 |
-|  127 |  128 |  128 |
-|  127 |  128 |  128 |
-+------+------+------+
+=== Out-of-Range
+
+A value is considered &#34;out-of-range&#34; when it is too small or too large to be stored in a data type. When ##sql_mode=STRICT_TRANS_TABLES## (the default) is set, an out-of-range value generates an error. If strict mode is not in effect, the value is rounded to the nearest valid value and a warning is generated (which might be hidden, depending on your warning settings).
+
+An example of non-strict out-of-range behavior:
+
+&lt;&lt;sql&gt;&gt;
+TRUNCATE tinyint_signed_example;
+
+-- Disable strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+
+INSERT INTO tinyint_signed_example VALUES
+   (&#39;Underflow&#39;, -129),
+   (&#39;Overflow&#39;, 128);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 2
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+
+SELECT * FROM tinyint_signed_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
++-------------+---------+
+| description | example |
++-------------+---------+
+| Underflow   |    -128 |
+| Overflow    |     127 |
++-------------+---------+
+
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+TRUNCATE tinyint_unsigned_example;
+
+-- Disable strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+
+INSERT INTO tinyint_unsigned_example VALUES
+   (&#39;Underflow&#39;, -1),
+   (&#39;Overflow&#39;, 256);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 2
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+SELECT * FROM tinyint_unsigned_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
++-------------+---------+
+| description | example |
++-------------+---------+
+| Underflow   |       0 |
+| Overflow    |     255 |
++-------------+---------+
+
+&lt;&lt;/sql&gt;&gt;
+
+=== TINYINT ZEROFILL
+
+A special type of ##TINYINT UNSIGNED## is ##TINYINT ZEROFILL##, which pads out the values with leading zeros in SELECT results. The number of leading zeros are just enough to pad the field out to the length of the type&#39;s maximum unsigned value, but the zeros are not included in an expression result or in a UNION ##SELECT## column.
+
+Using ##TINYINT ZEROFILL## works the same way as ##TINYINT UNSIGNED## for most operations except a simple ##SELECT##. For example, with the following test table setup:
+
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE tinyint_zerofill_example (
+   description VARCHAR(20),
+   example TINYINT ZEROFILL
+);
+INSERT INTO tinyint_zerofill_example VALUES
+   (&#39;Zero&#39;, 0),
+   (&#39;Forty-Two&#39;, 42),
+   (&#39;Minimum&#39;, 0),
+   (&#39;Maximum&#39;, 255);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+-- Turn off strict mode or the inserts will fail
+SET sql_mode=(SELECT REPLACE(@@sql_mode, &#39;STRICT_TRANS_TABLES&#39;, &#39;&#39;));
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO tinyint_zerofill_example VALUES
+   (&#39;Underflow&#39;, -1),
+   (&#39;Overflow&#39;, 256);
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 1
+Warning (sql 1264): Out of range value for column &#39;example&#39; at row 2
+&lt;&lt;/sql&gt;&gt;
+
+The resulting data would look like this:
+&lt;&lt;sql&gt;&gt;
+
+SELECT *, example + 0 FROM tinyint_zerofill_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
++-------------+---------+-------------+
+| description | example | example + 0 |
++-------------+---------+-------------+
+| Zero        |     000 |           0 |
+| Forty-Two   |     042 |          42 |
+| Minimum     |     000 |           0 |
+| Maximum     |     255 |         255 |
+| Underflow   |     000 |           0 |
+| Overflow    |     255 |         255 |
++-------------+---------+-------------+
+
 &lt;&lt;/sql&gt;&gt;
 
 == See Also

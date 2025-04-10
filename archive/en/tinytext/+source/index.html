@@ -232,8 +232,6 @@
                             <li><a href="/kb/en/">Home</a></li>
                             
                                 
-                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
-                                
                                 <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
                                 <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
                                 <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
@@ -316,7 +314,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/tinytext/+r/67059/">67059</a></dd>
+            <dd><a href="/kb/en/tinytext/+r/150494/">150494</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +323,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2018-03-14 08:44">2018-03-14 08:44</span></dd>
+<span class="datetime" title="2025-04-09 10:28">2025-04-09 10:28</span></dd>
         </dl>
     </div>
     
@@ -335,7 +333,8 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">== Syntax
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
+== Syntax
 
 &lt;&lt;code&gt;&gt;
 TINYTEXT [CHARACTER SET charset_name] [COLLATE collation_name]
@@ -345,6 +344,63 @@ TINYTEXT [CHARACTER SET charset_name] [COLLATE collation_name]
 
 A [[text|TEXT]] column with a maximum length of 255 (##2^^8^^ - 1##) characters. The effective maximum length is less if the value contains multi-byte characters. Each TINYTEXT value is stored using a one-byte length prefix that indicates the number of bytes in the value.
 
+== EXAMPLES
+
+=== TINYTEXT
+
+Example of TINYTEXT:
+
+&lt;&lt;sql&gt;&gt;
+CREATE TABLE tinytext_example (
+   description VARCHAR(20),
+   example TINYTEXT
+) DEFAULT CHARSET=latin1; -- One byte per char makes the examples clearer
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+INSERT INTO tinytext_example VALUES
+   (&#39;Normal foo&#39;, &#39;foo&#39;),
+   (&#39;Trailing spaces foo&#39;, &#39;foo      &#39;),
+   (&#39;NULLed&#39;, NULL),
+   (&#39;Empty&#39;, &#39;&#39;),
+   (&#39;Maximum&#39;, RPAD(&#39;&#39;, 255, &#39;x&#39;));
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+SELECT description, LENGTH(example) AS length
+   FROM tinytext_example;
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+
++---------------------+--------+
+| description         | length |
++---------------------+--------+
+| Normal foo          |      3 |
+| Trailing spaces foo |      9 |
+| NULLed              |   NULL |
+| Empty               |      0 |
+| Maximum             |    255 |
++---------------------+--------+
+&lt;&lt;/sql&gt;&gt;
+
+=== Data Too Long
+
+When SQL_MODE is strict (the default) a value is considered &#34;too long&#34; when its length exceeds the size of the data type, and an error is generated.
+
+Example of data too long behavior for TINYTEXT:
+&lt;&lt;sql&gt;&gt;
+
+TRUNCATE tinytext_example;
+
+INSERT INTO tinytext_example VALUES
+   (&#39;Overflow&#39;, RPAD(&#39;&#39;, 256, &#39;x&#39;));
+&lt;&lt;/sql&gt;&gt;
+
+&lt;&lt;sql&gt;&gt;
+
+ERROR 1406 (22001): Data too long for column &#39;example&#39; at row 1
+&lt;&lt;/sql&gt;&gt;
 == See Also
 * [[text|TEXT]]
 * [[blob-and-text-data-types|BLOB and TEXT Data Types]]
