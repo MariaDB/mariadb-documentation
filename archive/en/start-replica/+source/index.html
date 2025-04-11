@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
     <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
 
-    <title>START SLAVE - Source - MariaDB Knowledge Base</title>
+    <title>START REPLICA - Source - MariaDB Knowledge Base</title>
 
     <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
 
@@ -21,7 +21,7 @@
     
 
     <!-- FB Open Graph tags -->
-    <meta property="og:title" content="START SLAVE - Source" />
+    <meta property="og:title" content="START REPLICA - Source" />
     <meta property="og:type" content="article" />
     <meta property="og:url" content="https://mariadb.com/kb/en/start-replica/+source/" />
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
@@ -216,11 +216,11 @@
     
 
     
-    » <a class="crumb" href="/kb/en/replication-commands/">Replication Commands</a>
+    » <a class="crumb" href="/kb/en/replication-statements/">Replication Statements</a>
     
 
 
-    » <a class="node_link crumb" href="/kb/en/start-replica/">START SLAVE</a>
+    » <a class="node_link crumb" href="/kb/en/start-replica/">START REPLICA</a>
 
 
                 </div>
@@ -308,7 +308,7 @@
             
             <section id="content" class="limited_width col-md-10 clearfix">
                 
-                    <h1>START SLAVE - Source</h1>
+                    <h1>START REPLICA - Source</h1>
                 
 
                 
@@ -324,7 +324,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/start-replica/+r/135114/">135114</a></dd>
+            <dd><a href="/kb/en/start-replica/+r/150540/">150540</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-7">
@@ -333,7 +333,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2024-02-08 09:34">2024-02-08 09:34</span></dd>
+<span class="datetime" title="2025-04-10 12:26">2025-04-10 12:26</span></dd>
         </dl>
     </div>
     
@@ -346,78 +346,66 @@
         <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;include slug=&#34;replica_slave&#34;&gt;&gt;
 == Syntax
 &lt;&lt;code wrap=true&gt;&gt;
-START SLAVE [&#34;connection_name&#34;] [thread_type [, thread_type] ... ] [FOR CHANNEL &#34;connection_name&#34;]
-START SLAVE [&#34;connection_name&#34;] [SQL_THREAD] UNTIL                
-    MASTER_LOG_FILE = &#39;log_name&#39;, MASTER_LOG_POS = log_pos [FOR CHANNEL &#34;connection_name&#34;]
-START SLAVE [&#34;connection_name&#34;] [SQL_THREAD] UNTIL
-    RELAY_LOG_FILE = &#39;log_name&#39;, RELAY_LOG_POS = log_pos [FOR CHANNEL &#34;connection_name&#34;]
-START SLAVE [&#34;connection_name&#34;] [SQL_THREAD] UNTIL
-    MASTER_GTID_POS = &lt;GTID position&gt; [FOR CHANNEL &#34;connection_name&#34;]
-START ALL SLAVES [thread_type [, thread_type]]
-
-START REPLICA [&#34;connection_name&#34;] [thread_type [, thread_type] ... ] -- from 10.5.1
+START REPLICA [&#34;connection_name&#34;] [thread_type [, thread_type] ... ]
 START REPLICA [&#34;connection_name&#34;] [SQL_THREAD] UNTIL                
-    MASTER_LOG_FILE = &#39;log_name&#39;, MASTER_LOG_POS = log_pos -- from 10.5.1
+    MASTER_LOG_FILE = &#39;log_name&#39;, MASTER_LOG_POS = log_pos 
 START REPLICA [&#34;connection_name&#34;] [SQL_THREAD] UNTIL
-    RELAY_LOG_FILE = &#39;log_name&#39;, RELAY_LOG_POS = log_pos -- from 10.5.1
+    RELAY_LOG_FILE = &#39;log_name&#39;, RELAY_LOG_POS = log_pos 
 START REPLICA [&#34;connection_name&#34;] [SQL_THREAD] UNTIL
-    MASTER_GTID_POS = &lt;GTID position&gt; -- from 10.5.1
-START ALL REPLICAS [thread_type [, thread_type]] -- from 10.5.1
+    MASTER_GTID_POS = &lt;GTID position&gt; 
+START ALL REPLICAS [thread_type [, thread_type]] 
 
 thread_type: IO_THREAD | SQL_THREAD
 &lt;&lt;/code&gt;&gt;
 &lt;&lt;toc&gt;&gt;
 == Description
-##START SLAVE## (##START REPLICA## from MariaDB 10.5.1) with no thread_type options starts both of the replica threads (see [[replication]]) needed to connect with a master setup with  [[change-master-to|CHANGE MASTER TO]] .
+##START REPLICA## (##START REPLICA## from MariaDB 10.5.1) with no thread_type options starts both of the replica threads (see [[replication]]) needed to connect with a master setup with [[change-master-to|CHANGE MASTER TO]] .
  The I/O thread reads events from the primary server and stores
 them in the [[relay-log|relay log]]. The SQL thread reads events from the relay log
-and executes them. ##START SLAVE## requires the [[grant/#super|SUPER]] privilege, or, from MariaDB 10.5.2, the [[grant/#replication-slave-admin|REPLICATION SLAVE ADMIN]] privilege.
+and executes them. ##START REPLICA## requires the [[grant/#super|SUPER]] privilege, or, from MariaDB 10.5.2, the [[grant/#replication-slave-admin|REPLICATION SLAVE ADMIN]] privilege.
 
-If ##START SLAVE## succeeds in starting the replica threads, it returns
+If ##START REPLICA## succeeds in starting the replica threads, it returns
 without any error. However, even in that case, it might be that the
 replica threads start and then later stop (for example, because they do
 not manage to connect to the primary or read its [[binary-log|binary log]], or some
-other problem). ##START SLAVE## does not warn you about this. You must
+other problem). ##START REPLICA## does not warn you about this. You must
 check the replica&#39;s [[error-log|error log]] for error messages generated by the replica
-threads, or check that they are running satisfactorily with [[show-replica-status|SHOW SLAVE
-STATUS]] ([[show-replica-status|SHOW REPLICA STATUS]] from MariaDB 10.5.1).
+threads, or check that they are running satisfactorily with [[show-replica-status|SHOW REPLICA
+STATUS]] ([[show-replica-status|SHOW REPLICA STATUS]]).
 
-==== START SLAVE UNTIL
-##START SLAVE UNTIL## refers to the ##SQL_THREAD## replica position at which the ##SQL_THREAD## replication will halt. If ##SQL_THREAD## isn&#39;t specified both threads are started.
+==== START REPLICA UNTIL
+##START REPLICA UNTIL## refers to the ##SQL_THREAD## replica position at which the ##SQL_THREAD## replication will halt. If ##SQL_THREAD## isn&#39;t specified both threads are started.
 
-##START SLAVE UNTIL master_gtid_pos=xxx## is also supported. See [[global-transaction-id#start-slave-until-master_gtid_posxxx|Global Transaction ID/START SLAVE UNTIL master_gtid_pos=xxx]] for more details.
+##START REPLICA UNTIL master_gtid_pos=xxx## is also supported. See [[global-transaction-id#start-slave-until-master_gtid_posxxx|Global Transaction ID/START REPLICA UNTIL master_gtid_pos=xxx]] for more details.
 
 
 &lt;&lt;product mariadb from=11.3.0&gt;&gt;
+
 =====SQL_BEFORE_GTIDS|SQL_AFTER_GTIDS
-MariaDB 11.3 extended the START SLAVE UNTIL command with the options ##SQL_BEFORE_GTIDS## and ##SQL_AFTER_GTIDS## to allow control of whether the replica stops before or after a provided GTID state. Its
+MariaDB 11.3 extended the START REPLICA UNTIL command with the options ##SQL_BEFORE_GTIDS## and ##SQL_AFTER_GTIDS## to allow control of whether the replica stops before or after a provided GTID state. Its
 syntax is:
 &lt;&lt;sql&gt;&gt;
-START SLAVE UNTIL (SQL_BEFORE_GTIDS|SQL_AFTER_GTIDS)=&#34;&lt;gtid_list&gt;&#34;
+START REPLICA UNTIL (SQL_BEFORE_GTIDS|SQL_AFTER_GTIDS)=&#34;&lt;gtid_list&gt;&#34;
 &lt;&lt;/sql&gt;&gt;
 See [[gtid/#sql_before_gtidssql_after_gtids|Global Transaction ID#SQL_BEFORE_GTIDS/SQL_AFTER_GTIDS]] for details.
 &lt;&lt;/product&gt;&gt;
 
 ==== connection_name
-If there is only one nameless primary, or the default primary (as specified by the [[replication-and-binary-log-server-system-variables#default_master_connection|default_master_connection]] system variable) is intended, ##connection_name## can be omitted. If provided, the ##START SLAVE## statement will apply to the specified primary. ##connection_name## is case-insensitive.
+If there is only one nameless primary, or the default primary (as specified by the [[replication-and-binary-log-server-system-variables#default_master_connection|default_master_connection]] system variable) is intended, ##connection_name## can be omitted. If provided, the ##START REPLICA## statement will apply to the specified primary. ##connection_name## is case-insensitive.
 
 &lt;&lt;product MariaDB from=10.7.0&gt;&gt;
 The ##FOR CHANNEL## keyword was added for MySQL compatibility. This is identical as
-using the channel_name directly after ##START SLAVE##.
+using the channel_name directly after ##START REPLICA##.
 &lt;&lt;/product&gt;&gt;
-==== START ALL SLAVES
-##START ALL SLAVES## starts all configured replicas (replicas with master_host not empty) that were not started before.  It will give a ##note## for all started connections. You can check the notes with [[show-warnings|SHOW WARNINGS]].
 
-==== START REPLICA
-&lt;&lt;product mariadb from=10.5.1&gt;&gt;
-##START REPLICA## is an alias for ##START SLAVE## from MariaDB 10.5.1. 
-&lt;&lt;/product&gt;&gt;
+==== START ALL REPLICAS
+##START ALL REPLICAS## starts all configured replicas (replicas with master_host not empty) that were not started before.  It will give a ##note## for all started connections. You can check the notes with [[show-warnings|SHOW WARNINGS]].
 
 == See Also
 * [[setting-up-replication|Setting up replication]].
 * [[change-master-to|CHANGE MASTER TO]] is used to create and change connections.
-* [[stop-slave|STOP SLAVE]] is used to stop a running connection.
-* [[reset-slave|RESET SLAVE]] is used to reset parameters for a connection and also to permanently delete a primary connection.</textarea>
+* [[stop-slave|STOP REPLICA]] is used to stop a running connection.
+* [[reset-slave|RESET REPLICA]] is used to reset parameters for a connection and also to permanently delete a primary connection.</textarea>
     
 
 
