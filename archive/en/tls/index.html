@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>TLS - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
+
+    
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="TLS" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/tls/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="Issue, configure and rotate TLS certificates for MariaDB and MaxScale" />
+
+    <meta name="description" content="Issue, configure and rotate TLS certificates for MariaDB and MaxScale" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/tls/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/tls/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/solutions" title="Solutions">Solutions</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="Company">Company</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-enterprise-server/">MariaDB Enterprise Server</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-enterprise-operator/">MariaDB Enterprise Operator</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/tls/">TLS</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/tls/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/tls/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/tls/+flag"
+                data-flag-url="/kb/en/tls/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/tls/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2025-02-27 18:31">1 month, 3 weeks ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2025-04-22 08:36">15 hours, 26 minutes ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/tls/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/tls/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/tls/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/tls/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>TLS</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <p>MariaDB Enterprise Operator supports issuing, configuring and rotating TLS certiticates for both your <code>MariaDB</code> and <code>MaxScale</code> resources. It aims to be secure by default, for this reason, TLS certificates are issued and configured by the operator as a default behaviour.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#mariadb-configuration"><code>MariaDB</code> configuration</a></li>
+<li><a href="#maxscale-configuration"><code>MaxScale</code> configuration</a></li>
+<li><a href="#mariadb-certificate-specification"><code>MariaDB</code> certificate specification</a></li>
+<li><a href="#maxscale-certificate-specification"><code>MaxScale</code> certificate specification</a></li>
+<li><a href="#ca-bundle">CA bundle</a></li>
+<li><a href="#issue-certificates-with-the-operator">Issue certificates with the operator</a></li>
+<li><a href="#issue-certificates-with-cert-manager">Issue certificates with cert-manager</a></li>
+<li><a href="#provide-your-own-certificates">Provide your own certificates</a></li>
+<li><a href="#bring-your-own-ca">Bring your own CA</a></li>
+<li><a href="#intermediate-cas">Intermediate CAs</a></li>
+<li><a href="#custom-trust">Custom trust</a></li>
+<li><a href="#distributing-trust">Distributing trust</a></li>
+<li><a href="#tls-version-configuration">TLS version configuration</a></li>
+<li><a href="#certificate-lifetime-configuration">Certificate lifetime configuration</a></li>
+<li><a href="#private-key-configuration">Private key configuration</a></li>
+<li><a href="#ca-renewal">CA renewal</a></li>
+<li><a href="#certificate-renewal">Certificate renewal</a></li>
+<li><a href="#certificate-status">Certificate status</a></li>
+<li><a href="#tls-requirements-for-users">TLS requirements for <code>Users</code></a></li>
+<li><a href="#galera-enterprise-ssl-modes">Galera Enterprise SSL modes</a></li>
+<li><a href="#secure-application-connections-with-tls">Secure application connections with TLS</a></li>
+<li><a href="#test-tls-certificates-with-connections">Test TLS certificates with <code>Connections</code></a></li>
+<li><a href="#limitations">Limitations</a></li>
+</ul>
+<h2 id="mariadb-configuration"><code>MariaDB</code> configuration</h2>
+<blockquote>
+<p><strong>IMPORTANT</strong><br>
+This section covers TLS configuration in new instances. If you are looking to migrate an existing instance to use TLS, please refer to <a href="https://mariadb.com/kb/en/enabling-tls-in-existing-instances/">Enabling TLS in existing instances</a> instead.</p>
+</blockquote>
+<p>TLS can be configured in <code>MariaDB</code> resources by setting <code>tls.enabled=true</code>:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<p>As a result, the operator will generate a Certificate Authority (CA) and use it to issue the leaf certificates mounted by the instance. It is important to note that the TLS connections are not enforced in this case i.e. both TLS and non-TLS connections will be accepted. This is the default behaviour when no <code>tls</code> field is specified.</p>
+<p>If you want to enforce TLS connections, you can set <code>tls.required=true</code>:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>required</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<p>This approach ensures that any unencrypted connection will fail, effectively enforcing security best practices.</p>
+<p>If you want to fully opt-out from TLS, you can set <code>tls.enabled=false</code>:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>false</span>
+</pre></div>
+
+
+<p>This will disable certificate issuance, resulting in all connections being unencrypted.</p>
+<p>Refer to further sections for a more advanced TLS configuration.</p>
+<h2 id="maxscale-configuration"><code>MaxScale</code> configuration</h2>
+<blockquote>
+<p><strong>IMPORTANT</strong><br>
+This section covers TLS configuration in new instances. If you are looking to migrate an existing instance to use TLS, please refer to <a href="https://mariadb.com/kb/en/enabling-tls-in-existing-instances/">Enabling TLS in existing instances</a> instead.</p>
+</blockquote>
+<p>TLS will be automatically enabled in <code>MaxScale</code> when the referred <code>MariaDB</code> (via <code>mariaDbRef</code>) has TLS enabled and enforced. Alternatively, you can explicitly enable TLS by setting <code>tls.enabled=true</code>:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale-galera</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb-galera</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<p>As a result, the operator will generate a Certificate Authority (CA) and use it to issue the leaf certificates mounted by the instance. It is important to note that, unlike <code>MariaDB</code>, <code>MaxScale</code> does not support TLS and non-TLS connections simultaneously (see <a href="#limitations">limitations</a>). Therefore, TLS connections will be enforced in this case i.e. unencrypted connections will fail, ensuring security best practises.</p>
+<p>If you want to fully opt-out from TLS, you can set <code>tls.enabled=false</code>. This should only be done when <code>MariaDB</code> TLS is not enforced or disabled:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale-galera</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb-galera</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>false</span>
+</pre></div>
+
+
+<p>This will disable certificate issuance, resulting in all connections being unencrypted.</p>
+<p>Refer to further sections for a more advanced TLS configuration.</p>
+<h2 id="mariadb-certificate-specification"><code>MariaDB</code> certificate specification</h2>
+<p>The <code>MariaDB</code> TLS setup consists of the following certificates:</p>
+<ul>
+<li>Certificate Authority (CA) keypair to issue the server certificate.</li>
+<li>Server leaf certificate used to encrypt server connections.</li>
+<li>Certificate Authority (CA) keypair to issue the client certificate.</li>
+<li>Client leaf certificate used to encrypt and authenticate client connections.</li>
+</ul>
+<p>As a default behaviour, the operator generates a single CA to be used for issuing both the server and client certificates, but the user can decide to use dedicated CAs for each case. Root CAs, and <a href="#intermediate-cas">intermedicate CAs</a> in some cases, are supported, see <a href="#limitations">limitations</a> for further detail. </p>
+<p>The server certificate contains the following Subject Alternative Names (SANs):</p>
+<ul>
+<li><code>&lt;mariadb-name&gt;.&lt;namespace&gt;.svc.&lt;cluster-name&gt;</code>  </li>
+<li><code>&lt;mariadb-name&gt;.&lt;namespace&gt;.svc</code>  </li>
+<li><code>&lt;mariadb-name&gt;.&lt;namespace&gt;</code>  </li>
+<li><code>&lt;mariadb-name&gt;</code>  </li>
+<li><code>*.&lt;mariadb-name&gt;-internal.&lt;namespace&gt;.svc.&lt;cluster-name&gt;</code>  </li>
+<li><code>*.&lt;mariadb-name&gt;-internal.&lt;namespace&gt;.svc</code>  </li>
+<li><code>*.&lt;mariadb-name&gt;-internal.&lt;namespace&gt;</code>  </li>
+<li><code>*.&lt;mariadb-name&gt;-internal</code>  </li>
+<li><code>&lt;mariadb-name&gt;-primary.&lt;namespace&gt;.svc.&lt;cluster-name&gt;</code>  </li>
+<li><code>&lt;mariadb-name&gt;-primary.&lt;namespace&gt;.svc</code>  </li>
+<li><code>&lt;mariadb-name&gt;-primary.&lt;namespace&gt;</code>  </li>
+<li><code>&lt;mariadb-name&gt;-primary</code>  </li>
+<li><code>&lt;mariadb-name&gt;-secondary.&lt;namespace&gt;.svc.&lt;cluster-name&gt;</code>  </li>
+<li><code>&lt;mariadb-name&gt;-secondary.&lt;namespace&gt;.svc</code>  </li>
+<li><code>&lt;mariadb-name&gt;-secondary.&lt;namespace&gt;</code>  </li>
+<li><code>&lt;mariadb-name&gt;-secondary</code></li>
+<li><code>localhost</code></li>
+</ul>
+<p>Whereas the client certificate is only valid for the <code>&lt;mariadb-name&gt;-client</code> SAN.</p>
+<h2 id="maxscale-certificate-specification"><code>MaxScale</code> certificate specification</h2>
+<p>The <code>MaxScale</code> TLS setup consists of the following certificates:</p>
+<ul>
+<li>Certificate Authority (CA) keypair to issue the admin certificate.</li>
+<li>Admin leaf certificate used to encrypt the administrative REST API and GUI.</li>
+<li>Certificate Authority (CA) keypair to issue the listener certificate.</li>
+<li>Listener leaf certificate used to encrypt database connections to the listener.</li>
+<li>Server CA bundle used to establish trust with the MariaDB server.</li>
+<li>Server leaf certificate used to connect to the MariaDB server.</li>
+</ul>
+<p>As a default behaviour, the operator generates a single CA to be used for issuing both the admin and the listener certificates, but the user can decide to use dedicated CAs for each case. Client certificate and CA bundle configured in the referred MariaDB are used as server certificates by default, but the user is able to provide its own certificates. Root CAs, and <a href="#intermediate-cas">intermedicate CAs</a> in some cases, are supported, see <a href="#limitations">limitations</a> for further detail.</p>
+<p>Both the admin and listener certificates contain the following Subject Alternative Names (SANs):</p>
+<ul>
+<li><code>&lt;maxscale-name&gt;.&lt;namespace&gt;.svc.&lt;clusername&gt;</code>  </li>
+<li><code>&lt;maxscale-name&gt;.&lt;namespace&gt;.svc</code>  </li>
+<li><code>&lt;maxscale-name&gt;.&lt;namespace&gt;</code>  </li>
+<li><code>&lt;maxscale-name&gt;</code>  </li>
+<li><code>&lt;maxscale-name&gt;-gui.&lt;namespace&gt;.svc.&lt;clusername&gt;</code>  </li>
+<li><code>&lt;maxscale-name&gt;-gui.&lt;namespace&gt;.svc</code>  </li>
+<li><code>&lt;maxscale-name&gt;-gui.&lt;namespace&gt;</code>  </li>
+<li><code>&lt;maxscale-name&gt;-gui</code>  </li>
+<li><code>*.&lt;maxscale-name&gt;-internal.&lt;namespace&gt;.svc.&lt;clusername&gt;</code>  </li>
+<li><code>*.&lt;maxscale-name&gt;-internal.&lt;namespace&gt;.svc</code>  </li>
+<li><code>*.&lt;maxscale-name&gt;-internal.&lt;namespace&gt;</code>  </li>
+<li><code>*.&lt;maxscale-name&gt;-internal</code></li>
+</ul>
+<p>For details about the server certificate, see <a href="#mariadb-certificate-specification"><code>MariaDB</code> certificate specification</a>.</p>
+<h2 id="ca-bundle">CA bundle</h2>
+<p>As you could appreciate in <a href="#mariadb-certificate-specification"><code>MariaDB</code> certificate specification</a> and <a href="#maxscale-certificate-specification"><code>MaxScale</code> certificate specification</a>, the TLS setup involves multiple CAs. In order to establish trust in a more convenient way, the operator groups the CAs together in a CA bundle that will need to be specified when <a href="#connect-applications-with-tls">securely connecting from your applications</a>. Every <code>MariaDB</code> and <code>MaxScale</code> resources have a dedicated bundle of its own available in a <code>Secret</code> named <code>&lt;instance-name&gt;-ca-bundle</code>. </p>
+<p>These trust bundles contain non expired CAs needed to connect to the instances. New CAs are automatically added to the bundle after <a href="#ca-renewal">renewal</a>, whilst old CAs are removed after they expire. It is important to note that both the new and old CAs remain in the bundle for a while to ensure a smooth update when the new certificates are issued by the new CA.</p>
+<h2 id="issue-certificates-with-the-operator">Issue certificates with the operator</h2>
+<p>By setting <code>tls.enabled=true</code>, the operator will generate a root CA for each instance, which will be used to issue the certificates described in the <a href="#mariadb-certificate-specification"><code>MariaDB</code> cert spec</a> and <a href="#maxscale-certificate-specification"><code>MaxScale</code> cert spec</a> sections:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<p>To establish trust with the instances, the CA's public key will be added to the <a href="#ca-bundle">CA bundle</a>. If you need a different trust chain, please refer to the <a href="#custom-trust">custom trust</a> section.</p>
+<p>The advantage of this approach is that the operator fully manages the <code>Secrets</code> that contain the certificates without depending on any third party dependency. Also, since the operator fully controls the renewal process, it is able to pause a leaf certificate renewal if the CA is being updated at that moment, as described in the <a href="#certificate-renewal">cert renewal</a> section. </p>
+<h2 id="issue-certificates-with-cert-manager">Issue certificates with cert-manager</h2>
+<blockquote>
+<p><strong>IMPORTANT</strong>
+<a href="https://cert-manager.io/">cert-manager</a> must be previously installed in the cluster in order to use this feature.</p>
+</blockquote>
+<p>cert-manager is the de-facto standard for managing certificates in Kubernetes. It is a Kubernetes native certificate management controller that allows you to automatically provision, manage and renew certificates. It supports multiple <a href="https://cert-manager.io/docs/configuration/issuers/">certificate backends</a> (in-cluster, Hashicorp Vault...) which are configured as <code>Issuer</code> or <code>ClusterIssuer</code> resources.</p>
+<p>As an example, we are going to setup an in-cluster root CA <code>ClusterIssuer</code>:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>cert-manager.io/v1</span>
+<span>kind</span><span>:</span> <span>ClusterIssuer</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>selfsigned</span>
+<span>spec</span><span>:</span>
+  <span>selfSigned</span><span>:</span> <span>{}</span>
+<span>---</span>
+<span>apiVersion</span><span>:</span> <span>cert-manager.io/v1</span>
+<span>kind</span><span>:</span> <span>Certificate</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>root-ca</span>
+  <span>namespace</span><span>:</span> <span>default</span>
+<span>spec</span><span>:</span>
+  <span>duration</span><span>:</span> <span>52596h</span> <span># 6 years</span>
+  <span>commonName</span><span>:</span> <span>root-ca</span>
+  <span>usages</span><span>:</span>
+  <span>-</span> <span>digital signature</span>
+  <span>-</span> <span>key encipherment</span>
+  <span>-</span> <span>cert sign</span>
+  <span>issuerRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>selfsigned</span>
+    <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+  <span>isCA</span><span>:</span> <span>true</span>
+  <span>privateKey</span><span>:</span>
+    <span>encoding</span><span>:</span> <span>PKCS1</span>
+    <span>algorithm</span><span>:</span> <span>ECDSA</span>
+    <span>size</span><span>:</span> <span>256</span>
+  <span>secretTemplate</span><span>:</span>
+    <span>labels</span><span>:</span>
+      <span>enterprise.mariadb.com/watch</span><span>:</span> <span>""</span>
+  <span>secretName</span><span>:</span> <span>root-ca</span>
+  <span>revisionHistoryLimit</span><span>:</span> <span>10</span>
+<span>---</span>
+<span>apiVersion</span><span>:</span> <span>cert-manager.io/v1</span>
+<span>kind</span><span>:</span> <span>ClusterIssuer</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>root-ca</span>
+<span>spec</span><span>:</span>
+  <span>ca</span><span>:</span>
+    <span>secretName</span><span>:</span> <span>root-ca</span>
+</pre></div>
+
+
+<p>Then, you can reference the <code>ClusterIssuer</code> in the <code>MariaDB</code> and <code>MaxScale</code> resources:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>serverCertIssuerRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>root-ca</span>
+      <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+    <span>clientCertIssuerRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>root-ca</span>
+      <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+</pre></div>
+
+
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale-galera</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>adminCertIssuerRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>root-ca</span>
+      <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+    <span>listenerCertIssuerRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>root-ca</span>
+      <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+</pre></div>
+
+
+<p>The operator will create cert-manager's <a href="https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.Certificate"><code>Certificate</code> resources</a> for each certificate, and will mount the resulting <a href="https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets">TLS <code>Secrets</code></a> in the instances. These <code>Secrets</code> containing the certificates will be managed by cert-manager as well as its renewal process.</p>
+<p>To establish trust with the instances, the <a href="https://cert-manager.io/docs/faq/#why-isnt-my-certificates-chain-in-my-issued-secrets-cacrt"><code>ca.crt</code> field provided by cert-managed</a> in the <code>Secret</code> will be added to the <a href="#ca-bundle">CA bundle</a>. If you need a different trust chain, please refer to the <a href="#custom-trust">custom trust</a> section.</p>
+<p>The advantage of this approach is that you can use any of the <a href="https://cert-manager.io/docs/configuration/issuers/">cert-manager's certificate backends</a>, such as the in-cluster CA or HashiCorp Vault, and potentially reuse the same <code>Issuer</code>/<code>ClusterIssuer</code> with multiple instances.</p>
+<h2 id="provide-your-own-certificates">Provide your own certificates</h2>
+<p>Providing your own certificates is as simple as creating the <code>Secrets</code> with the appropriate structure and referencing them in the <code>MariaDB</code> and <code>MaxScale</code> resources. The certificates must be compliant with the <a href="#mariadb-certificate-specification"><code>MariaDB</code> cert spec</a> and <a href="#maxscale-certificate-specification"><code>MaxScale</code> cert spec</a>.</p>
+<p>The CA certificate must be provided as a <code>Secret</code> with the following structure:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>v1</span>
+<span>kind</span><span>:</span> <span>Secret</span>
+<span>type</span><span>:</span> <span>Opaque</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera-server-ca</span>
+  <span>labels</span><span>:</span>
+    <span>enterprise.mariadb.com/watch</span><span>:</span> <span>""</span>
+<span>data</span><span>:</span>
+  <span>ca.crt</span><span>:</span>
+  <span>-----BEGIN CERTIFICATE-----</span>
+  <span>&lt;public-key&gt;</span>
+  <span>-----END CERTIFICATE-----</span>
+  <span>ca.key</span><span>:</span>
+  <span>-----BEGIN EC PRIVATE KEY-----</span>
+  <span>&lt;private-key&gt;</span>
+  <span>-----END EC PRIVATE KEY-----</span>
+</pre></div>
+
+
+<p>The <code>ca.key</code> field is only required if you want to the operator to automatically re-issue certificates with this CA, see <a href="#bring-your-own-ca">bring your own CA</a> for further detail. In other words, if only <code>ca.crt</code> is provided, the operator will trust this CA by adding it to the <a href="#ca-bundle">CA bundle</a>, but no certificates will be issued with it, the user will responsible for upating the certificate <code>Secret</code> manually with renewed certificates.</p>
+<p>The <code>enterprise.mariadb.com/watch</code> label is required only if you want the operator to automatically trigger an update when the CA is renewed, see <a href="#ca-renewal">CA renewal</a> for more detail.</p>
+<p>The leaf certificate must match the previous CA's public key, and it should provided as a <a href="https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets">TLS <code>Secret</code></a> with the following structure:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>v1</span>
+<span>kind</span><span>:</span> <span>Secret</span>
+<span>type</span><span>:</span> <span>kubernetes.io/tls</span>  
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera-server-tls</span> 
+  <span>labels</span><span>:</span>
+    <span>enterprise.mariadb.com/watch</span><span>:</span> <span>""</span>
+<span>data</span><span>:</span>
+  <span>tls.crt</span><span>:</span>
+  <span>-----BEGIN CERTIFICATE-----</span>
+  <span>&lt;public-key&gt;</span>
+  <span>-----END CERTIFICATE-----</span>
+  <span>tls.key</span><span>:</span>
+  <span>-----BEGIN EC PRIVATE KEY-----</span>
+  <span>&lt;private-key&gt;</span>
+  <span>-----END EC PRIVATE KEY-----</span>
+</pre></div>
+
+
+<p>The <code>enterprise.mariadb.com/watch</code> label is required only if you want the operator to automatically trigger an update when the certificate is renewed, see <a href="#certificate-renewal">cert renewal</a> for more detail.</p>
+<p>Once the certificate <code>Secrets</code> are available in the cluster, you can create the <code>MariaDB</code> and <code>MaxScale</code> resources referencing them:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>serverCASecretRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>mariadb-server-ca</span>
+    <span>serverCertSecretRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>mariadb-galera-server-tls</span>
+    <span>clientCASecretRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>mariadb-client-ca</span>
+    <span>clientCertSecretRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>mariadb-galera-client-tls</span>
+</pre></div>
+
+
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale-galera</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>adminCASecretRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>maxscale-admin-ca</span>
+    <span>adminCertSecretRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>maxscale-galera-admin-tls</span>
+    <span>listenerCASecretRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>maxscale-listener-ca</span>
+    <span>listenerCertSecretRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>maxscale-galera-listener-tls</span>
+    <span>serverCASecretRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>mariadb-galera-ca-bundle</span>
+    <span>serverCertSecretRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>mariadb-galera-client-tls</span>
+</pre></div>
+
+
+<h2 id="bring-your-own-ca">Bring your own CA</h2>
+<p>If you already have a CA setup outside of Kubernetes, you can use it with the operator by providing the CA certificate as a <code>Secret</code> with the following structure:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>v1</span>
+<span>kind</span><span>:</span> <span>Secret</span>
+<span>type</span><span>:</span> <span>Opaque</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-ca</span>
+  <span>labels</span><span>:</span>
+    <span>enterprise.mariadb.com/watch</span><span>:</span> <span>""</span>
+<span>data</span><span>:</span>
+  <span>ca.crt</span><span>:</span>
+  <span>-----BEGIN CERTIFICATE-----</span>
+  <span>&lt;public-key&gt;</span>
+  <span>-----END CERTIFICATE-----</span>
+  <span>ca.key</span><span>:</span>
+  <span>-----BEGIN EC PRIVATE KEY-----</span>
+  <span>&lt;private-key&gt;</span>
+  <span>-----END EC PRIVATE KEY-----</span>
+</pre></div>
+
+
+<p>Just by providing a reference to this <code>Secret</code>, the operator will use it to issue leaf certificates instead of generating a new CA:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>serverCASecretRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>mariadb-server-ca</span>
+    <span>clientCASecretRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>mariadb-client-ca</span>
+</pre></div>
+
+
+<h2 id="intermediate-cas">Intermediate CAs</h2>
+<p>Intermediate CAs are supported by the operator with <a href="#limitations">some limitations</a>. Leaf certificates issued by the intermediate CAs are slightly different, and include the intermediate CA public key as part of the certificate, in the following order: <code>Leaf certificate -&gt; Intermediate CA</code>. This is a common practise to easily establish trust in complex PKI setups, where multiple CA are involved. </p>
+<p>Many applications support this <code>Leaf certificate -&gt; Intermediate CA</code> structure as a valid leaf certificate, and are able to establish trust with the intermediate CA. Normally, the intermediate CA will not be directly trusted, but used as a path to the root CA, which should be trusted by the application. If not trusted already, you can add the root CA to the <a href="#ca-bundle">CA bundle</a> by using a <a href="#custom-trust">custom trust</a>.</p>
+<h2 id="custom-trust">Custom trust</h2>
+<p>You are able to provide a set of CA public keys to be added to the <a href="#ca-bundle">CA bundle</a> by creating a <code>Secret</code> with the following structure:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>v1</span>
+<span>kind</span><span>:</span> <span>Secret</span>
+<span>type</span><span>:</span> <span>Opaque</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>custom-trust</span>
+  <span>labels</span><span>:</span>
+    <span>enterprise.mariadb.com/watch</span><span>:</span> <span>""</span>
+<span>data</span><span>:</span>
+  <span>ca.crt</span><span>:</span>
+  <span>-----BEGIN CERTIFICATE-----</span>
+  <span>&lt;my-org-root-ca&gt;</span>
+  <span>-----END CERTIFICATE-----</span>
+  <span>-----BEGIN CERTIFICATE-----</span>
+  <span>&lt;root-ca&gt;</span>
+  <span>-----END CERTIFICATE-----</span>
+</pre></div>
+
+
+<p>And referencing it in the <code>MariaDB</code> and <code>MaxScale</code> resources, for instance:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale-galera</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>adminCASecretRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>custom-trust</span>
+    <span>adminCertIssuerRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>my-org-intermediate-ca</span>
+      <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+    <span>listenerCASecretRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>custom-trust</span>
+    <span>listenerCertIssuerRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>intermediate-ca</span>
+      <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+</pre></div>
+
+
+<p>This is specially useful when issuing certificates with an intermediate CA, see <a href="#intermediate-cas">intermediate CAs</a> section for further detail.</p>
+<h2 id="distributing-trust">Distributing trust</h2>
+<p>Distributing the <a href="#ca-bundle">CA bundle</a> to your application namespace is out of the scope of this operator, the bundles will remain in the same namespace as the <code>MariaDB</code> and <code>MaxScale</code> instances.</p>
+<p>If your application is in a different namespace, you can copy the CA bundle to the application namespace. Projects like <a href="https://github.com/cert-manager/trust-manager">trust-manager</a> can help you to automate this process and continously reconcile bundle changes.</p>
+<h2 id="tls-version-configuration">TLS version configuration</h2>
+<p>You may configure the supported TLS versions in <code>MariaDB</code> by setting:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>tls</span><span>:</span>
+    <span>versions</span><span>:</span>
+      <span>-</span> <span>TLSv1.3</span>
+      <span>-</span> <span>TLSv1.2</span>
+      <span>-</span> <span>TLSv1.1</span>
+      <span>-</span> <span>TLSv1.0</span>
+</pre></div>
+
+
+<p>If not specified, the MariaDB's default TLS versions will be used. See <a href="https://mariadb.com/kb/en/ssltls-system-variables/#tls_version.">MariaDB docs</a>.</p>
+<p>Regarding <code>MaxScale</code>, you can also configure the supported TLS versions, both for the Admin REST API and MariaDB servers:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale-galera</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>tls</span><span>:</span>
+    <span>adminVersions</span><span>:</span>
+      <span>-</span> <span>TLSv13</span>
+      <span>-</span> <span>TLSv12</span>
+      <span>-</span> <span>TLSv11</span>
+      <span>-</span> <span>TLSv10</span>
+    <span>serverVersions</span><span>:</span>
+      <span>-</span> <span>TLSv13</span>
+      <span>-</span> <span>TLSv12</span>
+      <span>-</span> <span>TLSv11</span>
+      <span>-</span> <span>TLSv10</span>
+</pre></div>
+
+
+<p>If not specified, the MaxScale's default TLS versions will be used. See MaxScale docs:</p>
+<ul>
+<li><a href="https://mariadb.com/kb/en/mariadb-maxscale-25-mariadb-maxscale-configuration-guide/#admin_ssl_version">Admin TLS version</a></li>
+<li><a href="https://mariadb.com/kb/en/mariadb-maxscale-25-mariadb-maxscale-configuration-guide/#ssl_version">Server TLS version</a></li>
+</ul>
+<h2 id="certificate-lifetime-configuration">Certificate lifetime configuration</h2>
+<p>By default, CA certificates are valid for 3 years, while leaf certificates have a validity of 3 months. This lifetime can be customized in both <code>MariaDB</code> and <code>MaxScale</code> resources through the certificate configuration fields. For example:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>required</span><span>:</span> <span>true</span>
+    <span>serverCertConfig</span><span>:</span>
+      <span>caLifetime</span><span>:</span> <span>8766h</span> <span># 1 year</span>
+      <span>certLifetime</span><span>:</span> <span>720h</span> <span># 1 month</span>
+    <span>clientCertConfig</span><span>:</span>
+      <span>caLifetime</span><span>:</span> <span>8766h</span> <span># 1 year</span>
+      <span>certLifetime</span><span>:</span> <span>720h</span> <span># 1 month</span>
+</pre></div>
+
+
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale-galera</span>
+<span>spec</span><span>:</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>adminCertConfig</span><span>:</span>
+      <span>caLifetime</span><span>:</span> <span>8766h</span> <span># 1 year</span>
+      <span>certLifetime</span><span>:</span> <span>1h</span> <span># 1 month</span>
+    <span>listenerCertConfig</span><span>:</span>
+      <span>caLifetime</span><span>:</span> <span>8766h</span> <span># 1 year</span>
+      <span>certLifetime</span><span>:</span> <span>720h</span> <span># 1 month</span>
+</pre></div>
+
+
+<p>When issuing certificates with cert-manager, you can specify the certificate configuration field alongside the issuer reference:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>required</span><span>:</span> <span>true</span>
+    <span>serverCertIssuerRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>root-ca</span>
+      <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+    <span>serverCertConfig</span><span>:</span>
+      <span>caLifetime</span><span>:</span> <span>8766h</span> <span># 1 year</span>
+      <span>certLifetime</span><span>:</span> <span>720h</span> <span># 1 month</span>
+    <span>clientCertIssuerRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>root-ca</span>
+      <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+    <span>clientCertConfig</span><span>:</span>
+      <span>caLifetime</span><span>:</span> <span>8766h</span> <span># 1 year</span>
+      <span>certLifetime</span><span>:</span> <span>720h</span> <span># 1 month</span>
+</pre></div>
+
+
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale-galera</span>
+<span>spec</span><span>:</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>adminCertIssuerRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>root-ca</span>
+      <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+    <span>adminCertConfig</span><span>:</span>
+      <span>caLifetime</span><span>:</span> <span>8766h</span> <span># 1 year</span>
+      <span>certLifetime</span><span>:</span> <span>1h</span> <span># 1 month</span>
+    <span>listenerCertIssuerRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>root-ca</span>
+      <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+    <span>listenerCertConfig</span><span>:</span>
+      <span>caLifetime</span><span>:</span> <span>8766h</span> <span># 1 year</span>
+      <span>certLifetime</span><span>:</span> <span>720h</span> <span># 1 month</span>
+</pre></div>
+
+
+<h2 id="private-key-configuration">Private key configuration</h2>
+<p>By default, private keys are generated with the <code>ECDSA</code> algorithm and a size of <code>256</code>. You can customize the private key configuration in both <code>MariaDB</code> and <code>MaxScale</code> resources through the certificate configuration fields. For example:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>required</span><span>:</span> <span>true</span>
+    <span>serverCertConfig</span><span>:</span>
+      <span>privateKeyAlgorithm</span><span>:</span> <span>RSA</span>
+      <span>privateKeySize</span><span>:</span> <span>2048</span>
+    <span>clientCertConfig</span><span>:</span>
+      <span>privateKeyAlgorithm</span><span>:</span> <span>RSA</span>
+      <span>privateKeySize</span><span>:</span> <span>2048</span>
+</pre></div>
+
+
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale-galera</span>
+<span>spec</span><span>:</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>adminCertConfig</span><span>:</span>
+      <span>privateKeyAlgorithm</span><span>:</span> <span>RSA</span>
+      <span>privateKeySize</span><span>:</span> <span>2048</span>
+    <span>listenerCertConfig</span><span>:</span>
+      <span>privateKeyAlgorithm</span><span>:</span> <span>RSA</span>
+      <span>privateKeySize</span><span>:</span> <span>2048</span>
+</pre></div>
+
+
+<p>When issuing certificates with cert-manager, you can specify the private key configuration field alongside the issuer reference:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>required</span><span>:</span> <span>true</span>
+    <span>serverCertIssuerRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>root-ca</span>
+      <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+    <span>serverCertConfig</span><span>:</span>
+      <span>privateKeyAlgorithm</span><span>:</span> <span>ECDSA</span>
+      <span>privateKeySize</span><span>:</span> <span>256</span>
+    <span>clientCertIssuerRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>root-ca</span>
+      <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+    <span>clientCertConfig</span><span>:</span>
+      <span>privateKeyAlgorithm</span><span>:</span> <span>ECDSA</span>
+      <span>privateKeySize</span><span>:</span> <span>256</span>
+</pre></div>
+
+
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale-galera</span>
+<span>spec</span><span>:</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>adminCertIssuerRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>root-ca</span>
+      <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+    <span>adminCertConfig</span><span>:</span>
+      <span>privateKeyAlgorithm</span><span>:</span> <span>ECDSA</span>
+      <span>privateKeySize</span><span>:</span> <span>256</span>
+    <span>listenerCertIssuerRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>root-ca</span>
+      <span>kind</span><span>:</span> <span>ClusterIssuer</span>
+    <span>listenerCertConfig</span><span>:</span>
+      <span>privateKeyAlgorithm</span><span>:</span> <span>ECDSA</span>
+      <span>privateKeySize</span><span>:</span> <span>256</span>
+</pre></div>
+
+
+<p>The following set of algorithms and sizes are supported:</p>
+<table>
+<thead>
+<tr>
+<th>Algorithm</th>
+<th>Key Sizes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>RSA</strong></td>
+<td>2048, 3072, 4096</td>
+</tr>
+<tr>
+<td><strong>ECDSA</strong></td>
+<td>256, 384, 521</td>
+</tr>
+</tbody>
+</table>
+<h2 id="ca-renewal">CA renewal</h2>
+<p>Depending on the setup, CAs can be managed and renewed by either MariaDB Enterprise Operator or cert-manager. </p>
+<p>When managed by the operator, CAs have a lifetime of 3 years by default, and are marked for renewal after 66% of its lifetime has passed i.e. ~2 years. After being renewed, the operator will trigger an update of the instances to include the new CA in the bundle. </p>
+<p>When managed by cert-manager, the renewal process is fully controlled by cert-manager, but the operator will also update the CA bundle after the CA is renewed.</p>
+<p>You may choose any of the available <a href="https://mariadb.com/kb/en/updates/">update strategies</a> to control the instance update process.</p>
+<h2 id="certificate-renewal">Certificate renewal</h2>
+<p>Depending on the setup, certificates can be managed and renewed by the operator or cert-manager. In either case, certificates have a lifetime of 90 days by default, and marked for renewal after 66% of its lifetime has passed i.e. ~60 days.</p>
+<p>When the <a href="#issue-certificates-with-the-operator">certificates are issued by the operator</a>, the operator is able to pause a leaf certificate renewal if the CA is being updated at that same moment. This approach ensures a smooth update by avoiding the simultaneous rollout of the new CA and its associated certificates. Rolling them out together could be problematic, as all Pods need to trust the new CA before its issued certificates can be utilized.</p>
+<p>When the <a href="#issue-certificates-with-cert-manager">certificates are issued by cert-manager</a>, the renewal process is fully managed by cert-manager, and the operator will not interfere with it. The operator will only update the instances whenever the CA or the certificates get renewed.</p>
+<p>You may choose any of the available <a href="https://mariadb.com/kb/en/updates/">update strategies</a> to control the instance update process.</p>
+<h2 id="certificate-status">Certificate status</h2>
+<p>To have a high level picture of the certificates status, you can check the <code>status.tls</code> field of the <code>MariaDB</code> and <code>MaxScale</code> resources:</p>
+<div><pre><span></span>kubectl get mariadb mariadb-galera -o <span>jsonpath</span><span>=</span><span>"{.status.tls}"</span> <span>|</span> jq
+<span>{</span>
+  <span>"caBundle"</span>: <span>[</span>
+    <span>{</span>
+      <span>"issuer"</span>: <span>"CN=mariadb-galera-ca"</span>,
+      <span>"notAfter"</span>: <span>"2028-01-20T14:26:50Z"</span>,
+      <span>"notBefore"</span>: <span>"2025-01-20T13:26:50Z"</span>,
+      <span>"subject"</span>: <span>"CN=mariadb-galera-ca"</span>
+    <span>}</span>
+  <span>]</span>,
+  <span>"clientCert"</span>: <span>{</span>
+    <span>"issuer"</span>: <span>"CN=mariadb-galera-ca"</span>,
+    <span>"notAfter"</span>: <span>"2025-04-20T14:26:50Z"</span>,
+    <span>"notBefore"</span>: <span>"2025-01-20T13:26:50Z"</span>,
+    <span>"subject"</span>: <span>"CN=mariadb-galera-client"</span>
+  <span>}</span>,
+  <span>"serverCert"</span>: <span>{</span>
+    <span>"issuer"</span>: <span>"CN=mariadb-galera-ca"</span>,
+    <span>"notAfter"</span>: <span>"2025-04-20T14:26:50Z"</span>,
+    <span>"notBefore"</span>: <span>"2025-01-20T13:26:50Z"</span>,
+    <span>"subject"</span>: <span>"CN=mariadb-galera.default.svc.cluster.local"</span>
+  <span>}</span>
+<span>}</span>
+</pre></div>
+
+
+<div><pre><span></span>kubectl get maxscale maxscale-galera -o <span>jsonpath</span><span>=</span><span>"{.status.tls}"</span> <span>|</span> jq
+<span>{</span>
+  <span>"adminCert"</span>: <span>{</span>
+    <span>"issuer"</span>: <span>"CN=maxscale-galera-ca"</span>,
+    <span>"notAfter"</span>: <span>"2025-04-20T14:33:09Z"</span>,
+    <span>"notBefore"</span>: <span>"2025-01-20T13:33:09Z"</span>,
+    <span>"subject"</span>: <span>"CN=maxscale-galera.default.svc.cluster.local"</span>
+  <span>}</span>,
+  <span>"caBundle"</span>: <span>[</span>
+    <span>{</span>
+      <span>"issuer"</span>: <span>"CN=maxscale-galera-ca"</span>,
+      <span>"notAfter"</span>: <span>"2028-01-20T14:33:09Z"</span>,
+      <span>"notBefore"</span>: <span>"2025-01-20T13:33:09Z"</span>,
+      <span>"subject"</span>: <span>"CN=maxscale-galera-ca"</span>
+    <span>}</span>,
+    <span>{</span>
+      <span>"issuer"</span>: <span>"CN=mariadb-galera-ca"</span>,
+      <span>"notAfter"</span>: <span>"2028-01-20T14:28:46Z"</span>,
+      <span>"notBefore"</span>: <span>"2025-01-20T13:28:46Z"</span>,
+      <span>"subject"</span>: <span>"CN=mariadb-galera-ca"</span>
+    <span>}</span>
+  <span>]</span>,
+  <span>"listenerCert"</span>: <span>{</span>
+    <span>"issuer"</span>: <span>"CN=maxscale-galera-ca"</span>,
+    <span>"notAfter"</span>: <span>"2025-04-20T14:33:09Z"</span>,
+    <span>"notBefore"</span>: <span>"2025-01-20T13:33:09Z"</span>,
+    <span>"subject"</span>: <span>"CN=maxscale-galera.default.svc.cluster.local"</span>
+  <span>}</span>,
+  <span>"serverCert"</span>: <span>{</span>
+    <span>"issuer"</span>: <span>"CN=mariadb-galera-ca"</span>,
+    <span>"notAfter"</span>: <span>"2025-04-20T14:28:46Z"</span>,
+    <span>"notBefore"</span>: <span>"2025-01-20T13:28:46Z"</span>,
+    <span>"subject"</span>: <span>"CN=mariadb-galera-client"</span>
+  <span>}</span>
+<span>}</span>
+</pre></div>
+
+
+<h2 id="tls-requirements-for-users">TLS requirements for <code>Users</code></h2>
+<p>You are able to declaratively manage access to your <code>MariaDB</code> instances by creating <a href="https://mariadb.com/kb/en/sql-resources/#user-cr"><code>User</code> SQL resources</a>. In particular, when TLS is enabled, you can provide additional requirements for the user when connecting over TLS.</p>
+<p>For instance, if you want to require a valid x509 certificate for the user to be able o connect:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>User</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>user</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>require</span><span>:</span>
+    <span>x509</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<p>In order to restrict which subject the user certificate should have and/or require a particular issuer, you may set:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>User</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>user</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>require</span><span>:</span>
+    <span>issuer</span><span>:</span> <span>"/CN=mariadb-galera-ca"</span>
+    <span>subject</span><span>:</span> <span>"/CN=mariadb-galera-client"</span>
+</pre></div>
+
+
+<p>When any of these TLS requirements are not met, the user will not be able to connect to the instance.</p>
+<p>See <a href="https://mariadb.com/kb/en/securing-connections-for-client-and-server/#requiring-tls">MariaDB docs</a> and the <a href="https://mariadb.com/kb/en/mariadb-enterprise-operator-api-reference/">API reference</a> for further detail.</p>
+<h2 id="galera-enterprise-ssl-modes">Galera Enterprise SSL modes</h2>
+<p>MariaDB Enterprise Cluster (Galera) supports multiple SSL modes to secure the communication between the nodes. For configuring the SSL enforcement level on the server i.e. WSREP, you can set:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>galeraServerSSLMode</span><span>:</span> <span>SERVER_X509</span>
+</pre></div>
+
+
+<p>The following values are supported: <code>SERVER_X509</code>, <code>SERVER</code> and <code>PROVIDER</code>. Refer to the <a href="https://mariadb.com/docs/server/security/galera/#WSREP_TLS_Modes">Galera Enterprise docs</a> for further detail about these modes.</p>
+<p>You may also configure the SSL enforcement level used during Snapshot State Transfers(SST) by setting:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>galeraSSTEnabled</span><span>:</span> <span>true</span>
+    <span>galeraClientSSLMode</span><span>:</span> <span>VERIFY_IDENTITY</span>
+</pre></div>
+
+
+<p>The following values are supported: <code>VERIFY_IDENTITY</code>, <code>VERIFY</code>, <code>REQUIRED</code> and <code>DISABLED</code>. Refer to the <a href="https://mariadb.com/docs/server/security/galera/#SST_TLS_Modes">Galera Enterprise docs</a> for further detail about these modes.</p>
+<p>If you are willing to increase the enforcement level in an existing instance, make sure you follow the migration guide provided in the <a href="https://mariadb.com/kb/en/enabling-tls-in-existing-instances/">Enabling TLS in existing instances</a> section.</p>
+<h2 id="secure-application-connections-with-tls">Secure application connections with TLS</h2>
+<p>In this guide, we will configure TLS for an application running in the <code>app</code> namespace to connect with <code>MariaDB</code> and <code>MaxScale</code> instances deployed in the <code>default</code> namespace. We assume that the following resources are already present in the <code>default</code> namespace:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>rootPasswordSecretKeyRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+    <span>key</span><span>:</span> <span>root-password</span>
+  <span>storage</span><span>:</span>
+    <span>size</span><span>:</span> <span>1Gi</span>
+  <span>replicas</span><span>:</span> <span>3</span>
+  <span>galera</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>required</span><span>:</span> <span>true</span>
+<span>---</span>
+<span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale-galera</span>
+<span>spec</span><span>:</span>
+  <span>replicas</span><span>:</span> <span>2</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb-galera</span>
+  <span>tls</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<p>The first step is to create a <code>User</code> resource and grant the necessary permissions:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>User</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>app</span>
+  <span>namespace</span><span>:</span> <span>app</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb-galera</span>
+    <span>namespace</span><span>:</span> <span>default</span>
+  <span>require</span><span>:</span>
+    <span>issuer</span><span>:</span> <span>"/CN=mariadb-galera-ca"</span>
+    <span>subject</span><span>:</span> <span>"/CN=mariadb-galera-client"</span>
+  <span>host</span><span>:</span> <span>"%"</span>
+<span>---</span>
+<span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Grant</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>grant-app</span>
+  <span>namespace</span><span>:</span> <span>app</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb-galera</span>
+    <span>namespace</span><span>:</span> <span>default</span>
+  <span>privileges</span><span>:</span>
+    <span>-</span> <span>"ALL</span><span> </span><span>PRIVILEGES"</span>
+  <span>database</span><span>:</span> <span>"*"</span>
+  <span>table</span><span>:</span> <span>"*"</span>
+  <span>username</span><span>:</span> <span>app</span>
+  <span>host</span><span>:</span> <span>"%"</span>
+</pre></div>
+
+
+<p>The <code>app</code> user will be able to connect to the <code>MariaDB</code> instance from the <code>app</code> namespace by providing a certificate with subject <code>mariadb-galera-client</code> and issued by the <code>mariadb-galera-ca</code> CA.</p>
+<p>With the permissions in place, the next step is to prepare the certificates required for the application to connect:</p>
+<ul>
+<li><strong>CA Bundle</strong>: The trust bundle for <code>MariaDB</code> and <code>MaxScale</code> is available as a <code>Secret</code> named <code>&lt;instance-name&gt;-ca-bundle</code> in the <code>default</code> namespace. For more details, refer to the sections on <a href="#ca-bundle">CA bundle</a> and <a href="#distributing-trust">distributing trust</a>.</li>
+<li><strong>Client Certificate</strong>: <code>MariaDB</code> provides a default client certificate stored in a <code>Secret</code> named <code>&lt;mariadb-name&gt;-client-cert</code> in the <code>default</code> namespace. You can either use this <code>Secret</code> or generate a new one with the subject <code>mariadb-galera-client</code>, issued by the <code>mariadb-galera-ca</code> CA. While issuing client certificates for applications falls outside the scope of this operator, you can <a href="#test-tls-certificates-with-connections">test them using <code>Connection</code> resources</a>.</li>
+</ul>
+<p>In this example, we assume that the following <code>Secrets</code> are available in the <code>app</code> namespace:<br>
+- <code>mariadb-bundle</code>: CA bundle for the <code>MariaDB</code> and <code>MaxScale</code> instances.<br>
+- <code>mariadb-galera-client-cert</code>: Client certificate required to connect to the <code>MariaDB</code> instance.  </p>
+<p>With these <code>Secrets</code> in place, we can proceed to define our application:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>batch/v1</span>
+<span>kind</span><span>:</span> <span>CronJob</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-client</span>
+  <span>namespace</span><span>:</span> <span>app</span>
+<span>spec</span><span>:</span>
+  <span>schedule</span><span>:</span> <span>"*/1</span><span> </span><span>*</span><span> </span><span>*</span><span> </span><span>*</span><span> </span><span>*"</span>
+  <span>jobTemplate</span><span>:</span>
+    <span>spec</span><span>:</span>
+      <span>template</span><span>:</span>
+        <span>spec</span><span>:</span>
+          <span>containers</span><span>:</span>
+          <span>-</span> <span>name</span><span>:</span> <span>mariadb-client</span>
+            <span>image</span><span>:</span> <span>mariadb:11.4.4</span>
+            <span>command</span><span>:</span>
+              <span>-</span> <span>bash</span>
+            <span>args</span><span>:</span>
+              <span>-</span> <span>-c</span>
+              <span>-</span> <span>&gt;</span>
+                <span>mariadb -u app -h mariadb-galera-primary.default.svc.cluster.local</span>
+                <span>--ssl-ca=/etc/pki/ca.crt --ssl-cert=/etc/pki/tls.crt</span>
+                <span>--ssl-key=/etc/pki/tls.key --ssl-verify-server-cert</span>
+                <span>-e "SELECT 'MariaDB connection successful!' AS Status;" -t</span>
+            <span>volumeMounts</span><span>:</span>
+            <span>-</span> <span>name</span><span>:</span> <span>pki</span>
+              <span>mountPath</span><span>:</span> <span>/etc/pki</span>
+              <span>readOnly</span><span>:</span> <span>true</span>
+          <span>volumes</span><span>:</span>
+          <span>-</span> <span>name</span><span>:</span> <span>pki</span>
+            <span>projected</span><span>:</span>
+              <span>sources</span><span>:</span>
+              <span>-</span> <span>secret</span><span>:</span>
+                  <span>name</span><span>:</span> <span>mariadb-bundle</span>
+                  <span>items</span><span>:</span>
+                  <span>-</span> <span>key</span><span>:</span> <span>ca.crt</span>
+                    <span>path</span><span>:</span> <span>ca.crt</span>
+              <span>-</span> <span>secret</span><span>:</span>
+                  <span>name</span><span>:</span> <span>mariadb-galera-client-cert</span>
+                  <span>items</span><span>:</span>
+                  <span>-</span> <span>key</span><span>:</span> <span>tls.crt</span>
+                    <span>path</span><span>:</span> <span>tls.crt</span>
+                  <span>-</span> <span>key</span><span>:</span> <span>tls.key</span>
+                    <span>path</span><span>:</span> <span>tls.key</span>
+          <span>restartPolicy</span><span>:</span> <span>Never</span>
+</pre></div>
+
+
+<p>The application will connect to the <code>MariaDB</code> instance using the <code>app</code> user, and will execute a simple query to check the connection status. The <code>--ssl-ca</code>, <code>--ssl-cert</code>, <code>--ssl-key</code> and <code>--ssl-verify-server-cert</code> flags are used to provide the CA bundle, client certificate and key, and to verify the server certificate respectively. </p>
+<p>If the connection is successful, the output should be:</p>
+<div><pre><span></span>+---------------------------------+
+<span>|</span> Status                          <span>|</span>
++---------------------------------+
+<span>|</span> MariaDB connection successful!  <span>|</span>
++---------------------------------+
+</pre></div>
+
+
+<p>You can also point the application to the <code>MaxScale</code> instance by updating the host to <code>maxscale-galera.default.svc.cluster.local</code>:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>batch/v1</span>
+<span>kind</span><span>:</span> <span>CronJob</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale-client</span>
+  <span>namespace</span><span>:</span> <span>app</span>
+<span>spec</span><span>:</span>
+  <span>schedule</span><span>:</span> <span>"*/1</span><span> </span><span>*</span><span> </span><span>*</span><span> </span><span>*</span><span> </span><span>*"</span>
+  <span>jobTemplate</span><span>:</span>
+    <span>spec</span><span>:</span>
+      <span>template</span><span>:</span>
+        <span>spec</span><span>:</span>
+          <span>containers</span><span>:</span>
+          <span>-</span> <span>name</span><span>:</span> <span>maxscale-client</span>
+            <span>image</span><span>:</span> <span>mariadb:11.4.4</span>
+            <span>command</span><span>:</span>
+              <span>-</span> <span>bash</span>
+            <span>args</span><span>:</span>
+              <span>-</span> <span>-c</span>
+              <span>-</span> <span>&gt;</span>
+                <span>mariadb -u app -h maxscale-galera.default.svc.cluster.local</span>
+                <span>--ssl-ca=/etc/pki/ca.crt --ssl-cert=/etc/pki/tls.crt</span>
+                <span>--ssl-key=/etc/pki/tls.key --ssl-verify-server-cert</span>
+                <span>-e "SELECT 'MaxScale connection successful!' AS Status;" -t</span>
+            <span>volumeMounts</span><span>:</span>
+            <span>-</span> <span>name</span><span>:</span> <span>pki</span>
+              <span>mountPath</span><span>:</span> <span>/etc/pki</span>
+              <span>readOnly</span><span>:</span> <span>true</span>
+          <span>volumes</span><span>:</span>
+          <span>-</span> <span>name</span><span>:</span> <span>pki</span>
+            <span>projected</span><span>:</span>
+              <span>sources</span><span>:</span>
+              <span>-</span> <span>secret</span><span>:</span>
+                  <span>name</span><span>:</span> <span>mariadb-bundle</span>
+                  <span>items</span><span>:</span>
+                  <span>-</span> <span>key</span><span>:</span> <span>ca.crt</span>
+                    <span>path</span><span>:</span> <span>ca.crt</span>
+              <span>-</span> <span>secret</span><span>:</span>
+                  <span>name</span><span>:</span> <span>mariadb-galera-client-cert</span>
+                  <span>items</span><span>:</span>
+                  <span>-</span> <span>key</span><span>:</span> <span>tls.crt</span>
+                    <span>path</span><span>:</span> <span>tls.crt</span>
+                  <span>-</span> <span>key</span><span>:</span> <span>tls.key</span>
+                    <span>path</span><span>:</span> <span>tls.key</span>
+          <span>restartPolicy</span><span>:</span> <span>Never</span>
+</pre></div>
+
+
+<p>If successful, the expected output is:</p>
+<div><pre><span></span>+---------------------------------+
+<span>|</span> Status                          <span>|</span>
++---------------------------------+
+<span>|</span> MaxScale connection successful! <span>|</span>
++---------------------------------+
+</pre></div>
+
+
+<h2 id="test-tls-certificates-with-connections">Test TLS certificates with <code>Connections</code></h2>
+<p>In order to validate your TLS setup, and to ensure that you TLS certificates are correctly issued and configured, you can use the <code>Connection</code> resource to test the connection to both your <code>MariaDB</code> and <code>MaxScale</code> instances:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Connection</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>connection</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb-galera</span>
+  <span>username</span><span>:</span> <span>mariadb</span>
+  <span>passwordSecretKeyRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+    <span>key</span><span>:</span> <span>password</span>
+  <span>tlsClientCertSecretRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb-galera-client-cert</span>
+  <span>database</span><span>:</span> <span>mariadb</span>
+  <span>healthCheck</span><span>:</span>
+    <span>interval</span><span>:</span> <span>30s</span>
+</pre></div>
+
+
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Connection</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>connection-maxscale</span>
+<span>spec</span><span>:</span>
+  <span>maxScaleRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>maxscale-galera</span>
+  <span>username</span><span>:</span> <span>mariadb</span>
+  <span>passwordSecretKeyRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+    <span>key</span><span>:</span> <span>password</span>
+  <span>tlsClientCertSecretRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb-galera-client-cert</span>
+  <span>database</span><span>:</span> <span>mariadb</span>
+  <span>healthCheck</span><span>:</span>
+    <span>interval</span><span>:</span> <span>30s</span>
+</pre></div>
+
+
+<p>If successful, the <code>Connection</code> resource will be in a <code>Ready</code> state, which means that your TLS setup is correctly configured:</p>
+<div><pre><span></span>kubectl get connections
+NAME                         READY   STATUS    SECRET                AGE
+connection                   True    Healthy   connection            2m8s
+connection-maxscale          True    Healthy   connection-maxscale   97s
+</pre></div>
+
+
+<p>This could be specially useful when <a href="#provide-your-own-certificates">providing your own certificates</a> and issuing certificates for your applications.</p>
+<h2 id="limitations">Limitations</h2>
+<h3 id="galera-and-intermediate-cas">Galera and intermediate CAs</h3>
+<p>Leaf certificates issued by <a href="#intermediate-cas">intermediate CAs</a> are not supported by Galera, see <a href="https://jira.mariadb.org/browse/MDEV-35812">MDEV-35812</a>. This implies that a root CA must be used to issue the <code>MariaDB</code> certificates.</p>
+<p>This doesn't affect <code>MaxScale</code>, as it is able to establish trust with intermediate CAs, and therefore you can still issue your application facing certificates (MaxScale listeners) with an intermediate CA, giving you more flexibility in your PKI setup.</p>
+<h3 id="maxscale">MaxScale</h3>
+<ul>
+<li>Unlike <code>MariaDB</code>, TLS and non-TLS connections on the same port are not supported simultanously.</li>
+<li>TLS encryption must be enabled for listeners when they are created. For servers, the TLS can be enabled after creation but it cannot be disabled or altered.</li>
+</ul>
+<p>Refer to the <a href="https://mariadb.com/kb/en/mariadb-maxscale-2308-mariadb-maxscale-configuration-guide/#tlsssl-encryption">MaxScale documentation </a>for further detail.</p>
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/tls/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/tls/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/mariadb-enterprise-operator-storage/">
+                        ← Storage
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/mariadb-enterprise-operator/">
+                        ↑ MariaDB Enterprise Operator ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/configuration/">
+                        Configuration →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="15899" data-comments-url="/kb/en/tls/+comments"
+         data-reply-url="/kb/en/tls/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/mariadb-enterprise-operator/">
+                    ↑ MariaDB Enterprise Operator ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-introduction/">
+                            
+                            Introduction
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/customer-access-to-docker-mariadb-com/">
+                            
+                            Customer access to docker.mariadb.com
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/docker-images/">
+                            
+                            Docker Images
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-installation/">
+                            
+                            MariaDB Enterprise Operator Installation
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/quickstart/">
+                            
+                            Quickstart
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/standalone-mariadb/">
+                            
+                            Standalone MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-galera-cluster/">
+                            
+                            Galera Cluster
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/high-availability/">
+                            
+                            High Availability
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/maxscale-database-proxy/">
+                            
+                            MaxScale Database Proxy
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/backup-and-restore/">
+                            
+                            Backup and Restore
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-storage/">
+                            
+                            Storage
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>TLS</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/configuration/">
+                            
+                            Configuration
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/updates/">
+                            
+                            Updates
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-metrics/">
+                            
+                            Metrics
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/sql-resources/">
+                            
+                            SQL Resources
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/metadata/">
+                            
+                            Metadata
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/suspend-reconciliation/">
+                            
+                            Suspend Reconciliation
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/api-reference/">
+                            
+                            API Reference
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/examples-catalog/">
+                            
+                            Examples Catalog
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-migrations/">
+                            
+                            MariaDB Enterprise Operator Migrations
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-release-notes/">
+                            
+                            MariaDB Enterprise Operator Release Notes
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    <ul class="list-inline text-center footer-nav">
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/products" title="Products">Products</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/solutions" title="Solutions">Solutions</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/resources" title="Resources">Resources</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/about-us" title="About MariaDB">Company</a></h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/pricing" title="Pricing">Pricing</a>
+                            </h5>
+                        </li>
+                        
+                        
+                        <li>
+                            <h5><a href="https://mariadb.com/downloads" title="Download">Download MariaDB</a></h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row row-10">
+                
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div class="footer-copyright">
+                        <div class="text-center">
+                            <ul class="list-inline no-margin">
+                                <li>
+                                    <a href="/legal" title="Legal">Legal</a>
+                                </li>
+                                <li>
+                                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                            <p>Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
+
+</html>

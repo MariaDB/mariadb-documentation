@@ -280,7 +280,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-04-21 09:39">14 hours, 22 minutes ago</span></dd>
+<span class="datetime" title="2025-04-22 13:33">10 hours, 29 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -461,7 +461,9 @@
     <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
 </li>
 </div><p>
-The <a href="/kb/en/innodb/">InnoDB</a> buffer pool is a key component for optimizing MariaDB. It stores data and indexes, and you usually want it as large as possible so as to keep as much of the data and indexes in memory, reducing disk IO, as main bottleneck.</p>
+The InnoDB storage engine in MariaDB Enterprise Server utilizes the Buffer Pool as a crucial in-memory cache. This Buffer Pool stores recently accessed data pages, enabling faster retrieval for subsequent requests. Recognizing patterns of access, InnoDB also employs predictive prefetching, caching nearby pages when sequential access is detected. To manage memory efficiently, a least recently used (LRU) algorithm is used to evict older, less frequently accessed pages.</p>
+<p>To optimize server restarts, the Buffer Pool's contents can be preserved across shutdowns. At shutdown, the page numbers of all pages residing in the Buffer Pool are recorded. Upon the next startup, InnoDB reads this dump of page numbers and reloads the corresponding data pages from their respective data files, effectively avoiding a "cold" cache scenario.</p>
+<p>The size of each individual page within the Buffer Pool is determined by the setting of the innodb_page_size system variable.</p>
 <h2 class="anchored_heading" id="how-the-buffer-pool-works">How the Buffer Pool Works</h2>
 <p>The buffer pool attempts to keep frequently-used blocks in the buffer, and so essentially works as two sublists, a <em>new</em> sublist of recently-used information, and an <em>old</em> sublist of older information. By default, 37% of the list is reserved for the old list.</p>
 <p>When new information is accessed that doesn't appear in the list, it is placed at the top of the old list, the oldest item in the old list is removed, and everything else bumps back one position in the list.</p>
@@ -473,7 +475,6 @@ The <a href="/kb/en/innodb/">InnoDB</a> buffer pool is a key component for optim
 <p>The buffer pool can be set dynamically. See <a href="/kb/en/setting-innodb-buffer-pool-size-dynamically/">Setting Innodb Buffer Pool Size Dynamically</a>.</p>
 <h2 class="anchored_heading" id="innodb_buffer_pool_instances">innodb_buffer_pool_instances</h2>
 <p>The functionality described below was disabled in <a href="/kb/en/what-is-mariadb-105/">MariaDB 10.5</a>, and removed in <a href="/kb/en/what-is-mariadb-106/">MariaDB 10.6</a>, as the original reasons for for splitting the buffer pool have mostly gone away. </p>
-<p>If innodb_buffer_pool_size is set to more than 1GB, <a href="/kb/en/innodb-system-variables/#innodb_buffer_pool_instances">innodb_buffer_pool_instances</a> divides the InnoDB buffer pool into a specific number of instances. The default was 1 in <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a>, but for large systems with buffer pools of many gigabytes, many instances can help reduce contention concurrency. The default is 8 in <a href="/kb/en/what-is-mariadb-100/">MariaDB 10.0</a>, with the exception of 32-bit Windows, where it depends on the value of <a href="/kb/en/innodb-system-variables/#innodb_buffer_pool_size">innodb_buffer_pool_size</a>. Each instance manages its own data structures and takes an equal portion of the total buffer pool size, so for example if innodb_buffer_pool_size is 4GB and innodb_buffer_pool_instances is set to 4, each instance will be 1GB. Each instance should ideally be at least 1GB in size. </p>
 <h2 class="anchored_heading" id="innodb_old_blocks_pct-and-innodb_old_blocks_time">innodb_old_blocks_pct and innodb_old_blocks_time</h2>
 <p>The default 37% reserved for the old list can be adjusted by changing the value of <a href="/kb/en/innodb-system-variables/#innodb_old_blocks_pct">innodb_old_blocks_pct</a>. It can accept anything between between 5% and 95%. </p>
 <p>The <a href="/kb/en/innodb-system-variables/#innodb_old_blocks_time">innodb_old_blocks_time</a> variable specifies the delay before a block can be moved from the old to the new sublist. <code>0</code> means no delay, while the default has been set to <code>1000</code>.</p>

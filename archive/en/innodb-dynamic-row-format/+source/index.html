@@ -320,7 +320,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-dynamic-row-format/+r/149456/">149456</a></dd>
+            <dd><a href="/kb/en/innodb-dynamic-row-format/+r/150759/">150759</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3487">
@@ -329,7 +329,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-03-18 10:29">2025-03-18 10:29</span></dd>
+<span class="datetime" title="2025-04-22 12:59">2025-04-22 12:59</span></dd>
         </dl>
     </div>
     
@@ -345,7 +345,17 @@
 
 The ##DYNAMIC## row format is similar to the ##COMPACT## row format, but tables using the ##DYNAMIC## row format can store even more data on overflow pages than tables using the ##COMPACT## row format. This results in more efficient data storage than tables using the ##COMPACT## row format, especially for tables containing columns using the [[varbinary|VARBINARY]], [[varchar|VARCHAR]], [[blob|BLOB]] and [[text|TEXT]] data types. While InnoDB tables using the ##COMPRESSED## row format can result in even greater space-efficiency, COMPRESSED requires substantially more memory and CPU to both read and write, so there is a significant performance and concurrency trade-off for that space-efficiency gain. COMPRESSED tables are not recommended for production use in most situations, while DYNAMIC row format scales well in high-performance environments.
 
-The ##DYNAMIC## row format was originally introduced in MariaDB 5.5.
+== Supported Index Prefix Limits
+
+The limit for indexing column values depends on the [[innodb-system-variables/#innodb_page_size|innodb_page_size]] value:
+
+&lt;&lt;style class=&#34;darkheader-nospace-borders left&#34;&gt;&gt;
+|= Page Size |= Index Prefix Limit |
+| 16k \\32k \\ 16k  | 3072 bytes |
+| 8k  | 1536 bytes |
+| 4k  | 768 bytes |
+&lt;&lt;/style&gt;&gt;
+
 
 == Using the DYNAMIC Row Format
 
@@ -366,6 +376,216 @@ CREATE TABLE tab (
 ) ENGINE=InnoDB;
 &lt;&lt;/sql&gt;&gt;
 
+=== Create an InnoDB Table with the Dynamic Row Format by Default
+
+InnoDB uses the Dynamic row format for new InnoDB tables by default, because the [[innodb-system-variables/#innodb_default_row_format|innodb_default_row_format]] system variable is dynamic by default.
+
+Let&#39;s create an InnoDB table after confirming that the default storage engine is InnoDB and that InnoDB&#39;s default row format is Dynamic:
+
+1. Connect to the server using [[mariadb-client|MariaDB Client]]:
+
+&lt;&lt;code&gt;&gt;
+$ mariadb --user=root
+&lt;&lt;/code&gt;&gt;
+
+2. Confirm that the default storage engine is InnoDB by checking the [[server-system-variables/#default_storage_engine|default_storage_engine]] system variable using the [[show-variables|SHOW SESSION VARIABLES]] statement:
+
+&lt;&lt;code&gt;&gt;
+SHOW SESSION VARIABLES
+   LIKE &#39;default_storage_engine&#39;;
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
++------------------------+--------+
+| Variable_name          | Value  |
++------------------------+--------+
+| default_storage_engine | InnoDB |
++------------------------+--------+
+&lt;&lt;/code&gt;&gt;
+
+3. Confirm that InnoDB&#39;s default row format is Dynamic by checking the [[innodb-system-variables/#innodb_default_row_format|innodb_default_row_format]] system variable using the [[show-variables|SHOW GLOBAL VARIABLES]] statement:
+
+&lt;&lt;code&gt;&gt;
+SHOW GLOBAL VARIABLES
+   LIKE &#39;innodb_default_row_format&#39;;
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+
++---------------------------+---------+
+| Variable_name             | Value   |
++---------------------------+---------+
+| innodb_default_row_format | dynamic |
++---------------------------+---------+
+&lt;&lt;/code&gt;&gt;
+
+4. If the database does not exist, then create the database for the table using the [[create-database|CREATE DATABASE]] statement:
+
+&lt;&lt;code&gt;&gt;
+CREATE DATABASE hq_sales;
+&lt;&lt;/code&gt;&gt;
+
+5. Create the table using the [[create-table|CREATE TABLE]] statement:
+
+&lt;&lt;code&gt;&gt;
+CREATE TABLE hq_sales.invoices (
+   invoice_id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
+   branch_id INT NOT NULL,
+   customer_id INT,
+   invoice_date DATETIME(6),
+   invoice_total DECIMAL(13, 2),
+   payment_method ENUM(&#39;NONE&#39;, &#39;CASH&#39;, &#39;WIRE_TRANSFER&#39;, &#39;CREDIT_CARD&#39;, &#39;GIFT_CARD&#39;),
+   PRIMARY KEY(invoice_id)
+);
+&lt;&lt;/code&gt;&gt;
+
+
+6. Confirm that the table uses the Dynamic row format by querying the [[information-schema-innodb_sys_tables-table|information_schema.INNODB_SYS_TABLES]] table:
+
+&lt;&lt;code&gt;&gt;
+SELECT NAME, ROW_FORMAT
+FROM information_schema.INNODB_SYS_TABLES
+WHERE NAME=&#39;hq_sales/invoices&#39;;
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
++-------------------+------------+
+| NAME              | ROW_FORMAT |
++-------------------+------------+
+| hq_sales/invoices | Dynamic    |
++-------------------+------------+
+&lt;&lt;/code&gt;&gt;
+
+=== Create an InnoDB Table with the Dynamic Row Format using ##ROW_FORMAT##
+An InnoDB table that uses the Dynamic row format can be created using the the ##ROW_FORMAT## table option.
+
+Let&#39;s create an InnoDB table after confirming that the default storage engine is InnoDB and that InnoDB&#39;s default row format is not Dynamic:
+
+1. Connect to the server using [[mariadb-client|MariaDB Client]]:
+
+&lt;&lt;code&gt;&gt;
+$ mariadb --user=root
+&lt;&lt;/code&gt;&gt;
+
+2. Confirm that the default storage engine is InnoDB by checking the [[server-system-variables/#default_storage_engine|default_storage_engine]] system variable using the [[show-variables|SHOW SESSION VARIABLES]] statement:
+
+&lt;&lt;code&gt;&gt;
+SHOW SESSION VARIABLES
+   LIKE &#39;default_storage_engine&#39;;
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
++------------------------+--------+
+| Variable_name          | Value  |
++------------------------+--------+
+| default_storage_engine | InnoDB |
++------------------------+--------+
+&lt;&lt;/code&gt;&gt;
+
+3. Confirm that InnoDB&#39;s default row format is not Dynamic by checking the [[innodb-system-variables/#innodb_default_row_format|innodb_default_row_format]] system variable using the [[show-variables|SHOW GLOBAL VARIABLES]] statement:
+
+&lt;&lt;code&gt;&gt;
+SHOW GLOBAL VARIABLES
+   LIKE &#39;innodb_default_row_format&#39;;
+&lt;&lt;/code&gt;&gt;
+
+
+&lt;&lt;code&gt;&gt;
++---------------------------+---------+
+| Variable_name             | Value   |
++---------------------------+---------+
+| innodb_default_row_format | compact |
++---------------------------+---------+
+&lt;&lt;/code&gt;&gt;
+
+4. If the database does not exist, then create the database for the table using the [[create-database|CREATE DATABASE]] statement:
+
+&lt;&lt;code&gt;&gt;
+CREATE DATABASE hq_sales;
+&lt;&lt;/code&gt;&gt;
+
+
+5. Create the table using the [[create-table|CREATE TABLE]] statement, and specify the Dynamic row format using the ##ROW_FORMAT## table option:
+
+&lt;&lt;code&gt;&gt;
+CREATE TABLE hq_sales.invoices (
+   invoice_id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
+   branch_id INT NOT NULL,
+   customer_id INT,
+   invoice_date DATETIME(6),
+   invoice_total DECIMAL(13, 2),
+   payment_method ENUM(&#39;NONE&#39;, &#39;CASH&#39;, &#39;WIRE_TRANSFER&#39;, &#39;CREDIT_CARD&#39;, &#39;GIFT_CARD&#39;),
+   PRIMARY KEY(invoice_id)
+) ROW_FORMAT = Dynamic;
+&lt;&lt;/code&gt;&gt;
+
+6. Confirm that the table uses the Dynamic row format by querying the [[information-schema-innodb_sys_tables-table|information_schema.INNODB_SYS_TABLES]] table:
+
+&lt;&lt;code&gt;&gt;
+SELECT NAME, ROW_FORMAT
+FROM information_schema.INNODB_SYS_TABLES
+WHERE NAME=&#39;hq_sales/invoices&#39;;
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
++-------------------+------------+
+| NAME              | ROW_FORMAT |
++-------------------+------------+
+| hq_sales/invoices | Dynamic    |
++-------------------+------------+
+&lt;&lt;/code&gt;&gt;
+
+=== Convert InnoDB Tables to the Dynamic Row Format
+
+If your database was physically upgraded from some older version of MariaDB Server or MySQL, then some of your tables may not be using the Dynamic row format. If you want to get the benefits of the Dynamic row format, then those tables will need to be converted to use it.
+
+Let&#39;s convert some InnoDB tables to the Dynamic row format:
+
+1. Connect to the server using MariaDB Client:
+
+&lt;&lt;code&gt;&gt;
+$ mariadb --user=root
+&lt;&lt;/code&gt;&gt;
+
+2. Search for InnoDB tables that do not use the Dynamic row format by querying the [[information-schema-innodb_sys_tables-table|information_schema.INNODB_SYS_TABLES]] table:
+
+&lt;&lt;code&gt;&gt;
+SELECT NAME, ROW_FORMAT
+FROM information_schema.INNODB_SYS_TABLES
+WHERE NAME NOT LIKE &#39;SYS_%&#39;
+AND ROW_FORMAT != &#39;Dynamic&#39;;
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
++-------------------+------------+
+| NAME              | ROW_FORMAT |
++-------------------+------------+
+| hq_sales/invoices | Compact    |
++-------------------+------------+
+&lt;&lt;/code&gt;&gt;
+
+3. Alter the table using the [[alter-table|ALTER TABLE]] statement, and specify the Dynamic row format using the ##ROW_FORMAT## table option:
+
+&lt;&lt;code&gt;&gt;
+ALTER TABLE hq_sales.invoices
+   ROW_FORMAT = Dynamic;
+&lt;&lt;/code&gt;&gt;
+
+4. Confirm that the table uses the Dynamic row format by querying the [[information-schema-innodb_sys_tables-table|information_schema.INNODB_SYS_TABLES]] table again:
+
+&lt;&lt;code&gt;&gt;
+SELECT NAME, ROW_FORMAT
+FROM information_schema.INNODB_SYS_TABLES
+WHERE NAME=&#39;hq_sales/invoices&#39;;
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
++-------------------+------------+
+| NAME              | ROW_FORMAT |
++-------------------+------------+
+| hq_sales/invoices | Dynamic    |
++-------------------+------------+
+&lt;&lt;/code&gt;&gt;
 == Index Prefixes with the DYNAMIC Row Format
 
 The ##DYNAMIC## row format supports index prefixes up to 3072 bytes. In earlier versions of MariaDB, the [[innodb-system-variables/#innodb_large_prefix|innodb_large_prefix]] system variable is used to configure the maximum index prefix length. In these versions, if [[innodb-system-variables/#innodb_large_prefix|innodb_large_prefix]] is set to ##ON##, then the maximum prefix length is 3072 bytes, and if it is set to ##OFF##, then the maximum prefix length is 767 bytes.

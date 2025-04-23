@@ -316,7 +316,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-redo-log/+r/148630/">148630</a></dd>
+            <dd><a href="/kb/en/innodb-redo-log/+r/150761/">150761</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-3487">
@@ -325,7 +325,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-03-12 08:23">2025-03-12 08:23</span></dd>
+<span class="datetime" title="2025-04-22 13:23">2025-04-22 13:23</span></dd>
         </dl>
     </div>
     
@@ -343,8 +343,50 @@ Directly editing or moving the redo logs can cause corruption, and should never 
 
 == Overview
 
-The redo log is used by [[innodb|InnoDB]] during crash recovery and background flushing of transactions to the tablespaces. The redo log files have names like ##ib_logfileN##, where ##N## is an integer. From MariaDB 10.5, there is only one redo log, so the file will always be named ##ib_logfile0##. If the [[innodb-system-variables/#innodb_log_group_home_dir|innodb_log_group_home_dir]] system variable is configured, then the redo log files will be created in that directory. Otherwise, they will be created in the directory defined by the [[server-system-variables/#datadir|datadir]] system variable.
+The InnoDB storage engine in MariaDB Enterprise Server employs a **Redo Log** to ensure data is written to disk reliably, even in the event of a crash. This is achieved by the Redo Log acting as a transaction log.
 
+Redo Log records are uniquely identified by a **Log Sequence Number (LSN)**. The Redo Log consists of circular log files of a fixed size, where older records are routinely overwritten by newer ones.
+
+InnoDB periodically performs **checkpoints**. During a checkpoint operation, InnoDB writes (flushes) the Redo Log records to the InnoDB tablespace files.
+
+In the event of a server crash, InnoDB utilizes the Redo Log for **crash recovery** during the subsequent server startup. It locates the last checkpoint within the Redo Log and then replays the Redo Log records generated since that checkpoint, effectively flushing these pending changes to the InnoDB tablespace files.
+
+The redo log files are typically named ##ib_logfileN##, where ##N## is an integer. However, starting with MariaDB 10.5, there is a single redo log file, consistently named ##ib_logfile0##. The location of these redo log files is determined by the ##innodb_log_group_home_dir## system variable, if configured. If this variable is not set, the redo log files are created in the directory specified by the ##datadir## system variable. The redo log plays a crucial role during crash recovery and in the background process of flushing transactions to the tablespaces.
+
+== Feature Summary
+
+&lt;&lt;style class=&#34;darkheader-nospace-borders left&#34;&gt;&gt;
+|= Feature |=Detail |= Resources|
+| Transaction Log  | InnoDB Redo Log | |
+| Storage Engine  | InnoDB | |
+| Purpose  | Crash Safety | |
+| Availability  | All ES and CS versions | [[mariadb-enterprise-server|MariaDB Enterprise Server]] |
+| Location  | Set by [[innodb-system-variables/#innodb_log_group_home_dir|innodb_log_group_home_dir]] (Defaults to [[server-system-variables/#datadir|datadir]]) |  |
+| Quantity  | 1 (ES 10.5+, CS 10.5+) | [[configure-the-innodb-redo-log|Configure the InnoDB Redo Log]]|
+| Size  | Set by [[innodb-system-variables/#innodb_log_file_size|innodb_log_file_size]] (default varies) | [[configure-the-innodb-redo-log|Configure the InnoDB Redo Log]] |
+&lt;&lt;/style&gt;&gt;
+== Basic Configuration
+
+&lt;&lt;code&gt;&gt;
+[mariadb]
+...
+innodb_log_file_size=2G
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
+SET GLOBAL innodb_log_file_size=(2 * 1024 * 1024 * 1024);
+
+SHOW GLOBAL VARIABLES
+   LIKE &#39;innodb_log_file_size&#39;;
+&lt;&lt;/code&gt;&gt;
+
+&lt;&lt;code&gt;&gt;
++----------------------+------------+
+| Variable_name        | Value      |
++----------------------+------------+
+| innodb_log_file_size | 2147483648 |
++----------------------+------------+
+&lt;&lt;/code&gt;&gt;
 == Flushing Effects on Performance and Consistency
 
 The [[innodb-system-variables#innodb_flush_log_at_trx_commit|innodb_flush_log_at_trx_commit]] system variable determines how often the transactions are flushed to the redo log, and it is important to achieve a good balance between speed and reliability.

@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>High Availability - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
+
+    
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="High Availability" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/high-availability/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="Configure high availability in MariaDB and MaxScale" />
+
+    <meta name="description" content="Configure high availability in MariaDB and MaxScale" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/high-availability/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/high-availability/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/solutions" title="Solutions">Solutions</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="Company">Company</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-enterprise-server/">MariaDB Enterprise Server</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-enterprise-operator/">MariaDB Enterprise Operator</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/high-availability/">High Availability</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/high-availability/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/high-availability/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/high-availability/+flag"
+                data-flag-url="/kb/en/high-availability/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/high-availability/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2025-02-27 11:10">1 month, 3 weeks ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2025-04-22 08:34">15 hours, 27 minutes ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/high-availability/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/high-availability/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/high-availability/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/high-availability/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>High Availability</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <p>This section provide guidance on how to run <code>MariaDB</code> and <code>MaxScale</code> in high availability mode. If you are looking to run the operator in HA as well, please refer to the <a href="https://mariadb.com/kb/en/helm/">Helm documentation</a>.</p>
+<p>Our recommended HA setup for production is:</p>
+<ul>
+<li><strong><a href="https://mariadb.com/kb/en/mariadb-enterprise-operator-galera-cluster/">Galera</a></strong> with at least 3 nodes. Always an odd number of nodes.</li>
+<li><strong><a href="https://mariadb.com/kb/en/maxscale-database-proxy/">MaxScale</a></strong> with at least 2 nodes to load balance requests to the <strong><a href="https://mariadb.com/kb/en/mariadb-enterprise-operator-galera-cluster/">Galera</a></strong> cluster.</li>
+<li>Use <strong><a href="#dedicated-nodes">dedicated nodes</a></strong> to avoid noisy neighbours.</li>
+<li>Define <strong><a href="#pod-disruption-budgets">pod disruption budgets</a></strong>.</li>
+</ul>
+<p>Refer to the following sections for further detail.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#kubernetes-services">Kubernetes Services</a></li>
+<li><a href="#maxscale">MaxScale</a></li>
+<li><a href="#pod-anti-affinity">Pod Anti-Affinity</a></li>
+<li><a href="#dedicated-nodes">Dedicated Nodes</a></li>
+<li><a href="#pod-disruption-budgets">Pod Disruption Budgets</a></li>
+</ul>
+<h2 id="kubernetes-services">Kubernetes Services</h2>
+<p>In order to address nodes, MariaDB Enterprise Operator provides you with the following Kubernetes <code>Services</code>:</p>
+<ul>
+<li><code>&lt;mariadb-name&gt;</code>: To be used for read requests. It will point to all nodes. </li>
+<li><code>&lt;mariadb-name&gt;-primary</code>: To be used for write requests. It will point to a single node, the primary.</li>
+<li><code>&lt;mariadb-name&gt;-secondary</code>: To be used for read requests. It will point to all nodes, except the primary.</li>
+</ul>
+<p>Whenever the primary changes, either by the user or by the operator, both the <code>&lt;mariadb-name&gt;-primary</code> and <code>&lt;mariadb-name&gt;-secondary</code> <code>Services</code> will be automatically updated by the operator to address the right nodes.</p>
+<p>The primary may be manually changed by the user at any point by updating the <code>spec.galera.primary.podIndex</code> field. Alternatively,  automatic primary failover can be enabled by setting <code>spec.galera.primary.automaticFailover</code>, which will make the operator to switch primary whenever the primary <code>Pod</code> goes down.</p>
+<h2 id="maxscale">MaxScale</h2>
+<p>While Kubernetes <code>Services</code> can be utilized to dynamically address primary and secondary instances, the most robust high availability configuration we recommend relies on MaxScale. Please refer to <a href="https://mariadb.com/kb/en/maxscale-database-proxy/">MaxScale docs</a> for further detail.</p>
+<h2 id="pod-anti-affinity">Pod Anti-Affinity</h2>
+<blockquote>
+<p><strong>WARNING</strong><br>
+Bear in mind that, when enabling this, you need to have at least as many <code>Nodes</code> available as the replicas specified. Otherwise your <code>Pods</code> will be unscheduled and the cluster won't bootstrap.</p>
+</blockquote>
+<p>To achieve real high availability, we need to run each <code>MariaDB</code> <code>Pod</code> in different Kubernetes <code>Nodes</code>. This practice, known as anti-affinity, helps reducing the blast radius of <code>Nodes</code> being unavailable.</p>
+<p>By default, anti-affinity is disabled, which means that multiple <code>Pods</code> may be scheduled in the same <code>Node</code>, something not desired in HA scenarios.</p>
+<p>You can selectively enable anti-affinity in all the different <code>Pods</code> managed by the <code>MariaDB</code> resource:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>bootstrapFrom</span><span>:</span>
+    <span>restoreJob</span><span>:</span>
+      <span>affinity</span><span>:</span>
+        <span>antiAffinityEnabled</span><span>:</span> <span>true</span>
+  <span>...</span>
+  <span>metrics</span><span>:</span>
+    <span>exporter</span><span>:</span>
+      <span>affinity</span><span>:</span>
+        <span>antiAffinityEnabled</span><span>:</span> <span>true</span>
+  <span>...</span>
+  <span>affinity</span><span>:</span>
+    <span>antiAffinityEnabled</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<p>Anti-affinity may also be enabled in the the resources that have a reference to <code>MariaDB</code>, resulting in their <code>Pods</code> being scheduled in <code>Nodes</code> where <code>MariaDB</code> is not running. For instance, the <code>Backup</code> and <code>Restore</code> processes can run in different <code>Nodes</code>:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Backup</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>backup</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb-galera</span>
+  <span>...</span>
+  <span>affinity</span><span>:</span>
+    <span>antiAffinityEnabled</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Restore</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>restore</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb-galera</span>
+  <span>...</span>
+  <span>affinity</span><span>:</span>
+    <span>antiAffinityEnabled</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<p>In the case of <code>MaxScale</code>, the <code>Pods</code> will also be placed in <code>Nodes</code> isolated in terms of compute, ensuring isolation not only among themselves but also from the <code>MariaDB</code> <code>Pods</code>. For example, if you run a <code>MariaDB</code> and <code>MaxScale</code> with 3 replicas each, you will need 6 <code>Nodes</code> in total:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale-galera</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb-galera</span>
+  <span>...</span>
+  <span>metrics</span><span>:</span>
+    <span>exporter</span><span>:</span>
+      <span>affinity</span><span>:</span>
+        <span>antiAffinityEnabled</span><span>:</span> <span>true</span>
+  <span>...</span>
+  <span>affinity</span><span>:</span>
+    <span>antiAffinityEnabled</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<p>Default anti-affinity rules generated by the operator might not satisfy your needs, but you can always define your own rules. For example, if you want the <code>MaxScale</code> <code>Pods</code> to be in different <code>Nodes</code>, but you want them to share <code>Nodes</code> with <code>MariaDB</code>:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale-galera</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb-galera</span>
+  <span>...</span>
+  <span>affinity</span><span>:</span>
+    <span>podAntiAffinity</span><span>:</span>
+      <span>requiredDuringSchedulingIgnoredDuringExecution</span><span>:</span>
+      <span>-</span> <span>labelSelector</span><span>:</span>
+          <span>matchExpressions</span><span>:</span>
+          <span>-</span> <span>key</span><span>:</span> <span>app.kubernetes.io/instance</span>
+            <span>operator</span><span>:</span> <span>In</span>
+            <span>values</span><span>:</span>
+            <span>-</span> <span>maxscale-galera</span>
+            <span># 'mariadb-galera' instance omitted (default anti-affinity rule)</span>
+        <span>topologyKey</span><span>:</span> <span>kubernetes.io/hostname</span>
+</pre></div>
+
+
+<h2 id="dedicated-nodes">Dedicated Nodes</h2>
+<p>If you want to avoid noisy neighbours running in the same Kubernetes <code>Nodes</code> as your <code>MariaDB</code>, you may consider using dedicated <code>Nodes</code>. For achieving this, you will need:</p>
+<ul>
+<li>Taint your <code>Nodes</code> and add the counterpart toleration in your <code>Pods</code>.<blockquote>
+<p><strong>IMPORTANT</strong><br>
+Tainting your <code>Nodes</code> is not covered by this operator, it is something you need to do by yourself beforehand. You may take a look at the <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/">Kubernetes documentation</a> to understand how to achieve this.</p>
+</blockquote>
+</li>
+<li>
+<p>Select the <code>Nodes</code> where <code>Pods</code> will be scheduled in via a <code>nodeSelector</code>.</p>
+<blockquote>
+<p><strong>NOTE</strong><br>
+Although you can use the default <code>Node</code> labels, you may consider adding more significative labels to your <code>Nodes</code>, as you will have to set to them in your <code>Pod</code> <code>nodeSelector</code>. Refer to the <a href="https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes/#add-a-label-to-a-node">Kubernetes documentation</a>. </p>
+</blockquote>
+</li>
+<li>
+<p>Add <code>podAntiAffinity</code> to your <code>Pods</code> as described in the <a href="#pod-anti-affinity">Pod Anti-Affinity</a> section.</p>
+</li>
+</ul>
+<p>The previous steps can be achieved by setting these fields in the  <code>MariaDB</code> resource:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+  <span>tolerations</span><span>:</span>
+    <span>-</span> <span>key</span><span>:</span> <span>"enterprise.mariadb.com/ha"</span>
+      <span>operator</span><span>:</span> <span>"Exists"</span>
+      <span>effect</span><span>:</span> <span>"NoSchedule"</span>
+  <span>nodeSelector</span><span>:</span>
+    <span>"enterprise.mariadb.com/node"</span><span>:</span> <span>"ha"</span> 
+  <span>affinity</span><span>:</span>
+    <span>antiAffinityEnabled</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<h2 id="pod-disruption-budgets">Pod Disruption Budgets</h2>
+<blockquote>
+<p><strong>IMPORTANT</strong><br>
+Take a look at the <a href="https://kubernetes.io/docs/tasks/run-application/configure-pdb/">Kubernetes documentation</a> if you are unfamiliar to <code>PodDisruptionBudgets</code></p>
+</blockquote>
+<p>By defining a <code>PodDisruptionBudget</code>, you are telling Kubernetes how many <code>Pods</code> your database tolerates to be down. This quite important for planned maintenance operations such as <code>Node</code> upgrades.</p>
+<p>MariaDB Enterprise Operator creates a default <code>PodDisruptionBudget</code> if you are running in HA, but you are able to define your own by setting:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>...</span>
+    <span>podDisruptionBudget</span><span>:</span>
+      <span>maxUnavailable</span><span>:</span> <span>33%</span>
+</pre></div>
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/high-availability/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/high-availability/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/mariadb-enterprise-operator-galera-cluster/">
+                        ← Galera Cluster
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/mariadb-enterprise-operator/">
+                        ↑ MariaDB Enterprise Operator ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/maxscale-database-proxy/">
+                        MaxScale Database Proxy →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="15892" data-comments-url="/kb/en/high-availability/+comments"
+         data-reply-url="/kb/en/high-availability/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/mariadb-enterprise-operator/">
+                    ↑ MariaDB Enterprise Operator ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-introduction/">
+                            
+                            Introduction
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/customer-access-to-docker-mariadb-com/">
+                            
+                            Customer access to docker.mariadb.com
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/docker-images/">
+                            
+                            Docker Images
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-installation/">
+                            
+                            MariaDB Enterprise Operator Installation
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/quickstart/">
+                            
+                            Quickstart
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/standalone-mariadb/">
+                            
+                            Standalone MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-galera-cluster/">
+                            
+                            Galera Cluster
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>High Availability</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/maxscale-database-proxy/">
+                            
+                            MaxScale Database Proxy
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/backup-and-restore/">
+                            
+                            Backup and Restore
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-storage/">
+                            
+                            Storage
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/tls/">
+                            
+                            TLS
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/configuration/">
+                            
+                            Configuration
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/updates/">
+                            
+                            Updates
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-metrics/">
+                            
+                            Metrics
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/sql-resources/">
+                            
+                            SQL Resources
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/metadata/">
+                            
+                            Metadata
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/suspend-reconciliation/">
+                            
+                            Suspend Reconciliation
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/api-reference/">
+                            
+                            API Reference
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/examples-catalog/">
+                            
+                            Examples Catalog
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-migrations/">
+                            
+                            MariaDB Enterprise Operator Migrations
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-release-notes/">
+                            
+                            MariaDB Enterprise Operator Release Notes
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    <ul class="list-inline text-center footer-nav">
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/products" title="Products">Products</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/solutions" title="Solutions">Solutions</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/resources" title="Resources">Resources</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/about-us" title="About MariaDB">Company</a></h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/pricing" title="Pricing">Pricing</a>
+                            </h5>
+                        </li>
+                        
+                        
+                        <li>
+                            <h5><a href="https://mariadb.com/downloads" title="Download">Download MariaDB</a></h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row row-10">
+                
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div class="footer-copyright">
+                        <div class="text-center">
+                            <ul class="list-inline no-margin">
+                                <li>
+                                    <a href="/legal" title="Legal">Legal</a>
+                                </li>
+                                <li>
+                                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                            <p>Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
+
+</html>

@@ -316,7 +316,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/innodb-buffer-pool/+r/150713/">150713</a></dd>
+            <dd><a href="/kb/en/innodb-buffer-pool/+r/150762/">150762</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -325,7 +325,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-04-21 09:39">2025-04-21 09:39</span></dd>
+<span class="datetime" title="2025-04-22 13:33">2025-04-22 13:33</span></dd>
         </dl>
     </div>
     
@@ -336,7 +336,11 @@
     
         
         <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;toc&gt;&gt;
-The [[innodb|InnoDB]] buffer pool is a key component for optimizing MariaDB. It stores data and indexes, and you usually want it as large as possible so as to keep as much of the data and indexes in memory, reducing disk IO, as main bottleneck.
+The InnoDB storage engine in MariaDB Enterprise Server utilizes the Buffer Pool as a crucial in-memory cache. This Buffer Pool stores recently accessed data pages, enabling faster retrieval for subsequent requests. Recognizing patterns of access, InnoDB also employs predictive prefetching, caching nearby pages when sequential access is detected. To manage memory efficiently, a least recently used (LRU) algorithm is used to evict older, less frequently accessed pages.
+
+To optimize server restarts, the Buffer Pool&#39;s contents can be preserved across shutdowns. At shutdown, the page numbers of all pages residing in the Buffer Pool are recorded. Upon the next startup, InnoDB reads this dump of page numbers and reloads the corresponding data pages from their respective data files, effectively avoiding a &#34;cold&#34; cache scenario.
+
+The size of each individual page within the Buffer Pool is determined by the setting of the innodb_page_size system variable.
 
 == How the Buffer Pool Works
 The buffer pool attempts to keep frequently-used blocks in the buffer, and so essentially works as two sublists, a //new// sublist of recently-used information, and an //old// sublist of older information. By default, 37% of the list is reserved for the old list.
@@ -358,8 +362,6 @@ The buffer pool can be set dynamically. See [[setting-innodb-buffer-pool-size-dy
 == innodb_buffer_pool_instances
 
 The functionality described below was disabled in MariaDB 10.5, and removed in MariaDB 10.6, as the original reasons for for splitting the buffer pool have mostly gone away. 
-
-If innodb_buffer_pool_size is set to more than 1GB, [[innodb-system-variables#innodb_buffer_pool_instances|innodb_buffer_pool_instances]] divides the InnoDB buffer pool into a specific number of instances. The default was 1 in MariaDB 5.5, but for large systems with buffer pools of many gigabytes, many instances can help reduce contention concurrency. The default is 8 in MariaDB 10.0, with the exception of 32-bit Windows, where it depends on the value of [[innodb-system-variables#innodb_buffer_pool_size|innodb_buffer_pool_size]]. Each instance manages its own data structures and takes an equal portion of the total buffer pool size, so for example if innodb_buffer_pool_size is 4GB and innodb_buffer_pool_instances is set to 4, each instance will be 1GB. Each instance should ideally be at least 1GB in size. 
 
 == innodb_old_blocks_pct and innodb_old_blocks_time
 

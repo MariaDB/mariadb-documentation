@@ -284,7 +284,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-03-18 10:29">1 month ago</span></dd>
+<span class="datetime" title="2025-04-22 12:59">11 hours, 3 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -421,7 +421,16 @@
 <h3>Contents</h3>
  <ol class="toc">
 
-    <li class=""><a href="#using-the-dynamic-row-format" title="Using the DYNAMIC Row Format">Using the DYNAMIC Row Format</a></li>
+    <li class=""><a href="#supported-index-prefix-limits" title="Supported Index Prefix Limits">Supported Index Prefix Limits</a></li>
+
+    <li class=""><a href="#using-the-dynamic-row-format" title="Using the DYNAMIC Row Format">Using the DYNAMIC Row Format</a>    <ol class="toc">
+
+        <li class=""><a href="#create-an-innodb-table-with-the-dynamic-row-format-by-default" title="Create an InnoDB Table with the Dynamic Row Format by Default">Create an InnoDB Table with the Dynamic Row Format by Default</a></li>
+
+        <li class=""><a href="#create-an-innodb-table-with-the-dynamic-row-format-using-row_format" title="Create an InnoDB Table with the Dynamic Row Format using ROW_FORMAT">Create an InnoDB Table with the Dynamic Row Format using ROW_FORMAT</a></li>
+
+        <li class=""><a href="#convert-innodb-tables-to-the-dynamic-row-format" title="Convert InnoDB Tables to the Dynamic Row Format">Convert InnoDB Tables to the Dynamic Row Format</a>    </ol>
+</li>
 
     <li class=""><a href="#index-prefixes-with-the-dynamic-row-format" title="Index Prefixes with the DYNAMIC Row Format">Index Prefixes with the DYNAMIC Row Format</a></li>
 
@@ -429,8 +438,14 @@
 </li>
 </div>
 <p>The <code>DYNAMIC</code> row format is similar to the <code>COMPACT</code> row format, but tables using the <code>DYNAMIC</code> row format can store even more data on overflow pages than tables using the <code>COMPACT</code> row format. This results in more efficient data storage than tables using the <code>COMPACT</code> row format, especially for tables containing columns using the <a href="/kb/en/varbinary/">VARBINARY</a>, <a href="/kb/en/varchar/">VARCHAR</a>, <a href="/kb/en/blob/">BLOB</a> and <a href="/kb/en/text/">TEXT</a> data types. While InnoDB tables using the <code>COMPRESSED</code> row format can result in even greater space-efficiency, COMPRESSED requires substantially more memory and CPU to both read and write, so there is a significant performance and concurrency trade-off for that space-efficiency gain. COMPRESSED tables are not recommended for production use in most situations, while DYNAMIC row format scales well in high-performance environments.</p>
-<p>The <code>DYNAMIC</code> row format was originally introduced in <a href="/kb/en/what-is-mariadb-55/">MariaDB 5.5</a>.</p>
-<h2 class="anchored_heading" id="using-the-dynamic-row-format">Using the DYNAMIC Row Format</h2>
+<h2 class="anchored_heading" id="supported-index-prefix-limits">Supported Index Prefix Limits</h2>
+<p>The limit for indexing column values depends on the <a href="/kb/en/innodb-system-variables/#innodb_page_size">innodb_page_size</a> value:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Page Size</th><th>Index Prefix Limit</th></tr>
+<tr><td>16k <br>32k <br> 16k</td><td>3072 bytes</td></tr>
+<tr><td>8k</td><td>1536 bytes</td></tr>
+<tr><td>4k</td><td>768 bytes</td></tr>
+</table>
+</div><h2 class="anchored_heading" id="using-the-dynamic-row-format">Using the DYNAMIC Row Format</h2>
 <p>The default row format is <code>DYNAMIC</code>, as long as the <a href="/kb/en/innodb-system-variables/#innodb_default_row_format">innodb_default_row_format</a> system variable has not been modified. Therefore, in these versions, the easiest way to create an InnoDB table that uses the <code>DYNAMIC</code> row format is by <strong>not</strong> setting the <a href="/kb/en/create-table/#row_format">ROW_FORMAT</a> table option at all in a <a href="/kb/en/create-table/">CREATE TABLE</a> or <a href="/kb/en/alter-table/">ALTER TABLE</a> statement.</p>
 <p>It is recommended to set the <a href="/kb/en/innodb-system-variables/#innodb_strict_mode">innodb_strict_mode</a> system variable to <code>ON</code> when using this row format.</p>
 <p>For example:</p>
@@ -442,6 +457,118 @@
    <span class="n">id</span> <span class="nb">int</span><span class="p">,</span>
    <span class="n">str</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
 <span class="p">)</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">InnoDB</span><span class="p">;</span>
+</pre><h3 class="anchored_heading" id="create-an-innodb-table-with-the-dynamic-row-format-by-default">Create an InnoDB Table with the Dynamic Row Format by Default</h3>
+<p>InnoDB uses the Dynamic row format for new InnoDB tables by default, because the <a href="/kb/en/innodb-system-variables/#innodb_default_row_format">innodb_default_row_format</a> system variable is dynamic by default.</p>
+<p>Let's create an InnoDB table after confirming that the default storage engine is InnoDB and that InnoDB's default row format is Dynamic:</p>
+<p>1. Connect to the server using <a href="/kb/en/mariadb-client/">MariaDB Client</a>:</p>
+<pre class="fixed">$ mariadb --user=root
+</pre><p>2. Confirm that the default storage engine is InnoDB by checking the <a href="/kb/en/server-system-variables/#default_storage_engine">default_storage_engine</a> system variable using the <a href="/kb/en/show-variables/">SHOW SESSION VARIABLES</a> statement:</p>
+<pre class="fixed">SHOW SESSION VARIABLES
+   LIKE 'default_storage_engine';
+</pre><pre class="fixed">+------------------------+--------+
+| Variable_name          | Value  |
++------------------------+--------+
+| default_storage_engine | InnoDB |
++------------------------+--------+
+</pre><p>3. Confirm that InnoDB's default row format is Dynamic by checking the <a href="/kb/en/innodb-system-variables/#innodb_default_row_format">innodb_default_row_format</a> system variable using the <a href="/kb/en/show-variables/">SHOW GLOBAL VARIABLES</a> statement:</p>
+<pre class="fixed">SHOW GLOBAL VARIABLES
+   LIKE 'innodb_default_row_format';
+</pre><pre class="fixed">
++---------------------------+---------+
+| Variable_name             | Value   |
++---------------------------+---------+
+| innodb_default_row_format | dynamic |
++---------------------------+---------+
+</pre><p>4. If the database does not exist, then create the database for the table using the <a href="/kb/en/create-database/">CREATE DATABASE</a> statement:</p>
+<pre class="fixed">CREATE DATABASE hq_sales;
+</pre><p>5. Create the table using the <a href="/kb/en/create-table/">CREATE TABLE</a> statement:</p>
+<pre class="fixed">CREATE TABLE hq_sales.invoices (
+   invoice_id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
+   branch_id INT NOT NULL,
+   customer_id INT,
+   invoice_date DATETIME(6),
+   invoice_total DECIMAL(13, 2),
+   payment_method ENUM('NONE', 'CASH', 'WIRE_TRANSFER', 'CREDIT_CARD', 'GIFT_CARD'),
+   PRIMARY KEY(invoice_id)
+);
+</pre><p>6. Confirm that the table uses the Dynamic row format by querying the <a href="/kb/en/information-schema-innodb_sys_tables-table/">information_schema.INNODB_SYS_TABLES</a> table:</p>
+<pre class="fixed">SELECT NAME, ROW_FORMAT
+FROM information_schema.INNODB_SYS_TABLES
+WHERE NAME='hq_sales/invoices';
+</pre><pre class="fixed">+-------------------+------------+
+| NAME              | ROW_FORMAT |
++-------------------+------------+
+| hq_sales/invoices | Dynamic    |
++-------------------+------------+
+</pre><h3 class="anchored_heading" id="create-an-innodb-table-with-the-dynamic-row-format-using-row_format">Create an InnoDB Table with the Dynamic Row Format using <code>ROW_FORMAT</code></h3>
+<p>An InnoDB table that uses the Dynamic row format can be created using the the <code>ROW_FORMAT</code> table option.</p>
+<p>Let's create an InnoDB table after confirming that the default storage engine is InnoDB and that InnoDB's default row format is not Dynamic:</p>
+<p>1. Connect to the server using <a href="/kb/en/mariadb-client/">MariaDB Client</a>:</p>
+<pre class="fixed">$ mariadb --user=root
+</pre><p>2. Confirm that the default storage engine is InnoDB by checking the <a href="/kb/en/server-system-variables/#default_storage_engine">default_storage_engine</a> system variable using the <a href="/kb/en/show-variables/">SHOW SESSION VARIABLES</a> statement:</p>
+<pre class="fixed">SHOW SESSION VARIABLES
+   LIKE 'default_storage_engine';
+</pre><pre class="fixed">+------------------------+--------+
+| Variable_name          | Value  |
++------------------------+--------+
+| default_storage_engine | InnoDB |
++------------------------+--------+
+</pre><p>3. Confirm that InnoDB's default row format is not Dynamic by checking the <a href="/kb/en/innodb-system-variables/#innodb_default_row_format">innodb_default_row_format</a> system variable using the <a href="/kb/en/show-variables/">SHOW GLOBAL VARIABLES</a> statement:</p>
+<pre class="fixed">SHOW GLOBAL VARIABLES
+   LIKE 'innodb_default_row_format';
+</pre><pre class="fixed">+---------------------------+---------+
+| Variable_name             | Value   |
++---------------------------+---------+
+| innodb_default_row_format | compact |
++---------------------------+---------+
+</pre><p>4. If the database does not exist, then create the database for the table using the <a href="/kb/en/create-database/">CREATE DATABASE</a> statement:</p>
+<pre class="fixed">CREATE DATABASE hq_sales;
+</pre><p>5. Create the table using the <a href="/kb/en/create-table/">CREATE TABLE</a> statement, and specify the Dynamic row format using the <code>ROW_FORMAT</code> table option:</p>
+<pre class="fixed">CREATE TABLE hq_sales.invoices (
+   invoice_id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
+   branch_id INT NOT NULL,
+   customer_id INT,
+   invoice_date DATETIME(6),
+   invoice_total DECIMAL(13, 2),
+   payment_method ENUM('NONE', 'CASH', 'WIRE_TRANSFER', 'CREDIT_CARD', 'GIFT_CARD'),
+   PRIMARY KEY(invoice_id)
+) ROW_FORMAT = Dynamic;
+</pre><p>6. Confirm that the table uses the Dynamic row format by querying the <a href="/kb/en/information-schema-innodb_sys_tables-table/">information_schema.INNODB_SYS_TABLES</a> table:</p>
+<pre class="fixed">SELECT NAME, ROW_FORMAT
+FROM information_schema.INNODB_SYS_TABLES
+WHERE NAME='hq_sales/invoices';
+</pre><pre class="fixed">+-------------------+------------+
+| NAME              | ROW_FORMAT |
++-------------------+------------+
+| hq_sales/invoices | Dynamic    |
++-------------------+------------+
+</pre><h3 class="anchored_heading" id="convert-innodb-tables-to-the-dynamic-row-format">Convert InnoDB Tables to the Dynamic Row Format</h3>
+<p>If your database was physically upgraded from some older version of MariaDB Server or MySQL, then some of your tables may not be using the Dynamic row format. If you want to get the benefits of the Dynamic row format, then those tables will need to be converted to use it.</p>
+<p>Let's convert some InnoDB tables to the Dynamic row format:</p>
+<p>1. Connect to the server using MariaDB Client:</p>
+<pre class="fixed">$ mariadb --user=root
+</pre><p>2. Search for InnoDB tables that do not use the Dynamic row format by querying the <a href="/kb/en/information-schema-innodb_sys_tables-table/">information_schema.INNODB_SYS_TABLES</a> table:</p>
+<pre class="fixed">SELECT NAME, ROW_FORMAT
+FROM information_schema.INNODB_SYS_TABLES
+WHERE NAME NOT LIKE 'SYS_%'
+AND ROW_FORMAT != 'Dynamic';
+</pre><pre class="fixed">+-------------------+------------+
+| NAME              | ROW_FORMAT |
++-------------------+------------+
+| hq_sales/invoices | Compact    |
++-------------------+------------+
+</pre><p>3. Alter the table using the <a href="/kb/en/alter-table/">ALTER TABLE</a> statement, and specify the Dynamic row format using the <code>ROW_FORMAT</code> table option:</p>
+<pre class="fixed">ALTER TABLE hq_sales.invoices
+   ROW_FORMAT = Dynamic;
+</pre><p>4. Confirm that the table uses the Dynamic row format by querying the <a href="/kb/en/information-schema-innodb_sys_tables-table/">information_schema.INNODB_SYS_TABLES</a> table again:</p>
+<pre class="fixed">SELECT NAME, ROW_FORMAT
+FROM information_schema.INNODB_SYS_TABLES
+WHERE NAME='hq_sales/invoices';
+</pre><pre class="fixed">+-------------------+------------+
+| NAME              | ROW_FORMAT |
++-------------------+------------+
+| hq_sales/invoices | Dynamic    |
++-------------------+------------+
 </pre><h2 class="anchored_heading" id="index-prefixes-with-the-dynamic-row-format">Index Prefixes with the DYNAMIC Row Format</h2>
 <p>The <code>DYNAMIC</code> row format supports index prefixes up to 3072 bytes. In earlier versions of MariaDB, the <a href="/kb/en/innodb-system-variables/#innodb_large_prefix">innodb_large_prefix</a> system variable is used to configure the maximum index prefix length. In these versions, if <a href="/kb/en/innodb-system-variables/#innodb_large_prefix">innodb_large_prefix</a> is set to <code>ON</code>, then the maximum prefix length is 3072 bytes, and if it is set to <code>OFF</code>, then the maximum prefix length is 767 bytes.</p>
 <h2 class="anchored_heading" id="overflow-pages-with-the-dynamic-row-format">Overflow Pages with the DYNAMIC Row Format</h2>

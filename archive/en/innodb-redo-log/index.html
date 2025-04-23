@@ -280,7 +280,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-03-12 08:23">1 month, 1 week ago</span></dd>
+<span class="datetime" title="2025-04-22 13:23">10 hours, 39 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -468,6 +468,10 @@
 
     <li class=""><a href="#overview" title="Overview">Overview</a></li>
 
+    <li class=""><a href="#feature-summary" title="Feature Summary">Feature Summary</a></li>
+
+    <li class=""><a href="#basic-configuration" title="Basic Configuration">Basic Configuration</a></li>
+
     <li class=""><a href="#flushing-effects-on-performance-and-consistency" title="Flushing Effects on Performance and Consistency">Flushing Effects on Performance and Consistency</a>    <ol class="toc">
 
         <li class=""><a href="#binary-log-group-commit-and-redo-log-flushing" title="Binary Log Group Commit and Redo Log Flushing">Binary Log Group Commit and Redo Log Flushing</a>    </ol>
@@ -495,8 +499,35 @@
 </div>
 <div class="cstm-style redbox"><p>Directly editing or moving the redo logs can cause corruption, and should never normally be attempted.</p>
 </div><h2 class="anchored_heading" id="overview">Overview</h2>
-<p>The redo log is used by <a href="/kb/en/innodb/">InnoDB</a> during crash recovery and background flushing of transactions to the tablespaces. The redo log files have names like <code>ib_logfileN</code>, where <code>N</code> is an integer. From <a href="/kb/en/what-is-mariadb-105/">MariaDB 10.5</a>, there is only one redo log, so the file will always be named <code>ib_logfile0</code>. If the <a href="/kb/en/innodb-system-variables/#innodb_log_group_home_dir">innodb_log_group_home_dir</a> system variable is configured, then the redo log files will be created in that directory. Otherwise, they will be created in the directory defined by the <a href="/kb/en/server-system-variables/#datadir">datadir</a> system variable.</p>
-<h2 class="anchored_heading" id="flushing-effects-on-performance-and-consistency">Flushing Effects on Performance and Consistency</h2>
+<p>The InnoDB storage engine in MariaDB Enterprise Server employs a <strong>Redo Log</strong> to ensure data is written to disk reliably, even in the event of a crash. This is achieved by the Redo Log acting as a transaction log.</p>
+<p>Redo Log records are uniquely identified by a <strong>Log Sequence Number (LSN)</strong>. The Redo Log consists of circular log files of a fixed size, where older records are routinely overwritten by newer ones.</p>
+<p>InnoDB periodically performs <strong>checkpoints</strong>. During a checkpoint operation, InnoDB writes (flushes) the Redo Log records to the InnoDB tablespace files.</p>
+<p>In the event of a server crash, InnoDB utilizes the Redo Log for <strong>crash recovery</strong> during the subsequent server startup. It locates the last checkpoint within the Redo Log and then replays the Redo Log records generated since that checkpoint, effectively flushing these pending changes to the InnoDB tablespace files.</p>
+<p>The redo log files are typically named <code>ib_logfileN</code>, where <code>N</code> is an integer. However, starting with <a href="/kb/en/what-is-mariadb-105/">MariaDB 10.5</a>, there is a single redo log file, consistently named <code>ib_logfile0</code>. The location of these redo log files is determined by the <code>innodb_log_group_home_dir</code> system variable, if configured. If this variable is not set, the redo log files are created in the directory specified by the <code>datadir</code> system variable. The redo log plays a crucial role during crash recovery and in the background process of flushing transactions to the tablespaces.</p>
+<h2 class="anchored_heading" id="feature-summary">Feature Summary</h2>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Feature</th><th>Detail</th><th>Resources</th></tr>
+<tr><td>Transaction Log</td><td>InnoDB Redo Log</td><td></td></tr>
+<tr><td>Storage Engine</td><td>InnoDB</td><td></td></tr>
+<tr><td>Purpose</td><td>Crash Safety</td><td></td></tr>
+<tr><td>Availability</td><td>All ES and CS versions</td><td><a href="/kb/en/mariadb-enterprise-server/">MariaDB Enterprise Server</a></td></tr>
+<tr><td>Location</td><td>Set by <a href="/kb/en/innodb-system-variables/#innodb_log_group_home_dir">innodb_log_group_home_dir</a> (Defaults to <a href="/kb/en/server-system-variables/#datadir">datadir</a>)</td><td></td></tr>
+<tr><td>Quantity</td><td>1 (ES 10.5+, CS 10.5+)</td><td><a href="/kb/en/configure-the-innodb-redo-log/">Configure the InnoDB Redo Log</a></td></tr>
+<tr><td>Size</td><td>Set by <a href="/kb/en/innodb-system-variables/#innodb_log_file_size">innodb_log_file_size</a> (default varies)</td><td><a href="/kb/en/configure-the-innodb-redo-log/">Configure the InnoDB Redo Log</a></td></tr>
+</table>
+</div><h2 class="anchored_heading" id="basic-configuration">Basic Configuration</h2>
+<pre class="fixed">[mariadb]
+...
+innodb_log_file_size=2G
+</pre><pre class="fixed">SET GLOBAL innodb_log_file_size=(2 * 1024 * 1024 * 1024);
+
+SHOW GLOBAL VARIABLES
+   LIKE 'innodb_log_file_size';
+</pre><pre class="fixed">+----------------------+------------+
+| Variable_name        | Value      |
++----------------------+------------+
+| innodb_log_file_size | 2147483648 |
++----------------------+------------+
+</pre><h2 class="anchored_heading" id="flushing-effects-on-performance-and-consistency">Flushing Effects on Performance and Consistency</h2>
 <p>The <a href="/kb/en/innodb-system-variables/#innodb_flush_log_at_trx_commit">innodb_flush_log_at_trx_commit</a> system variable determines how often the transactions are flushed to the redo log, and it is important to achieve a good balance between speed and reliability.</p>
 <h3 class="anchored_heading" id="binary-log-group-commit-and-redo-log-flushing">Binary Log Group Commit and Redo Log Flushing</h3>
 <p>When both <a href="/kb/en/innodb-system-variables/#innodb_flush_log_at_trx_commit">innodb_flush_log_at_trx_commit=1</a> (the default) is set and the <a href="/kb/en/binary-log/">binary log</a> is enabled, there is one less sync to disk inside InnoDB during commit (2 syncs shared between a group of transactions instead of 3). See <a href="/kb/en/binary-log-group-commit-and-innodb-flushing-performance/">Binary Log Group Commit and InnoDB Flushing Performance</a> for more information.</p>

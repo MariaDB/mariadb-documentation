@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Backup and Restore - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
+
+    
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Backup and Restore" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/backup-and-restore/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="Take and restore backups of your MariaDB instances" />
+
+    <meta name="description" content="Take and restore backups of your MariaDB instances" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/backup-and-restore/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/backup-and-restore/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/solutions" title="Solutions">Solutions</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="Company">Company</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-enterprise-server/">MariaDB Enterprise Server</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-enterprise-operator/">MariaDB Enterprise Operator</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/backup-and-restore/">Backup and Restore</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/backup-and-restore/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/backup-and-restore/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/backup-and-restore/+flag"
+                data-flag-url="/kb/en/backup-and-restore/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/backup-and-restore/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2025-02-26 10:52">1 month, 3 weeks ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2025-04-22 08:35">15 hours, 27 minutes ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/backup-and-restore/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/backup-and-restore/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/backup-and-restore/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/backup-and-restore/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Backup and Restore</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <p>MariaDB Enterprise Operator allows you to declaratively take backups by defining <code>Backup</code> resources and later on restore them by using their <code>Restore</code> counterpart. These resources get reconciled into <code>Job</code>/<code>CronJob</code> resources that automatically perform the backup/restore operations, so you don't need to manually script them.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#storage-types">Storage types</a></li>
+<li><a href="#backup-cr"><code>Backup</code> CR</a></li>
+<li><a href="#restore-cr"><code>Restore</code> CR</a></li>
+<li><a href="#bootstrap-new-mariadb-instances">Bootstrap new <code>MariaDB</code> instances</a></li>
+<li><a href="#backup-and-restore-specific-databases">Backup and restore specific databases</a></li>
+<li><a href="#extra-options">Extra options</a></li>
+<li><a href="#staging-area">Staging area</a></li>
+<li><a href="#data-mobility-between-instances">Data mobility between instances</a></li>
+<li><a href="#important-considerations-and-limitations">Important considerations and limitations</a></li>
+<li><a href="#reference">Reference</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+<h2 id="storage-types">Storage types</h2>
+<p>Currently, the following storage types are supported:</p>
+<ul>
+<li><strong>S3 compatible storage</strong>: Store backups in a S3 compatible storage, such as <a href="https://aws.amazon.com/s3/">AWS S3</a> or <a href="https://github.com/minio/minio">Minio</a>. </li>
+<li><strong>PVCs</strong>: Use the available <a href="https://kubernetes.io/docs/concepts/storage/storage-classes/">StorageClasses</a> in your Kubernetes cluster to provision a PVC dedicated to store the backup files.</li>
+<li><strong>Kubernetes volumes</strong>: Use any of the <a href="https://kubernetes.io/docs/concepts/storage/volumes/#volume-types">volume types</a> supported natively by Kubernetes.</li>
+</ul>
+<p>Our recommendation is to store the backups externally in a S3 compatible storage.</p>
+<h2 id="backup-cr"><code>Backup</code> CR</h2>
+<p>You can take a one-time backup of your <code>MariaDB</code> instance by declaring the following resource:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Backup</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>backup</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+  <span>storage</span><span>:</span>
+    <span>persistentVolumeClaim</span><span>:</span>
+      <span>resources</span><span>:</span>
+        <span>requests</span><span>:</span>
+          <span>storage</span><span>:</span> <span>1Gi</span>
+      <span>accessModes</span><span>:</span>
+        <span>-</span> <span>ReadWriteOnce</span>
+</pre></div>
+
+
+<p>This will use the default <code>StorageClass</code> to provision a PVC that would hold the backup files, but ideally you should use a S3 compatible storage:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Backup</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>backup</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+  <span>storage</span><span>:</span>
+    <span>s3</span><span>:</span>
+      <span>bucket</span><span>:</span> <span>backups</span>
+      <span>prefix</span><span>:</span> <span>mariadb</span>
+      <span>endpoint</span><span>:</span> <span>minio.minio.svc.cluster.local:9000</span>
+      <span>region</span><span>:</span>  <span>us-east-1</span>
+      <span>accessKeyIdSecretKeyRef</span><span>:</span>
+        <span>name</span><span>:</span> <span>minio</span>
+        <span>key</span><span>:</span> <span>access-key-id</span>
+      <span>secretAccessKeySecretKeyRef</span><span>:</span>
+        <span>name</span><span>:</span> <span>minio</span>
+        <span>key</span><span>:</span> <span>secret-access-key</span>
+      <span>tls</span><span>:</span>
+        <span>enabled</span><span>:</span> <span>true</span>
+        <span>caSecretKeyRef</span><span>:</span>
+          <span>name</span><span>:</span> <span>minio-ca</span>
+          <span>key</span><span>:</span> <span>tls.crt</span>
+</pre></div>
+
+
+<p>By providing the authentication details and the TLS configuration via references to <code>Secret</code> keys, this example will store the backups in a local Minio instance.</p>
+<p>Alternatively you can use dynamic credentials from an <a href="https://repost.aws/knowledge-center/eks-restrict-s3-bucket">EKS Service Account using IRSA</a>:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>v1</span>
+<span>kind</span><span>:</span> <span>ServiceAccount</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-backup</span>
+  <span>annotations</span><span>:</span>
+    <span>eks.amazonaws.com/role-arn</span><span>:</span> <span>arn:aws:iam::&lt;&lt;account_id&gt;&gt;:role/my-role-irsa</span>
+</pre></div>
+
+
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Backup</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>backup</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+  <span>serviceAccountName</span><span>:</span> <span>mariadb-backup</span>
+  <span>storage</span><span>:</span>
+    <span>s3</span><span>:</span>
+      <span>bucket</span><span>:</span> <span>backups</span>
+      <span>prefix</span><span>:</span> <span>mariadb</span>
+      <span>endpoint</span><span>:</span> <span>s3.us-east-1.amazonaws.com</span>
+      <span>region</span><span>:</span>  <span>us-east-1</span>
+      <span>tls</span><span>:</span>
+        <span>enabled</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<p>By leaving out <code>accessKeyIdSecretKeyRef</code> and <code>secretAccessKeySecretKeyRef</code> the credentials and pointing to the correct <code>serviceAccountName</code>, the backup Job will use the dynamic credentials from EKS.</p>
+<h4 id="scheduling">Scheduling</h4>
+<p>To minimize the Recovery Point Objective (RPO) and mitigate the risk of data loss, it is recommended to perform backups regularly. You can do so by providing a <code>spec.schedule</code> in your <code>Backup</code> resource:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Backup</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>backup</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+  <span>schedule</span><span>:</span>
+    <span>cron</span><span>:</span> <span>"*/1</span><span> </span><span>*</span><span> </span><span>*</span><span> </span><span>*</span><span> </span><span>*"</span>
+    <span>suspend</span><span>:</span> <span>false</span>
+</pre></div>
+
+
+<p>This resource gets reconciled into a <code>CronJob</code> that periodically takes the backups.</p>
+<p>It is important to note that regularly scheduled <code>Backups</code> complement very well the <a href="#target-recovery-time">target recovery time</a> feature detailed below.</p>
+<h4 id="retention-policy">Retention policy</h4>
+<p>Given that the backups can consume a substantial amount of storage, it is crucial to define your retention policy by providing the <code>spec.maxRetention</code> field in your <code>Backup</code> resource:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Backup</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>backup</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+  <span>maxRetention</span><span>:</span> <span>720h</span> <span># 30 days</span>
+</pre></div>
+
+
+<h4 id="compression">Compression</h4>
+<p>You are able to compress backups by providing the compression algorithm you want to use in the  <code>spec.compression</code> field:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Backup</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>backup</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+  <span>compression</span><span>:</span> <span>gzip</span>
+</pre></div>
+
+
+<p>Currently the following compression algorithms are supported:</p>
+<ul>
+<li><code>bzip2</code>: Good compression ratio, but slower compression/decompression speed compared to gzip.</li>
+<li><code>gzip</code>: Good compression/decompression speed, but worse compression ratio compared to bzip2.</li>
+<li><code>none</code>: No compression.</li>
+</ul>
+<p><code>compression</code> is defaulted to <code>none</code> by the operator.</p>
+<h2 id="restore-cr"><code>Restore</code> CR</h2>
+<p>You can easily restore a <code>Backup</code> in your <code>MariaDB</code> instance by creating the following resource:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Restore</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>restore</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+  <span>backupRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>backup</span>
+</pre></div>
+
+
+<p>This will trigger a <code>Job</code> that will mount the same storage as the <code>Backup</code> and apply the dump to your <code>MariaDB</code> database.</p>
+<p>Nevertheless, the <code>Restore</code> resource doesn't necessarily need to specify a <code>spec.backupRef</code>, you can point to other storage source that contains backup files, for example a S3 bucket:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Restore</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>restore</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+  <span>s3</span><span>:</span>
+    <span>bucket</span><span>:</span> <span>backups</span>
+    <span>prefix</span><span>:</span> <span>mariadb</span>
+    <span>endpoint</span><span>:</span> <span>minio.minio.svc.cluster.local:9000</span>
+    <span>region</span><span>:</span>  <span>us-east-1</span>
+    <span>accessKeyIdSecretKeyRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>minio</span>
+      <span>key</span><span>:</span> <span>access-key-id</span>
+    <span>secretAccessKeySecretKeyRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>minio</span>
+      <span>key</span><span>:</span> <span>secret-access-key</span>
+    <span>tls</span><span>:</span>
+      <span>enabled</span><span>:</span> <span>true</span>
+      <span>caSecretKeyRef</span><span>:</span>
+        <span>name</span><span>:</span> <span>minio-ca</span>
+        <span>key</span><span>:</span> <span>tls.crt</span>
+</pre></div>
+
+
+<h4 id="target-recovery-time">Target recovery time</h4>
+<p>If you have multiple backups available, specially after configuring a <a href="#scheduling">scheduled Backup</a>, the operator is able to infer which backup to restore based on the <code>spec.targetRecoveryTime</code> field.</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Restore</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>restore</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+  <span>backupRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>backup</span>
+  <span>targetRecoveryTime</span><span>:</span> <span>2023-12-19T09:00:00Z</span>
+</pre></div>
+
+
+<p>The operator will look for the closest backup available and utilize it to restore your <code>MariaDB</code> instance.</p>
+<p>By default, <code>spec.targetRecoveryTime</code> will be set to the current time, which means that the latest available backup will be used.</p>
+<h2 id="bootstrap-new-mariadb-instances">Bootstrap new <code>MariaDB</code> instances</h2>
+<p>To minimize your Recovery Time Objective (RTO) and to switfly spin up new clusters from existing <code>Backups</code>, you can provide a <code>Restore</code> source directly in the <code>MariaDB</code> object via the <code>spec.bootstrapFrom</code> field:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-from-backup</span>
+<span>spec</span><span>:</span>
+  <span>storage</span><span>:</span>
+    <span>size</span><span>:</span> <span>1Gi</span>
+  <span>bootstrapFrom</span><span>:</span>
+    <span>backupRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>backup</span>
+    <span>targetRecoveryTime</span><span>:</span> <span>2023-12-19T09:00:00Z</span>
+</pre></div>
+
+
+<p>As in the <code>Restore</code> resource, you don't strictly need to specify a reference to a <code>Backup</code>, you can provide other storage types that contain backup files:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-from-backup</span>
+<span>spec</span><span>:</span>
+  <span>storage</span><span>:</span>
+    <span>size</span><span>:</span> <span>1Gi</span>
+  <span>bootstrapFrom</span><span>:</span>
+    <span>s3</span><span>:</span>
+      <span>bucket</span><span>:</span> <span>backups</span>
+      <span>prefix</span><span>:</span> <span>mariadb</span>
+      <span>endpoint</span><span>:</span> <span>minio.minio.svc.cluster.local:9000</span>
+      <span>accessKeyIdSecretKeyRef</span><span>:</span>
+        <span>name</span><span>:</span> <span>minio</span>
+        <span>key</span><span>:</span> <span>access-key-id</span>
+      <span>secretAccessKeySecretKeyRef</span><span>:</span>
+        <span>name</span><span>:</span> <span>minio</span>
+        <span>key</span><span>:</span> <span>secret-access-key</span>
+      <span>tls</span><span>:</span>
+        <span>enabled</span><span>:</span> <span>true</span>
+        <span>caSecretKeyRef</span><span>:</span>
+          <span>name</span><span>:</span> <span>minio-ca</span>
+          <span>key</span><span>:</span> <span>tls.crt</span>
+    <span>targetRecoveryTime</span><span>:</span> <span>2023-12-19T09:00:00Z</span>
+</pre></div>
+
+
+<p>Under the hood, the operator creates a <code>Restore</code> object just after the <code>MariaDB</code> resource becomes ready. The advantage of using <code>spec.bootstrapFrom</code> over a standalone <code>Restore</code> is that the <code>MariaDB</code> is bootstrap-aware and this will allow the operator to hold primary switchover/failover operations until the restoration is finished.</p>
+<h2 id="backup-and-restore-specific-databases">Backup and restore specific databases</h2>
+<p>By default, all the logical databases are backed up when a <code>Backup</code> is created, but you may also select specific databases by providing the <code>databases</code> field:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Backup</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>backup</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+  <span>databases</span><span>:</span>
+    <span>-</span> <span>db1</span>
+    <span>-</span> <span>db2</span>
+    <span>-</span> <span>db3</span>
+</pre></div>
+
+
+<p>When it comes to restore, all the databases available in the backup will be restored, but you may also choose a single database to be restored via the  <code>database</code> field available in the <code>Restore</code> resource:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Restore</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>restore</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+  <span>backupRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>backup</span>
+  <span>database</span><span>:</span> <span>db1</span>
+</pre></div>
+
+
+<p>There are a couple of points to consider here:</p>
+<ul>
+<li>The referred database (<code>db1</code> in the example) must previously exist for the <code>Restore</code> to succeed.</li>
+<li>The <code>mariadb</code> CLI invoked by the operator under the hood only supports selecting a single database to restore via the <a href="https://mariadb.com/kb/en/mariadb-command-line-client/#-o-one-database"><code>--one-database</code></a> option, restoration of multiple specific databases is not supported.</li>
+</ul>
+<h2 id="extra-options">Extra options</h2>
+<p>Not all the flags supported by <code>mariadb-dump</code> and <code>mariadb</code> have their counterpart field in the <code>Backup</code> and <code>Restore</code> CRs respectively, but you may pass extra options by using the <code>args</code> field. For example, setting the <code>--verbose</code> flag can be helpful to track the progress of backup and restore operations:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Backup</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>backup</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+  <span>args</span><span>:</span>
+    <span>-</span> <span>--verbose</span>
+</pre></div>
+
+
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Restore</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>restore</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+  <span>backupRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>backup</span>
+  <span>args</span><span>:</span>
+    <span>-</span> <span>--verbose</span>
+</pre></div>
+
+
+<p>Refer to the <code>mariadb-dump</code> and <code>mariadb</code> CLI options in the <a href="#reference">reference</a> section.</p>
+<h2 id="staging-area">Staging area</h2>
+<blockquote>
+<p><strong>NOTE</strong><br>
+S3 is the only storage type that supports a staging area.</p>
+</blockquote>
+<p>When using S3 storage for backups, a staging area is used for keeping the external backups while they are being processed. By default, this staging area is an <code>emptyDir</code> volume, which means that the backups are temporarily stored in the node's local storage where the <code>Backup</code>/<code>Restore</code> <code>Job</code> is scheduled. In production environments, large backups may lead to issues if the node doesn't have sufficient space, potentially causing the backup/restore process to fail.</p>
+<p>To overcome this limitation, you are able to define your own staging area by setting the <code>stagingStorage</code> field to both the <code>Backup</code> and <code>Restore</code> CRs:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Backup</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>backup</span>
+<span>spec</span><span>:</span>
+  <span>storage</span><span>:</span>
+    <span>s3</span><span>:</span>
+      <span>...</span>
+  <span>stagingStorage</span><span>:</span>
+    <span>persistentVolumeClaim</span><span>:</span>
+      <span>resources</span><span>:</span>
+        <span>requests</span><span>:</span>
+          <span>storage</span><span>:</span> <span>10Gi</span>
+      <span>accessModes</span><span>:</span>
+        <span>-</span> <span>ReadWriteOnce</span>
+</pre></div>
+
+
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Restore</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>restore</span>
+<span>spec</span><span>:</span>
+  <span>s3</span><span>:</span>
+    <span>...</span>
+  <span>stagingStorage</span><span>:</span>
+    <span>persistentVolumeClaim</span><span>:</span>
+      <span>resources</span><span>:</span>
+        <span>requests</span><span>:</span>
+          <span>storage</span><span>:</span> <span>10Gi</span>
+      <span>accessModes</span><span>:</span>
+        <span>-</span> <span>ReadWriteOnce</span>
+</pre></div>
+
+
+<p>In the examples above, a PVC with the default <code>StorageClass</code> will be used as staging area. Refer to the <a href="https://mariadb.com/kb/en/mariadb-enterprise-operator-api-reference/">API reference</a> for more configuration options.</p>
+<p>Similarly, you may also use a custom staging area when <a href="#bootstrap-new-mariadb-instances">bootstrapping from backup</a>:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb</span>
+<span>spec</span><span>:</span>
+  <span>bootstrapFrom</span><span>:</span>
+    <span>s3</span><span>:</span>
+      <span>...</span>
+    <span>stagingStorage</span><span>:</span>
+      <span>persistentVolumeClaim</span><span>:</span>
+        <span>resources</span><span>:</span>
+          <span>requests</span><span>:</span>
+            <span>storage</span><span>:</span> <span>10Gi</span>
+        <span>accessModes</span><span>:</span>
+          <span>-</span> <span>ReadWriteOnce</span>
+</pre></div>
+
+
+<h2 id="data-mobility-between-instances">Data mobility between instances</h2>
+<p>Logical backups serve not just as a source of restoration, but also enable data mobility between <code>MariaDB</code> instances. These backups are called "logical" because they are independent from the <code>MariaDB</code> topology, as they only contain DDLs and <code>INSERT</code> statements to populate data.</p>
+<p>When migrating between different topologies, certain considerations must be taken into account in the following scenario:</p>
+<h4 id="migrating-from-standalone-to-galera-mariadbs">Migrating from standalone to Galera <code>MariaDBs</code></h4>
+<p>Galera has specific limitations regarding backups. Before proceeding, please review the <a href="#galera-backup-limitations">Galera Backup Limitations</a> section.</p>
+<p>To address these limitations, the <code>Backup</code> from the standalone instance must be taken with <code>spec.ignoreGlobalPriv=true</code>. The following example demonstrates how to back up a standalone <code>MariaDB</code> (single instance):</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Backup</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>backup-standalone</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb-standalone</span>
+  <span>ignoreGlobalPriv</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<p>Once the previous <code>Backup</code> is completed, we will be able bootstrap a new Galera instance from it:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb-galera</span>
+<span>spec</span><span>:</span>
+  <span>replicas</span><span>:</span> <span>3</span>
+  <span>galera</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+  <span>storage</span><span>:</span>
+    <span>size</span><span>:</span> <span>1Gi</span>
+  <span>bootstrapFrom</span><span>:</span>
+    <span>backupRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>backup-standalone</span>
+</pre></div>
+
+
+<h2 id="important-considerations-and-limitations">Important considerations and limitations</h2>
+<h4 id="root-credentials">Root credentials</h4>
+<p>When restoring a backup, the root credentials specified through the <code>spec.rootPasswordSecretKeyRef</code> field in the <code>MariaDB</code> resource must match the ones in the backup. These credentials are utilized by the liveness and readiness probes, and if they are invalid, the probes will fail, causing your <code>MariaDB</code> <code>Pods</code> to restart after the backup restoration.</p>
+<h4 id="restore-job">Restore job</h4>
+<p>Restoring large backups can consume significant compute resources and may cause <code>Restore</code> <code>Jobs</code> to become stuck due to insufficient resources. To prevent this, you can define the compute resources allocated to the <code>Job</code>:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb</span>
+<span>spec</span><span>:</span>
+  <span>storage</span><span>:</span>
+    <span>size</span><span>:</span> <span>1Gi</span>
+  <span>bootstrapFrom</span><span>:</span>
+    <span>restoreJob</span><span>:</span>
+      <span>args</span><span>:</span>
+        <span>-</span> <span>--verbose</span>
+      <span>resources</span><span>:</span>
+        <span>requests</span><span>:</span>
+          <span>cpu</span><span>:</span> <span>100m</span>
+          <span>memory</span><span>:</span> <span>128Mi</span>
+        <span>limits</span><span>:</span>
+          <span>memory</span><span>:</span> <span>1Gi</span>
+</pre></div>
+
+
+<h4 id="galera-backup-limitations">Galera backup limitations</h4>
+<h4 id="mysqlglobal_priv"><code>mysql.global_priv</code></h4>
+<p>Galera only replicates the tables with InnoDB engine:</p>
+<ul>
+<li><a href="https://galeracluster.com/library/kb/user-changes.html">https://galeracluster.com/library/kb/user-changes.html</a></li>
+</ul>
+<p>Something that does not include <code>mysql.global_priv</code>, the table used to store users and grants, which uses the MyISAM engine. This basically means that a Galera instance with <code>mysql.global_priv</code> populated will not replicate this data to an empty Galera instance. However, DDL statements (<code>CREATE USER</code>, <code>ALTER USER</code> ...) will be replicated.</p>
+<p>Taking this into account, if we think now about a restore scenario where:</p>
+<ul>
+<li>The backup file includes a <code>DROP TABLE</code> statement for the <code>mysql.global_priv</code> table.</li>
+<li>The backup has some <code>INSERT</code> statements for the <code>mysql.global_priv</code> table.</li>
+<li>The Galera cluster has 3 nodes: <code>galera-0</code>, <code>galera-1</code> and <code>galera-2</code>.</li>
+<li>The backup is restored in <code>galera-0</code>.</li>
+</ul>
+<p>This is what will happen under the scenes while restoring the backup:</p>
+<ul>
+<li>The <code>DROP TABLE</code> statement is a DDL so it will be executed in <code>galera-0</code>, <code>galera-1</code> and <code>galera-2</code>.</li>
+<li>The <code>INSERT</code> statements are not DDLs, so they will only be applied to <code>galera-0</code>.</li>
+<li>This results in the <code>galera-1</code> and <code>galera-2</code> not having the <code>mysql.global_priv</code> table.</li>
+</ul>
+<p>After the backup is fully restored, the liveness and readiness probes will kick in, they will succeed in <code>galera-0</code>, but they will fail in <code>galera-1</code> and <code>galera-2</code>, as they rely in the root credentials available in <code>mysql.global_priv</code>, resulting in the <code>galera-1</code> and <code>galera-2</code> getting restarted.</p>
+<p>To address this issue, when backing up <code>MariaDB</code> instances with Galera enabled, the <code>mysql.global_priv</code> table will be excluded from backups by using the <code>--ignore-table</code> option with <code>mariadb-dump</code>. This prevents the replication of the <code>DROP TABLE</code> statement for the <code>mysql.global_priv</code> table. You can opt-out from this feature by setting <code>spec.ignoreGlobalPriv=false</code> in the <code>Backup</code> resource.</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>Backup</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>backup</span>
+<span>spec</span><span>:</span>
+  <span>mariaDbRef</span><span>:</span>
+    <span>name</span><span>:</span> <span>mariadb</span>
+  <span>ignoreGlobalPriv</span><span>:</span> <span>false</span>
+</pre></div>
+
+
+<p>Also, to avoid situations where <code>mysql.global_priv</code> is unreplicated, all the entries in that table must be managed via DDLs. This is the recommended approach suggested in the <a href="https://galeracluster.com/library/kb/user-changes.html">Galera docs</a>. There are a couple of ways that we can guarantee this:</p>
+<ul>
+<li>Use the <code>rootPasswordSecretKeyRef</code>, <code>username</code> and <code>passwordSecretKeyRef</code> fields of the <code>MariaDB</code> CR to create the root and initial user respectively. This fields will be translated into DDLs by the image entrypoint.</li>
+<li>Rely on the <code>User</code> and <code>Grant</code> CRs to create additional users and grants. Refer to the <a href="https://mariadb.com/kb/en/sql-resources/">SQL resource documentation</a> for further detail.</li>
+</ul>
+<h4 id="lock-tables"><code>LOCK TABLES</code></h4>
+<p>Galera is not compatible with the <code>LOCK TABLES</code> statement:</p>
+<ul>
+<li><a href="https://mariadb.com/kb/en/lock-tables/#limitations">https://mariadb.com/kb/en/lock-tables/#limitations</a></li>
+</ul>
+<p>For this reason, the operator automatically adds the <code>--skip-add-locks</code> option to the <code>Backup</code> to overcome this limitation.</p>
+<h2 id="reference">Reference</h2>
+<ul>
+<li><a href="https://mariadb.com/kb/en/mariadb-enterprise-operator-api-reference/">API reference</a></li>
+<li><a href="https://mariadb.com/kb/en/mariadb-dump/#options"><code>mariadb-dump</code> options</a></li>
+<li><a href="https://mariadb.com/kb/en/mariadb-command-line-client/#options"><code>mariadb</code> options</a></li>
+</ul>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h4 id="galera-pods-restarting-after-bootstrapping-from-a-backup">Galera <code>Pods</code> restarting after bootstrapping from a backup</h4>
+<p>Please make sure you understand the <a href="#galera-backup-limitations">Galera backup limitations</a>.</p>
+<p>After doing so, ensure that your backup does not contain a <code>DROP TABLE mysql.global_priv;</code> statement, as it will make your liveness and readiness probes to fail after the backup restoration.</p>
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/backup-and-restore/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/backup-and-restore/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/maxscale-database-proxy/">
+                        ← MaxScale Database Proxy
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/mariadb-enterprise-operator/">
+                        ↑ MariaDB Enterprise Operator ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/mariadb-enterprise-operator-storage/">
+                        Storage →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="15881" data-comments-url="/kb/en/backup-and-restore/+comments"
+         data-reply-url="/kb/en/backup-and-restore/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/mariadb-enterprise-operator/">
+                    ↑ MariaDB Enterprise Operator ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-introduction/">
+                            
+                            Introduction
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/customer-access-to-docker-mariadb-com/">
+                            
+                            Customer access to docker.mariadb.com
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/docker-images/">
+                            
+                            Docker Images
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-installation/">
+                            
+                            MariaDB Enterprise Operator Installation
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/quickstart/">
+                            
+                            Quickstart
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/standalone-mariadb/">
+                            
+                            Standalone MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-galera-cluster/">
+                            
+                            Galera Cluster
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/high-availability/">
+                            
+                            High Availability
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/maxscale-database-proxy/">
+                            
+                            MaxScale Database Proxy
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Backup and Restore</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-storage/">
+                            
+                            Storage
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/tls/">
+                            
+                            TLS
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/configuration/">
+                            
+                            Configuration
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/updates/">
+                            
+                            Updates
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-metrics/">
+                            
+                            Metrics
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/sql-resources/">
+                            
+                            SQL Resources
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/metadata/">
+                            
+                            Metadata
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/suspend-reconciliation/">
+                            
+                            Suspend Reconciliation
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/api-reference/">
+                            
+                            API Reference
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/examples-catalog/">
+                            
+                            Examples Catalog
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-migrations/">
+                            
+                            MariaDB Enterprise Operator Migrations
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-release-notes/">
+                            
+                            MariaDB Enterprise Operator Release Notes
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    <ul class="list-inline text-center footer-nav">
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/products" title="Products">Products</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/solutions" title="Solutions">Solutions</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/resources" title="Resources">Resources</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/about-us" title="About MariaDB">Company</a></h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/pricing" title="Pricing">Pricing</a>
+                            </h5>
+                        </li>
+                        
+                        
+                        <li>
+                            <h5><a href="https://mariadb.com/downloads" title="Download">Download MariaDB</a></h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row row-10">
+                
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div class="footer-copyright">
+                        <div class="text-center">
+                            <ul class="list-inline no-margin">
+                                <li>
+                                    <a href="/legal" title="Legal">Legal</a>
+                                </li>
+                                <li>
+                                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                            <p>Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
+
+</html>

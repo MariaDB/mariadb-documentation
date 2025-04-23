@@ -1,0 +1,5909 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Metrics - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
+
+    
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Metrics" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/mariadb-enterprise-operator-metrics/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="Configure Prometheus metrics in your MariaDB and MaxScale instances" />
+
+    <meta name="description" content="Configure Prometheus metrics in your MariaDB and MaxScale instances" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/mariadb-enterprise-operator-metrics/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/mariadb-enterprise-operator-metrics/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/solutions" title="Solutions">Solutions</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="Company">Company</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-enterprise-server/">MariaDB Enterprise Server</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-enterprise-operator/">MariaDB Enterprise Operator</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/mariadb-enterprise-operator-metrics/">Metrics</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/mariadb-enterprise-operator-metrics/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/mariadb-enterprise-operator-metrics/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/mariadb-enterprise-operator-metrics/+flag"
+                data-flag-url="/kb/en/mariadb-enterprise-operator-metrics/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/mariadb-enterprise-operator-metrics/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2025-02-28 16:57">1 month, 3 weeks ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2025-04-22 08:37">15 hours, 25 minutes ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/mariadb-enterprise-operator-metrics/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/mariadb-enterprise-operator-metrics/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/mariadb-enterprise-operator-metrics/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/mariadb-enterprise-operator-metrics/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Metrics</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <p>MariaDB Enterprise Operator is able to configure <a href="https://prometheus-operator.dev/">Prometheus operator</a> resources to scrape metrics from MariaDB and MaxScale instances. These metrics can be used later on to build <a href="#grafana-dashboards">Grafana dashboards</a> or trigger <a href="https://prometheus.io/docs/alerting/latest/alertmanager/">Alertmanager</a> alerts.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#operator-metrics">Operator metrics</a></li>
+<li><a href="#exporter">Exporter</a></li>
+<li><a href="#servicemonitor"><code>ServiceMonitor</code></a></li>
+<li><a href="#configuration">Configuration</a></li>
+<li><a href="#grafana-dashboards">Grafana dashboards</a></li>
+<li><a href="#mariadb-metrics">MariaDB metrics</a></li>
+<li><a href="#maxscale-metrics">MaxScale metrics</a></li>
+</ul>
+<h2 id="operator-metrics">Operator metrics</h2>
+<p>In order to expose the operator internal metrics, you can install the operator Helm chart passing the <code>metrics.enabled = true</code> value. Refer to the <a href="https://mariadb.com/kb/en/helm/">Helm documentation</a> for further detail.</p>
+<h2 id="exporters">Exporters</h2>
+<p>The operator configures exporters to query MariaDB and MaxScale, exposing metrics in Prometheus format through an HTTP endpoint.  </p>
+<p>It is important to note that these exporters run as standalone <code>Deployments</code> rather than as sidecars for each data-plane replica. Since they can communicate with all replicas of MariaDB and MaxScale, there is no need to run a separate exporter for each replica.  </p>
+<p>As a result, the lifecycle of MariaDB and MaxScale remains independent from the exporters, allowing for upgrades without impacting the availability of either component.</p>
+<h2 id="servicemonitor"><code>ServiceMonitor</code></h2>
+<p>Once the exporter <code>Deployment</code> is ready, the operator creates a <a href="https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor</a> object that will be eventually reconciled by the <a href="https://github.com/prometheus-operator/prometheus-operator">Prometheus operator</a>, resulting in the Prometheus instance being configured to scrape the exporter endpoint.</p>
+<p>As you scale MariaDB and MaxScale by adjusting the number of replicas, the operator will reconcile the <code>ServiceMonitor</code> to dynamically add or remove targets corresponding to the updated instances.</p>
+<h2 id="configuration">Configuration</h2>
+<p>The easiest way to setup metrics in your MariaDB and MaxScale instances is just by setting <code>spec.metrics.enabled = true</code>:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb</span>
+<span>spec</span><span>:</span>
+<span>...</span>
+  <span>metrics</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale</span>
+<span>spec</span><span>:</span>
+<span>...</span>
+  <span>metrics</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+</pre></div>
+
+
+<p>The rest of the fields are defaulted by the operator. If you need a more fine grained configuration, refer to the <a href="https://mariadb.com/kb/en/mariadb-enterprise-operator-api-reference/">API reference</a> and the following examples:</p>
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MariaDB</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>mariadb</span>
+<span>spec</span><span>:</span>
+<span>...</span>
+  <span>metrics</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>exporter</span><span>:</span>
+      <span>image</span><span>:</span> <span>mariadb/mariadb-prometheus-exporter-ubi:v0.0.2</span>
+      <span>resources</span><span>:</span>
+        <span>requests</span><span>:</span>
+          <span>cpu</span><span>:</span> <span>50m</span>
+          <span>memory</span><span>:</span> <span>64Mi</span>
+        <span>limits</span><span>:</span>
+          <span>cpu</span><span>:</span> <span>300m</span>
+          <span>memory</span><span>:</span> <span>512Mi</span>
+      <span>port</span><span>:</span> <span>9104</span>
+    <span>serviceMonitor</span><span>:</span>
+      <span>prometheusRelease</span><span>:</span> <span>kube-prometheus-stack</span>
+      <span>jobLabel</span><span>:</span> <span>mariadb-monitoring</span>
+      <span>interval</span><span>:</span> <span>10s</span>
+      <span>scrapeTimeout</span><span>:</span> <span>10s</span>
+    <span>username</span><span>:</span> <span>monitoring</span>
+    <span>passwordSecretKeyRef</span><span>:</span>
+      <span>name</span><span>:</span> <span>mariadb</span>
+      <span>key</span><span>:</span> <span>password</span>
+</pre></div>
+
+
+<div><pre><span></span><span>apiVersion</span><span>:</span> <span>enterprise.mariadb.com/v1alpha1</span>
+<span>kind</span><span>:</span> <span>MaxScale</span>
+<span>metadata</span><span>:</span>
+  <span>name</span><span>:</span> <span>maxscale</span>
+<span>spec</span><span>:</span>
+<span>...</span>
+  <span>auth</span><span>:</span>
+    <span>metricsUsername</span><span>:</span> <span>metrics</span>
+    <span>metricsPasswordSecretKeyRef</span><span>:</span>
+      <span>key</span><span>:</span> <span>password</span>
+      <span>name</span><span>:</span> <span>maxscale-galera-metrics</span>
+  <span>metrics</span><span>:</span>
+    <span>enabled</span><span>:</span> <span>true</span>
+    <span>exporter</span><span>:</span>
+      <span>image</span><span>:</span> <span>mariadb/maxscale-prometheus-exporter-ubi:v0.0.2</span>
+      <span>resources</span><span>:</span>
+        <span>requests</span><span>:</span>
+          <span>cpu</span><span>:</span> <span>50m</span>
+          <span>memory</span><span>:</span> <span>64Mi</span>
+        <span>limits</span><span>:</span>
+          <span>cpu</span><span>:</span> <span>300m</span>
+          <span>memory</span><span>:</span> <span>512Mi</span>
+      <span>port</span><span>:</span> <span>9105</span>
+    <span>serviceMonitor</span><span>:</span>
+      <span>prometheusRelease</span><span>:</span> <span>kube-prometheus-stack</span>
+      <span>jobLabel</span><span>:</span> <span>mariadb-monitoring</span>
+      <span>interval</span><span>:</span> <span>10s</span>
+      <span>scrapeTimeout</span><span>:</span> <span>10s</span>
+</pre></div>
+
+
+<h2 id="grafana-dashboards">Grafana dashboards</h2>
+<p>The following community dashboards available on <a href="https://grafana.com/grafana/dashboards/">grafana.com</a> are compatible with the <a href="#mariadb-metrics">MariaDB metrics</a>, and therefore they can be used to monitor <code>MariaDB</code> instances:</p>
+<p><strong><a href="https://grafana.com/grafana/dashboards/7362-mysql-overview/">MySQL Overview</a></strong></p>
+<p><strong><a href="https://grafana.com/grafana/dashboards/14057-mysql/">MySQL Exporter Quickstart and Dashboard</a></strong></p>
+<p><strong><a href="https://grafana.com/grafana/dashboards/7371-mysql-replication/">MySQL Replication</a></strong></p>
+<p><strong><a href="https://grafana.com/grafana/dashboards/13106-galera-mariadb-overview/">Galera/MariaDB - Overview</a></strong></p>
+<h2 id="mariadb-metrics">MariaDB metrics</h2>
+<p>The following metrics are available for <code>MariaDB</code> instances:</p>
+<table>
+<thead>
+<tr>
+<th>Metric Name</th>
+<th>Description</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mysql_exporter_collector_duration_seconds</td>
+<td>Collector time duration.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_exporter_collector_success</td>
+<td>mysqld_exporter: Whether a collector succeeded.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_galera_evs_repl_latency_avg_seconds</td>
+<td>PXC/Galera group communication latency. Avg value.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_galera_evs_repl_latency_max_seconds</td>
+<td>PXC/Galera group communication latency. Max value.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_galera_evs_repl_latency_min_seconds</td>
+<td>PXC/Galera group communication latency. Min value.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_galera_evs_repl_latency_sample_size</td>
+<td>PXC/Galera group communication latency. Sample Size.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_galera_evs_repl_latency_stdev</td>
+<td>PXC/Galera group communication latency. Standard Deviation.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_galera_gcache_size_bytes</td>
+<td>PXC/Galera gcache size.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_galera_status_info</td>
+<td>PXC/Galera status information.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_galera_variables_info</td>
+<td>PXC/Galera variables information.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_status_aborted_clients</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_aborted_connects</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_aborted_connects_preauth</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_access_denied_errors</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_acl_column_grants</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_acl_database_grants</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_acl_function_grants</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_acl_package_body_grants</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_acl_package_spec_grants</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_acl_procedure_grants</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_acl_proxy_users</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_acl_role_grants</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_acl_roles</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_acl_table_grants</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_acl_users</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_aria_pagecache_blocks_not_flushed</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_aria_pagecache_blocks_unused</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_aria_pagecache_blocks_used</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_aria_pagecache_read_requests</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_aria_pagecache_reads</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_aria_pagecache_write_requests</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_aria_pagecache_writes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_aria_transaction_log_syncs</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_binlog_bytes_written</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_binlog_cache_disk_use</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_binlog_cache_use</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_binlog_commits</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_binlog_disk_use</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_binlog_group_commit_trigger_count</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_binlog_group_commit_trigger_lock_wait</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_binlog_group_commit_trigger_timeout</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_binlog_group_commits</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_binlog_gtid_index_hit</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_binlog_gtid_index_miss</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_binlog_snapshot_position</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_binlog_stmt_cache_disk_use</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_binlog_stmt_cache_use</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_buffer_pool_dirty_pages</td>
+<td>Innodb buffer pool dirty pages.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_status_buffer_pool_page_changes_total</td>
+<td>Innodb buffer pool page state changes.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>mysql_global_status_buffer_pool_pages</td>
+<td>Innodb buffer pool pages by state.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_status_busy_time</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_bytes_received</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_bytes_sent</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_column_compressions</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_column_decompressions</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_commands_total</td>
+<td>Total number of executed MySQL commands.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>mysql_global_status_compression</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_connection_errors_total</td>
+<td>Total number of MySQL connection errors.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>mysql_global_status_connections</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_cpu_time</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_created_tmp_disk_tables</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_created_tmp_files</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_created_tmp_tables</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_delayed_errors</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_delayed_insert_threads</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_delayed_writes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_delete_scan</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_empty_queries</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_executed_events</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_executed_triggers</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_application_time_periods</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_check_constraint</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_custom_aggregate_functions</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_delay_key_write</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_dynamic_columns</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_fulltext</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_gis</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_insert_returning</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_into_outfile</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_into_variable</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_invisible_columns</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_json</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_locale</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_subquery</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_system_versioning</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_timezone</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_trigger</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_window_functions</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_feature_xml</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_handlers_total</td>
+<td>Total number of executed MySQL handlers.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_adaptive_hash_hash_searches</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_adaptive_hash_non_hash_searches</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_available_undo_logs</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_background_log_sync</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_buffer_pool_bytes_data</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_buffer_pool_bytes_dirty</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_buffer_pool_load_incomplete</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_buffer_pool_read_ahead</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_buffer_pool_read_ahead_evicted</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_buffer_pool_read_ahead_rnd</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_buffer_pool_read_requests</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_buffer_pool_reads</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_buffer_pool_wait_free</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_buffer_pool_write_requests</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_bulk_operations</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_checkpoint_age</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_checkpoint_max_age</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_data_fsyncs</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_data_pending_fsyncs</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_data_pending_reads</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_data_pending_writes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_data_read</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_data_reads</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_data_writes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_data_written</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_dblwr_pages_written</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_dblwr_writes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_deadlocks</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_encryption_n_merge_blocks_decrypted</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_encryption_n_merge_blocks_encrypted</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_encryption_n_rowlog_blocks_decrypted</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_encryption_n_rowlog_blocks_encrypted</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_encryption_n_temp_blocks_decrypted</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_encryption_n_temp_blocks_encrypted</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_encryption_num_key_requests</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_encryption_rotation_estimated_iops</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_encryption_rotation_pages_flushed</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_encryption_rotation_pages_modified</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_encryption_rotation_pages_read_from_cache</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_encryption_rotation_pages_read_from_disk</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_have_bzip2</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_have_lz4</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_have_lzma</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_have_lzo</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_have_punch_hole</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_have_snappy</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_history_list_length</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_instant_alter_column</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_log_waits</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_log_write_requests</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_log_writes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_lsn_current</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_lsn_flushed</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_lsn_last_checkpoint</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_master_thread_active_loops</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_master_thread_idle_loops</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_max_trx_id</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_mem_adaptive_hash</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_mem_dictionary</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_num_open_files</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_num_page_compressed_trim_op</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_num_pages_decrypted</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_num_pages_encrypted</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_num_pages_page_compressed</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_num_pages_page_compression_error</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_num_pages_page_decompressed</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_onlineddl_pct_progress</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_onlineddl_rowlog_pct_used</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_onlineddl_rowlog_rows</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_os_log_written</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_page_compression_saved</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_page_size</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_pages_created</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_pages_read</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_pages_written</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_row_lock_current_waits</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_row_lock_time</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_row_lock_time_avg</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_row_lock_time_max</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_row_lock_waits</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_truncated_status_writes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_innodb_undo_truncations</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_key_blocks_not_flushed</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_key_blocks_unused</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_key_blocks_used</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_key_blocks_warm</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_key_read_requests</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_key_reads</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_key_write_requests</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_key_writes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_last_query_cost</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_master_gtid_wait_count</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_master_gtid_wait_time</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_master_gtid_wait_timeouts</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_max_statement_time_exceeded</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_max_tmp_space_used</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_max_used_connections</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_max_used_connections_time</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_memory_used</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_memory_used_initial</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_not_flushed_delayed_rows</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_open_files</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_open_streams</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_open_table_definitions</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_open_tables</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_opened_files</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_opened_plugin_libraries</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_opened_table_definitions</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_opened_tables</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_opened_views</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_optimizer_join_prefixes_check_calls</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_performance_schema_lost_total</td>
+<td>Total number of MySQL instrumentations that could not be loaded or created due to memory constraints.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>mysql_global_status_prepared_stmt_count</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_qcache_free_blocks</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_qcache_free_memory</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_qcache_hits</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_qcache_inserts</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_qcache_lowmem_prunes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_qcache_not_cached</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_qcache_queries_in_cache</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_qcache_total_blocks</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_queries</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_questions</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_resultset_metadata_skipped</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rows_read</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rows_sent</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rows_tmp_read</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_clients</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_get_ack</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_net_avg_wait_time</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_net_wait_time</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_net_waits</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_no_times</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_no_tx</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_request_ack</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_status</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_timefunc_failures</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_tx_avg_wait_time</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_tx_wait_time</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_tx_waits</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_wait_pos_backtraverse</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_wait_sessions</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_master_yes_tx</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_slave_send_ack</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_semi_sync_slave_status</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_rpl_transactions_multi_engine</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_select_full_join</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_select_full_range_join</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_select_range</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_select_range_check</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_select_scan</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_server_audit_active</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_server_audit_writes_failed</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_slave_connections</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_slave_heartbeat_period</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_slave_open_temp_tables</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_slave_received_heartbeats</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_slave_retried_transactions</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_slave_running</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_slave_skipped_errors</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_slaves_connected</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_slaves_running</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_slow_launch_threads</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_slow_queries</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_sort_merge_passes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_sort_priority_queue_sorts</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_sort_range</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_sort_rows</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_sort_scan</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_accept_renegotiates</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_accepts</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_callback_cache_hits</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_client_connects</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_connect_renegotiates</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_ctx_verify_depth</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_ctx_verify_mode</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_default_timeout</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_finished_accepts</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_finished_connects</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_session_cache_hits</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_session_cache_misses</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_session_cache_overflows</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_session_cache_size</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_session_cache_timeouts</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_sessions_reused</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_used_session_cache_entries</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_verify_depth</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_ssl_verify_mode</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_subquery_cache_hit</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_subquery_cache_miss</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_syncs</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_table_locks_immediate</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_table_locks_waited</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_table_open_cache_active_instances</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_table_open_cache_hits</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_table_open_cache_misses</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_table_open_cache_overflows</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_tc_log_max_pages_used</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_tc_log_page_size</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_tc_log_page_waits</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_threadpool_idle_threads</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_threadpool_threads</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_threads_cached</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_threads_connected</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_threads_created</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_threads_running</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_tmp_space_used</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_transactions_gtid_foreign_engine</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_transactions_multi_engine</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_update_scan</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_uptime</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_uptime_since_flush_status</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_applier_thread_count</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_apply_oooe</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_apply_oool</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_apply_waits</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_apply_window</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_causal_reads</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_cert_deps_distance</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_cert_index_size</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_cert_interval</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_cluster_conf_id</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_cluster_size</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_cluster_status</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_cluster_weight</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_commit_oooe</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_commit_oool</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_commit_window</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_connected</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_desync_count</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_flow_control_paused</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_flow_control_paused_ns</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_flow_control_recv</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_flow_control_sent</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_gmcast_segment</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_last_committed</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_bf_aborts</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_cached_downto</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_cert_failures</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_commits</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_index</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_recv_queue</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_recv_queue_avg</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_recv_queue_max</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_recv_queue_min</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_replays</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_send_queue</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_send_queue_avg</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_send_queue_max</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_send_queue_min</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_local_state</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_open_connections</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_open_transactions</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_protocol_version</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_ready</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_received</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_received_bytes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_repl_data_bytes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_repl_keys</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_repl_keys_bytes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_repl_other_bytes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_replicated</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_replicated_bytes</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_rollbacker_thread_count</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_status_wsrep_thread_count</td>
+<td>Generic metric from SHOW GLOBAL STATUS.</td>
+<td>UNTYPED</td>
+</tr>
+<tr>
+<td>mysql_global_variables_allow_suspicious_udfs</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_analyze_sample_percentage</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_block_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_checkpoint_interval</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_checkpoint_log_activity</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_encrypt_tables</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_force_start_after_recovery_failures</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_group_commit_interval</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_log_file_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_max_sort_file_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_page_checksum</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_pagecache_age_threshold</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_pagecache_buffer_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_pagecache_division_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_pagecache_file_hash_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_repair_threads</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_sort_buffer_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_aria_used_for_temp_tables</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_auto_increment_increment</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_auto_increment_offset</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_autocommit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_automatic_sp_privileges</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_back_log</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_big_tables</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_alter_two_phase</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_annotate_row_events</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_cache_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_commit_wait_count</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_commit_wait_usec</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_direct_non_transactional_updates</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_expire_logs_seconds</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_file_cache_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_gtid_index</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_gtid_index_page_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_gtid_index_span_min</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_legacy_event_pos</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_optimize_thread_scheduling</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_row_event_max_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_space_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_binlog_stmt_cache_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_bulk_insert_buffer_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_check_constraint_checks</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_column_compression_threshold</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_column_compression_zlib_level</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_column_compression_zlib_wrap</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_connect_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_core_file</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_deadlock_search_depth_long</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_deadlock_search_depth_short</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_deadlock_timeout_long</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_deadlock_timeout_short</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_default_password_lifetime</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_default_week_format</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_delay_key_write</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_delayed_insert_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_delayed_insert_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_delayed_queue_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_disconnect_on_expired_password</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_div_precision_increment</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_encrypt_binlog</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_encrypt_tmp_disk_tables</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_encrypt_tmp_files</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_eq_range_index_dive_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_event_scheduler</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_expensive_subquery_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_expire_logs_days</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_explicit_defaults_for_timestamp</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_extra_max_connections</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_extra_port</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_flush</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_flush_time</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_foreign_key_checks</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_ft_max_word_len</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_ft_min_word_len</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_ft_query_expansion_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_general_log</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_group_concat_max_len</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_gtid_cleanup_batch_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_gtid_domain_id</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_gtid_ignore_duplicates</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_gtid_strict_mode</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_have_compress</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_have_crypt</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_have_dynamic_loading</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_have_geometry</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_have_openssl</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_have_profiling</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_have_query_cache</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_have_rtree_keys</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_have_ssl</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_have_symlink</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_histogram_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_host_cache_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_idle_readonly_transaction_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_idle_transaction_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_idle_write_transaction_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_ignore_builtin_innodb</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_in_predicate_conversion_threshold</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_adaptive_flushing</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_adaptive_flushing_lwm</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_adaptive_hash_index</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_adaptive_hash_index_parts</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_alter_copy_bulk</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_autoextend_increment</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_autoinc_lock_mode</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_buf_dump_status_frequency</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_buffer_pool_chunk_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_buffer_pool_dump_at_shutdown</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_buffer_pool_dump_now</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_buffer_pool_dump_pct</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_buffer_pool_load_abort</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_buffer_pool_load_at_startup</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_buffer_pool_load_now</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_buffer_pool_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_cmp_per_index_enabled</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_compression_default</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_compression_failure_threshold_pct</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_compression_level</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_compression_pad_pct_max</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_data_file_buffering</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_data_file_write_through</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_deadlock_detect</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_default_encryption_key_id</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_disable_sort_file_cache</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_doublewrite</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_encrypt_log</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_encrypt_tables</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_encrypt_temporary_tables</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_encryption_rotate_key_age</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_encryption_rotation_iops</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_encryption_threads</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_fast_shutdown</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_fatal_semaphore_wait_threshold</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_file_per_table</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_fill_factor</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_flush_log_at_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_flush_log_at_trx_commit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_flush_neighbors</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_flush_sync</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_flushing_avg_loops</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_force_primary_key</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_force_recovery</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_ft_cache_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_ft_enable_diag_print</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_ft_enable_stopword</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_ft_max_token_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_ft_min_token_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_ft_num_word_optimize</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_ft_result_cache_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_ft_sort_pll_degree</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_ft_total_cache_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_immediate_scrub_data_uncompressed</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_io_capacity</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_io_capacity_max</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_lock_wait_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_log_buffer_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_log_file_buffering</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_log_file_mmap</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_log_file_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_log_file_write_through</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_log_spin_wait_delay</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_log_write_ahead_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_lru_flush_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_lru_scan_depth</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_max_dirty_pages_pct</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_max_dirty_pages_pct_lwm</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_max_purge_lag</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_max_purge_lag_delay</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_max_purge_lag_wait</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_max_undo_log_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_old_blocks_pct</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_old_blocks_time</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_online_alter_log_max_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_open_files</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_optimize_fulltext_only</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_page_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_prefix_index_cluster_optimization</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_print_all_deadlocks</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_purge_batch_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_purge_rseg_truncate_frequency</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_purge_threads</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_random_read_ahead</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_read_ahead_threshold</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_read_io_threads</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_read_only</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_read_only_compressed</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_rollback_on_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_snapshot_isolation</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_sort_buffer_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_spin_wait_delay</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_stats_auto_recalc</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_stats_include_delete_marked</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_stats_modified_counter</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_stats_on_metadata</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_stats_persistent</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_stats_persistent_sample_pages</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_stats_traditional</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_stats_transient_sample_pages</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_status_output</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_status_output_locks</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_strict_mode</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_sync_spin_loops</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_table_locks</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_truncate_temporary_tablespace_now</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_undo_log_truncate</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_undo_tablespaces</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_use_atomic_writes</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_use_native_aio</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_innodb_write_io_threads</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_interactive_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_join_buffer_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_join_buffer_space_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_join_cache_level</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_keep_files_on_create</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_key_buffer_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_key_cache_age_threshold</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_key_cache_block_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_key_cache_division_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_key_cache_file_hash_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_key_cache_segments</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_large_files_support</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_large_page_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_large_pages</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_local_infile</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_lock_wait_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_locked_in_memory</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_bin</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_bin_compress</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_bin_compress_min_len</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_bin_trust_function_creators</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_queries_not_using_indexes</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_slave_updates</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_slow_admin_statements</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_slow_max_warnings</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_slow_min_examined_row_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_slow_query</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_slow_query_time</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_slow_rate_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_slow_slave_statements</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_tc_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_log_warnings</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_long_query_time</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_low_priority_updates</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_lower_case_file_system</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_lower_case_table_names</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_master_verify_checksum</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_allowed_packet</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_binlog_cache_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_binlog_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_binlog_stmt_cache_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_binlog_total_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_connect_errors</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_connections</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_delayed_threads</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_digest_length</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_error_count</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_heap_table_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_insert_delayed_threads</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_join_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_length_for_sort_data</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_password_errors</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_prepared_stmt_count</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_recursive_iterations</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_relay_log_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_rowid_filter_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_seeks_for_key</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_session_mem_used</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_sort_length</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_sp_recursion_depth</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_statement_time</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_tmp_session_space_usage</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_tmp_total_space_usage</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_user_connections</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_max_write_lock_count</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_metadata_locks_cache_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_metadata_locks_hash_instances</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_min_examined_row_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_mrr_buffer_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_myisam_block_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_myisam_data_pointer_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_myisam_max_sort_file_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_myisam_mmap_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_myisam_repair_threads</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_myisam_sort_buffer_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_myisam_use_mmap</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_mysql56_temporal_format</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_net_buffer_length</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_net_read_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_net_retry_count</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_net_write_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_old</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_old_passwords</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_open_files_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_adjust_secondary_key_costs</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_disk_read_cost</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_disk_read_ratio</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_extra_pruning_depth</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_index_block_copy_cost</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_join_limit_pref_ratio</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_key_compare_cost</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_key_copy_cost</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_key_lookup_cost</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_key_next_find_cost</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_max_sel_arg_weight</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_max_sel_args</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_prune_level</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_row_copy_cost</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_row_lookup_cost</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_row_next_find_cost</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_rowid_compare_cost</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_rowid_copy_cost</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_scan_setup_cost</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_search_depth</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_selectivity_sampling_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_trace_max_mem_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_use_condition_selectivity</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_optimizer_where_cost</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_accounts_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_digests_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_events_stages_history_long_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_events_stages_history_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_events_statements_history_long_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_events_statements_history_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_events_transactions_history_long_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_events_transactions_history_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_events_waits_history_long_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_events_waits_history_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_hosts_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_cond_classes</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_cond_instances</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_digest_length</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_file_classes</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_file_handles</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_file_instances</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_index_stat</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_memory_classes</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_metadata_locks</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_mutex_classes</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_mutex_instances</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_prepared_statements_instances</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_program_instances</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_rwlock_classes</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_rwlock_instances</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_socket_classes</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_socket_instances</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_sql_text_length</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_stage_classes</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_statement_classes</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_statement_stack</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_table_handles</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_table_instances</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_table_lock_stat</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_thread_classes</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_max_thread_instances</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_session_connect_attrs_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_setup_actors_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_setup_objects_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_performance_schema_users_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_port</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_preload_buffer_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_profiling</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_profiling_history_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_progress_report_time</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_protocol_version</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_query_alloc_block_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_query_cache_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_query_cache_min_res_unit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_query_cache_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_query_cache_strip_comments</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_query_cache_type</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_query_cache_wlock_invalidate</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_query_prealloc_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_range_alloc_block_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_read_binlog_speed_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_read_buffer_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_read_only</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_read_rnd_buffer_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_relay_log_purge</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_relay_log_recovery</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_relay_log_space_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_replicate_annotate_row_events</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_report_port</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_require_secure_transport</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_rowid_merge_buff_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_rpl_semi_sync_master_enabled</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_rpl_semi_sync_master_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_rpl_semi_sync_master_trace_level</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_rpl_semi_sync_master_wait_no_slave</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_rpl_semi_sync_slave_delay_master</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_rpl_semi_sync_slave_enabled</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_rpl_semi_sync_slave_kill_conn_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_rpl_semi_sync_slave_trace_level</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_secure_auth</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_secure_timestamp</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_server_audit_file_rotate_now</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_server_audit_file_rotate_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_server_audit_file_rotations</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_server_audit_load_on_error</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_server_audit_logging</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_server_audit_mode</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_server_audit_query_log_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_server_audit_reload_filters</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_server_id</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_session_track_schema</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_session_track_state_change</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_session_track_transaction_info</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_shutdown_wait_for_slaves</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_simple_password_check_digits</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_simple_password_check_letters_same_case</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_simple_password_check_minimal_length</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_simple_password_check_other_characters</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_skip_external_locking</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_skip_grant_tables</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_skip_name_resolve</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_skip_networking</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_skip_show_database</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slave_compressed_protocol</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slave_connections_needed_for_purge</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slave_domain_parallel_threads</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slave_max_allowed_packet</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slave_max_statement_time</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slave_net_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slave_parallel_max_queued</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slave_parallel_threads</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slave_parallel_workers</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slave_run_triggers_for_rbr</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slave_skip_errors</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slave_sql_verify_checksum</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slave_transaction_retries</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slave_transaction_retry_interval</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slow_launch_time</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_slow_query_log</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sort_buffer_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sql_auto_is_null</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sql_big_selects</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sql_buffer_result</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sql_if_exists</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sql_log_bin</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sql_log_off</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sql_notes</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sql_quote_show_create</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sql_safe_updates</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sql_select_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sql_slave_skip_counter</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sql_warnings</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_standard_compliant_cte</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_stored_program_cache</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_strict_password_validation</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sync_binlog</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sync_frm</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sync_master_info</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sync_relay_log</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_sync_relay_log_info</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_system_versioning_insert_history</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_table_definition_cache</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_table_open_cache</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_table_open_cache_instances</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_tcp_keepalive_interval</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_tcp_keepalive_probes</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_tcp_keepalive_time</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_tcp_nodelay</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_thread_cache_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_thread_pool_dedicated_listener</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_thread_pool_exact_stats</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_thread_pool_idle_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_thread_pool_max_threads</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_thread_pool_oversubscribe</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_thread_pool_prio_kickup_timer</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_thread_pool_reshuffle_group_period</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_thread_pool_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_thread_pool_stall_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_thread_stack</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_tmp_disk_table_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_tmp_memory_table_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_tmp_table_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_transaction_alloc_block_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_transaction_prealloc_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_transaction_read_only</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_tx_read_only</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_unique_checks</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_updatable_views_with_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_userstat</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wait_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_auto_increment_control</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_black_box_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_certificate_expiration_hours_warning</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_certify_nonpk</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_convert_lock_to_trx</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_desync</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_dirty_reads</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_drupal_282555_workaround</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_gtid_domain_id</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_gtid_mode</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_ignore_apply_errors</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_load_data_splitting</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_log_conflicts</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_max_ws_rows</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_max_ws_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_mysql_replication_bundle</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_on</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_base_port</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_cert_log_conflicts</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_cert_optimistic_pa</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_debug</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_auto_evict</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_causal_keepalive_period</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_delay_margin</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_delayed_keep_period</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_inactive_check_period</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_inactive_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_info_log_mask</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_install_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_join_retrans_period</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_keepalive_period</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_max_install_timeouts</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_send_window</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_stats_report_period</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_suspect_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_use_aggregate</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_user_send_window</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_version</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_evs_view_forget_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcache_keep_pages_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcache_keep_plaintext_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcache_mem_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcache_page_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcache_recover</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcache_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcs_fc_debug</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcs_fc_factor</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcs_fc_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcs_fc_master_slave</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcs_fc_single_primary</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcs_max_packet_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcs_max_throttle</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcs_recv_q_hard_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcs_recv_q_soft_limit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcs_sync_donor</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gcs_vote_policy</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gmcast_mcast_ttl</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gmcast_peer_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gmcast_segment</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gmcast_time_wait</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_gmcast_version</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_pc_announce_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_pc_bootstrap</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_pc_checksum</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_pc_ignore_quorum</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_pc_ignore_sb</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_pc_linger</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_pc_npvo</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_pc_recovery</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_pc_version</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_pc_wait_prim</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_pc_wait_prim_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_pc_weight</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_protonet_version</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_repl_causal_read_timeout</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_repl_commit_order</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_repl_max_ws_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_repl_proto_max</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_socket_checksum</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_socket_dynamic</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_socket_ssl</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_socket_ssl_cipher</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_socket_ssl_compression</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_provider_socket_ssl_reload</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_recover</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_restart_slave</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_retry_autocommit</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_slave_fk_checks</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_slave_threads</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_slave_uk_checks</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_sst_donor_rejects_queries</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_sync_wait</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_global_variables_wsrep_trx_fragment_size</td>
+<td>Generic gauge metric from SHOW GLOBAL VARIABLES.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_info_schema_innodb_cmp_compress_ops_ok_total</td>
+<td>Number of times a B-tree page of the size PAGE_SIZE has been successfully compressed.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>mysql_info_schema_innodb_cmp_compress_ops_total</td>
+<td>Number of times a B-tree page of the size PAGE_SIZE has been compressed.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>mysql_info_schema_innodb_cmp_compress_time_seconds_total</td>
+<td>Total time in seconds spent in attempts to compress B-tree pages.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>mysql_info_schema_innodb_cmp_uncompress_ops_total</td>
+<td>Number of times a B-tree page of the size PAGE_SIZE has been uncompressed.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>mysql_info_schema_innodb_cmp_uncompress_time_seconds_total</td>
+<td>Total time in seconds spent in uncompressing B-tree pages.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>mysql_info_schema_innodb_cmpmem_pages_free_total</td>
+<td>Number of blocks of the size PAGE_SIZE that are currently available for allocation.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>mysql_info_schema_innodb_cmpmem_pages_used_total</td>
+<td>Number of blocks of the size PAGE_SIZE that are currently in use.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>mysql_info_schema_innodb_cmpmem_relocation_ops_total</td>
+<td>Number of times a block of the size PAGE_SIZE has been relocated.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>mysql_info_schema_innodb_cmpmem_relocation_time_seconds_total</td>
+<td>Total time in seconds spent in relocating blocks.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>mysql_transaction_isolation</td>
+<td>MySQL transaction isolation.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_up</td>
+<td>Whether the MySQL server is up.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>mysql_version_info</td>
+<td>MySQL version and distribution.</td>
+<td>GAUGE</td>
+</tr>
+</tbody>
+</table>
+<h2 id="maxscale-metrics">MaxScale metrics</h2>
+<p>The following metrics are available for <code>MaxScale</code> instances:</p>
+<table>
+<thead>
+<tr>
+<th>Metric Name</th>
+<th>Description</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maxscale_exporter_collector_duration_seconds</td>
+<td>Collector time duration.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_exporter_last_scrape_error</td>
+<td>Whether the last scrape of metrics from MariaDB resulted in an error (1 for error, 0 for success).</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_exporter_scrapes_total</td>
+<td>Total number of times MariaDB was scraped for metrics.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>maxscale_logging_high_precision</td>
+<td>Whether high precision logging is active.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_logging_level</td>
+<td>The current logging levels active.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_logging_maxlog</td>
+<td>Whether maxlog is active.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_logging_syslog</td>
+<td>Whether syslog is active.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_logging_throttling_count</td>
+<td>The number of logging throttling.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_logging_throttling_suppress_milliseconds</td>
+<td>The value of throttling suppress_ms.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_logging_throttling_suppress_window_milliseconds</td>
+<td>The value of throttling window_ms.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_modules</td>
+<td>Maxscale modules currently enabled.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_monitor</td>
+<td>Maxscale Monitor.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_server_active_operations</td>
+<td>The number of active operations.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_server_adaptive_avg_select_time</td>
+<td>The adaptive average select time. This is always zero.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_server_connection_pool_empty</td>
+<td>The current connection pool empty</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_server_connections</td>
+<td>The current number of connections to the server.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_server_max_connections</td>
+<td>The max number of connections.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_server_max_pool_size</td>
+<td>The current max pool size,</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_server_persistent_connections</td>
+<td>The number of persistent connections to the server.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_server_reused_connections</td>
+<td>The number of Re-used Connections by the server.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_server_routed_packets</td>
+<td>The number of routed packets to the server,</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_server_state</td>
+<td>The current state of the server.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_server_total_connections</td>
+<td>The total number of connections to the server.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>maxscale_service_active_connections</td>
+<td>The total number of active operations to the service.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_service_connections</td>
+<td>The current number of connections to the server.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_service_state</td>
+<td>The current state of each service.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_service_statistics_connections</td>
+<td>The total number of connections to the service.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_service_statistics_failed_auths</td>
+<td>The total number of failed authentications to the service.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>maxscale_service_statistics_max_connections</td>
+<td>The max number of connections to the service.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_service_statistics_routed_packets</td>
+<td>The total number of routed packets to the service.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_service_statistics_total_connections</td>
+<td>The total number of connections to the service.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>maxscale_service_total_connections</td>
+<td>The total number of connections to the server.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>maxscale_threads_accepts</td>
+<td>The number of accept events.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>maxscale_threads_blocking_polls</td>
+<td>The number of non-blocking poll cycles that will be done before a blocking poll takes place.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_threads_count</td>
+<td>The number of threads</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_threads_current_descriptors</td>
+<td>The current number of descriptors handled by each thread.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_threads_errors</td>
+<td>The number of error events.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>maxscale_threads_event_queue_length</td>
+<td>The amount of I/O events returned by one call to epoll_wait().</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_threads_hangups</td>
+<td>The number of hangup events.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>maxscale_threads_load_last_hour</td>
+<td>The load during the last 60m.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_threads_load_last_minute</td>
+<td>The load during the last 60s.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_threads_load_last_second</td>
+<td>The load during the last second.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_threads_max_event_queue_length</td>
+<td>The maximum amount of I/O events returned by one call to epoll_wait().</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_threads_max_exec_time</td>
+<td>The maximum time it took to process an I/O event.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_threads_max_queue_time</td>
+<td>The maximum time it took before an I/O event became ready for processing (ms).</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_threads_reads</td>
+<td>The number of read events.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>maxscale_threads_stack_size</td>
+<td>The stack size of each worker.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_threads_total_descriptors</td>
+<td>The total number of descriptors handled by each thread since MaxScale startup.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_threads_writes</td>
+<td>The number of write events.</td>
+<td>COUNTER</td>
+</tr>
+<tr>
+<td>maxscale_up</td>
+<td>Whether the Maxscale server is up.</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_uptime_seconds</td>
+<td>Maxscale uptime in seconds</td>
+<td>GAUGE</td>
+</tr>
+<tr>
+<td>maxscale_version</td>
+<td>Maxscale Version</td>
+<td>GAUGE</td>
+</tr>
+</tbody>
+</table>
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/mariadb-enterprise-operator-metrics/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/mariadb-enterprise-operator-metrics/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/updates/">
+                        ← Updates
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/mariadb-enterprise-operator/">
+                        ↑ MariaDB Enterprise Operator ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/sql-resources/">
+                        SQL Resources →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="15901" data-comments-url="/kb/en/mariadb-enterprise-operator-metrics/+comments"
+         data-reply-url="/kb/en/mariadb-enterprise-operator-metrics/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/mariadb-enterprise-operator/">
+                    ↑ MariaDB Enterprise Operator ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-introduction/">
+                            
+                            Introduction
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/customer-access-to-docker-mariadb-com/">
+                            
+                            Customer access to docker.mariadb.com
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/docker-images/">
+                            
+                            Docker Images
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-installation/">
+                            
+                            MariaDB Enterprise Operator Installation
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/quickstart/">
+                            
+                            Quickstart
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/standalone-mariadb/">
+                            
+                            Standalone MariaDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-galera-cluster/">
+                            
+                            Galera Cluster
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/high-availability/">
+                            
+                            High Availability
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/maxscale-database-proxy/">
+                            
+                            MaxScale Database Proxy
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/backup-and-restore/">
+                            
+                            Backup and Restore
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-storage/">
+                            
+                            Storage
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/tls/">
+                            
+                            TLS
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/configuration/">
+                            
+                            Configuration
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/updates/">
+                            
+                            Updates
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Metrics</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/sql-resources/">
+                            
+                            SQL Resources
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/metadata/">
+                            
+                            Metadata
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/suspend-reconciliation/">
+                            
+                            Suspend Reconciliation
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/api-reference/">
+                            
+                            API Reference
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/examples-catalog/">
+                            
+                            Examples Catalog
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-migrations/">
+                            
+                            MariaDB Enterprise Operator Migrations
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-operator-release-notes/">
+                            
+                            MariaDB Enterprise Operator Release Notes
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    <ul class="list-inline text-center footer-nav">
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/products" title="Products">Products</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/solutions" title="Solutions">Solutions</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/resources" title="Resources">Resources</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/about-us" title="About MariaDB">Company</a></h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/pricing" title="Pricing">Pricing</a>
+                            </h5>
+                        </li>
+                        
+                        
+                        <li>
+                            <h5><a href="https://mariadb.com/downloads" title="Download">Download MariaDB</a></h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row row-10">
+                
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div class="footer-copyright">
+                        <div class="text-center">
+                            <ul class="list-inline no-margin">
+                                <li>
+                                    <a href="/legal" title="Legal">Legal</a>
+                                </li>
+                                <li>
+                                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                            <p>Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
+
+</html>

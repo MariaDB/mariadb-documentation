@@ -284,7 +284,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2021-02-20 20:10">4 years, 1 month ago</span></dd>
+<span class="datetime" title="2025-04-22 15:02">9 hours ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -333,6 +333,24 @@
                     </li>
                 
                     <li><a href="/kb/en/columnstore-storage-architecture/+image/extent-elimination">extent-elimination</a>
+                    </li>
+                
+                    <li><a href="/kb/en/columnstore-storage-architecture/+image/columnpartitions">columnpartitions</a>
+                    </li>
+                
+                    <li><a href="/kb/en/columnstore-storage-architecture/+image/dataorganizationextentmap">dataorganizationextentmap</a>
+                    </li>
+                
+                    <li><a href="/kb/en/columnstore-storage-architecture/+image/ecolumnstorephysicaldataorganizationcolumnextents">ecolumnstorephysicaldataorganizationcolumnextents</a>
+                    </li>
+                
+                    <li><a href="/kb/en/columnstore-storage-architecture/+image/entcolstoretopologysharedstoragenetworkdiagram">entcolstoretopologysharedstoragenetworkdiagram</a>
+                    </li>
+                
+                    <li><a href="/kb/en/columnstore-storage-architecture/+image/entcolumnstoretopologys3-network-diagram">entcolumnstoretopologys3-network-diagram</a>
+                    </li>
+                
+                    <li><a href="/kb/en/columnstore-storage-architecture/+image/segmentfiles">segmentfiles</a>
                     </li>
                 
             </ul>
@@ -444,53 +462,309 @@
 <h3>Contents</h3>
  <ol class="toc">
 
-    <li class=""><a href="#extents" title="Extents">Extents</a>    <ol class="toc">
+    <li class=""><a href="#overview" title="Overview">Overview</a>    <ol class="toc">
 
-        <li class=""><a href="#extent-maps" title="Extent Maps">Extent Maps</a></li>
+        <li class=""><a href="#columnar-storage-engine" title="Columnar Storage Engine">Columnar Storage Engine</a></li>
+
+        <li class=""><a href="#olap-workloads" title="OLAP Workloads">OLAP Workloads</a></li>
+
+        <li class=""><a href="#oltp-workloads" title="OLTP Workloads">OLTP Workloads</a></li>
+
+        <li class=""><a href="#hybrid-workloads" title="Hybrid Workloads">Hybrid Workloads</a>    </ol>
+</li>
+
+    <li class=""><a href="#storage-options" title="Storage Options">Storage Options</a>    <ol class="toc">
+
+        <li class=""><a href="#deployment-with-s3-compatible-storage" title="Deployment with S3-Compatible Storage">Deployment with S3-Compatible Storage</a></li>
+
+        <li class=""><a href="#deployment-with-shared-storage" title="Deployment with Shared Storage">Deployment with Shared Storage</a>    </ol>
+</li>
+
+    <li class=""><a href="#s3-compatible-object-storage" title="S3-Compatible Object Storage">S3-Compatible Object Storage</a>    <ol class="toc">
+
+        <li class=""><a href="#s3-api" title="S3 API">S3 API</a></li>
+
+        <li class=""><a href="#storage-manager" title="Storage Manager">Storage Manager</a></li>
+
+        <li class=""><a href="#storage-manager-directory" title="Storage Manager Directory">Storage Manager Directory</a></li>
+
+        <li class=""><a href="#configure-the-s3-storage-manager" title="Configure the S3 Storage Manager">Configure the S3 Storage Manager</a></li>
+
+        <li class=""><a href="#shared-local-storage" title="Shared Local Storage">Shared Local Storage</a>    </ol>
+</li>
+
+    <li class=""><a href="#shared-local-storage-options" title="Shared Local Storage Options">Shared Local Storage Options</a></li>
+
+    <li class=""><a href="#directories-requiring-shared-local-storage-for-ha" title="Directories Requiring Shared Local Storage for HA">Directories Requiring Shared Local Storage for HA</a></li>
+
+    <li class=""><a href="#recommended-storage-options" title="Recommended Storage Options">Recommended Storage Options</a></li>
+
+    <li class=""><a href="#storage-format" title="Storage Format">Storage Format</a>    <ol class="toc">
+
+        <li class=""><a href="#db-root-directories" title="DB Root Directories">DB Root Directories</a></li>
+
+        <li class=""><a href="#extents" title="Extents">Extents</a></li>
+
+        <li class=""><a href="#segment-files" title="Segment Files">Segment Files</a></li>
+
+        <li class=""><a href="#column-partitions" title="Column Partitions">Column Partitions</a></li>
+
+        <li class=""><a href="#extent-map" title="Extent Map">Extent Map</a></li>
+
+        <li class=""><a href="#compression" title="Compression">Compression</a></li>
+
+        <li class=""><a href="#version-buffer" title="Version Buffer">Version Buffer</a></li>
 
         <li class=""><a href="#extent-elimination" title="Extent Elimination">Extent Elimination</a>    </ol>
-</li>
-
-    <li class=""><a href="#compression-with-real-time-decompression" title="Compression with Real-time Decompression">Compression with Real-time Decompression</a></li>
-
-    <li class=""><a href="#version-buffer" title="Version Buffer">Version Buffer</a>    <ol class="toc">
-
-        <li class=""><a href="#how-the-version-buffer-works" title="How the Version Buffer Works">How the Version Buffer Works</a>    </ol>
-</li>
-
-    <li class=""><a href="#transaction-log" title="Transaction Log">Transaction Log</a> </ol>
+ </ol>
 </li>
 </div>
-<p>When you create a table on MariaDB ColumnStore, the system creates at least one file per column in the table.  So, for instance, a table created with three columns would have a minimum of three, separately addressable logical objects created on a SAN or on the local disk of a Performance Module.</p>
-<p>ColumnStore writes the table schema locally to /usr/local/mariadb/columnstore/mysql/db with all the other non-ColumnStore tables.  The data you write to the ColumnStore table is stored across the Performance Modules in DB Roots, which are located in /usr/local/mariadb/columnstore/datax.</p>
-<p><img src="/kb/en/columnstore-storage-architecture/+image/datastorage-diagram" alt="datastorage-diagram" title="datastorage-diagram"></p>
-<h2 class="anchored_heading" id="extents">Extents</h2>
-<p>Each column in the table is stored independently in a logical measure of 8,388,608 rows called an Extent.  Extents for 1 byte datatypes consume 8MB; 2 byte datatypes require 16MB; 4 byte datatypes 32MB; 8 bytes 64MB; and variable size datatypes 64MB.  Once an Extent becomes full, ColumnStore creates a new Extent.  String columns greater than 8 characters store indexes in the main column file and actual values in separate dictionary files.</p>
-<p>Extents are physically stored as a collection of blocks.  Each block is 8KB.  Every database block is uniquely identified by its Logical Block Identifier, or LBID.</p>
-<p>The physical file ColumnStore writes to disk is called a segment file.  Once segment files reach the maximum number of extents, ColumnStore automatically creates a new segment file.  You can set the maximum number of extents in a segment file using <code>ExtentsPreSegmentFile</code> in the <code>ColumnStore.xml</code> file.  It should be set to a multiple of the number of DB Roots.  The default value is 2.</p>
-<p>Collectively, all of a column's segment files for one or more extents for a partition.  This is the horizontal partitioning in ColumnStore.  Partitions are stored in hierarchical structures organized by segments, (that is, folders).  ColumnStore meta-stores maps file structure and location to the DB schema as well as in the <code>FilesPerColumnPartition</code> in the <code>ColumnStore.xml</code> file.  The default value is 4.  Additionally, by default, ColumnStore compresses data.</p>
-<h3 class="anchored_heading" id="extent-maps">Extent Maps</h3>
-<p>ColumnStore uses a smart structure called an Extent Map to provide a logical range for partitioning and remove the need for indexing, manual table partitioning, materialized views, summary tables and other structures and objects that row-based databases must implement for query performance.</p>
-<p>Extents are logical blocks of space that exist within a physical segment file, and is anywhere between 8 and 64 MB in size.  Each Extent supports the same number of rows, with smaller data types using less disk space.  The Extent Map catalogs Extents to their corresponding blocks (LBID's), along with minimum and maximum values for the column's data within the Extent.</p>
-<p>The primary Performance Module has a master copy of the Extent Map.  On system startup, the file is read into memory, then physically copied to all other participating User and Performance modules for disaster recovery and failover.  Nodes keep the Extent Map in memory for quick access.  As Extents are modified, updates are broadcast to participating nodes.</p>
-<h3 class="anchored_heading" id="extent-elimination">Extent Elimination</h3>
+<h2 class="anchored_heading" id="overview">Overview</h2>
+<p>MariaDB Enterprise ColumnStore's storage architecture is designed to provide great performance for analytical queries.</p>
+<h3 class="anchored_heading" id="columnar-storage-engine">Columnar Storage Engine</h3>
+<p>MariaDB Enterprise ColumnStore is a columnar storage engine for <a href="/kb/en/mariadb-enterprise-server/">MariaDB Enterprise Server</a>. MariaDB Enterprise ColumnStore enables ES to perform analytical workloads, including online analytical processing (OLAP), data warehousing, decision support systems (DSS), and hybrid transactional-analytical processing (HTAP) workloads.</p>
+<p>Most traditional relational databases use row-based storage engines. In row-based storage engines, all columns for a table are stored contiguously. Row-based storage engines perform very well for transactional workloads, but are less performant for analytical workloads.</p>
+<p>Columnar storage engines store each column separately. Columnar storage engines perform very well for analytical workloads. Analytical workloads are characterized by ad hoc queries on very large data sets by relatively few users.</p>
+<p>MariaDB Enterprise ColumnStore automatically partitions each column into extents, which helps improve query performance without using indexes.</p>
+<h3 class="anchored_heading" id="olap-workloads">OLAP Workloads</h3>
+<p>MariaDB Enterprise ColumnStore enables MariaDB Enterprise Server to perform analytical or online analytical processing (OLAP) workloads.</p>
+<p>OLAP workloads are generally characterized by ad hoc queries on very large data sets. Some other typical characteristics are:</p>
+<ul start="1"><li>Each query typically reads a subset of columns in the table
+</li><li>Most activity typically consists of read-only queries that perform aggregations, window functions, and various calculations
+</li><li>Analytical applications typically require only a few concurrent queries
+</li><li>Analytical applications typically require scalability of large, complex queries
+</li><li>Analytical applications typically require efficient bulk loads of new data
+</li></ul>
+<p>OLAP workloads are typically required for:</p>
+<ul start="1"><li>Business intelligence (BI)
+</li><li>Health informatics
+</li><li>Historical data mining
+</li></ul>
+<p>Row-based storage engines have a disadvantage for OLAP workloads. Indexes are not usually very useful for OLAP workloads, because the large size of the data set and the ad hoc nature of the queries preclude the use of indexes to optimize queries.</p>
+<p>Columnar storage engines are much better suited for OLAP workloads. MariaDB Enterprise ColumnStore is a columnar storage engine that is designed for OLAP workloads:</p>
+<ul start="1"><li>When a query reads a subset of columns in the table, Enterprise ColumnStore is able to reduce I/O by reading those columns and ignoring all others, because each column is stored separately
+</li><li>When most activity consists of read-only queries that perform aggregations, window functions, and various calculations, Enterprise ColumnStore is able to efficiently execute those queries using extent elimination, distributed query execution, and massively parallel processing (MPP) techniques
+</li><li>When only a few concurrent queries are required, Enterprise ColumnStore is able to maximize the use of system resources by using multiple threads and multiple nodes to perform work for each query
+</li><li>When scalability of large, complex queries is required, Enterprise ColumnStore is able to achieve horizontal and vertical scalability using distributed query execution and massively parallel processing (MPP) techniques
+</li><li>When efficient bulk loads of new data is required, Enterprise ColumnStore is able to bulk load new data without affecting existing data using automatic partitioning with the extent map
+</li></ul>
+<h3 class="anchored_heading" id="oltp-workloads">OLTP Workloads</h3>
+<p>MariaDB Enterprise Server has had excellent performance for transactional or online transactional processing (OLTP) workloads since the beginning.</p>
+<p>OLTP workloads are generally characterized by a fixed set of queries using a relatively small data set. Some other typical characteristics are:</p>
+<ul start="1"><li>Each query typically reads and/or writes many columns in the table
+</li><li>Most activity typically consists of small transactions that only read and/or write a small number of rows
+</li><li>Transactional applications typically require many concurrent transactions
+</li><li>Transactional applications typically require a fast response time and low latency
+</li><li>Transactional applications typically require ACID properties to protect data
+</li></ul>
+<p>OLTP workloads are typically required for:</p>
+<ul start="1"><li>Financial transactions performed by financial institutions and e-commerce sites
+</li><li>Store inventory changes performed by brick-and-mortar stores and e-commerce sites
+</li><li>Account metadata changes performed by many sites that stores personal data
+</li></ul>
+<p>Row-based storage engines have several advantages for OLTP workloads:</p>
+<ul start="1"><li>When a query reads and/or writes many columns in the table, row-based storage engines can find all columns on a single page, so the I/O costs of the operation are low
+</li><li>When a transaction reads/writes a small number of rows, row-based storage engines can use an index to find the page for each row without a full table scan
+</li><li>When many concurrent transactions are operating, row-based storage engines can implement transactional isolation by storing multiple versions of changed rows
+</li><li>When a fast response time and low latency are required, row-based storage engines can use indexes to optimize the most common queries
+</li><li>When ACID properties are required, row-based storage engines can implement consistency and durability with fewer performance trade-offs, since each row's columns are stored contiguously
+</li></ul>
+<p><a href="/kb/en/storage-engines-overview-innodb-storage-engine/">InnoDB</a> is ES's default storage engine, and it is a highly performant row-based storage engine.</p>
+<h3 class="anchored_heading" id="hybrid-workloads">Hybrid Workloads</h3>
+<p>MariaDB Enterprise ColumnStore enables MariaDB Enterprise Server to function as a single-stack solution for <a href="/kb/en/deploy-htap-topology/">Hybrid transactional-analytical processing (HTAP)</a> workloads.</p>
+<p>Hybrid workloads are characterized by a mix of transactional and analytical queries. Hybrid workloads are also known as "Smart Transactions", "Augmented Transactions" "Translytical", or "Hybrid Operational-Analytical Processing (HOAP)".</p>
+<p>Hybrid workloads are typically required for applications that require real-time analytics that lead to immediate action:</p>
+<ul start="1"><li>Financial institutions use transactional queries to handle financial transactions and analytical queries to analyze the transactions for business intelligence
+</li><li>Insurance companies use transactional queries to accept/process claims and analytical queries to analyze those claims for business opportunities or risks
+</li><li>Health providers use transactional queries to track electronic health records (EHR) and analytical queries to analyze the EHRs to discover health trends or prevent adverse drug interactions
+</li></ul>
+<p>MariaDB Enterprise Server provides multiple components to perform hybrid workloads:</p>
+<ul start="1"><li>For analytical queries, the Enterprise ColumnStore storage engine can be used.
+</li><li>For transactional queries, row-based storage engines, such as InnoDB, can be used.
+</li><li>For queries that reference both analytical and transactional data, ES's cross-engine join functionality can be used to join Enterprise ColumnStore tables with InnoDB tables.
+</li><li><a href="/kb/en/maxscale/">MariaDB MaxScale</a> is a high-performance database proxy, which can dynamically route analytical queries to Enterprise ColumnStore and transactional queries to the transactional storage engine.
+</li></ul>
+<h2 class="anchored_heading" id="storage-options">Storage Options</h2>
+<p>MariaDB Enterprise ColumnStore supports multiple storage types:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Storage Type</th><th>Description</th></tr>
+<tr><td><a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#s3-compatible-object-storage">S3-Compatible Object Storage</a></td><td>• S3-compatible object storage is optional, but recommended <br> • Enterprise ColumnStore can use S3-compatible object storage to store data. <br>  •With multi-node Enterprise ColumnStore, the <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#storage-manager-directory">Storage Manager directory</a> should use <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#shared-local-storage">shared local storage</a> for high availability.</td></tr>
+<tr><td><a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#shared-local-storage">Shared Local Storage</a></td><td>• Required for multi-node Enterprise ColumnStore with high availability <br> • Enterprise ColumnStore can use shared local storage to store data and metadata. <br>  •If S3-compatible storage is used for data, the shared local storage will only be used for the <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#storage-manager-directory">Storage Manager directory</a>.</td></tr>
+<tr><td>Non-Shared Local Storage</td><td>• Appropriate for single-node Enterprise ColumnStore. <br> • Enterprise ColumnStore can use non-shared local storage to store data and metadata.</td></tr>
+</table>
+</div><h3 class="anchored_heading" id="deployment-with-s3-compatible-storage">Deployment with S3-Compatible Storage</h3>
+<p><img src="/kb/en/columnstore-storage-architecture/+image/entcolumnstoretopologys3-network-diagram" alt="EntColumnStoreTopologyS3-Network-Diagram" title="EntColumnStoreTopologyS3-Network-Diagram"></p>
+<h3 class="anchored_heading" id="deployment-with-shared-storage">Deployment with Shared Storage</h3>
+<p><img src="/kb/en/columnstore-storage-architecture/+image/entcolstoretopologysharedstoragenetworkdiagram" alt="EntColStoreTopologySharedStorageNetworkDiagram" title="EntColStoreTopologySharedStorageNetworkDiagram"></p>
+<h2 class="anchored_heading" id="s3-compatible-object-storage">S3-Compatible Object Storage</h2>
+<p>MariaDB Enterprise ColumnStore supports S3-compatible object storage.</p>
+<p>S3-compatible object storage is optional, but highly recommended. If S3-compatible object storage is used, Enterprise ColumnStore requires the <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#storage-manager-directory">Storage Manager directory</a> to use <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#shared-local-storage">Shared Local Storage</a> (such as NFS) for high availability.</p>
+<p>S3-compatible object storage is:</p>
+<ul start="1"><li><strong>Compatible</strong>: Many object storage services are compatible with the Amazon S3 API.
+</li><li><strong>Economical</strong>: S3-compatible object storage is often very low cost.
+</li><li><strong>Flexible</strong>: S3-compatible object storage is available for both cloud and on-premises deployments.
+</li><li><strong>Limitless</strong>: S3-compatible object storage is often virtually limitless.
+</li><li><strong>Resilient</strong>: S3-compatible object storage is often low maintenance and highly available, since many services use resilient cloud infrastructure.
+</li><li><strong>Scalable</strong>: S3-compatible object storage is often highly optimized for read and write scaling.
+</li><li><strong>Secure</strong>: S3-compatible object storage is often encrypted-at-rest.
+</li></ul>
+<p>Many S3-compatible object storage services exist. MariaDB Corporation cannot make guarantees about all S3-compatible object storage services, because different services provide different functionality.</p>
+<p>If you have any questions about using specific S3-compatible object storage with MariaDB Enterprise ColumnStore, contact us.</p>
+<h3 class="anchored_heading" id="s3-api">S3 API</h3>
+<p>MariaDB Enterprise ColumnStore can use any object store that is compatible with the Amazon S3 API.</p>
+<p>Many object storage services are compatible with the Amazon S3 API, and compatible object storage services are available for cloud deployments and on-premises deployments, so vendor lock-in is not a concern.</p>
+<h3 class="anchored_heading" id="storage-manager">Storage Manager</h3>
+<p>MariaDB Enterprise ColumnStore's Storage Manager enables remote S3-compatible object storage to be efficiently used. The Storage Manager uses a persistent local disk cache for read/write operations, so that network latency has minimal performance impact on Enterprise ColumnStore. In some cases, it will even perform better than local disk operations.</p>
+<p>Enterprise ColumnStore only uses the Storage Manager when S3-compatible storage is used for data.</p>
+<p>Storage Manager is configured using <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#configure-the-s3-storage-manager">storagemanager.cnf</a>.</p>
+<h3 class="anchored_heading" id="storage-manager-directory">Storage Manager Directory</h3>
+<p>MariaDB Enterprise ColumnStore's Storage Manager directory is at the following path by default:</p>
+<p><code>/var/lib/columnstore/storagemanager</code></p>
+<p>To enable high availability when S3-compatible object storage is used, the Storage Manager directory should use <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#shared-local-storage">Shared Local Storage</a> and be mounted on every ColumnStore node.</p>
+<h3 class="anchored_heading" id="configure-the-s3-storage-manager">Configure the S3 Storage Manager</h3>
+<p>When you want to use S3-compatible storage for Enterprise ColumnStore, you must configure Enterprise ColumnStore's S3 Storage Manager to use S3-compatible storage.</p>
+<p>To configure Enterprise ColumnStore to use S3-compatible storage, edit <code>/etc/columnstore/storagemanager.cnf</code>:</p>
+<pre class="fixed">[ObjectStorage]
+…
+service = S3
+…
+[S3]
+region = your_columnstore_bucket_region
+bucket = your_columnstore_bucket_name
+endpoint = your_s3_endpoint
+aws_access_key_id = your_s3_access_key_id
+aws_secret_access_key = your_s3_secret_key
+# iam_role_name = your_iam_role
+# sts_region = your_sts_region
+# sts_endpoint = your_sts_endpoint
+# ec2_iam_mode=enabled
+# port_number = your_port_number
+
+[Cache]
+cache_size = your_local_cache_size
+path = your_local_cache_path
+</pre><p>The S3-compatible object storage options are configured under [S3]:</p>
+<ul start="1"><li>The bucket option must be set to the name of the bucket.
+</li><li>The endpoint option must be set to the endpoint for the S3-compatible object storage.
+</li><li>The <code>aws_access_key_id</code> and <code>aws_secret_access_key</code> options must be set to the access key ID and secret access key for the S3-compatible object storage.
+</li><li>To use a specific IAM role, you must uncomment and set <code>iam_role_name, sts_region, and sts_endpoint</code>.
+</li><li>To use the IAM role assigned to an EC2 instance, you must uncomment <code>ec2_iam_mode=enabled</code>.
+</li><li>To use a non-default port number, you must set port_number to the desired port.
+</li></ul>
+<p>The local cache options are configured under [Cache]:</p>
+<ul start="1"><li>The <code>cache_size</code> option is set to 2 GB by default.
+</li><li>The path option is set to <code>/var/lib/columnstore/storagemanager/cache</code> by default.
+</li></ul>
+<p>Ensure that the specified path has sufficient storage space for the specified cache size.</p>
+<h3 class="anchored_heading" id="shared-local-storage">Shared Local Storage</h3>
+<p>MariaDB Enterprise ColumnStore can use shared local storage.</p>
+<p>Shared local storage is required for high availability. The specific <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#shared-local-storage">Shared Local Storage</a> requirements depend on whether Enterprise ColumnStore is configured to use <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#s3-compatible-object-storage">S3-compatible object storage</a>:</p>
+<p>When S3-compatible object storage is used, Enterprise ColumnStore requires the <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#storage-manager-directory">Storage Manager directory</a>  to use shared local storage for high availability.</p>
+<p>When S3-compatible object storage is not used, Enterprise ColumnStore requires the <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#db-root-directories">DB Root directories</a> to use shared local storage for high availability.</p>
+<p>The most common shared local storage options for on-premises and cloud deployments are:</p>
+<ul start="1"><li>NFS (Network File System)
+</li><li>GlusterFS
+</li></ul>
+<p>The most common shared local storage options for AWS (Amazon Web Services) deployments are:</p>
+<ul start="1"><li>EBS (Elastic Block Store) Multi-Attach
+</li><li>EFS (Elastic File System)
+</li></ul>
+<p>The most common shared local storage option for GCP (Google Cloud Platform) deployments is:</p>
+<ul start="1"><li>Filestore
+</li></ul>
+<h2 class="anchored_heading" id="shared-local-storage-options">Shared Local Storage Options</h2>
+<p>The most common options for shared local storage are:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Shared Local Storage</th><th>Description</th></tr>
+<tr><td>EBS (Elastic Block Store) Multi-Attach</td><td>• EBS is a high-performance block-storage service for AWS (Amazon Web Services). <br> • EBS Multi-Attach allows an EBS volume to be attached to multiple instances in AWS. Only clustered file systems, such as GFS2, are supported. <br> • For deployments in AWS, EBS Multi-Attach is a recommended option for the <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#storage-manager-directory">Storage Manager directory</a> , and <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#s3-compatible-object-storage">Amazon S3 storage</a> is the recommended option for data.</td></tr>
+<tr><td>EFS (Elastic File System)</td><td>• EFS is a scalable, elastic, cloud-native NFS file system for AWS (Amazon Web Services). <br> • For deployments in AWS, EFS is a recommended option for the <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#storage-manager-directory">Storage Manager directory</a> , and Amazon S3 storage is the recommended option for data.</td></tr>
+<tr><td>Filestore</td><td>• Filestore is high-performance, fully managed storage for GCP (Google Cloud Platform). <br> • For deployments in GCP, Filestore is the recommended option for the <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#storage-manager-directory">Storage Manager directory</a>, and <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#s3-compatible-object-storage">Google Object Storage (S3-compatible)</a> is the recommended option for data.</td></tr>
+<tr><td>NFS (Network File System)</td><td>• NFS is a distributed file system. <br> • If NFS is used, the storage should be mounted with the sync option to ensure that each node flushes its changes immediately. <br> • For on-premises deployments, NFS is the recommended option for the <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#storage-manager-directory">Storage Manager directory</a> , and any <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#s3-compatible-object-storage">S3-compatible storage</a> is the recommended option for data.</td></tr>
+<tr><td>GlusterFS</td><td>• GlusterFS is a distributed file system. <br> • GlusterFS supports replication and failover.</td></tr>
+</table>
+</div><h2 class="anchored_heading" id="directories-requiring-shared-local-storage-for-ha">Directories Requiring Shared Local Storage for HA</h2>
+<p>Multi-node MariaDB Enterprise ColumnStore requires some directories to use shared local storage for high availability. The specific requirements depend on if MariaDB Enterprise ColumnStore is configured to use <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#s3-compatible-object-storage">S3-compatible object storage</a>:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Using S3-Compatible Object Storage?</th><th>Directories to use Shared Local Storage</th></tr>
+<tr><td>Yes</td><td><a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#storage-manager-directory">Storage Manager directory</a></td></tr>
+<tr><td>No</td><td><a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#db-root-directories">DB Root directories</a></td></tr>
+</table>
+</div><h2 class="anchored_heading" id="recommended-storage-options">Recommended Storage Options</h2>
+<p>For best results, MariaDB Corporation would recommend the following storage options:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Environment</th><th>Object Storage For Data</th><th>Shared Local Storage For Storage Manager</th></tr>
+<tr><td>AWS</td><td>Amazon S3 storage</td><td>EBS Multi-Attach or EFS</td></tr>
+<tr><td>GCP</td><td>Google Object Storage (S3-compatible)</td><td>Filestore</td></tr>
+<tr><td>On-premises</td><td>Any S3-compatible object storage</td><td>NFS</td></tr>
+</table>
+</div><h2 class="anchored_heading" id="storage-format">Storage Format</h2>
+<p>MariaDB Enterprise ColumnStore's storage format is optimized for analytical queries.</p>
+<h3 class="anchored_heading" id="db-root-directories">DB Root Directories</h3>
+<p>MariaDB Enterprise ColumnStore stores data in DB Root directories when S3-compatible object storage is not configured.</p>
+<p>In multi-node Enterprise ColumnStore, each node has its own DB Root directory.</p>
+<p>The DB Root directories are at the following path by default:</p>
+<ul start="1"><li><code>/var/lib/columnstore/dataN</code>
+</li></ul>
+<p>The N in dataN represents a range of integers that starts at 1 and stops at the number of nodes in the deployment. For example, with a 3-node Enterprise ColumnStore deployment, this would refer to the following directories:</p>
+<ul start="1"><li><code>/var/lib/columnstore/data1</code>
+</li><li><code>/var/lib/columnstore/data2</code>
+</li><li><code>/var/lib/columnstore/data3</code>
+</li></ul>
+<p>To enable high availability for the DB Root directories, each directory should be mounted on every ColumnStore node using <a href="/kb/en/mariadb-enterprise-columnstore-storage-architecture/#shared-local-storage">Shared Local Storage</a>.</p>
+<h3 class="anchored_heading" id="extents">Extents</h3>
+<p><img src="/kb/en/columnstore-storage-architecture/+image/ecolumnstorephysicaldataorganizationcolumnextents" alt="EColumnStorePhysicalDataOrganizationColumnExtents" title="EColumnStorePhysicalDataOrganizationColumnExtents"></p>
+<p>Each column in a table is stored in units called extents.</p>
+<p>By default, each extent contains the column values for 8 million rows. The physical size of each extent can range from 8 MB to 64 MB. When an extent reaches the maximum number of column values, Enterprise ColumnStore creates a new extent.</p>
+<p>Each extent is stored in 8 KB blocks, and each block has a logical block identifier (LBID).</p>
+<p>If a string column is longer than 8 characters, the value is stored in a separate dictionary file, and a pointer to the value is stored in the extent.</p>
+<h3 class="anchored_heading" id="segment-files">Segment Files</h3>
+<p><img src="/kb/en/columnstore-storage-architecture/+image/segmentfiles" alt="SegmentFiles" title="SegmentFiles"></p>
+<p>A segment file is used to store Enterprise ColumnStore data within a DB Root directory.</p>
+<p>A segment file always contains two extents. When a segment file reaches its maximum size, Enterprise ColumnStore creates a new segment file.</p>
+<p>The relevant configuration options are:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Option</th><th>Description</th></tr>
+<tr><td><code>ExtentsPerSegmentFile</code></td><td>• Configures the maximum number of extents that can be stored in each segment file. <br> • Default value is 2.</td></tr>
+</table>
+</div><p>For example, to configure Enterprise ColumnStore to store more extents in each segment file using the mcsSetConfig utility:</p>
+<pre class="fixed">$ mcsSetConfig ExtentMap ExtentsPerSegmentFile 4
+</pre><h3 class="anchored_heading" id="column-partitions">Column Partitions</h3>
+<p><img src="/kb/en/columnstore-storage-architecture/+image/columnpartitions" alt="ColumnPartitions" title="ColumnPartitions"></p>
+<p>Enterprise ColumnStore automatically groups a column's segment files into column partitions.</p>
+<p>On disk, each column partition is represented by a directory in the DB Root. The directory contains the segment files for the column partition.</p>
+<p>By default, a column partition can contain four segment files, but you can configure Enterprise ColumnStore to store more segment files in each column partition. When a column partition reaches the maximum number of segment files, Enterprise ColumnStore creates a new column partition.</p>
+<p>The relevant configuration options are:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Option</th><th>Description</th></tr>
+<tr><td><code>FilesPerColumnPartition</code></td><td>• Configures the maximum number of segment files that can be stored in each column partition. <br> • Default value is 4.</td></tr>
+</table>
+</div><p>For example, to configure Enterprise ColumnStore to store more segment files in each column partition using the mcsSetConfig utility:</p>
+<pre class="fixed">$ mcsSetConfig ExtentMap FilesPerColumnPartition 8
+</pre><h3 class="anchored_heading" id="extent-map">Extent Map</h3>
+<p><img src="/kb/en/columnstore-storage-architecture/+image/dataorganizationextentmap" alt="DataOrganizationExtentMap" title="DataOrganizationExtentMap"></p>
+<p>Enterprise ColumnStore maintains an Extent Map to determine which values are located in each extent.</p>
+<p>The Extent Map identifies each extent using its logical block identifier (LBID) values, and it maintains the minimum and maximum values within each extent.</p>
+<p>The Extent Map is used to implement a performance optimization called <a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/#extent-elimination">Extent Elimination</a>.</p>
+<p>The primary node has a master copy of the Extent Map. When Enterprise ColumnStore is started, the primary node copies the Extent Map to the replica nodes.</p>
+<p>While Enterprise ColumnStore is running, each node maintains a copy of the Extent Map in its main memory, so that it can be accessed quickly without additional I/O.</p>
+<p>If the Extent Map gets corrupted, the mcsRebuildEM utility can rebuild the Extent Map from the contents of the database file system. The mcsRebuildEM utility is available starting in MariaDB Enterprise ColumnStore 6.2.2.</p>
+<h3 class="anchored_heading" id="compression">Compression</h3>
+<p>Enterprise ColumnStore automatically compresses all data on disk using either snappy or LZ4 compression. See the columnstore_compression_type system variable for how to select the desired compression type.</p>
+<p>Since Enterprise ColumnStore stores a single column's data in each segment file, the data in each segment file tends to be very similar. The similar data usually allows for excellent compressibility. However, the specific data compression ratio will depend on a lot of factors, such as the randomness of the data and the number of distinct values.</p>
+<p>Enterprise ColumnStore's compression strategy is tuned to optimize the performance of I/O-bound queries, because the decompression rate is optimized to maximize read performance.</p>
+<h3 class="anchored_heading" id="version-buffer">Version Buffer</h3>
+<p>Enterprise ColumnStore uses the version buffer to store blocks that are being modified.</p>
+<p>The version buffer is used for multiple tasks:</p>
+<ul start="1"><li>It is used to rollback a transaction.
+</li><li>It is used for multi-version concurrency control (MVCC). With MVCC, Enterprise ColumnStore can implement read snapshots, which allows a statement to have a consistent view of the database, even if some of the underlying rows have changed. The snapshot for a given statement is identified by the system change number (SCN).
+</li></ul>
+<p>The version buffer is split between data structures that are in-memory and on-disk.</p>
+<p>The in-memory data structures are hash tables that keep track of in-flight transaction. The hash tables store the LBIDs for each block that is being modified by a transaction. The in-memory hash tables start at 4 MB, and they grow as-needed. The size of the hash tables increases as the number of modified blocks increases.</p>
+<p>An on-disk version buffer file is stored in each DB Root. By default, the on-disk version buffer file is 1 GB, but you can configure Enterprise ColumnStore to use a different file size. The relevant configuration options are:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Option</th><th>Description</th></tr>
+<tr><td><code>VersionBufferFileSize</code></td><td>• Configures the size of the on-disk version buffer in each DB Root. <br> • Default value is 1 GB.</td></tr>
+</table>
+</div><p>For example, to configure Enterprise ColumnStore to use a larger on-disk version buffer file using the mcsSetConfig utility:</p>
+<pre class="fixed">$ mcsSetConfig VersionBuffer VersionBufferFileSize 2GB
+</pre><h3 class="anchored_heading" id="extent-elimination">Extent Elimination</h3>
 <p>Using the Extent Map, ColumnStore can perform logical range partitioning and only retrieve the blocks needed to satisfy the query.  This is done through Extent Elimination, the process of eliminating Extents from the results that don't meet the given join and filter conditions of the query, which reduces the overall I/O operations.</p>
 <p><img src="/kb/en/columnstore-storage-architecture/+image/extent-elimination" alt="extent-elimination" title="extent-elimination"></p>
 <p>In Extent Elimination, ColumnStore scans the columns in join and filter conditions.  It then extracts the logical horizontal partitioning information of each extent along with the minimum and maximum values for the column to further eliminate Extents.  To eliminate an Extent when a column scan involves a filter, that filter is compared to the minimum and maximum values stored in each extent for the column.  If the filter value is outside the Extents minimum and maximum value range, ColumnStore eliminates the Extent.</p>
 <p>This behavior is automatic and well suited for series, ordered, patterned and time-based data, where the data is loaded frequently and often referenced by time.  Any column with clustered values is a good candidate for Extent Elimination.</p>
-<h2 class="anchored_heading" id="compression-with-real-time-decompression">Compression with Real-time Decompression</h2>
-<p>In columnar storage, similar data is stored within each column file, which allows for excellent compressibility.  While the actual space savings depends on the randomness of the data and the number of distinct values that exists, many data-sets show compression rates saving between 65% and 95% space.</p>
-<p>ColumnStore optimizes its compression strategy for read performance from disk.  It is tuned to accelerate the decompression rate, maximizing the performance benefits when reading from disk.  This allows systems that are I/O bound to improve performance on disk reads.</p>
-<p>By default, compression is turned on in ColumnStore.  In addition, you can enable or disable it at the table-level or column-level, or control it at the session-level by setting the <code><a href="/kb/en/columnstore-system-variables/#compression-mode">infinidb_compression_type</a></code> system variable.  When enabled, ColumnStore uses snappy compression.</p>
-<h2 class="anchored_heading" id="version-buffer">Version Buffer</h2>
-<p>MariaDB ColumnStore uses the Version Buffer to store disk blocks that are being modified, manage transaction rollbacks, and service the MVCC (multi-version concurrency control) or "snapshot read" function of the database.  This allows it to offer a query consistent view of the database.  </p>
-<p>All statements in ColumnStore run at a particular version (or, snapshot) of the database, which the system refers to as the System Change Number, (SCN).  </p>
-<div class="cstm-style greenbox"><p><strong>Note:</strong> Although it is called a "buffer", the Version Buffer uses both memory and disk structures.</p>
-</div><h3 class="anchored_heading" id="how-the-version-buffer-works">How the Version Buffer Works</h3>
-<p>The Version Buffer uses in-memory hash tables to supply memory access to in-flight transaction information.  It starts at 4MB with the memory region growing from that amount to handle blocks that are being modified by a transaction.  Each entry in the hash table is a 40-byte reference to the 8KB block being modified. </p>
-<p>The limiting factor of the Version Buffer is not the number of rows being updated, but rather the number of disk blocks.  You can increase the size, but use caution, since increasing the number of disk blocks means that <code><a href="/kb/en/update/">UPDATE</a></code> and <code><a href="/kb/en/delete/">DELETE</a></code> statements that run for long periods of time can take even longer in the event that you need to roll back the changes.</p>
-<h2 class="anchored_heading" id="transaction-log">Transaction Log</h2>
-<p>MariaDB ColumnStore supports logging committed transaction to the server's <a href="/kb/en/binlog/">Binary Log</a>.</p>
 
     </div>
 
