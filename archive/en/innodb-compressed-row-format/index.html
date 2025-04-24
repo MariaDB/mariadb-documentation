@@ -284,7 +284,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-04-21 08:18">1 day, 15 hours ago</span></dd>
+<span class="datetime" title="2025-04-23 08:28">15 hours, 35 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -460,7 +460,22 @@
 <h3>Contents</h3>
  <ol class="toc">
 
-    <li class=""><a href="#using-the-compressed-row-format" title="Using the COMPRESSED Row Format">Using the COMPRESSED Row Format</a></li>
+    <li class=""><a href="#supported-block-sizes" title="Supported Block Sizes">Supported Block Sizes</a></li>
+
+    <li class=""><a href="#supported-index-prefix-limits" title="Supported Index Prefix Limits">Supported Index Prefix Limits</a></li>
+
+    <li class=""><a href="#using-the-compressed-row-format" title="Using the COMPRESSED Row Format">Using the COMPRESSED Row Format</a>    <ol class="toc">
+
+        <li class=""><a href="#create-an-innodb-table-with-the-compressed-row-format-using-row_format" title="Create an InnoDB Table with the Compressed Row Format using ROW_FORMAT">Create an InnoDB Table with the Compressed Row Format using ROW_FORMAT</a>        <ol class="toc">
+
+            <li class=""><a href="#step-by-step-procedure" title="Step-by-Step Procedure">Step-by-Step Procedure</a>        </ol>
+</li>
+
+        <li class=""><a href="#create-an-innodb-table-with-the-compressed-row-format-using-key_block_size" title="Create an InnoDB Table with the Compressed Row Format using KEY_BLOCK_SIZE">Create an InnoDB Table with the Compressed Row Format using KEY_BLOCK_SIZE</a>        <ol class="toc">
+
+            <li class=""><a href="#step-by-step-procedure" title="Step-by-Step Procedure">Step-by-Step Procedure</a>        </ol>
+    </ol>
+</li>
 
     <li class=""><a href="#compression-with-the-compressed-row-format" title="Compression with the COMPRESSED Row Format">Compression with the COMPRESSED Row Format</a></li>
 
@@ -478,14 +493,27 @@
 <div class="cstm-style bluebox"><p>An alternative (and usually superior) way to compress InnoDB tables is by using <a href="/kb/en/innodb-page-compression/">InnoDB Page Compression</a>. See <a href="/kb/en/innodb-page-compression/#comparison-with-the-compressed-row-format">Comparison with the COMPRESSED Row Format</a>.</p>
 </div><p>The <code>COMPRESSED</code> row format is similar to the <code>COMPACT</code> row format, but tables using the <code>COMPRESSED</code> row format can store even more data on overflow pages than tables using the <code>COMPACT</code> row format. This results in more efficient data storage than tables using the <code>COMPACT</code> row format, especially for tables containing columns using the <a href="/kb/en/varbinary/">VARBINARY</a>, <a href="/kb/en/varchar/">VARCHAR</a>, <a href="/kb/en/blob/">BLOB</a> and <a href="/kb/en/text/">TEXT</a> data types.</p>
 <p>The <code>COMPRESSED</code> row format also supports compression of all data and index pages.</p>
-<h2 class="anchored_heading" id="using-the-compressed-row-format">Using the <code>COMPRESSED</code> Row Format</h2>
-<p>An InnoDB table that uses the <code>COMPRESSED</code> row format can be created by setting the <a href="/kb/en/create-table/#row_format">ROW_FORMAT</a> table option to <code>COMPRESSED</code> and by setting the <a href="/kb/en/create-table/#key_block_size">KEY_BLOCK_SIZE</a> table option to one of the following values in a <a href="/kb/en/create-table/">CREATE TABLE</a> or <a href="/kb/en/alter-table/">ALTER TABLE</a> statement, where the units are in <code>KB</code>:</p>
-<ul start="1"><li><code>1</code>
-</li><li><code>2</code>
-</li><li><code>4</code>
-</li><li><code>8</code>
-</li><li><code>16</code>
-</li></ul>
+<h2 class="anchored_heading" id="supported-block-sizes">Supported Block Sizes</h2>
+<p>The Compressed row format supports the following block sizes:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Block Size</th><th>KEY_BLOCK_SIZE Value</th></tr>
+<tr><td>1 KB</td><td>1</td></tr>
+<tr><td>2 KB</td><td>2</td></tr>
+<tr><td>4 KB</td><td>4</td></tr>
+<tr><td>8 KB</td><td>8</td></tr>
+<tr><td>16 KB</td><td>16</td></tr>
+</table>
+</div><p>If the <code>KEY_BLOCK_SIZE</code> table option is not specified, the block size defaults to half of <a href="/kb/en/innodb-status-variables/#innodb_page_size">innodb_page_size</a>. With the default 16 KB page size, the block size defaults to 8 KB.</p>
+<p>For compression to be effective, the chosen block size should be smaller than the servers value of the <a href="/kb/en/innodb-status-variables/#innodb_page_size">innodb_page_size</a> system variable.</p>
+<h2 class="anchored_heading" id="supported-index-prefix-limits">Supported Index Prefix Limits</h2>
+<p>The limit for indexing column values depends on the <a href="/kb/en/innodb-status-variables/#innodb_page_size">innodb_page_size</a> value:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Page Size</th><th>Index Prefix Limit</th></tr>
+<tr><td>16k</td><td>3072 bytes</td></tr>
+<tr><td>8k</td><td>1536 bytes</td></tr>
+<tr><td>4k</td><td>768 bytes</td></tr>
+</table>
+</div><h2 class="anchored_heading" id="using-the-compressed-row-format">Using the <code>COMPRESSED</code> Row Format</h2>
+<div class="cstm-style redbox"><p>The Compressed row format does not efficiently use the InnoDB buffer pool, so it is not the recommended way to achieve InnoDB table compression. For more information about how to compress InnoDB tables, see <a href="configure-innodb-page-compression">Configure InnoDB Page Compression</a>.</p>
+</div><p>An InnoDB table that uses the <code>COMPRESSED</code> row format can be created by setting the <a href="/kb/en/create-table/#row_format">ROW_FORMAT</a> table option to <code>COMPRESSED</code> and by setting the <a href="/kb/en/create-table/#key_block_size">KEY_BLOCK_SIZE</a> table option to one of the following values in a <a href="/kb/en/create-table/">CREATE TABLE</a> or <a href="/kb/en/alter-table/">ALTER TABLE</a> statement, where the units are in <code>KB</code>.</p>
 <p><code>16k</code> is the default value of the <a href="/kb/en/innodb-system-variables/#innodb_page_size">innodb_page_size</a> system variable, so using <code>16</code> will usually result in minimal compression unless one of the following is true:</p>
 <ul start="1"><li>The table has many columns that can be stored in overflow pages, such as columns that use the <a href="/kb/en/varbinary/">VARBINARY</a>, <a href="/kb/en/varchar/">VARCHAR</a>, <a href="/kb/en/blob/">BLOB</a> and <a href="/kb/en/text/">TEXT</a> data types.
 </li><li>The server is using a non-default <a href="/kb/en/innodb-system-variables/#innodb_page_size">innodb_page_size</a> value that is greater than <code>16k</code>.
@@ -517,6 +545,88 @@
    <span class="n">id</span> <span class="nb">int</span><span class="p">,</span>
    <span class="n">str</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
 <span class="p">)</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">InnoDB</span> <span class="n">ROW_FORMAT</span><span class="o">=</span><span class="n">COMPRESSED</span><span class="p">;</span>
+</pre><h3 class="anchored_heading" id="create-an-innodb-table-with-the-compressed-row-format-using-row_format">Create an InnoDB Table with the Compressed Row Format using ROW_FORMAT</h3>
+<p>The default block size for tables that use the Compressed row format is half of <a href="/kb/en/innodb-status-variables/#innodb_page_size">innodb_page_size</a>. With the default 16 KB page size, the block size defaults to 8 KB. A compressed table with the default block size can be created by setting the ROW_FORMAT table option to COMPRESSED:</p>
+<pre class="fixed">CREATE TABLE hq_sales.invoices (
+   invoice_id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
+   branch_id INT NOT NULL,
+   customer_id INT,
+   invoice_date DATETIME(6),
+   invoice_total DECIMAL(13, 2),
+   payment_method ENUM('NONE', 'CASH', 'WIRE_TRANSFER', 'CREDIT_CARD', 'GIFT_CARD'),
+   PRIMARY KEY(invoice_id)
+) ROW_FORMAT = Compressed;
+</pre><h4 class="anchored_heading" id="step-by-step-procedure">Step-by-Step Procedure</h4>
+<p>1. Connect to the server using <a href="/kb/en/mariadb-client/">MariaDB Client</a>:</p>
+<pre class="fixed">$ mariadb --user=root
+</pre><p>2. Confirm that the default storage engine is InnoDB by checking the <a href="/kb/en/server-system-variables/#default_storage_engine">default_storage_engine</a> system variable using the <a href="/kb/en/show-variables/">SHOW SESSION VARIABLES</a> statement:</p>
+<pre class="fixed">SHOW SESSION VARIABLES
+   LIKE 'default_storage_engine';
+</pre><pre class="fixed">+------------------------+--------+
+| Variable_name          | Value  |
++------------------------+--------+
+| default_storage_engine | InnoDB |
++------------------------+--------+
+</pre><p>3. Create the table using the <a href="/kb/en/create-table/">CREATE TABLE</a> statement, and specify the Compressed row format using the <code>ROW_FORMAT</code> table option:</p>
+<pre class="fixed">CREATE TABLE hq_sales.invoices (
+   invoice_id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
+   branch_id INT NOT NULL,
+   customer_id INT,
+   invoice_date DATETIME(6),
+   invoice_total DECIMAL(13, 2),
+   payment_method ENUM('NONE', 'CASH', 'WIRE_TRANSFER', 'CREDIT_CARD', 'GIFT_CARD'),
+   PRIMARY KEY(invoice_id)
+) ROW_FORMAT = Compressed;
+</pre><p>4. Confirm that the table uses the Compressed row format with an 8 KB block size by querying the <a href="/kb/en/information-schema-innodb_sys_tables-table/">information_schema.INNODB_SYS_TABLES</a> table:</p>
+<pre class="fixed">SELECT NAME, ROW_FORMAT, ZIP_PAGE_SIZE
+FROM information_schema.INNODB_SYS_TABLES
+WHERE NAME='hq_sales/invoices';
+</pre><pre class="fixed">+-------------------+------------+---------------+
+| NAME              | ROW_FORMAT | ZIP_PAGE_SIZE |
++-------------------+------------+---------------+
+| hq_sales/invoices | Compressed |          8192 |
++-------------------+------------+---------------+
+</pre><h3 class="anchored_heading" id="create-an-innodb-table-with-the-compressed-row-format-using-key_block_size">Create an InnoDB Table with the Compressed Row Format using KEY_BLOCK_SIZE</h3>
+<p>The default block size for tables that use the Compressed row format is half of <a href="/kb/en/innodb-status-variables/#innodb_page_size">innodb_page_size</a>. With the default 16 KB page size, the block size defaults to 8 KB. A compressed table with a non-default block size can be created by setting the <code>KEY_BLOCK_SIZE</code> table option to the desired block size.</p>
+<pre class="fixed">CREATE TABLE hq_sales.invoices (
+   invoice_id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
+   branch_id INT NOT NULL,
+   customer_id INT,
+   invoice_date DATETIME(6),
+   invoice_total DECIMAL(13, 2),
+   payment_method ENUM('NONE', 'CASH', 'WIRE_TRANSFER', 'CREDIT_CARD', 'GIFT_CARD'),
+   PRIMARY KEY(invoice_id)
+) KEY_BLOCK_SIZE = 4;
+</pre><h4 class="anchored_heading" id="step-by-step-procedure">Step-by-Step Procedure</h4>
+<p>1. Connect to the server using <a href="/kb/en/mariadb-client/">MariaDB Client</a>:</p>
+<pre class="fixed">$ mariadb --user=root
+</pre><p>2. Confirm that the default storage engine is InnoDB by checking the <a href="/kb/en/server-system-variables/#default_storage_engine">default_storage_engine</a> system variable using the <a href="/kb/en/show-variables/">SHOW SESSION VARIABLES</a> statement:</p>
+<pre class="fixed">SHOW SESSION VARIABLES
+   LIKE 'default_storage_engine';
+</pre><pre class="fixed">+------------------------+--------+
+| Variable_name          | Value  |
++------------------------+--------+
+| default_storage_engine | InnoDB |
++------------------------+--------+
+</pre><p>3. Create the table using the CREATE TABLE statement, and specify the block size using the <code>KEY_BLOCK_SIZE</code> table option, which implies the Compressed row format:</p>
+<pre class="fixed">CREATE TABLE hq_sales.invoices (
+   invoice_id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
+   branch_id INT NOT NULL,
+   customer_id INT,
+   invoice_date DATETIME(6),
+   invoice_total DECIMAL(13, 2),
+   payment_method ENUM('NONE', 'CASH', 'WIRE_TRANSFER', 'CREDIT_CARD', 'GIFT_CARD'),
+   PRIMARY KEY(invoice_id)
+) KEY_BLOCK_SIZE = 4;
+</pre><p>4. Confirm that the table uses the Compressed row format with an 8 KB block size by querying the <a href="/kb/en/information-schema-innodb_sys_tables-table/">information_schema.INNODB_SYS_TABLES</a> table:</p>
+<pre class="fixed">SELECT NAME, ROW_FORMAT, ZIP_PAGE_SIZE
+FROM information_schema.INNODB_SYS_TABLES
+WHERE NAME='hq_sales/invoices';
+</pre><pre class="fixed">+-------------------+------------+---------------+
+| NAME              | ROW_FORMAT | ZIP_PAGE_SIZE |
++-------------------+------------+---------------+
+| hq_sales/invoices | Compressed |          4096 |
++-------------------+------------+---------------+
 </pre><h2 class="anchored_heading" id="compression-with-the-compressed-row-format">Compression with the <code>COMPRESSED</code> Row Format</h2>
 <p>The <code>COMPRESSED</code> row format supports compression of all data and index pages.</p>
 <p>To avoid compressing and uncompressing pages too many times, InnoDB tries to keep both compressed and uncompressed pages in the <a href="/kb/en/xtradbinnodb-memory-buffer/">buffer pool</a> when there is enough room. This results in a bigger cache. When there is not enough room, an adaptive LRU algorithm is used to decide whether compressed or uncompressed pages should be evicted from the buffer: for CPU-bound workloads, the compressed pages are evicted first; for I/O-bound workloads, the uncompressed pages are evicted first. Of course, when necessary, both the compressed and uncompressed version of the same data can be evicted from the buffer.</p>
