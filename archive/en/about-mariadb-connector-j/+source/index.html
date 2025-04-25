@@ -316,7 +316,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/about-mariadb-connector-j/+r/150277/">150277</a></dd>
+            <dd><a href="/kb/en/about-mariadb-connector-j/+r/150884/">150884</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-2">
@@ -325,7 +325,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-04-03 13:25">2025-04-03 13:25</span></dd>
+<span class="datetime" title="2025-04-24 13:25">2025-04-24 13:25</span></dd>
         </dl>
     </div>
     
@@ -487,7 +487,7 @@ jdbc:mariadb:[replication:|loadbalance:|sequential:|load-balance-read:]//&lt;hos
 
  HostDescription:
 &lt;&lt;code&gt;&gt;
-&lt;host&gt;[:&lt;portnumber&gt;]  or address=(host=&lt;host&gt;|localSocket=&lt;socket&gt;|pipe=&lt;namedpipe&gt;)[(port=&lt;portnumber&gt;)][(type=(master|slave))][(sslMode=disable|trust|verify-ca|verify-full)]
+&lt;host&gt;[:&lt;portnumber&gt;]  or address=(host=&lt;host&gt;|localSocket=&lt;socket&gt;|pipe=&lt;namedpipe&gt;)[(port=&lt;portnumber&gt;)][(type=(master|replica|slave))][(sslMode=disable|trust|verify-ca|verify-full)]
 &lt;&lt;/code&gt;&gt;
 
 Some notes about this:
@@ -495,7 +495,7 @@ Some notes about this:
 * If the host is an IPv6 address, then it must be inside square brackets.
 * The default port is ##3306##.
 * The default type is ##master##.
-* If the failover and load-balancing mode is set to ##replication##, then the connector assumes that the first host is master, and the others are slaves by default, if their types are not explicitly mentioned.
+* If the failover and load-balancing mode is set to ##replication##, then the connector assumes that the first host is master, and the others are replicas by default, if their types are not explicitly mentioned.
 * //aurora// failover prefix is available on 2.x version. 
 *  A detailed host description option supersedes a global option description
 * sslMode, pipe and localSocket are available since 3.4.1 version
@@ -517,32 +517,32 @@ Failover and Load-Balancing Modes were introduced in [[mariadb-connector-j-120-r
 
 
 ==== ##sequential##
-* **Description:** This mode supports connection failover in a multi-master environment, such as MariaDB Galera Cluster. This mode does **not** support load-balancing reads on slaves. The connector will try to connect to hosts in the order in which they were declared in the connection URL, so the first available host is used for all queries.\\For example, let&#39;s say that the connection URL is the following: ##jdbc:mariadb:sequential:host1,host2,host3/testdb##\\When the connector tries to connect, it will always try host1 first. If that host is not available, then it will try host2. etc. When a host fails, the connector will try to reconnect to hosts in the same order.
+* **Description:** This mode supports connection failover in a multi-master environment, such as MariaDB Galera Cluster. This mode does **not** support load-balancing reads on replicas. The connector will try to connect to hosts in the order in which they were declared in the connection URL, so the first available host is used for all queries.\\For example, let&#39;s say that the connection URL is the following: ##jdbc:mariadb:sequential:host1,host2,host3/testdb##\\When the connector tries to connect, it will always try host1 first. If that host is not available, then it will try host2. etc. When a host fails, the connector will try to reconnect to hosts in the same order.
 * **Introduced:** 1.3.0
 
 ----
 
 ==== ##loadbalance##
-* **Description:** This mode supports connection load-balancing in a multi-master environment, such as MariaDB Galera Cluster. This mode does **not** support load-balancing reads on slaves. The connector performs load-balancing for all queries by randomly picking a host from the connection URL for each connection, so queries will be load-balanced as a result of the connections getting randomly distributed across all hosts. \\Before 2.4.2, this option was named `failover` - alias still exist for compatibility -
+* **Description:** This mode supports connection load-balancing in a multi-master environment, such as MariaDB Galera Cluster. This mode does **not** support load-balancing reads on replicas. The connector performs load-balancing for all queries by randomly picking a host from the connection URL for each connection, so queries will be load-balanced as a result of the connections getting randomly distributed across all hosts. \\Before 2.4.2, this option was named `failover` - alias still exist for compatibility -
 * **Introduced:** 1.2.0
 
 ----
 
 ==== ##replication##
-* **Description:** This mode supports connection failover in a master-slave environment, such as a MariaDB Replication cluster. The mode supports environments with one or more masters. This mode does support load-balancing reads on slaves if the connection is set to read-only before executing the read. The connector performs load-balancing by randomly picking a slave from the connection URL to execute read queries for a connection
+* **Description:** This mode supports connection failover in a primary-replica environment, such as a MariaDB Replication cluster. The mode supports environments with one or more masters. This mode does support load-balancing reads on replicas if the connection is set to read-only before executing the read. The connector performs load-balancing by randomly picking a replica from the connection URL to execute read queries for a connection
 * **Introduced:** 1.2.0
 
 ----
 
 ==== ##load-balance-read##
-* **Description:** When running a multi-master cluster (i.e. Galera), writing to more than one node can lead to optimistic locking errors (&#34;deadlocks&#34;). Writing concurrently to multiple nodes also doesn&#39;t bring a whole lot of performance, due to having to (synchronously) replicate to all nodes anyway. \\\\This mode supports connection failover in a multi-master environment, such as MariaDB Galera Cluster. This mode does support load-balancing reads on slaves. The connector will try to connect to primary hosts in the order in which they were declared in the connection URL, so the first available host is used for all queries.\\For example, let&#39;s say that the connection URL is the following: ##jdbc:mariadb:load-balance-read://primary1,primary2,address=(host=replica1)(type=replica),address=(host=replica2)(type=replica)/DB##\\When the connector tries to connect, it will always try primary1 first. If that host is not available, then it will try primary2. etc. When a primary host fails, the connector will try to reconnect to hosts in the same order.\\\\For replica hosts, the connector performs load-balancing for all queries by randomly picking a replica host from the connection URL for each connection, so queries will be load-balanced as a result of the connections getting randomly distributed across all replica hosts.
+* **Description:** When running a multi-master cluster (i.e. Galera), writing to more than one node can lead to optimistic locking errors (&#34;deadlocks&#34;). Writing concurrently to multiple nodes also doesn&#39;t bring a whole lot of performance, due to having to (synchronously) replicate to all nodes anyway. \\\\This mode supports connection failover in a multi-master environment, such as MariaDB Galera Cluster. This mode does support load-balancing reads on replicas. The connector will try to connect to primary hosts in the order in which they were declared in the connection URL, so the first available host is used for all queries.\\For example, let&#39;s say that the connection URL is the following: ##jdbc:mariadb:load-balance-read://primary1,primary2,address=(host=replica1)(type=replica),address=(host=replica2)(type=replica)/DB##\\When the connector tries to connect, it will always try primary1 first. If that host is not available, then it will try primary2. etc. When a primary host fails, the connector will try to reconnect to hosts in the same order.\\\\For replica hosts, the connector performs load-balancing for all queries by randomly picking a replica host from the connection URL for each connection, so queries will be load-balanced as a result of the connections getting randomly distributed across all replica hosts.
 * **Introduced:** 3.5.1
 
 ----
 
 
 ==== ##aurora##
-* **Description:** This mode supports connection failover in an Amazon Aurora cluster. This mode does support load-balancing reads on slave instances if the connection is set to read-only before executing the read. The connector performs load-balancing by randomly picking a slave instance to execute read queries for a connection
+* **Description:** This mode supports connection failover in an Amazon Aurora cluster. This mode does support load-balancing reads on replica instances if the connection is set to read-only before executing the read. The connector performs load-balancing by randomly picking a replica instance to execute read queries for a connection
 * **Introduced:** 1.2.0 and **not supported anymore since 3.0 version**
 
 ----
@@ -1118,14 +1118,14 @@ See the [[pool-datasource-implementation/|pool documentation]] for pool configur
 
 &lt;&lt;style class=&#34;darkheader-nospace-borders centered&#34;&gt;&gt;
 |= Parameter |= Description
- | ##allowMasterDownConnection## |When the ##replication## Failover and Load Balancing Mode is in use, allow the creation of connections when the master is down. If no masters are available, then the default connection will be a slave, and Connection.isReadOnly() will return true. \\//Default: false. Since 2.2.0, removed in 3.0.0//|
+ | ##allowMasterDownConnection## |When the ##replication## Failover and Load Balancing Mode is in use, allow the creation of connections when the master is down. If no masters are available, then the default connection will be a replica, and Connection.isReadOnly() will return true. \\//Default: false. Since 2.2.0, removed in 3.0.0//|
 | ##interactiveClient## |Session timeout is defined by the [[https://mariadb.com/kb/en/server-system-variables/#wait_timeout|wait_timeout]] server variable. Setting interactiveClient to true will tell the server to use the [[https://mariadb.com/kb/en/mariadb/server-system-variables/#interactive_timeout|interactive_timeout]] server variable.\\//Default: false. Since 1.1.7//|
 | ##assureReadOnly## | When this parameter enabled when a Failover and Load Balancing Mode is in use, and a read-only connection is made to a host, assure that this connection is in read-only mode by setting the session to read-only.\\Default to false.\\Since 1.3.0, removed in 3.0.0|
 | ##autoReconnect## |If this parameter is enabled and Failover and Load Balancing Mode is **not** in use, the connector will simply try to reconnect to its host after a failure. This is referred to as **Basic Failover**. \\If this parameter is enabled and Failover and Load Balancing Mode is in use, the connector will blacklist the failed host and try to connect to a different host of the same type. This is referred to as **Standard Failover**. \\Default is false.\\since 1.1.7, removed in 3.0.0|
 | ##cachePrepStmts## | if useServerPrepStmts = true, cache the prepared informations in a LRU cache to avoid re-preparation of command. Next use of that command, only prepared identifier and parameters (if any) will be sent to server. This mainly permit for server to avoid reparsing query. \\//Default: true. Since 1.3.0, removed in 3.0.0//|
 | ##callableStmtCacheSize## | This sets the number of callable statements that the driver will cache per VM if &#34;cacheCallableStmts&#34; is enabled.\\//Default: true. Since 1.4.0, removed in 3.0.0//|
 | ##enablePacketDebug## |Driver will save the last 16 MySQL packet exchanges (limited to first 1000 bytes). Hexadecimal value of those packets will be added to stacktrace when an IOException occur.\\This option has no impact on performance but driver will then take 16kb more memory.\\//Default: false. Since 1.6.0, 2.0.1, removed in 3.0.0|
-| ##failoverLoopRetries## |When the connector is searching silently for a valid host, this parameter defines the maximum number of connection attempts the connector will make before throwing an exception.\\This parameter differs from the &#34;retriesAllDown&#34; parameter because this silent search is used in situations where the connector can temporarily workaround the problem, such as by using the master connection to execute reads when the slave connection fails.\\Default: 120.\\since 1.2.0, removed in 3.0.0|
+| ##failoverLoopRetries## |When the connector is searching silently for a valid host, this parameter defines the maximum number of connection attempts the connector will make before throwing an exception.\\This parameter differs from the &#34;retriesAllDown&#34; parameter because this silent search is used in situations where the connector can temporarily workaround the problem, such as by using the master connection to execute reads when the replica connection fails.\\Default: 120.\\since 1.2.0, removed in 3.0.0|
 | ##jdbcCompliantTruncation## | Truncation error (&#34;Data truncated for column &#39;%&#39; at row %&#34;, &#34;Out of range value for column &#39;%&#39; at row %&#34;) will be thrown as an error, and not as a warning.\\//Default: true. Since 1.4.0//|
 |##keyPassword##|Password for the private key in client certificate keyStore. (only needed if private key password differ from keyStore password).\\//Since 1.5.3, removed in 3.0.0//|
 | ##loadBalanceBlacklistTimeout## |When a connection fails, this host will be blacklisted for the amount of time defined by this parameter.\\When connecting to a host, the driver will try to connect to a host in the list of non-blacklisted hosts and, only if none are found, attempt blacklisted ones.\\This blacklist is shared inside the classloader.\\Default: 50 seconds.\\since 1.2.0, removed in 3.0.0|
