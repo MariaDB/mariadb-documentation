@@ -275,12 +275,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2012-09-26 16:17">12 years, 6 months ago</span></dd>
+<span class="datetime" title="2012-09-26 16:17">12 years, 7 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-12-04 10:00">4 months, 2 weeks ago</span></dd>
+<span class="datetime" title="2025-04-28 00:18">5 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -448,11 +448,6 @@
 
     <li class=""><a href="#compiling-mariadb-for-debugging-using-the-cmake_build_type-option" title="Compiling MariaDB for Debugging Using the CMAKE_BUILD_TYPE Option">Compiling MariaDB for Debugging Using the CMAKE_BUILD_TYPE Option</a></li>
 
-    <li class=""><a href="#compiling-mariadb-for-debugging-using-build-scripts" title="Compiling MariaDB for Debugging Using Build Scripts">Compiling MariaDB for Debugging Using Build Scripts</a>    <ol class="toc">
-
-        <li class=""><a href="#example-of-compiling-mariadb-for-debugging-using-build-scripts" title="Example of Compiling MariaDB for Debugging Using Build Scripts">Example of Compiling MariaDB for Debugging Using Build Scripts</a>    </ol>
-</li>
-
     <li class=""><a href="#building-optimized-build-with-debug-symbols" title="Building Optimized Build With Debug Symbols">Building Optimized Build With Debug Symbols</a></li>
 
     <li class=""><a href="#doing-a-debug-build-on-debianubuntu" title="Doing a Debug Build on Debian/Ubuntu">Doing a Debug Build on Debian/Ubuntu</a>    <ol class="toc">
@@ -470,77 +465,49 @@
     <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
 </li>
 </div>
-<p>Compiling MariaDB with full debug information includes all code symbols and also new code to do internal testing of structures and allow one to trace MariaDB execution. A full debug binary will be notably slower than a normal binary (30%).</p>
 <h2 class="anchored_heading" id="compiling-mariadb-for-debugging-using-the-cmake_build_type-option">Compiling MariaDB for Debugging Using the <code>CMAKE_BUILD_TYPE</code> Option</h2>
-<p>On Unix systems, you can build a debug build by executing <code>cmake</code> and by setting the <code>CMAKE_BUILD_TYPE</code> option to <code>Debug</code>. For example:</p>
-<pre class="fixed">cmake -DCMAKE_BUILD_TYPE=Debug .
-</pre><h2 class="anchored_heading" id="compiling-mariadb-for-debugging-using-build-scripts">Compiling MariaDB for Debugging Using Build Scripts</h2>
-<p>The other option is to use the scripts in the BUILD directory that will compile MariaDB with most common debug options and plugins:</p>
-<pre class="fixed">./BUILD/compile-pentium64-debug-max
-</pre><p>or alternatively if you want to use the <a href="http://www.valgrind.org">Valgrind</a> memory checking tool with the <a href="/kb/en/mysqltest/">MariaDB test system</a>:</p>
-<pre class="fixed">./BUILD/compile-pentium64-valgrind-max
-</pre><p>There are separate build scripts for different configurations in the BUILD directory.</p>
-<p>You can find a list of the needed packages/libraries for building on Linux <a href="/kb/en/Build_Environment_Setup_for_Linux/">here</a>.</p>
-<h3 class="anchored_heading" id="example-of-compiling-mariadb-for-debugging-using-build-scripts">Example of Compiling MariaDB for Debugging Using Build Scripts</h3>
-<ul start="1"><li>Scripts containing "debug" in the name are for developers that want to build, develop and test MariaDB.
-</li><li>Scripts containing "valgrind" in the name are for running mariadbd under <a href="http://valgrind.org">valgrind</a>. Compiling for valgrind means that we are using another implementation of MEM_ROOT to allow valgrind to better detect memory overruns. In addition, some memory areas are marked as used/not used to remove some false positives.
-</li><li>Scripts containing "max" in the name include all normal plugins.
-</li></ul>
-<p>Here is an example of how to compile MariaDB for debugging in your home directory with <a href="/kb/en/mariadb-529-release-notes/">MariaDB 5.2.9</a> as an example:</p>
-<pre class="fixed">cd ~
-mkdir mariadb
-cd mariadb
-tar xvf mariadb-5.2.9.tar.gz
-ln -s mariadb-5.2.9 current
-cd current
-./BUILD/compile-pentium64-debug-max
-</pre><p>The last command will produce a debug version of <code class="highlight fixed" style="white-space:pre-wrap">sql/mysqld</code>.
-If you have a system other than 64 bit Intel/AMD on Linux you can use a
-different <code class="highlight fixed" style="white-space:pre-wrap">BUILD/...-debug-max</code> file. If this fails, you can
-try with:</p>
-<pre class="fixed">cmake --build  .  --config Debug
-make -j4
-</pre><h2 class="anchored_heading" id="building-optimized-build-with-debug-symbols">Building Optimized Build With Debug Symbols</h2>
-<p>To build MariaDB with symbols, to get better stack traces and to be able to debug the binary with <code>gdb</code>, you need to supply the <code>-g3</code> option to the <code>gcc</code> compiler.</p>
-<p>Just compiling with <code>-g3</code> will make the binary much bigger but the slowdown of the server should be negligible.</p>
-<p>One way to do this is to edit the script</p>
-<pre class="fixed">BUILD/compile-pentium64-max
-</pre><p>and add the -g3 last on the line with <code>extra_flags</code>, like this:</p>
-<pre class="fixed">extra_flags=&#34;$pentium64_cflags $fast_cflags -g3&#34;
-</pre><p>After that you can compile MariaDB with debugging symbols by just execution the above script.</p>
-<h2 class="anchored_heading" id="doing-a-debug-build-on-debianubuntu">Doing a Debug Build on Debian/Ubuntu</h2>
-<p>To build a "mysqld" binary with debugging enabled that uses the same parameters as the ones used in Debian/Ubuntu binary packages, you must do as follows (you must have a deb-src line of one of the MariaDB repositories on your /etc/apt/sources.list in order to do that):</p>
-<pre class="fixed">apt-get build-dep mariadb-10.2
-apt-get install cmake libaio1 libaio-dev
-apt-get source mariadb-10.2
-cd mariadb-10.2*
-./debian/rules configure
-./BUILD/compile-pentuim64-debug-all
-</pre><p>Then you will have your "debugging enabled" mysqld binary in the sql/ directory.</p>
-<p>This binary can directly replace the one provided by the binary package that is placed on "/usr/bin/mysqld".</p>
+<p>This option enables multiple debug instrumentation aspects within the MariaDB server that provided more detailed information around complex parts of the server and can be used to implement and run tests where the concurrent execution of multiple threads must be controlled to achieve a specific state. If you are not doing this, the following <a href="#Building_Optimized_Build_With_Debug_Symbols">option</a> is sufficient.</p>
+<p>Compiling MariaDB with full debug information includes all code symbols and also new code to do internal testing of structures and allow one to trace MariaDB execution. A full debug binary will be notably slower than a normal binary (30%). Most of this overhead can be removed by disabling <code>-DWITH_DBUG_TRACE=OFF</code></p>
+<p>You can configure build a debug build by executing <code>cmake</code> and by setting the <code>CMAKE_BUILD_TYPE</code> option to <code>Debug</code>. For example:</p>
+<pre class="fixed">cmake -DCMAKE_BUILD_TYPE=Debug source_directory
+</pre><p>To compile:</p>
+<pre class="fixed">cmake --build .
+</pre><p>You can find a list of the needed packages/libraries for building on Linux <a href="/kb/en/Build_Environment_Setup_for_Linux/">here</a>.</p>
+<h2 class="anchored_heading" id="building-optimized-build-with-debug-symbols">Building Optimized Build With Debug Symbols</h2>
+<p>To build MariaDB with debug symbols, to get better stack traces and to be able to debug the binary with <code>gdb</code>, you need to supply the <a href="https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html#index-Og"><code>-Og</code></a> and <a href="https://gcc.gnu.org/onlinedocs/gcc/Debugging-Options.html"><code>-g3</code></a> options to the <code>gcc</code> compiler for an debuggable, with limited optimization tradeoffs..</p>
+<p>Pass these are options to cmake like:</p>
+<pre class="fixed">cmake -DCMAKE_CXX_COMPILE_FLAGS='-Og -g3' -DCMAKE_C_COMPILE_FLAGS='-Og -g3' source_directory
+</pre><p>To compile:</p>
+<pre class="fixed">cmake --build .
+</pre><h2 class="anchored_heading" id="doing-a-debug-build-on-debianubuntu">Doing a Debug Build on Debian/Ubuntu</h2>
+<p>To build a "mariadbd" binary with debugging enabled that uses the same parameters as the ones used in Debian/Ubuntu binary packages, you must do as follows (you must have a deb-src line of one of the MariaDB repositories on your /etc/apt/sources.list in order to do that):</p>
+<pre class="fixed"> apt install build-essential devscripts fakeroot dpkg-dev
+apt-get build-dep mariadb-server
+apt-get source mariadb-server
+cd mariadb-*
+ DEB_CFLAGS_APPEND='-Og -g3' DEB_CXXFLAGS_APPEND='-Og -g3' debuild -us -uc                     
+</pre><p>The packages created will have these flags set.</p>
 <h3 class="anchored_heading" id="temporarily-installing-your-debug-build">Temporarily Installing your Debug Build</h3>
-<p>The commands shown below replace the release <code>mysqld</code> binary with the debug <code>mysqld</code> binary that you compiled. Most importantly, they replace the binary in a way which makes it trivial to revert back to the
-original release <code>mysqld</code> binary.</p>
+<p>The commands shown below replace the release <code>mariadbd</code> binary with the debug <code>mariadbd</code> binary that you compiled. Most importantly, they replace the binary in a way which makes it trivial to revert back to the
+original release <code>mariadbd</code> binary.</p>
 <p>First, <a href="/kb/en/starting-and-stopping-mariadb-starting-and-stopping-mariadb/">stop MariaDB</a>.</p>
-<p>Then, use the <code>mv</code> utility to rename the release <code>mysqld</code> binary:</p>
-<pre class="fixed">sudo mv /usr/sbin/mysqld /usr/sbin/mysqld-orig
+<p>Then, use the <code>mv</code> utility to rename the release <code>mariadbd</code> binary:</p>
+<pre class="fixed">sudo mv /usr/sbin/mariadbd /usr/sbin/mariadbd-orig
 </pre><p>Note: Do not use the <code>cp</code> utility because that will change the file modification timestamp.</p>
-<p>Then, install the debug <code>mysqld</code> binary from your source tree:</p>
-<pre class="fixed">sudo install ~/mariadb-10.3.14/sql/mysqld /usr/sbin/mysqld-debug
-</pre><p>Then, link the <code>mysqld</code> path to the path of your debug <code>mysqld</code> binary:</p>
-<pre class="fixed">sudo ln -s /usr/sbin/mysqld-debug /usr/sbin/mysqld
+<p>Then, install the debug <code>mariadbd</code> binary from your source tree:</p>
+<pre class="fixed">sudo install ~/mariadb-*/sql/mariadbd /usr/sbin/mariadbd
 </pre><p>Then, <a href="/kb/en/starting-and-stopping-mariadb-starting-and-stopping-mariadb/">start MariaDB</a>.</p>
-<p>Be sure to replace <code>/usr/sbin/mysqld</code> with the path to your <code>mysqld</code> binary and to also replace <code><code>~</code>/mariadb-10.3.14/sql/mysqld</code> with the path to your debug <code>mysqld</code> binary.</p>
+<p>Be sure to replace <code>/usr/sbin/mariadbd</code> with the path to your <code>mariadbdd</code> binary and to also replace <code><code>~</code>/mariadb-*/sql/mariadbd</code> with the path to your debug #mariadbd<code> binary.</code></p>
 <h3 class="anchored_heading" id="reinstalling-your-release-build">Reinstalling your Release Build</h3>
-<p>If you want to restore your original <code>mysqld</code> binary, you can do it with the following process::</p>
+<p>If you want to restore your original <code>mariadbd</code> binary, you can do it with the following process::</p>
 <p>First, <a href="/kb/en/starting-and-stopping-mariadb-starting-and-stopping-mariadb/">stop MariaDB</a>.</p>
 <p>Then, execute the following command to delete the symbolic link:</p>
-<pre class="fixed">sudo rm /usr/sbin/mysqld
-</pre><p>Then, execute the following command to move the original <code>mysqld</code> release binary back into place:</p>
-<pre class="fixed">sudo mv /usr/sbin/mysqld-orig /usr/sbin/mysqld
+<pre class="fixed">sudo mv /usr/sbin/mariadbd /usr/sbin/mariadbd-debug
+</pre><p>Then, execute the following command to move the original <code>mariadbd</code> release binary back into place:</p>
+<pre class="fixed">sudo mv /usr/sbin/mariadbd-orig /usr/sbin/mariadbd
 </pre><p>Then, <a href="/kb/en/starting-and-stopping-mariadb-starting-and-stopping-mariadb/">start MariaDB</a>.</p>
-<p>Be sure to replace <code>/usr/sbin/mysqld</code> with the path to your <code>mysqld</code> binary</p>
-<p>Notice that the debug <code>mysqld</code> binary located at <code>/usr/sbin/mysqld-debug</code> was not deleted. Only the symbolic link to this file was deleted. The debug <code>mysqld</code> binary is still present if it is needed again in the future.</p>
+<p>Be sure to replace <code>/usr/sbin/mariadbd</code> with the path to your <code>mariadbd</code> binary</p>
+<p>The debug <code>mariadb-debug</code> binary is still present if it is needed again in the future.</p>
 <h2 class="anchored_heading" id="different-compilation-options">Different Compilation Options</h2>
 <h3 class="anchored_heading" id="changing-dbug_assert-to-print-to-error-log">Changing DBUG_ASSERT to Print to Error Log</h3>
 <p>A debug binary has lots of code checks and asserts, that are not checked in production. This is done to get more performance when running in production.
