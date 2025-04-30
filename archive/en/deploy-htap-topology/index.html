@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Deploy HTAP Topology - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
+
+    
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Deploy HTAP Topology" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/deploy-htap-topology/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+Overview
+This procedure describes the deployment of the HTAP topology with MariaDB Enterprise Server and MariaDB Enterprise ColumnStore 23.10.
+MariaDB Enterprise ColumnStore ..." />
+
+    <meta name="description" content="
+Overview
+This procedure describes the deployment of the HTAP topology with MariaDB Enterprise Server and MariaDB Enterprise ColumnStore 23.10.
+MariaDB Enterprise ColumnStore ..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/deploy-htap-topology/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/deploy-htap-topology/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/solutions" title="Solutions">Solutions</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="Company">Company</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/topologies/">Topologies</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/htap/">HTAP</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/deploy-htap-topology/">Deploy HTAP Topology</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/deploy-htap-topology/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/deploy-htap-topology/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/deploy-htap-topology/+flag"
+                data-flag-url="/kb/en/deploy-htap-topology/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/deploy-htap-topology/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2025-04-01 06:05">4 weeks ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2025-04-29 10:02">14 hours, 1 minute ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/deploy-htap-topology/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/deploy-htap-topology/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/deploy-htap-topology/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/deploy-htap-topology/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <ul>
+                
+                    <li><a href="/kb/en/deploy-htap-topology/+image/es-columnstore-htap-topology-s3-no-title">es-columnstore-htap-topology-s3-no-title</a>
+                    </li>
+                
+            </ul>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Deploy HTAP Topology</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+ <li class=""><a href="#overview" title="Overview">Overview</a></li>
+
+ <li class=""><a href="#procedure-steps" title="Procedure Steps">Procedure Steps</a></li>
+
+ <li class=""><a href="#support" title="Support">Support</a></li>
+
+ <li class=""><a href="#components" title="Components">Components</a></li>
+
+ <li class=""><a href="#mariadb-enterprise-server-components" title="MariaDB Enterprise Server Components">MariaDB Enterprise Server Components</a></li>
+
+ <li class=""><a href="#topology" title="Topology">Topology</a></li>
+
+ <li class=""><a href="#requirements" title="Requirements">Requirements</a></li>
+
+ <li class=""><a href="#operating-system" title="Operating System">Operating System</a> <ol class="toc">
+
+    <li class=""><a href="#s3-compatible-object-storage-option" title="S3-Compatible Object Storage Option">S3-Compatible Object Storage Option</a></li>
+
+    <li class=""><a href="#preferred-object-storage-providers-cloud" title="Preferred Object Storage Providers: Cloud">Preferred Object Storage Providers: Cloud</a></li>
+
+    <li class=""><a href="#preferred-object-storage-providers-hardware" title="Preferred Object Storage Providers: Hardware">Preferred Object Storage Providers: Hardware</a> </ol>
+</li>
+
+ <li class=""><a href="#limitations" title="Limitations">Limitations</a> <ol class="toc">
+
+    <li class=""><a href="#cross-database-queries" title="Cross-Database Queries">Cross-Database Queries</a></li>
+
+    <li class=""><a href="#semi-synchronous-replication" title="Semi-Synchronous Replication">Semi-Synchronous Replication</a></li>
+
+    <li class=""><a href="#parallel-replication" title="Parallel Replication">Parallel Replication</a></li>
+
+    <li class=""><a href="#row-based-replication" title="Row-Based Replication">Row-Based Replication</a> </ol>
+</li>
+
+ <li class=""><a href="#quick-reference" title="Quick Reference">Quick Reference</a> <ol class="toc">
+
+    <li class=""><a href="#mariadb-enterprise-server-configuration-management" title="MariaDB Enterprise Server Configuration Management">MariaDB Enterprise Server Configuration Management</a> </ol>
+</li>
+
+ <li class=""><a href="#mariadb-enterprise-server-service-management" title="MariaDB Enterprise Server Service Management">MariaDB Enterprise Server Service Management</a></li>
+
+ <li class=""><a href="#mariadb-enterprise-server-logs" title="MariaDB Enterprise Server Logs">MariaDB Enterprise Server Logs</a></li>
+
+ <li class=""><a href="#enterprise-columnstore-service-management" title="Enterprise ColumnStore Service Management">Enterprise ColumnStore Service Management</a></li>
+
+ <li class=""><a href="#next-step" title="Next Step">Next Step</a></li>
+</div>
+<h1 class="anchored_heading" id="overview">Overview</h1>
+<p>This procedure describes the deployment of the HTAP topology with MariaDB Enterprise Server and MariaDB Enterprise ColumnStore 23.10.</p>
+<p>MariaDB Enterprise ColumnStore 23.10 is a columnar storage engine for MariaDB Enterprise Server. This topology is best suited for Hybrid Transactional-Analytical Processing (HTAP) workloads.</p>
+<p>This procedure has 4 steps, which are executed in sequence.</p>
+<p>This procedure represents the basic product capability and uses 1 Enterprise ColumnStore node.</p>
+<p>This page provides an overview of the topology, requirements, and deployment procedures.</p>
+<p>Please read and understand this procedure before executing.</p>
+<h1 class="anchored_heading" id="procedure-steps">Procedure Steps</h1>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Step</th><th>Description</th></tr>
+<tr><td>Step 1</td><td><a href="/kb/en/step-1-prepare-columnstore-node/">Prepare ColumnStore Node</a></td></tr>
+<tr><td>Step 2</td><td><a href="/kb/en/step-2-install-mariadb-enterprise-server/">Install MariaDB Enterprise Server</a></td></tr>
+<tr><td>Step 3</td><td><a href="/kb/en/step-3-start-and-configure-mariadb-enterprise-server/">Start and Configure MariaDB Enterprise Server</a></td></tr>
+<tr><td>Step 4</td><td><a href="/kb/en/step-4-test-mariadb-enterprise-server/">Test MariaDB Enterprise Server</a></td></tr>
+</table>
+</div><h1 class="anchored_heading" id="support">Support</h1>
+<p>Customers can obtain support by submitting a support case.</p>
+<h1 class="anchored_heading" id="components">Components</h1>
+<p>The following components are deployed during this procedure:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Component</th><th>Function</th></tr>
+<tr><td>MariaDB Enterprise Server</td><td>Modern SQL RDBMS with high availability, pluggable storage engines, hot online backups, and audit logging.</td></tr>
+</table>
+</div><h1 class="anchored_heading" id="mariadb-enterprise-server-components">MariaDB Enterprise Server Components</h1>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Component</th><th>Description</th></tr>
+<tr><td>InnoDB</td><td>• General purpose storage engine <br> • Support for Online Transactional Processing (OLTP) workloads <br> • ACID-compliant <br> • Performance</td></tr>
+<tr><td>MariaDB Enterprise ColumnStore 23.10</td><td>• Columnar storage engine <br> • Optimized for Online Analytical <br> • Processing (OLAP) workloads <br> • Scalable query execution</td></tr>
+</table>
+</div><h1 class="anchored_heading" id="topology">Topology</h1>
+<p><img src="/kb/en/deploy-htap-topology/+image/es-columnstore-htap-topology-s3-no-title" alt="es-columnstore-htap-topology-s3-no-title" title="es-columnstore-htap-topology-s3-no-title"></p>
+<p>The MariaDB Enterprise ColumnStore HTAP topology is designed for hybrid transactional-analytical processing (HTAP) workloads.</p>
+<p>The topology consists of:</p>
+<ul start="1"><li>One MaxScale node
+</li><li>One ColumnStore node running ES and Enterprise ColumnStore
+</li></ul>
+<p>The MaxScale node:</p>
+<ul start="1"><li>Monitors the health and availability of the ColumnStore node using the MariaDB Monitor (mariadbmon)
+</li><li>Accepts client and application connections
+</li><li>Routes queries to the ColumnStore node using the Read/Write Split Router (readwritesplit)
+</li></ul>
+<p>The ColumnStore node:</p>
+<ul start="1"><li>Receives queries from MaxScale
+</li><li>Executes queries
+</li><li>Uses a row-based storage engine, such as InnoDB to handle transactional queries
+</li><li>Uses Enterprise ColumnStore as the columnar storage engine to handle analytical queries
+</li><li>Uses cross-engine JOINs to join transactional and analytical tables
+</li><li>Replicates data between engines using MariaDB Replication
+</li><li>Optionally uses S3-compatible object storage for Enterprise ColumnStore data
+</li></ul>
+<h1 class="anchored_heading" id="requirements">Requirements</h1>
+<p>These requirements are for the HTAP topology when deployed with MariaDB Enterprise Server 11.4 and MariaDB Enterprise ColumnStore 23.10.</p>
+<ul start="1"><li>Operating System
+</li><li>S3-Compatible Object Storage Option
+</li><li>Preferred Object Storage Providers: Cloud
+</li><li>Preferred Object Storage Providers: Hardware
+</li></ul>
+<h1 class="anchored_heading" id="operating-system">Operating System</h1>
+<p>In alignment to the enterprise lifecycle, the HTAP topology with MariaDB Enterprise Server 11.4 and MariaDB Enterprise ColumnStore 23.10 is provided for:</p>
+<ul start="1"><li>Debian 11 (x86_64, ARM64)
+</li><li>Debian 12 (x86_64, ARM64)
+</li><li>Red Hat Enterprise Linux 8 (x86_64, ARM64)
+</li><li>Red Hat Enterprise Linux 9 (x86_64, ARM64)
+</li><li>Rocky Linux 8 (x86_64, ARM64)
+</li><li>Rocky Linux 9 (x86_64, ARM64)
+</li><li>Ubuntu 20.04 LTS (x86_64, ARM64)
+</li><li>Ubuntu 22.04 LTS (x86_64, ARM64)
+</li><li>Ubuntu 24.04 LTS (x86_64, ARM64)
+</li></ul>
+<h2 class="anchored_heading" id="s3-compatible-object-storage-option">S3-Compatible Object Storage Option</h2>
+<p>The HTAP topology can use S3-compatible object storage to store ColumnStore data, but it is not required.</p>
+<p>Many S3-compatible object storage services exist. MariaDB Corporation cannot make guarantees about all S3-compatible object storage services, because different services provide different functionality.</p>
+<p>For the preferred S3-compatible object storage providers that provide cloud and hardware solutions, see the following sections:</p>
+<ul start="1"><li>Cloud
+</li><li>Hardware
+</li></ul>
+<p>The use of non-cloud and non-hardware providers is at your own risk.</p>
+<p>If you have any questions about using specific S3-compatible object storage with MariaDB Enterprise ColumnStore, contact us.</p>
+<h2 class="anchored_heading" id="preferred-object-storage-providers-cloud">Preferred Object Storage Providers: Cloud</h2>
+<ul start="1"><li>Amazon Web Services (AWS) S3
+</li><li>Google Cloud Storage
+</li><li>Azure Storage
+</li><li>Alibaba Cloud Object Storage Service
+</li></ul>
+<h2 class="anchored_heading" id="preferred-object-storage-providers-hardware">Preferred Object Storage Providers: Hardware</h2>
+<ul start="1"><li>Cloudian HyperStore
+</li><li>Dell EMC
+</li><li>Seagate Lyve Rack
+</li><li>Quantum ActiveScale
+</li><li>IBM Cloud Object Storage
+</li></ul>
+<h1 class="anchored_heading" id="limitations">Limitations</h1>
+<h2 class="anchored_heading" id="cross-database-queries">Cross-Database Queries</h2>
+<p>This implementation relies on replicate_rewrite_db, so it does not support cross-database queries with statement-based replication.</p>
+<p>For example, if the replicated database is selected by the USE, then the query will replicate properly:</p>
+<pre class="fixed">USE innodb_db;
+
+INSERT INTO htap_test1
+   VALUES (100);
+</pre><pre class="fixed">SELECT * FROM columnstore_db.htap_test1;
+
++------+
+| id   |
++------+
+|  100 |
++------+
+</pre><p>However, if the replicated database is not selected, and it is instead prefixed the table name in the query, then the query will not replicate properly:</p>
+<pre class="fixed">USE columnstore_db;
+
+INSERT INTO innodb_db.htap_test1
+   VALUES (200);
+</pre><pre class="fixed">SELECT * FROM columnstore_db.htap_test1;
+
++------+
+| id   |
++------+
+|  100 |
++------+
+</pre><h2 class="anchored_heading" id="semi-synchronous-replication">Semi-Synchronous Replication</h2>
+<p>This implementation has not been tested with semi-synchronous replication.</p>
+<h2 class="anchored_heading" id="parallel-replication">Parallel Replication</h2>
+<p>This implementation has not been tested with parallel replication.</p>
+<h2 class="anchored_heading" id="row-based-replication">Row-Based Replication</h2>
+<p>This implementation requires the <a href="/kb/en/replication-and-binary-log-system-variables/#binlog_format">binlog_format</a> system variable to be set to STATEMENT. Row-based replication is not currently supported.</p>
+<h1 class="anchored_heading" id="quick-reference">Quick Reference</h1>
+<h2 class="anchored_heading" id="mariadb-enterprise-server-configuration-management">MariaDB Enterprise Server Configuration Management</h2>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Method</th><th>Description</th></tr>
+<tr><td>Configuration File</td><td>Configuration files (such as <code>/etc/my.cnf</code>) can be used to set system-variables and options. The server must be restarted to apply changes made to configuration files.</td></tr>
+<tr><td>Command-line</td><td>The server can be started with command-line options that set system-variables and options.</td></tr>
+<tr><td>SQL</td><td>Users can set system-variables that support dynamic changes on-the-fly using the SET statement.</td></tr>
+</table>
+</div><p>MariaDB Enterprise Server packages are configured to read configuration files from different paths, depending on the operating system. Making custom changes to Enterprise Server default configuration files is not recommended because custom changes may be overwritten by other default configuration files that are loaded later.</p>
+<p>To ensure that your custom changes will be read last, create a custom configuration file with the z- prefix in one of the include directories.</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Distribution</th><th>Example Configuration File Path</th></tr>
+<tr><td>• CentOS <br> • Red Hat Enterprise Linux (RHEL)</td><td><code>/etc/my.cnf.d/z-custom-mariadb.cnf</code></td></tr>
+<tr><td>• Debian <br> • Ubuntu</td><td><code>/etc/my.cnf.d/z-custom-mariadb.cnf</code></td></tr>
+</table>
+</div><h1 class="anchored_heading" id="mariadb-enterprise-server-service-management">MariaDB Enterprise Server Service Management</h1>
+<p>The systemctl command is used to start and stop the MariaDB Enterprise Server service.</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Operation</th><th>Command</th></tr>
+<tr><td>Start</td><td>sudo systemctl start mariadb</td></tr>
+<tr><td>Stop</td><td>sudo systemctl stop mariadb</td></tr>
+<tr><td>Restart</td><td>sudo systemctl restart mariadb</td></tr>
+<tr><td>Enable during startup</td><td>sudo systemctl enable mariadb</td></tr>
+<tr><td>Disable during startup</td><td>sudo systemctl disable mariadb</td></tr>
+<tr><td>Status</td><td>sudo systemctl status mariadb</td></tr>
+</table>
+</div><p>For additional information, see "Start and Stop Services".</p>
+<h1 class="anchored_heading" id="mariadb-enterprise-server-logs">MariaDB Enterprise Server Logs</h1>
+<p>MariaDB Enterprise Server produces log data that can be helpful in problem diagnosis.</p>
+<p>Log filenames and locations may be overridden in the server configuration. The default location of logs is the data directory. The data directory is specified by the <a href="/kb/en/server-system-variables/#datadir">datadir</a> system variable.</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Log</th><th>System Variable/Option</th><th>Default Filename</th></tr>
+<tr><td>MariaDB Error Log</td><td><a href="/kb/en/server-system-variables/#log_error">log_error</a></td><td>&lt;hostname&gt;.err</td></tr>
+<tr><td>MariaDB Enterprise Audit Log</td><td><a href="/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_file_path">server_audit_file_path</a></td><td>server_audit.log</td></tr>
+<tr><td>Slow Query Log</td><td><a href="/kb/en/server-system-variables/#slow_query_log_file">slow_query_log_file</a></td><td>&lt;hostname&gt;-slow.log</td></tr>
+<tr><td>General Query Log</td><td><a href="/kb/en/server-system-variables/#general_log_file">general_log_file</a></td><td>&lt;hostname&gt;.log</td></tr>
+<tr><td>Binary Log</td><td><a href="/kb/en/replication-and-binary-log-system-variables/#log_bin">log_bin</a></td><td>&lt;hostname&gt;-bin</td></tr>
+</table>
+</div><h1 class="anchored_heading" id="enterprise-columnstore-service-management">Enterprise ColumnStore Service Management</h1>
+<p>The systemctl command is used to start and stop the ColumnStore service.</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Operation</th><th>Command</th></tr>
+<tr><td>Start</td><td>sudo systemctl start mariadb-columnstore</td></tr>
+<tr><td>Stop</td><td>sudo systemctl stop mariadb-columnstore</td></tr>
+<tr><td>Restart</td><td>sudo systemctl restart mariadb-columnstore</td></tr>
+<tr><td>Enable during startup</td><td>sudo systemctl enable mariadb-columnstore</td></tr>
+<tr><td>Disable during startup</td><td>sudo systemctl disable mariadb-columnstore</td></tr>
+<tr><td>Status</td><td>sudo systemctl status mariadb-columnstore</td></tr>
+</table>
+</div><h1 class="anchored_heading" id="next-step">Next Step</h1>
+<p>Navigation in the procedure "<a href="/kb/en/deploy-htap-topology/">Deploy HTAP Topology</a>".</p>
+<p>Next: <a href="/kb/en/step-1-prepare-columnstore-node/">Step 1: Prepare ColumnStore Node</a>.</p>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/deploy-htap-topology/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/deploy-htap-topology/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                
+                    <li><a href="/kb/en/htap/">
+                        ↑ HTAP ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/step-1-prepare-columnstore-node/">
+                        Step 1: Prepare ColumnStore Node →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="16113" data-comments-url="/kb/en/deploy-htap-topology/+comments"
+         data-reply-url="/kb/en/deploy-htap-topology/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/htap/">
+                    ↑ HTAP ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li class="active">
+                        <span>Deploy HTAP Topology</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/step-1-prepare-columnstore-node/">
+                            
+                            Step 1: Prepare ColumnStore Node
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/step-2-install-mariadb-enterprise-server/">
+                            
+                            Step 2: Install MariaDB Enterprise Server
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/step-3-start-and-configure-mariadb-enterprise-server/">
+                            
+                            Step 3: Start and Configure MariaDB Enterprise Server
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/step-4-test-mariadb-enterprise-server/">
+                            
+                            Step 4: Test MariaDB Enterprise Server
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    <ul class="list-inline text-center footer-nav">
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/products" title="Products">Products</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/solutions" title="Solutions">Solutions</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/resources" title="Resources">Resources</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/about-us" title="About MariaDB">Company</a></h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/pricing" title="Pricing">Pricing</a>
+                            </h5>
+                        </li>
+                        
+                        
+                        <li>
+                            <h5><a href="https://mariadb.com/downloads" title="Download">Download MariaDB</a></h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row row-10">
+                
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div class="footer-copyright">
+                        <div class="text-center">
+                            <ul class="list-inline no-margin">
+                                <li>
+                                    <a href="/legal" title="Legal">Legal</a>
+                                </li>
+                                <li>
+                                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                            <p>Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
+
+</html>
