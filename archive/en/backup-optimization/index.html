@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Backup Optimization - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
+
+    
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Backup Optimization" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/backup-optimization/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+Overview
+Backup and restore implementations can help overcome specific technical challenges that would otherwise pose a barrier to meeting business requirements.
+Each of thes..." />
+
+    <meta name="description" content="
+Overview
+Backup and restore implementations can help overcome specific technical challenges that would otherwise pose a barrier to meeting business requirements.
+Each of thes..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/backup-optimization/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/backup-optimization/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/solutions" title="Solutions">Solutions</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="Company">Company</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-administration/">MariaDB Administration</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/backing-up-and-restoring-databases/">Backing Up and Restoring Databases</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/backup-and-restore-with-mariadb-enterprise-server/">Backup and Restore with MariaDB Enterprise Server</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/backup-optimization/">Backup Optimization</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/backup-optimization/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/backup-optimization/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/backup-optimization/+flag"
+                data-flag-url="/kb/en/backup-optimization/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/backup-optimization/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2025-03-03 08:06">1 month, 4 weeks ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2025-04-30 11:52">12 hours, 13 minutes ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/backup-optimization/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/backup-optimization/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/backup-optimization/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/backup-optimization/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Backup Optimization</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+ <li class=""><a href="#overview" title="Overview">Overview</a></li>
+
+ <li class=""><a href="#scheduling-of-restore-preparation" title="Scheduling of Restore Preparation">Scheduling of Restore Preparation</a> <ol class="toc">
+
+    <li class=""><a href="#technical-challenge-restore-time" title="Technical challenge: restore time">Technical challenge: restore time</a></li>
+
+    <li class=""><a href="#trade-off-increased-ongoing-overhead-for-backup-processing" title="Trade-off: increased ongoing overhead for backup processing">Trade-off: increased ongoing overhead for backup processing</a> </ol>
+</li>
+
+ <li class=""><a href="#moving-restored-data" title="Moving Restored Data">Moving Restored Data</a> <ol class="toc">
+
+    <li class=""><a href="#technical-challenge-disk-space-limitations" title="Technical challenge: disk space limitations">Technical challenge: disk space limitations</a></li>
+
+    <li class=""><a href="#trade-off-modification-of-backup-directory-contents" title="Trade-off: modification of backup directory contents">Trade-off: modification of backup directory contents</a> </ol>
+</li>
+
+ <li class=""><a href="#multi-threading" title="Multi-threading">Multi-threading</a> <ol class="toc">
+
+    <li class=""><a href="#technical-challenge-cpu-bottlenecks" title="Technical challenge:: CPU bottlenecks">Technical challenge:: CPU bottlenecks</a></li>
+
+    <li class=""><a href="#trade-off-increased-workload-during-backups" title="Trade-off: Increased workload during backups">Trade-off: Increased workload during backups</a> </ol>
+</li>
+
+ <li class=""><a href="#incrementing-an-incremental-backup" title="Incrementing an Incremental Backup">Incrementing an Incremental Backup</a> <ol class="toc">
+
+    <li class=""><a href="#technical-challenge-backup-resource-overhead-backup-duration" title="Technical challenge: Backup resource overhead, backup duration">Technical challenge: Backup resource overhead, backup duration</a></li>
+
+    <li class=""><a href="#trade-off-increased-restore-complexity-restore-process-duration" title="Trade-off: Increased restore complexity, restore process duration">Trade-off: Increased restore complexity, restore process duration</a> </ol>
+</li>
+
+ <li class=""><a href="#storage-snapshots" title="Storage Snapshots">Storage Snapshots</a> <ol class="toc">
+
+    <li class=""><a href="#technical-challenge-backup-resource-overhead-backup-duration" title="Technical challenge: Backup resource overhead, backup duration">Technical challenge: Backup resource overhead, backup duration</a></li>
+
+    <li class=""><a href="#trade-off-limited-to-platforms-with-volume-level-snapshots-may-require-crash-recovery" title="Trade-off: Limited to platforms with volume-level snapshots, may require crash recovery">Trade-off: Limited to platforms with volume-level snapshots, may require crash recovery</a></li>
+
+    <li class=""><a href="#snapshotting-with-mariadb-enterprise-server" title="Snapshotting with MariaDB Enterprise Server">Snapshotting with MariaDB Enterprise Server</a></li>
+
+    <li class=""><a href="#snapshotting-with-mariadb-community-server" title="Snapshotting with MariaDB Community Server">Snapshotting with MariaDB Community Server</a> </ol>
+</li>
+</div>
+<h1 class="anchored_heading" id="overview">Overview</h1>
+<p>Backup and restore implementations can help overcome specific technical challenges that would otherwise pose a barrier to meeting business requirements.</p>
+<p>Each of these practices represents a trade-off. Understand risks before implementing any of these practices.</p>
+<h1 class="anchored_heading" id="scheduling-of-restore-preparation">Scheduling of Restore Preparation</h1>
+<h4 class="anchored_heading" id="technical-challenge-restore-time"><strong>Technical challenge</strong>: restore time</h4>
+<h4 class="anchored_heading" id="trade-off-increased-ongoing-overhead-for-backup-processing"><strong>Trade-off</strong>: increased ongoing overhead for backup processing</h4>
+<p>Backup data can be prepared for restore any time after it is produced and before it is used for restore. To expedite recovery, incremental backups can be pre-applied to the prior full backup to enable faster recovery. This may be done at the expense of recovery points, or at the expense of storage by maintaining copies of unmerged full and incremental backup directories.</p>
+<h1 class="anchored_heading" id="moving-restored-data">Moving Restored Data</h1>
+<h4 class="anchored_heading" id="technical-challenge-disk-space-limitations"><strong>Technical challenge</strong>: disk space limitations</h4>
+<h4 class="anchored_heading" id="trade-off-modification-of-backup-directory-contents"><strong>Trade-off</strong>: modification of backup directory contents</h4>
+<p>Suggested method for moving restored data is to use <code>--copy-back</code> as this method provides added safety. Where you might instead optimize for disk space savings, system resources, and time you may choose to instead use MariaDB Enterprise Backup's <code>--move-back</code> option. Speed benefits are only present when backup files are on the same disk partition as the destination data directory.</p>
+<p>The <code>--move-back</code> option will result in the removal of all data files from the backup directory, so it is best to use this option only when you have an additional copy of your backup data in another location.</p>
+<p>To restore from a backup by moving files, use the <code>--move-back</code> option:</p>
+<pre class="fixed">
+# mariabackup --move-back --target-dir=/data/backups/full
+</pre><h1 class="anchored_heading" id="multi-threading">Multi-threading</h1>
+<h4 class="anchored_heading" id="technical-challenge-cpu-bottlenecks"><strong>Technical challenge</strong>:: CPU bottlenecks</h4>
+<h4 class="anchored_heading" id="trade-off-increased-workload-during-backups"><strong>Trade-off</strong>: Increased workload during backups</h4>
+<p>MariaDB Enterprise Backup is a multi-threaded application that by default runs on a single thread. In cases where you have a host with multiple cores available, you can specify the number of threads you want it to use for parallel data file transfers using the <code>--parallel</code> option:</p>
+<pre class="fixed"># mariabackup --backup \
+      --target-dir=/data/backups/full \
+      --user=mariabackup \
+      --password=mbu_passwd \
+      --parallel=12
+</pre><h1 class="anchored_heading" id="incrementing-an-incremental-backup">Incrementing an Incremental Backup</h1>
+<h4 class="anchored_heading" id="technical-challenge-backup-resource-overhead-backup-duration"><strong>Technical challenge</strong>: Backup resource overhead, backup duration</h4>
+<h4 class="anchored_heading" id="trade-off-increased-restore-complexity-restore-process-duration"><strong>Trade-off</strong>: Increased restore complexity, restore process duration</h4>
+<p>Under normal operation an incremental backup is taken against an existing full backup. This allows you to further shorten the amount of time MariaDB Enterprise Backup locks MariaDB Enterprise Server while copying tablespaces. You can then apply the changes in the increment to the full backup with a <code>--prepare</code> operation at leisure, without disrupting database operations.</p>
+<p>MariaDB Enterprise Backup also supports incrementing from an incremental backup. In this operation, the <code>--incremental-basedir</code> option points not to the full backup directory but rather to the previous incremental backup.</p>
+<pre class="fixed"># mariabackup --backup \
+      --incremental-basedir=/data/backups/inc1 \
+      --target-dir=/data/backups/inc2 \
+      --user=mariabackup \
+      --password=mbu_passwd
+</pre><p>In preparing a backup to restore the data directory, apply the chain of incremental backups to the full backup in order. That is, first <code>inc1/, then inc2/</code>, and so on:</p>
+<pre class="fixed"># mariabackup --prepare \
+      --target-dir=/data/backups/full \
+      --incremental-dir=/data/backups/inc1
+</pre><pre class="fixed"># mariabackup --prepare \
+      --target-dir=/data/backups/full \
+      --incremental-dir=/data/backups/inc2
+</pre><p>Continue to apply all the incremental changes until you have applied all available to the backup. Then restore as usual:</p>
+<pre class="fixed"># mariabackup --copy-back --target-dir=/data/backups/full
+# chown -R mysql:mysql /var/lib/mysql
+</pre><p>Start MariaDB Enterprise Server on the restored data directory.</p>
+<h1 class="anchored_heading" id="storage-snapshots">Storage Snapshots</h1>
+<h4 class="anchored_heading" id="technical-challenge-backup-resource-overhead-backup-duration"><strong>Technical challenge</strong>: Backup resource overhead, backup duration</h4>
+<h4 class="anchored_heading" id="trade-off-limited-to-platforms-with-volume-level-snapshots-may-require-crash-recovery"><strong>Trade-off</strong>: Limited to platforms with volume-level snapshots, may require crash recovery</h4>
+<p>While MariaDB Enterprise Backups produces file-level backups, users on storage solutions may prefer to instead perform volume-level snapshots to minimize resource impact. This storage capability exists with some SAN, NAS, and volume manager platforms.</p>
+<p>Snapshots occur point-in-time, so no preparation step is needed to ensure data is internally consistent. Snapshots occur while tablespaces are open, and a restored snapshot may need to undergo crash recovery.</p>
+<p>Just as traditional full, incremental, and partial backups should be tested, so too should recovery from snapshots be tested on an ongoing basis.</p>
+<h2 class="anchored_heading" id="snapshotting-with-mariadb-enterprise-server">Snapshotting with MariaDB Enterprise Server</h2>
+<p>MariaDB Enterprise Server includes <a href="/kb/en/mariadb-enterprise-backup/#non-blocking-backups">advanced backup</a> functionality to reduce the impact of backup operations:</p>
+<p>1. Connect with a client and issue a <code>BACKUP STAGE START</code> statement and then a <code>BACKUP STAGE BLOCK_COMMIT</code> statement.</p>
+<p>2. Take the snapshot.</p>
+<p>3. Issue a <code>BACKUP STAGE END</code> statement.</p>
+<p>4. Once the backup has been completed, remove all files which begin with the <code> #sql prefix</code>. These files are generated when <code>ALTER TABLE</code> occurs during a staged backup.</p>
+<p>5. Retrieve, copy, or store the snapshot as is typical for your storage platform and as per business requirements to make the backup durable. This may require mounting the snapshot in some manner.</p>
+<h2 class="anchored_heading" id="snapshotting-with-mariadb-community-server">Snapshotting with MariaDB Community Server</h2>
+<p>It is recommended to briefly prevent writes while snapshotting. Specific commands vary depending on storage platform, business requirements, and setup, but a general approach is to:</p>
+<p>1. Connect with a client and issue a <code>FLUSH TABLES WITH READ LOCK</code> statement, leaving the client connected.</p>
+<p>2. Take the snapshot.</p>
+<p>3. Issue an <code>UNLOCK TABLES</code> statement, to remove the read lock.</p>
+<p>4. Retrieve, copy, or store the snapshot as is typical for your storage platform and as per business requirements to make the backup durable. This may require mounting the snapshot in some manner.</p>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/backup-optimization/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/backup-optimization/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                
+                    <li><a href="/kb/en/backup-and-restore-with-mariadb-enterprise-server/">
+                        ↑ Backup and Restore with MariaDB Enterprise Server ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/forming-a-backup-strategy/">
+                        Forming a Backup Strategy →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="15905" data-comments-url="/kb/en/backup-optimization/+comments"
+         data-reply-url="/kb/en/backup-optimization/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/backup-and-restore-with-mariadb-enterprise-server/">
+                    ↑ Backup and Restore with MariaDB Enterprise Server ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li class="active">
+                        <span>Backup Optimization</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/forming-a-backup-strategy/">
+                            
+                            Forming a Backup Strategy
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-backup/">
+                            
+                            MariaDB Enterprise Backup
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    <ul class="list-inline text-center footer-nav">
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/products" title="Products">Products</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/solutions" title="Solutions">Solutions</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/resources" title="Resources">Resources</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/about-us" title="About MariaDB">Company</a></h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/pricing" title="Pricing">Pricing</a>
+                            </h5>
+                        </li>
+                        
+                        
+                        <li>
+                            <h5><a href="https://mariadb.com/downloads" title="Download">Download MariaDB</a></h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row row-10">
+                
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div class="footer-copyright">
+                        <div class="text-center">
+                            <ul class="list-inline no-margin">
+                                <li>
+                                    <a href="/legal" title="Legal">Legal</a>
+                                </li>
+                                <li>
+                                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                            <p>Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
+
+</html>

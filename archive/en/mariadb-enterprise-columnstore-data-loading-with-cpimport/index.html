@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>MariaDB Enterprise ColumnStore Data Loading with cpimport - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
+
+    
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="MariaDB Enterprise ColumnStore Data Loading with cpimport" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+Overview
+MariaDB Enterprise ColumnStore includes a bulk data loading tool called cpimport, which bypasses the SQL layer to decrease the overhead of bulk data loading.
+Refer t..." />
+
+    <meta name="description" content="
+Overview
+MariaDB Enterprise ColumnStore includes a bulk data loading tool called cpimport, which bypasses the SQL layer to decrease the overhead of bulk data loading.
+Refer t..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/solutions" title="Solutions">Solutions</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="Company">Company</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/columns-storage-engines-and-plugins/">Columns, Storage Engines, and Plugins</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/storage-engines/">Storage Engines</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/data-import-with-mariadb-enterprise-columnstore/">Data Import with MariaDB Enterprise ColumnStore</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/">MariaDB Enterprise ColumnStore Data Loading with cpimport</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/+flag"
+                data-flag-url="/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2025-03-19 10:16">1 month, 1 week ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2025-04-30 09:48">14 hours, 17 minutes ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>MariaDB Enterprise ColumnStore Data Loading with cpimport</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+ <li class=""><a href="#overview" title="Overview">Overview</a></li>
+
+ <li class=""><a href="#intended-use-cases" title="Intended Use Cases">Intended Use Cases</a></li>
+
+ <li class=""><a href="#locking" title="Locking">Locking</a></li>
+
+ <li class=""><a href="#import-the-schema" title="Import the Schema">Import the Schema</a></li>
+
+ <li class=""><a href="#appends-data" title="Appends Data">Appends Data</a></li>
+
+ <li class=""><a href="#sort-the-input-file" title="Sort the Input File">Sort the Input File</a></li>
+
+ <li class=""><a href="#confirm-the-field-delimiter" title="Confirm the Field Delimiter">Confirm the Field Delimiter</a></li>
+
+ <li class=""><a href="#import-from-text-files" title="Import from Text Files">Import from Text Files</a></li>
+
+ <li class=""><a href="#import-from-binary-files" title="Import from Binary Files">Import from Binary Files</a> <ol class="toc">
+
+    <li class=""><a href="#binary-date-format" title="Binary DATE Format">Binary DATE Format</a></li>
+
+    <li class=""><a href="#binary-datetime-format" title="Binary DATETIME Format">Binary DATETIME Format</a></li>
+
+    <li class=""><a href="#import-from-standard-input" title="Import from Standard Input">Import from Standard Input</a> </ol>
+</li>
+
+ <li class=""><a href="#import-from-s3-using-aws-cli" title="Import from S3 using AWS CLI">Import from S3 using AWS CLI</a></li>
+
+ <li class=""><a href="#set-the-field-delimiter" title="Set the Field Delimiter">Set the Field Delimiter</a></li>
+
+ <li class=""><a href="#set-the-quoting-style" title="Set the Quoting Style">Set the Quoting Style</a></li>
+
+ <li class=""><a href="#logging" title="Logging">Logging</a></li>
+
+ <li class=""><a href="#special-handling" title="Special Handling">Special Handling</a> <ol class="toc">
+
+    <li class=""><a href="#column-order" title="Column Order">Column Order</a></li>
+
+    <li class=""><a href="#date-format" title="Date Format">Date Format</a></li>
+
+    <li class=""><a href="#transaction-log" title="Transaction Log">Transaction Log</a></li>
+
+    <li class=""><a href="#binary-log" title="Binary Log">Binary Log</a></li>
+
+    <li class=""><a href="#efs-storage" title="EFS Storage">EFS Storage</a> </ol>
+</li>
+</div>
+<h1 class="anchored_heading" id="overview">Overview</h1>
+<p>MariaDB Enterprise ColumnStore includes a bulk data loading tool called cpimport, which bypasses the SQL layer to decrease the overhead of bulk data loading.</p>
+<p>Refer to, the <a href="/kb/en/columnstore-bulk-data-loading/#cpimport-modes">cpimport modes</a> for additional information and <a href="/kb/en/columnstore-bulk-data-loading/">ColumnStore Bulk Data Loading</a>.</p>
+<p>The cpimport tool:</p>
+<ul start="1"><li>Bypasses the SQL layer to decrease overhead
+</li></ul>
+<ul start="1"><li>Does not block read queries
+</li></ul>
+<ul start="1"><li>Requires a write metadata lock on the table, which can be monitored with the <a href="/kb/en/metadata-lock-info-plugin/">METADATA_LOCK_INFO plugin</a>
+</li></ul>
+<ul start="1"><li>Appends the new data to the table. While the bulk load is in progress, the newly appended data is temporarily hidden from queries. After the bulk load is complete, the newly appended data is visible to queries.
+</li></ul>
+<ul start="1"><li>Inserts each row in the order the rows are read from the source file. Users can optimize data loads for Enterprise ColumnStore's automatic partitioning by loading presorted data files.
+</li></ul>
+<ul start="1"><li>Supports parallel distributed bulk loads
+</li></ul>
+<ul start="1"><li>Imports data from text files
+</li></ul>
+<ul start="1"><li>Imports data from binary files
+</li></ul>
+<ul start="1"><li>Imports data from standard input (stdin)
+</li></ul>
+<h1 class="anchored_heading" id="intended-use-cases">Intended Use Cases</h1>
+<p>You can load data using the cpimport tool in the following cases:</p>
+<ul start="1"><li>You are loading data into a ColumnStore table from a text file stored on the primary node's file system.
+</li></ul>
+<ul start="1"><li>You are loading data into a ColumnStore table from a binary file stored on the primary node's file system.
+</li></ul>
+<ul start="1"><li>You are loading data into a ColumnStore table from the output of a command running on the primary node.
+</li></ul>
+<h1 class="anchored_heading" id="locking">Locking</h1>
+<p>MariaDB Enterprise ColumnStore requires a write metadata lock (MDL) on the table when a bulk data load is performed with cpimport.</p>
+<p>When a bulk data load is running:</p>
+<ul start="1"><li>Read queries will not be blocked.
+</li></ul>
+<ul start="1"><li>Write queries and concurrent bulk data loads on the same table will be blocked until the bulk data load operation is complete, and the write metadata lock on the table has been released.
+</li></ul>
+<ul start="1"><li>The write metadata lock (MDL) can be monitored with the <a href="/kb/en/metadata-lock-info-plugin/">METADATA_LOCK_INFO plugin</a>.
+</li></ul>
+<h1 class="anchored_heading" id="import-the-schema">Import the Schema</h1>
+<p>Before data can be imported into the tables, the schema must be created.</p>
+<p>1. Connect to the primary server using <a href="/kb/en/mariadb-client/">MariaDB Client</a>:</p>
+<pre class="fixed">$ mariadb --host 192.168.0.100 --port 5001 \
+      --user db_user --password \
+      --default-character-set=utf8
+</pre><p>After the command is executed, it will prompt you for a password.</p>
+<p>2. For each database that you are importing, create the database with the <a href="/kb/en/create-database/">CREATE DATABASE</a> statement:</p>
+<pre class="fixed">CREATE DATABASE inventory;
+</pre><p>3. For each table that you are importing, create the table with the <a href="/kb/en/create-table/">CREATE TABLE</a> statement:</p>
+<pre class="fixed">CREATE TABLE inventory.products (
+   product_name varchar(11) NOT NULL DEFAULT '',
+   supplier varchar(128) NOT NULL DEFAULT '',
+   quantity varchar(128) NOT NULL DEFAULT '',
+   unit_cost varchar(128) NOT NULL DEFAULT ''
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+</pre><div class="cstm-style bluebox"><p><strong>Note:</strong> To get the best performance from Enterprise ColumnStore, make sure to follow Enterprise ColumnStore's best practices for schema design. </p>
+</div><h1 class="anchored_heading" id="appends-data">Appends Data</h1>
+<p>When MariaDB Enterprise ColumnStore performs a bulk data load, it appends data to the table in the order in which the data is read. Appending data reduces the I/O requirements of bulk data loads, so that larger data sets can be loaded very efficiently.</p>
+<p>While the bulk load is in progress, the newly appended data is temporarily hidden from queries.</p>
+<p>After the bulk load is complete, the newly appended data is visible to queries.</p>
+<h1 class="anchored_heading" id="sort-the-input-file">Sort the Input File</h1>
+<p>When MariaDB Enterprise ColumnStore performs a bulk data load, it appends data to the table in the order in which the data is read.</p>
+<p>The order of data can have a significant effect on performance with Enterprise ColumnStore, so it can be helpful to sort the data in the input file prior to importing it.</p>
+<p>For additional information, see "<a href="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/#load-ordered-data-in-proper-order">Load Ordered Data in Proper Order</a>".</p>
+<h1 class="anchored_heading" id="confirm-the-field-delimiter">Confirm the Field Delimiter</h1>
+<p>Before importing a file into MariaDB Enterprise ColumnStore, confirm that the field delimiter is not present in the data.</p>
+<p>The default field delimiter for the cpimport tool is a pipe (|).</p>
+<p>To use a different delimiter, you can set the field delimiter.</p>
+<h1 class="anchored_heading" id="import-from-text-files">Import from Text Files</h1>
+<p>The cpimport tool can import data from a text file if a file is provided as an argument after the database and table name.</p>
+<p>For example, to import the file <code>inventory-products.txt</code> into the products table in the inventory database:</p>
+<pre class="fixed">$ sudo cpimport \
+   inventory products \
+   inventory-products.txt
+</pre><h1 class="anchored_heading" id="import-from-binary-files">Import from Binary Files</h1>
+<p>The cpimport tool can import data from a binary file if the <code>-I1 or -I2</code> option is provided and a file is provided as an argument after the database and table name.</p>
+<p>For example, to import the file <code>inventory-products.bin</code> into the products table in the inventory database:</p>
+<pre class="fixed">$ sudo cpimport -I1 \
+   inventory products \
+   inventory-products.bin
+</pre><p>The <code>-I1 and -I2</code> options allow two different binary import modes to be selected:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Option</th><th>Description</th></tr>
+<tr><td>-I1</td><td>Numeric fields containing <code>NULL</code> will be treated as <code>NULL</code> unless the column has a default value</td></tr>
+<tr><td>-I2</td><td>Numeric fields containing <code>NULL</code> will be saturated</td></tr>
+</table>
+</div><p>The binary file should use the following format for data:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Data Type(s)</th><th>Format</th></tr>
+<tr><td>BIGINT</td><td>Little-endian integer format <br> Signed NULL: 0x8000000000000000ULL <br> Unsigned NULL: 0xFFFFFFFFFFFFFFFEULL</td></tr>
+<tr><td>CHAR</td><td>String padded with '0' to match the length of the field <br>NULL: '0' for the full length of the field</td></tr>
+<tr><td>DATE</td><td>Use the format represented by the struct Date <br>NULL: 0xFFFFFFFE</td></tr>
+<tr><td>DATETIME</td><td>Use the format represented by the struct DateTime <br> NULL: 0xFFFFFFFFFFFFFFFEULL</td></tr>
+<tr><td>DECIMAL</td><td>Use an integer representation of the value without the decimal point Sizing depends on precision: <br> * 1-2: use 2 bytes <br> * 3-4: use 3 bytes <br> * 4-9: use 4 bytes <br> * 10+: use 8 bytes <br> Signed and unsigned NULL: See equivalent-sized integer</td></tr>
+<tr><td>DOUBLE</td><td>Native IEEE floating point format <br> NULL: 0xFFFAAAAAAAAAAAAAULL</td></tr>
+<tr><td>FLOAT</td><td>Native IEEE floating point format <br> NULL: 0xFFAAAAAA</td></tr>
+<tr><td>INT</td><td>Little-endian integer format <br> Signed NULL: 0x80000000 <br> Unsigned NULL: 0xFFFFFFFE</td></tr>
+<tr><td>SMALLINT</td><td>Little-endian integer format <br> Signed NULL: 0x8000 <br> Unsigned NULL: 0xFFFE</td></tr>
+<tr><td>TINYINT</td><td>Little-endian integer format <br> Signed NULL: 0x80 <br> Unsigned NULL: 0xFE</td></tr>
+<tr><td>VARCHAR</td><td>String padded with '0' to match the length of the field <br>NULL: '0' for the full length of the field</td></tr>
+</table>
+</div><h2 class="anchored_heading" id="binary-date-format">Binary DATE Format</h2>
+<p>In binary input files, the cpimport tool expects <a href="data-types-date">DATE</a> columns to be in the following format:</p>
+<pre class="fixed">struct Date
+{
+  unsigned spare : 6;
+  unsigned day : 6;
+  unsigned month : 4;
+  unsigned year : 16
+};
+</pre><h2 class="anchored_heading" id="binary-datetime-format">Binary DATETIME Format</h2>
+<p>In binary input files, the cpimport tool expects <a href="data-types-datetime">DATETIME</a> columns to be in the following format:</p>
+<pre class="fixed">
+struct DateTime
+{
+  unsigned msecond : 20;
+  unsigned second : 6;
+  unsigned minute : 6;
+  unsigned hour : 6;
+  unsigned day : 6;
+  unsigned month : 4;
+  unsigned year : 16
+};
+</pre><h2 class="anchored_heading" id="import-from-standard-input">Import from Standard Input</h2>
+<p>The cpimport tool can import data from standard input (stdin) if no file is provided as an argument.</p>
+<p>Importing from standard input is useful in many scenarios.</p>
+<p>One scenario is when you want to import data from a remote database. You can use <a href="/kb/en/mariadb-client/">MariaDB Client</a> to query the table using the <a href="/kb/en/select/">SELECT</a> statement, and then pipe the results into the standard input of the cpimport tool:</p>
+<pre class="fixed">$ mariadb --quick \
+   --skip-column-names \
+   --execute=&#34;SELECT * FROM inventory.products&#34; \
+   | cpimport -s '\t' inventory products
+</pre><h1 class="anchored_heading" id="import-from-s3-using-aws-cli">Import from S3 using AWS CLI</h1>
+<p>The cpimport tool can import data from a file stored in a remote S3 bucket.</p>
+<p>You can use the AWS CLI to copy the file from S3, and then pipe the contents into the standard input of the cpimport tool:</p>
+<pre class="fixed">$ aws s3 cp --quiet s3://columnstore-test/inventory-products.csv - \
+   | cpimport -s ',' inventory products
+</pre><p>Alternatively, the columnstore_info.load_from_s3 stored procedure can import data from S3-compatible cloud object storage.</p>
+<h1 class="anchored_heading" id="set-the-field-delimiter">Set the Field Delimiter</h1>
+<p>The default field delimiter for the cpimport tool is a pipe (|).</p>
+<p>If your data file uses a different field delimiter, you can specify the field delimiter with the -s option.</p>
+<p>For a TSV (tab-separated values) file:</p>
+<pre class="fixed">
+$ sudo cpimport -s '\t' \
+   inventory products \
+   inventory-products.tsv
+</pre><p>For a CSV (comma-separated values) file:</p>
+<pre class="fixed">$ sudo cpimport -s ',' \
+   inventory products \
+   inventory-products.csv
+</pre><h1 class="anchored_heading" id="set-the-quoting-style">Set the Quoting Style</h1>
+<p>By default, the cpimport tool does not expect fields to be quoted.</p>
+<p>If your data file uses quotes around fields, you can specify the quote character with the -E option.</p>
+<p>To load a TSV (tab-separated values) file that uses double quotes:</p>
+<pre class="fixed">$ sudo cpimport -s '\t' -E '&#34;' \
+   inventory products \
+   inventory-products.tsv
+</pre><p>To load a CSV (comma-separated values) file that uses optional single quotes:</p>
+<pre class="fixed">$ sudo cpimport -s ',' -E &#34;'&#34; \
+   inventory products \
+   inventory-products.csv
+</pre><h1 class="anchored_heading" id="logging">Logging</h1>
+<p>The cpimport tool writes logs to different directories, depending on the Enterprise ColumnStore version:</p>
+<ul start="1"><li>In Enterprise ColumnStore 5.5.2 and later, logs are written to /var/log/mariadb/columnstore/bulk/
+</li><li>In Enterprise ColumnStore 5 releases before 5.5.2, logs are written to /var/lib/columnstore/data/bulk/
+</li><li>In Enterprise ColumnStore 1.4, logs are written to /usr/local/mariadb/columnstore/bulk/
+</li></ul>
+<h1 class="anchored_heading" id="special-handling">Special Handling</h1>
+<h2 class="anchored_heading" id="column-order">Column Order</h2>
+<p>The cpimport tool requires column values to be be in the same order in the input file as the columns in the table definition.</p>
+<h2 class="anchored_heading" id="date-format">Date Format</h2>
+<p>The cpimport tool requires <a href="data-types-date">DATE</a> values to be specified in the format YYYY-MM-DD.</p>
+<h2 class="anchored_heading" id="transaction-log">Transaction Log</h2>
+<p>The cpimport tool does not write bulk data loads to the transaction log, so they are not transactional.</p>
+<h2 class="anchored_heading" id="binary-log">Binary Log</h2>
+<p>The cpimport tool does not write bulk data loads to the binary log, so they cannot be replicated using <a href="/kb/en/standard-replication/">MariaDB replication</a>.</p>
+<h2 class="anchored_heading" id="efs-storage">EFS Storage</h2>
+<p>When Enterprise ColumnStore uses object storage and the Storage Manager directory uses EFS in the default Bursting Throughput mode, the cpimport tool can have performance problems if multiple data load operations are executed consecutively. The performance problems can occur because the Bursting Throughput mode scales the rate relative to the size of the file system, so the burst credits for a small Storage Manager volume can be fully consumed very quickly.</p>
+<p>When this problem occurs, some solutions are:</p>
+<ul start="1"><li>Avoid using burst credits by using Provisioned Throughput mode instead of Bursting Throughput mode
+</li><li>Monitor burst credit balances in AWS and run data load operations when burst credits are available
+</li><li>Increase the burst credit balance by increasing the file system size (for example, by creating a dummy file)
+</li></ul>
+<p>Additional information is available <a href="/kb/en/columnstore-bulk-data-loading/#cpimport-modes">here</a>.</p>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                
+                    <li><a href="/kb/en/data-import-with-mariadb-enterprise-columnstore/">
+                        ↑ Data Import with MariaDB Enterprise ColumnStore ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/mariadb-enterprise-columnstore-data-loading-with-insert-select/">
+                        MariaDB Enterprise ColumnStore Data Loading with INSERT .. SELECT →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="16037" data-comments-url="/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/+comments"
+         data-reply-url="/kb/en/mariadb-enterprise-columnstore-data-loading-with-cpimport/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/data-import-with-mariadb-enterprise-columnstore/">
+                    ↑ Data Import with MariaDB Enterprise ColumnStore ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li class="active">
+                        <span>MariaDB Enterprise ColumnStore Data Loading with cpimport</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-columnstore-data-loading-with-insert-select/">
+                            
+                            MariaDB Enterprise ColumnStore Data Loading with INSERT .. SELECT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-columnstore-data-loading-with-load-data-infile/">
+                            
+                            MariaDB Enterprise ColumnStore Data Loading with LOAD DATA INFILE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-columnstore-data-loading-with-load_from_s3/">
+                            
+                            MariaDB Enterprise ColumnStore Data Loading with load_from_s3
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    <ul class="list-inline text-center footer-nav">
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/products" title="Products">Products</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/solutions" title="Solutions">Solutions</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/resources" title="Resources">Resources</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/about-us" title="About MariaDB">Company</a></h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/pricing" title="Pricing">Pricing</a>
+                            </h5>
+                        </li>
+                        
+                        
+                        <li>
+                            <h5><a href="https://mariadb.com/downloads" title="Download">Download MariaDB</a></h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row row-10">
+                
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div class="footer-copyright">
+                        <div class="text-center">
+                            <ul class="list-inline no-margin">
+                                <li>
+                                    <a href="/legal" title="Legal">Legal</a>
+                                </li>
+                                <li>
+                                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                            <p>Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
+
+</html>

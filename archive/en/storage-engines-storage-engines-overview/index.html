@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Storage Engines Overview - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
+
+    
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Storage Engines Overview" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/storage-engines-storage-engines-overview/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+Overview
+MariaDB Enterprise Server features pluggable storage engines to allow per-table workload optimization.
+A storage engine is a type of plugin for MariaDB Enterprise Se..." />
+
+    <meta name="description" content="
+Overview
+MariaDB Enterprise Server features pluggable storage engines to allow per-table workload optimization.
+A storage engine is a type of plugin for MariaDB Enterprise Se..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/storage-engines-storage-engines-overview/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/storage-engines-storage-engines-overview/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/solutions" title="Solutions">Solutions</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="Company">Company</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/columns-storage-engines-and-plugins/">Columns, Storage Engines, and Plugins</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/storage-engines/">Storage Engines</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/storage-engines-storage-engines-overview/">Storage Engines Overview</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/storage-engines-storage-engines-overview/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/storage-engines-storage-engines-overview/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/storage-engines-storage-engines-overview/+flag"
+                data-flag-url="/kb/en/storage-engines-storage-engines-overview/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/storage-engines-storage-engines-overview/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2025-02-27 08:55">2 months ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2025-04-30 08:57">15 hours, 7 minutes ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/storage-engines-storage-engines-overview/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/storage-engines-storage-engines-overview/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/storage-engines-storage-engines-overview/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/storage-engines-storage-engines-overview/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+    
+
+<div class="well well-small box"><div><h5>Parents</h5></div><div>
+
+        <ul>
+            
+                <li><a href="/kb/en/storage-engine/">Storage Engines</a></li>
+            
+                <li><a href="/kb/en/storage-engines-overview/">Storage Engines Overview</a></li>
+            
+        </ul>
+    
+</div>
+</div>
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Storage Engines Overview</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+ <li class=""><a href="#overview" title="Overview">Overview</a></li>
+
+ <li class=""><a href="#examples" title="Examples">Examples</a> <ol class="toc">
+
+    <li class=""><a href="#identify-the-default-storage-engine" title="Identify the Default Storage Engine">Identify the Default Storage Engine</a></li>
+
+    <li class=""><a href="#set-the-default-storage-engine" title="Set the Default Storage Engine">Set the Default Storage Engine</a></li>
+
+    <li class=""><a href="#configure-the-default-storage-engine" title="Configure the Default Storage Engine">Configure the Default Storage Engine</a></li>
+
+    <li class=""><a href="#identify-available-storage-engines" title="Identify Available Storage Engines">Identify Available Storage Engines</a></li>
+
+    <li class=""><a href="#choose-storage-engine-for-a-new-table" title="Choose Storage Engine for a New Table">Choose Storage Engine for a New Table</a> </ol>
+</li>
+
+ <li class=""><a href="#resources" title="Resources">Resources</a> <ol class="toc">
+
+    <li class=""><a href="#engines-for-system-tables" title="Engines for System Tables">Engines for System Tables</a> </ol>
+</li>
+
+ <li class=""><a href="#faq" title="FAQ">FAQ</a> <ol class="toc">
+
+    <li class=""><a href="#can-i-use-more-than-one-storage-engine-on-a-server" title="Can I use more than one storage engine on a server?">Can I use more than one storage engine on a server?</a></li>
+
+    <li class=""><a href="#can-i-use-more-than-one-storage-engine-in-a-single-query" title="Can I use more than one storage engine in a single query?">Can I use more than one storage engine in a single query?</a></li>
+
+    <li class=""><a href="#what-storage-engine-should-i-use-for-transactional-or-oltp-workloads" title="What storage engine should I use for transactional or OLTP workloads?">What storage engine should I use for transactional or OLTP workloads?</a></li>
+
+    <li class=""><a href="#what-storage-engine-should-i-use-for-analytical-or-olap-workloads" title="What storage engine should I use for analytical or OLAP workloads?">What storage engine should I use for analytical or OLAP workloads?</a></li>
+
+    <li class=""><a href="#what-storage-engine-should-i-use-if-my-application-performs-both-transactional-and-analytical-queries" title="What storage engine should I use if my application performs both transactional and analytical queries?">What storage engine should I use if my application performs both transactional and analytical queries?</a> </ol>
+</li>
+
+ <li class=""><a href="#reference" title="Reference">Reference</a> <ol class="toc">
+
+    <li class=""><a href="#mariadb-server-reference" title="MariaDB Server Reference">MariaDB Server Reference</a> </ol>
+</li>
+</div>
+<h1 class="anchored_heading" id="overview">Overview</h1>
+<p><a href="/kb/en/mariadb-enterprise-server/">MariaDB Enterprise Server</a> features pluggable storage engines to allow per-table workload optimization.</p>
+<p>A storage engine is a type of <a href="/kb/en/plugins/">plugin</a> for <a href="/kb/en/mariadb-enterprise-server/">MariaDB Enterprise Server</a>:</p>
+<ul start="1"><li>Different storage engines may be optimized for different workloads, such as transactional workloads, analytical workloads, or high throughput workloads.
+</li><li>Different storage engines may be designed for different use cases, such as federated table access, table sharding, and table archiving in the cloud.
+</li><li>Different tables on the same server may use different storage engines.
+</li></ul>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Engine</th><th>Target</th><th>Optimization</th><th>Availability</th></tr>
+<tr><td><a href="/kb/en/aria/">Aria</a></td><td>Read-Heavy</td><td>Reads</td><td>ES 10.5+</td></tr>
+<tr><td><a href="/kb/en/columnstore/">ColumnStore</a></td><td>Analytics, HTAP</td><td>Big Data, Analytical</td><td>ES 10.5+</td></tr>
+<tr><td><a href="/kb/en/innodb/">InnoDB</a></td><td>General Purpose</td><td>Mixed Read/Write</td><td>ES 10.5+</td></tr>
+<tr><td><a href="/kb/en/memory/">Memory</a></td><td>Cache, Temp</td><td>Temporary Data</td><td>ES 10.5+</td></tr>
+<tr><td><a href="/kb/en/myisam/">MyISAM</a></td><td>Reads</td><td>Reads</td><td>ES 10.5+</td></tr>
+<tr><td><a href="/kb/en/myrocks/">MyRocks</a></td><td>Write-Heavy</td><td>I/O Reduction, SSD</td><td>ES 10.5+</td></tr>
+<tr><td><a href="/kb/en/s3-storage-engine/">S3</a></td><td>Cloud</td><td>Read-Only</td><td>ES 10.5+</td></tr>
+<tr><td><a href="/kb/en/spider/">Spider</a></td><td>Federation</td><td>Sharding, Interlink</td><td>ES 10.5+</td></tr>
+</table>
+</div><h1 class="anchored_heading" id="examples">Examples</h1>
+<h2 class="anchored_heading" id="identify-the-default-storage-engine">Identify the Default Storage Engine</h2>
+<p>Identify the server's global default storage engine by using <a href="/kb/en/show-variables/">SHOW GLOBAL VARIABLES</a> to query the <a href="/kb/en/server-system-variables/#default_storage_engine">default_storage_engine</a> system variable:</p>
+<pre class="fixed">SHOW GLOBAL VARIABLES LIKE 'default_storage_engine';
+</pre><pre class="fixed">+------------------------+--------+
+| Variable_name          | Value  |
++------------------------+--------+
+| default_storage_engine | InnoDB |
++------------------------+--------+
+
+</pre><p>Identify the session's default storage engine by using <a href="/kb/en/show-variables/">SHOW SESSION VARIABLES</a>:</p>
+<pre class="fixed">SHOW SESSION VARIABLES LIKE 'default_storage_engine';
+</pre><pre class="fixed">+------------------------+--------+
+| Variable_name          | Value  |
++------------------------+--------+
+| default_storage_engine | InnoDB |
++------------------------+--------+
+
+</pre><h2 class="anchored_heading" id="set-the-default-storage-engine">Set the Default Storage Engine</h2>
+<p>Global default storage engine:</p>
+<pre class="fixed">SET GLOBAL default_storage_engine='MyRocks';
+</pre><p>Session default storage engine supersedes global default during this session:</p>
+<pre class="fixed">SET SESSION default_storage_engine='MyRocks';
+</pre><h2 class="anchored_heading" id="configure-the-default-storage-engine">Configure the Default Storage Engine</h2>
+<pre class="fixed">[mariadb]
+...
+default_storage_engine=MyRocks
+</pre><h2 class="anchored_heading" id="identify-available-storage-engines">Identify Available Storage Engines</h2>
+<pre class="fixed">SHOW ENGINES;
+</pre><h2 class="anchored_heading" id="choose-storage-engine-for-a-new-table">Choose Storage Engine for a New Table</h2>
+<p>Storage engine is specified at time of table creation using a ENGINE = parameter.</p>
+<pre class="fixed">CREATE TABLE accounts.messages (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  sender_id INT,
+  receiver_id INT,
+  message TEXT
+) ENGINE = MyRocks;
+</pre><h1 class="anchored_heading" id="resources">Resources</h1>
+<h2 class="anchored_heading" id="engines-for-system-tables">Engines for System Tables</h2>
+<p>Standard MariaDB storage engines are used for System Table storage:</p>
+<ul start="1"><li><a href="/kb/en/aria/">Aria Storage Engine</a> 
+</li><li><a href="/kb/en/myisam-storage-engine/">MyISAM Storage Engine</a> 
+</li></ul>
+<h1 class="anchored_heading" id="faq">FAQ</h1>
+<h2 class="anchored_heading" id="can-i-use-more-than-one-storage-engine-on-a-server">Can I use more than one storage engine on a server?</h2>
+<ul start="1"><li>Yes, different tables can use different storage engines on the same server.
+</li><li>To create a table with a specific storage engine, specify the ENGINE table option to the <a href="/kb/en/create-table/">CREATE TABLE</a> statement.
+</li></ul>
+<h2 class="anchored_heading" id="can-i-use-more-than-one-storage-engine-in-a-single-query">Can I use more than one storage engine in a single query?</h2>
+<ul start="1"><li>Yes, a single query can reference tables that use multiple storage engines.
+</li><li>In some cases, special configuration may be required. For example, Enterprise ColumnStore requires cross engine joins to be configured.
+</li></ul>
+<h2 class="anchored_heading" id="what-storage-engine-should-i-use-for-transactional-or-oltp-workloads">What storage engine should I use for transactional or OLTP workloads?</h2>
+<ul start="1"><li><a href="/kb/en/innodb/">InnoDB</a> is the recommended storage engine for transactional or OLTP workloads.
+</li></ul>
+<h2 class="anchored_heading" id="what-storage-engine-should-i-use-for-analytical-or-olap-workloads">What storage engine should I use for analytical or OLAP workloads?</h2>
+<ul start="1"><li><a href="/kb/en/columnstore/">ColumnStore</a> is the recommended storage engine for analytical or OLAP workloads.
+</li></ul>
+<h2 class="anchored_heading" id="what-storage-engine-should-i-use-if-my-application-performs-both-transactional-and-analytical-queries">What storage engine should I use if my application performs both transactional and analytical queries?</h2>
+<p>An application that performs both transactional and analytical queries is known as <a href="/kb/en/deploy-htap-topology/">hybrid transactional-analytical processing (HTAP)</a>.</p>
+<p>HTAP can be implemented with MariaDB Enterprise Server by using <a href="/kb/en/innodb/">InnoDB</a> for transactional queries and <a href="/kb/en/columnstore/">ColumnStore</a> for analytical queries.</p>
+<h1 class="anchored_heading" id="reference">Reference</h1>
+<h2 class="anchored_heading" id="mariadb-server-reference">MariaDB Server Reference</h2>
+<ul start="1"><li><a href="/kb/en/plugins/">Plugins</a>.
+</li><li><a href="/kb/en/information-schema-engines-table/">Information Schema ENGINES table</a>, which shows available storage engines.
+</li><li><a href="/kb/en/information-schema-tables-table/">Information Schema TABLES table</a>, which shows storage engine by table.</li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/storage-engines-storage-engines-overview/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/storage-engines-storage-engines-overview/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/machine-learning-with-mindsdb/">
+                        ← Machine Learning with MindsDB
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/storage-engine/">
+                        ↑ Storage Engines ↑
+                    </a>
+                    </li>
+                
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="15889" data-comments-url="/kb/en/storage-engines-storage-engines-overview/+comments"
+         data-reply-url="/kb/en/storage-engines-storage-engines-overview/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/storage-engine/">
+                    ↑ Storage Engines ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/choosing-the-right-storage-engine/">
+                            
+                            Choosing the Right Storage Engine
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/innodb/">
+                            
+                            InnoDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-columnstore/">
+                            
+                            MariaDB ColumnStore
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/aria/">
+                            
+                            Aria
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/archive/">
+                            
+                            Archive
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/blackhole/">
+                            
+                            BLACKHOLE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/connect/">
+                            
+                            CONNECT
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/csv/">
+                            
+                            CSV
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/federatedx-storage-engine/">
+                            
+                            FederatedX
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/memory-storage-engine/">
+                            
+                            MEMORY Storage Engine
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/merge/">
+                            
+                            MERGE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mroonga/">
+                            
+                            Mroonga
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/myisam-storage-engine/">
+                            
+                            MyISAM
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/myrocks/">
+                            
+                            MyRocks
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/oqgraph-storage-engine/">
+                            
+                            OQGRAPH
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/s3-storage-engine/">
+                            
+                            S3 Storage Engine
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/sequence-storage-engine/">
+                            
+                            Sequence Storage Engine
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/sphinx-storage-engine/">
+                            
+                            SphinxSE
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/spider/">
+                            
+                            Spider
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/tokudb/">
+                            
+                            TokuDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/information-schema-engines-table/">
+                            <span class="pull-right not_primary"></span>
+                            Information Schema ENGINES Table
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/performance_schema-storage-engine/">
+                            
+                            PERFORMANCE_SCHEMA Storage Engine
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/legacy-storage-engines/">
+                            
+                            Legacy Storage Engines
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/storage-engines-storage-engine-development/">
+                            
+                            Storage Engine Development
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/converting-tables-from-myisam-to-innodb/">
+                            
+                            Converting Tables from MyISAM to InnoDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/storage-engines-overview/">
+                            
+                            Storage Engines Overview
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/machine-learning-with-mindsdb/">
+                            
+                            Machine Learning with MindsDB
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Storage Engines Overview</span>
+                        
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    <ul class="list-inline text-center footer-nav">
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/products" title="Products">Products</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/solutions" title="Solutions">Solutions</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/resources" title="Resources">Resources</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/about-us" title="About MariaDB">Company</a></h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/pricing" title="Pricing">Pricing</a>
+                            </h5>
+                        </li>
+                        
+                        
+                        <li>
+                            <h5><a href="https://mariadb.com/downloads" title="Download">Download MariaDB</a></h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row row-10">
+                
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div class="footer-copyright">
+                        <div class="text-center">
+                            <ul class="list-inline no-margin">
+                                <li>
+                                    <a href="/legal" title="Legal">Legal</a>
+                                </li>
+                                <li>
+                                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                            <p>Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
+
+</html>

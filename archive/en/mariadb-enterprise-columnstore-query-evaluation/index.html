@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>MariaDB Enterprise ColumnStore Query Evaluation - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
+
+    
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="MariaDB Enterprise ColumnStore Query Evaluation" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/mariadb-enterprise-columnstore-query-evaluation/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+Overview
+MariaDB Enterprise ColumnStore is a smart storage engine designed to efficiently execute analytical queries using distributed query execution and massively parallel ..." />
+
+    <meta name="description" content="
+Overview
+MariaDB Enterprise ColumnStore is a smart storage engine designed to efficiently execute analytical queries using distributed query execution and massively parallel ..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/mariadb-enterprise-columnstore-query-evaluation/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/mariadb-enterprise-columnstore-query-evaluation/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/solutions" title="Solutions">Solutions</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="Company">Company</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/columns-storage-engines-and-plugins/">Columns, Storage Engines, and Plugins</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/storage-engines/">Storage Engines</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/columnstore-architecture/">ColumnStore Architecture</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/">MariaDB Enterprise ColumnStore Query Evaluation</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+flag"
+                data-flag-url="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2025-03-07 15:31">1 month, 3 weeks ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2025-04-30 11:47">12 hours, 18 minutes ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <ul>
+                
+                    <li><a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+image/ecstore-queryexecutionextentelimination">ecstore-queryexecutionextentelimination</a>
+                    </li>
+                
+                    <li><a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+image/ecstore-queryexecutionwith-s3-flowchart">ecstore-queryexecutionwith-s3-flowchart</a>
+                    </li>
+                
+            </ul>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>MariaDB Enterprise ColumnStore Query Evaluation</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+ <li class=""><a href="#overview" title="Overview">Overview</a></li>
+
+ <li class=""><a href="#scalability" title="Scalability">Scalability</a> <ol class="toc">
+
+    <li class=""><a href="#horizontal-scalability" title="Horizontal Scalability">Horizontal Scalability</a></li>
+
+    <li class=""><a href="#vertical-scalability" title="Vertical Scalability">Vertical Scalability</a> </ol>
+</li>
+
+ <li class=""><a href="#extent-elimination" title="Extent Elimination">Extent Elimination</a></li>
+
+ <li class=""><a href="#custom-select-handler" title="Custom Select Handler">Custom Select Handler</a></li>
+
+ <li class=""><a href="#smart-storage-engine" title="Smart Storage Engine">Smart Storage Engine</a> <ol class="toc">
+
+    <li class=""><a href="#configure-the-select-handler" title="Configure the Select Handler">Configure the Select Handler</a> </ol>
+</li>
+
+ <li class=""><a href="#joins" title="Joins">Joins</a> <ol class="toc">
+
+    <li class=""><a href="#configure-in-memory-joins" title="Configure In-Memory Joins">Configure In-Memory Joins</a></li>
+
+    <li class=""><a href="#configure-disk-based-joins" title="Configure Disk-Based Joins">Configure Disk-Based Joins</a> </ol>
+</li>
+
+ <li class=""><a href="#aggregations" title="Aggregations">Aggregations</a> <ol class="toc">
+
+    <li class=""><a href="#configure-disk-based-aggregations" title="Configure Disk-Based Aggregations">Configure Disk-Based Aggregations</a> </ol>
+</li>
+
+ <li class=""><a href="#query-planning" title="Query Planning">Query Planning</a></li>
+
+ <li class=""><a href="#exemgr-processfacility" title="ExeMgr Process/Facility">ExeMgr Process/Facility</a></li>
+
+ <li class=""><a href="#query-evaluation-process" title="Query Evaluation Process">Query Evaluation Process</a></li>
+</div>
+<h1 class="anchored_heading" id="overview">Overview</h1>
+<p>MariaDB Enterprise ColumnStore is a smart storage engine designed to efficiently execute analytical queries using distributed query execution and massively parallel processing (MPP) techniques.</p>
+<h1 class="anchored_heading" id="scalability">Scalability</h1>
+<p>MariaDB Enterprise ColumnStore is designed to achieve vertical and horizontal scalability for production analytics using distributed query execution and massively parallel processing (MPP) techniques.</p>
+<p>Enterprise ColumnStore evaluates each query as a sequence of job steps using sophisticated techniques to get the best performance for complex analytical queries. Some types of job steps are designed to scale with the system's resources. As you increase the number of ColumnStore nodes or the number of cores on each node, Enterprise ColumnStore can use those resources to more efficiently execute those types of job steps.</p>
+<p>Enterprise ColumnStore stores each column on disk in extents. The storage format is designed to maintain scalability, even as the table grows. If an operation does not read parts of a large table, I/O costs are reduced. Enterprise ColumnStore uses a technique called extent elimination that compares the maximum and minimum values in the extent map to the query's conditions, and it avoids scanning extents that don't satisfy the conditions.</p>
+<p>Enterprise ColumnStore provides exceptional scalability for analytical queries. Enterprise ColumnStore's design supports targeted scale-out to address increased workload requirements, whether it is a larger query load or increased storage and query processing capacity.</p>
+<h2 class="anchored_heading" id="horizontal-scalability">Horizontal Scalability</h2>
+<p>MariaDB Enterprise ColumnStore provides horizontal scalability by executing some types of job steps in a distributed manner using multiple nodes.</p>
+<p>When Enterprise ColumnStore is evaluating a job step, the ExeMgr process or facility on the initiator/aggregator node requests the PrimProc process on each node to perform the job step on different extents in parallel. As more nodes are added, Enterprise ColumnStore can perform more work in parallel.</p>
+<p>Enterprise ColumnStore also uses massively parallel processing (MPP) techniques to speed up some types of job steps. For some types of aggregation operations, each node can perform an initial local aggregation, and then the initiator/aggregator node only needs to combine the local results and perform a final aggregation. This technique can be very efficient for some types of aggregation operations, such as for queries that use the AVG(), COUNT(), or SUM() aggregate functions.</p>
+<h2 class="anchored_heading" id="vertical-scalability">Vertical Scalability</h2>
+<p>MariaDB Enterprise ColumnStore provides vertical scalability by executing some types of job steps in a multi-threaded manner using a thread pool.</p>
+<p>When the PrimProc process on a node receives work, it executes the job step on an extent in a multi-threaded manner using a thread pool. Each thread operates on a different block within the extent. As more CPUs are added, Enterprise ColumnStore can work on more blocks in parallel.</p>
+<h1 class="anchored_heading" id="extent-elimination">Extent Elimination</h1>
+<p><img src="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+image/ecstore-queryexecutionextentelimination" alt="ECStore-QueryExecutionExtentElimination" title="ECStore-QueryExecutionExtentElimination"></p>
+<p>MariaDB Enterprise ColumnStore uses extent elimination to scale query evaluation as table size increases.</p>
+<p>Most databases are row-based databases that use manually-created indexes to achieve high performance on large tables. This works well for transactional workloads. However, analytical queries tend to have very low selectivity, so traditional indexes are not typically effective for analytical queries.</p>
+<p>Enterprise ColumnStore uses extent elimination to achieve high performance, without requiring manually created indexes. Enterprise ColumnStore automatically partitions all data into <a href="mariadb-enterprise-columnstore-storage-architecture/#extents">extents</a>. Enterprise ColumnStore stores the minimum and maximum values for each extent in the <a href="mariadb-enterprise-columnstore-storage-architecture/#extent-map">extent map</a>. Enterprise ColumnStore uses the minimum and maximum values in the extent map to perform extent elimination.</p>
+<p>When Enterprise ColumnStore performs extent elimination, it compares the query's join conditions and filter conditions (i.e., WHERE clause) to the minimum and maximum values for each extent in the extent map. If the extent's minimum and maximum values fall outside the bounds of the query's conditions, Enterprise ColumnStore skips that extent for the query.</p>
+<p>Extent elimination is automatically performed for every query. It can significantly decrease I/O for columns with clustered values. For example, extent elimination works effectively for series, ordered, patterned, and time-based data.</p>
+<h1 class="anchored_heading" id="custom-select-handler">Custom Select Handler</h1>
+<p>The ColumnStore storage engine plugin implements a custom select handler to fully take advantage of Enterprise ColumnStore's capabilities.</p>
+<p>All storage engines interact with ES using an internal handler API, which is highly extensible. Storage engines can implement different features by implementing different methods within the handler API.</p>
+<p>For select statements, the handler API transforms each query into a <code>SELECT_LEX</code> object, which is provided to the select handler.</p>
+<p>The generic select handler is not optimal for Enterprise ColumnStore, because:</p>
+<ul start="1"><li>Enterprise ColumnStore selects data by column, but the generic select handler selects data by row
+</li><li>Enterprise ColumnStore supports parallel query evaluation, but the generic select handler does not
+</li><li>Enterprise ColumnStore supports distributed aggregations, but the generic select handler does not
+</li><li>Enterprise ColumnStore supports distributed functions, but the generic select handler does not
+</li><li>Enterprise ColumnStore supports extent elimination, but the generic select handler does not
+</li><li>Enterprise ColumnStore has its own query planner, but the generic select handler cannot use it
+</li></ul>
+<h1 class="anchored_heading" id="smart-storage-engine">Smart Storage Engine</h1>
+<p>The ColumnStore storage engine plugin is known as a smart storage engine, because it implements a custom select handler. MariaDB Enterprise ColumnStore integrates with MariaDB Enterprise Server using the ColumnStore storage engine plugin. The ColumnStore storage engine plugin enables MariaDB Enterprise Server to interact with ColumnStore tables.</p>
+<p>If a storage engine implements a custom select handler, it is known as a smart storage engine.</p>
+<p>As a smart storage engine, the ColumnStore storage engine plugin tightly integrates Enterprise ColumnStore with ES, but it has enough independence to efficiently execute analytical queries using a completely unique approach.</p>
+<h2 class="anchored_heading" id="configure-the-select-handler">Configure the Select Handler</h2>
+<p>The ColumnStore storage engine can use either the custom select handler or the generic select handler. The select handler can be configured using the columnstore_select_handler system variable:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Value</th><th>Description</th></tr>
+<tr><td>AUTO</td><td>• When set to AUTO, Enterprise ColumnStore automatically chooses the best select handler for a given SELECT query. <br> • AUTO was added in Enterprise ColumnStore 6.</td></tr>
+<tr><td>OFF</td><td>• When set to OFF, Enterprise ColumnStore uses the generic select handler for all SELECT queries. <br> • It is not recommended to use this value, unless recommended by MariaDB Support.</td></tr>
+<tr><td>ON</td><td>• When set to ON, Enterprise ColumnStore uses the custom select handler for all SELECT queries. <br> • ON is the default in Enterprise ColumnStore 5 and Enterprise ColumnStore 6.</td></tr>
+</table>
+</div><h1 class="anchored_heading" id="joins">Joins</h1>
+<p>MariaDB Enterprise ColumnStore performs join operations using hash joins.</p>
+<p>By default, hash joins are performed in memory.</p>
+<h2 class="anchored_heading" id="configure-in-memory-joins">Configure In-Memory Joins</h2>
+<p>MariaDB Enterprise ColumnStore can be configured to allocate more memory for hash joins.</p>
+<p>The relevant configuration options are:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Section</th><th>Option</th><th>Description</th></tr>
+<tr><td>HashJoin</td><td>PmMaxMemorySmallSide</td><td>• Configures the amount of memory available for a single join. <br> • Valid values are from 0 to 4 GB. <br> • Default value is 1 GB.</td></tr>
+<tr><td>HashJoin</td><td>TotalUmMemory</td><td>• Configures the amount of memory available for all joins. <br> • Values can be specified as a percentage of total system memory or as a specific amount of memory. <br> • Valid percentage values are from 0 to 100%. <br> • Default value is 25%.</td></tr>
+</table>
+</div><p>For example, to configure Enterprise ColumnStore to use more memory for hash joins using the mcsSetConfig utility:</p>
+<pre class="fixed">$ mcsSetConfig HashJoin PmMaxMemorySmallSide 2G
+$ mcsSetConfig HashJoin TotalUmMemory '40%'
+</pre><h2 class="anchored_heading" id="configure-disk-based-joins">Configure Disk-Based Joins</h2>
+<p>MariaDB Enterprise ColumnStore can be configured to perform disk-based joins.</p>
+<p>The relevant configuration options are:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Section</th><th>Option</th><th>Description</th></tr>
+<tr><td>HashJoin</td><td>AllowDiskBasedJoin</td><td>• Enables disk-based joins <br> • Valid values are Y and N <br> • Default value is N.</td></tr>
+<tr><td>HashJoin</td><td>TempFileCompression</td><td>• Enables compression for temporary files used by disk-based joins. <br> • Valid values are Y and N <br> • Default value is N.</td></tr>
+<tr><td>SystemConfig</td><td>SystemTempFileDir</td><td>Configures the directory used for temporary files used by disk-based joins and aggregations <br> • Default value is <code>/tmp/columnstore_tmp_files</code></td></tr>
+</table>
+</div><p>For example, to configure Enterprise ColumnStore to perform disk-based joins using the mcsSetConfig utility:</p>
+<pre class="fixed">$ mcsSetConfig HashJoin AllowDiskBasedJoin Y
+$ mcsSetConfig HashJoin TempFileCompression Y
+$ mcsSetConfig SystemConfig SystemTempFileDir /mariadb/tmp
+</pre><h1 class="anchored_heading" id="aggregations">Aggregations</h1>
+<p>MariaDB Enterprise ColumnStore performs aggregation operations on all nodes in a distributed manner, and then all nodes send their results to a single node, which combines the results and performs the final aggregation.</p>
+<p>By default, aggregation operations are performed in memory.</p>
+<h2 class="anchored_heading" id="configure-disk-based-aggregations">Configure Disk-Based Aggregations</h2>
+<p>In Enterprise ColumnStore 5.6.1 and later, disk-based aggregations can be configured.</p>
+<p>The relevant configuration options are:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Section</th><th>Option</th><th>Description</th></tr>
+<tr><td>RowAggregation</td><td>AllowDiskBasedAggregation</td><td>• Enables disk-based joins <br> • Valid values are Y and N <br> • Default value is N.</td></tr>
+<tr><td>RowAggregation</td><td>Compression</td><td>• Enables compression for temporary files used by disk-based joins. <br> • Valid values are Y and N <br> • Default value is N.</td></tr>
+<tr><td>SystemConfig</td><td>SystemTempFileDir</td><td>Configures the directory used for temporary files used by disk-based joins and aggregations <br> • Default value is <code>/tmp/columnstore_tmp_files</code></td></tr>
+</table>
+</div><p>For example, to configure Enterprise ColumnStore to perform disk-based aggregations using the mcsSetConfig utility:</p>
+<pre class="fixed">
+$ mcsSetConfig RowAggregation AllowDiskBasedAggregation Y
+$ mcsSetConfig RowAggregation Compression SNAPPY
+$ mcsSetConfig SystemConfig SystemTempFileDir /mariadb/tmp
+</pre><h1 class="anchored_heading" id="query-planning">Query Planning</h1>
+<p>The ColumnStore storage engine plugin is a smart storage engine, so MariaDB Enterprise ColumnStore to plan its own queries using the <a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/#custom-select-handler">custom select handler</a>.</p>
+<p>MariaDB Enterprise ColumnStore's query planning is divided into two steps:</p>
+<ul start="1"><li>ES provides the query's <code>SELECT_LEX</code> object to the  <a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/#custom-select-handler">custom select handler</a>. The custom select handler builds a ColumnStore Execution Plan (CSEP).
+</li><li>The custom select handler provides the CSEP to the <a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/#exemgr-processfacility">ExeMgr process or facility</a> on the same node. ExeMgr performs <a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/#extent-elimination">extent elimination</a> and creates a job list.
+</li></ul>
+<h1 class="anchored_heading" id="exemgr-processfacility">ExeMgr Process/Facility</h1>
+<p>The ColumnStore storage engine provides the CSEP to the ExeMgr process or facility on the same node, which will act as the initiator/aggregator node for the query.</p>
+<p>Starting with MariaDB Enterprise ColumnStore 22.08, the ExeMgr facility has been integrated into the PrimProc process, so it is no longer a separate process.</p>
+<p>ExeMgr performs multiple tasks:</p>
+<ul start="1"><li>Performs extent elimination.
+</li><li>Views the optimizer statistics.
+</li><li>Transforms the CSEP to a job list, which consists of job steps.
+</li><li>Assigns distributed job steps to the PrimProc process on each node.
+</li><li>Evaluates non-distributed job steps itself.
+</li><li>Provides final query results to ES.
+</li></ul>
+<h1 class="anchored_heading" id="query-evaluation-process">Query Evaluation Process</h1>
+<p><img src="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+image/ecstore-queryexecutionwith-s3-flowchart" alt="ECStore-QueryExecutionwith-S3-FlowChart" title="ECStore-QueryExecutionwith-S3-FlowChart"></p>
+<p>When Enterprise ColumnStore executes a query, it goes through the following process:</p>
+<p>1. The client or application sends the query to MariaDB MaxScale's listener port.</p>
+<p>2. The query is processed by the Read/Write Split Router (<code>readwritesplit</code>) service associated with the listener.</p>
+<p>3. The service routes the query to the ES TCP port on a ColumnStore node.</p>
+<p>4. MariaDB Enterprise Server (ES) evaluates the query using the handler interface.</p>
+<ul start="1"><li>The handler interface builds a <code>SELECT_LEX</code> object to represent the query.
+</li><li>The handler interface provides the <code>SELECT_LEX</code> object to the ColumnStore storage engine's select handler.
+</li><li>The select handler transforms the <code>SELECT_LEX</code> object into a ColumnStore Execution Plan (CSEP).
+</li><li>The select handler provides the CSEP to the ExeMgr facility on the same node, which will act as the initiator/aggregator node for the query.
+</li></ul>
+<p>5. <code>ExeMgr</code> transforms the CSEP into a job list, which consists of job steps.</p>
+<p>6. <code>ExeMgr</code> evaluates each job step sequentially.</p>
+<ul start="1"><li>If it is a non-distributed job step, <code>ExeMgr</code> evaluates the job step itself.
+</li><li>If it is a distributed job step, <code>ExeMgr</code> provides the job step to the PrimProc process on each node. The PrimProc process on each node evaluates the job step in a multi-threaded manner using a thread pool. After the PrimProc process on each node evaluates its job step, the results are returned to <code>ExeMgr</code> on the initiator/aggregator node as a Row Group.
+</li></ul>
+<p>7. After all job steps are evaluated, <code>ExeMgr</code> returns the results to ES.</p>
+<p>8. ES returns the results to MaxScale.</p>
+<p>9. MaxScale returns the results to the client or application.</p>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/mariadb-enterprise-columnstore-locking/">
+                        ← MariaDB Enterprise ColumnStore Locking
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/columnstore-architecture/">
+                        ↑ ColumnStore Architecture ↑
+                    </a>
+                    </li>
+                
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="15960" data-comments-url="/kb/en/mariadb-enterprise-columnstore-query-evaluation/+comments"
+         data-reply-url="/kb/en/mariadb-enterprise-columnstore-query-evaluation/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/columnstore-architecture/">
+                    ↑ ColumnStore Architecture ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-architectural-overview/">
+                            
+                            ColumnStore Architectural Overview
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-user-module/">
+                            
+                            ColumnStore User Module
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-performance-module/">
+                            
+                            ColumnStore Performance Module
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-storage-architecture/">
+                            
+                            ColumnStore Storage Architecture
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-query-processing/">
+                            
+                            ColumnStore Query Processing
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-system-databases/">
+                            
+                            ColumnStore System Databases
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/mariadb-enterprise-columnstore-locking/">
+                            
+                            MariaDB Enterprise ColumnStore Locking
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>MariaDB Enterprise ColumnStore Query Evaluation</span>
+                        
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    <ul class="list-inline text-center footer-nav">
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/products" title="Products">Products</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/solutions" title="Solutions">Solutions</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/resources" title="Resources">Resources</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/about-us" title="About MariaDB">Company</a></h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/pricing" title="Pricing">Pricing</a>
+                            </h5>
+                        </li>
+                        
+                        
+                        <li>
+                            <h5><a href="https://mariadb.com/downloads" title="Download">Download MariaDB</a></h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row row-10">
+                
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div class="footer-copyright">
+                        <div class="text-center">
+                            <ul class="list-inline no-margin">
+                                <li>
+                                    <a href="/legal" title="Legal">Legal</a>
+                                </li>
+                                <li>
+                                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                            <p>Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
+
+</html>

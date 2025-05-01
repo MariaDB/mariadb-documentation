@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Deploy ColumnStore Shared Local Storage Topology - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
+
+    
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Deploy ColumnStore Shared Local Storage Topology" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/deploy-columnstore-shared-local-storage-topology/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+Overview
+This procedure describes the deployment of the ColumnStore Shared Local Storage topology with MariaDB Enterprise Server 10.5, MariaDB Enterprise ColumnStore 5, and M..." />
+
+    <meta name="description" content="
+Overview
+This procedure describes the deployment of the ColumnStore Shared Local Storage topology with MariaDB Enterprise Server 10.5, MariaDB Enterprise ColumnStore 5, and M..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/deploy-columnstore-shared-local-storage-topology/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/deploy-columnstore-shared-local-storage-topology/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/solutions" title="Solutions">Solutions</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="Company">Company</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/topologies/">Topologies</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/columnstore-shared-local-storage/">ColumnStore Shared Local Storage</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/deploy-columnstore-shared-local-storage-topology/">Deploy ColumnStore Shared Local Storage Topology</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/deploy-columnstore-shared-local-storage-topology/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/deploy-columnstore-shared-local-storage-topology/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/deploy-columnstore-shared-local-storage-topology/+flag"
+                data-flag-url="/kb/en/deploy-columnstore-shared-local-storage-topology/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/deploy-columnstore-shared-local-storage-topology/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2025-03-27 08:32">1 month ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2025-04-30 08:39">15 hours, 25 minutes ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/deploy-columnstore-shared-local-storage-topology/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/deploy-columnstore-shared-local-storage-topology/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/deploy-columnstore-shared-local-storage-topology/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/deploy-columnstore-shared-local-storage-topology/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <ul>
+                
+                    <li><a href="/kb/en/deploy-columnstore-shared-local-storage-topology/+image/es-columnstore-topology-nfs">es-columnstore-topology-nfs</a>
+                    </li>
+                
+            </ul>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Deploy ColumnStore Shared Local Storage Topology</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+ <li class=""><a href="#overview" title="Overview">Overview</a></li>
+
+ <li class=""><a href="#procedure-steps" title="Procedure Steps">Procedure Steps</a></li>
+
+ <li class=""><a href="#support" title="Support">Support</a></li>
+
+ <li class=""><a href="#components" title="Components">Components</a></li>
+
+ <li class=""><a href="#mariadb-enterprise-server-components" title="MariaDB Enterprise Server Components">MariaDB Enterprise Server Components</a></li>
+
+ <li class=""><a href="#mariadb-maxscale-components" title="MariaDB MaxScale Components">MariaDB MaxScale Components</a></li>
+
+ <li class=""><a href="#topology" title="Topology">Topology</a></li>
+
+ <li class=""><a href="#requirements" title="Requirements">Requirements</a></li>
+
+ <li class=""><a href="#node-count" title="Node Count">Node Count</a></li>
+
+ <li class=""><a href="#operating-system" title="Operating System">Operating System</a></li>
+
+ <li class=""><a href="#minimum-hardware-requirements" title="Minimum Hardware Requirements">Minimum Hardware Requirements</a></li>
+
+ <li class=""><a href="#recommended-hardware-requirements" title="Recommended Hardware Requirements">Recommended Hardware Requirements</a></li>
+
+ <li class=""><a href="#storage-requirements" title="Storage Requirements">Storage Requirements</a></li>
+
+ <li class=""><a href="#shared-local-storage-directories" title="Shared Local Storage Directories">Shared Local Storage Directories</a></li>
+
+ <li class=""><a href="#shared-local-storage-options" title="Shared Local Storage Options">Shared Local Storage Options</a></li>
+
+ <li class=""><a href="#enterprise-columnstore-management-with-cmapi" title="Enterprise ColumnStore Management with CMAPI">Enterprise ColumnStore Management with CMAPI</a> <ol class="toc">
+
+    <li class=""><a href="#url-endpoint-format-for-rest-api" title="URL Endpoint Format for REST API">URL Endpoint Format for REST API</a></li>
+
+    <li class=""><a href="#required-request-headers" title="Required Request Headers">Required Request Headers</a></li>
+
+    <li class=""><a href="#get-status" title="Get Status">Get Status</a></li>
+
+    <li class=""><a href="#start-cluster" title="Start Cluster">Start Cluster</a></li>
+
+    <li class=""><a href="#stop-cluster" title="Stop Cluster">Stop Cluster</a></li>
+
+    <li class=""><a href="#add-node" title="Add Node">Add Node</a></li>
+
+    <li class=""><a href="#remove-node" title="Remove Node">Remove Node</a> </ol>
+</li>
+
+ <li class=""><a href="#quick-reference" title="Quick Reference">Quick Reference</a> <ol class="toc">
+
+    <li class=""><a href="#mariadb-enterprise-server-configuration-management" title="MariaDB Enterprise Server Configuration Management">MariaDB Enterprise Server Configuration Management</a> </ol>
+</li>
+
+ <li class=""><a href="#mariadb-enterprise-server-service-management" title="MariaDB Enterprise Server Service Management">MariaDB Enterprise Server Service Management</a></li>
+
+ <li class=""><a href="#mariadb-enterprise-server-logs" title="MariaDB Enterprise Server Logs">MariaDB Enterprise Server Logs</a></li>
+
+ <li class=""><a href="#enterprise-columnstore-service-management" title="Enterprise ColumnStore Service Management">Enterprise ColumnStore Service Management</a></li>
+
+ <li class=""><a href="#enterprise-columnstore-cmapi-service-management" title="Enterprise ColumnStore CMAPI Service Management">Enterprise ColumnStore CMAPI Service Management</a></li>
+
+ <li class=""><a href="#maxscale-configuration-management" title="MaxScale Configuration Management">MaxScale Configuration Management</a></li>
+
+ <li class=""><a href="#maxscale-service-management" title="MaxScale Service Management">MaxScale Service Management</a></li>
+
+ <li class=""><a href="#next-step" title="Next Step">Next Step</a></li>
+</div>
+<h1 class="anchored_heading" id="overview">Overview</h1>
+<p>This procedure describes the deployment of the ColumnStore <a href="/kb/en/deploy-columnstore-shared-local-storage-topology/">Shared Local Storage topology</a> with MariaDB Enterprise Server 10.5, MariaDB Enterprise ColumnStore 5, and MariaDB MaxScale 2.5.</p>
+<p>MariaDB Enterprise ColumnStore 5 is a columnar storage engine for MariaDB Enterprise Server 10.5. Enterprise ColumnStore is suitable for Online Analytical Processing (OLAP) workloads.</p>
+<p>This procedure has 9 steps, which are executed in sequence.</p>
+<p>This procedure represents basic product capability and deploys 3 Enterprise ColumnStore nodes and 1 MaxScale node.</p>
+<p>This page provides an overview of the topology, requirements, and deployment procedures.</p>
+<p>Please read and understand this procedure before executing.</p>
+<h1 class="anchored_heading" id="procedure-steps">Procedure Steps</h1>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Step</th><th>Description</th></tr>
+<tr><td>Step 1</td><td><a href="/kb/en/deploy-columnstore-shared-local-storage-topology-with-mariadb-server-step-1/">Prepare ColumnStore Nodes</a></td></tr>
+<tr><td>Step 2</td><td><a href="/kb/en/deploy-columnstore-shared-local-storage-topology-with-mariadb-server-step-2/">Configure Shared Local Storage</a></td></tr>
+<tr><td>Step 3</td><td><a href="/kb/en/deploy-columnstore-shared-local-storage-topology-with-mariadb-server-step-3/">Install MariaDB Enterprise Server</a></td></tr>
+<tr><td>Step 4</td><td><a href="/kb/en/deploy-columnstore-shared-local-storage-topology-with-mariadb-server-step-4/">Start and Configure MariaDB Enterprise Server</a></td></tr>
+<tr><td>Step 5</td><td><a href="/kb/en/deploy-columnstore-shared-local-storage-topology-with-mariadb-server-step-5/">Test MariaDB Enterprise Server</a></td></tr>
+<tr><td>Step 6</td><td><a href="/kb/en/deploy-columnstore-shared-local-storage-topology-with-mariadb-server-step-6/">Install MariaDB MaxScale</a></td></tr>
+<tr><td>Step 7</td><td><a href="/kb/en/deploy-columnstore-shared-local-storage-topology-with-mariadb-server-step-7/">Start and Configure MariaDB MaxScale</a></td></tr>
+<tr><td>Step 8</td><td><a href="/kb/en/deploy-columnstore-shared-local-storage-topology-with-mariadb-server-step-8/">Test MariaDB MaxScale</a></td></tr>
+<tr><td>Step 9</td><td><a href="/kb/en/deploy-columnstore-shared-local-storage-topology-with-mariadb-server-step-9/">Import Data</a></td></tr>
+</table>
+</div><h1 class="anchored_heading" id="support">Support</h1>
+<p>Customers can obtain support by submitting a support case.</p>
+<h1 class="anchored_heading" id="components">Components</h1>
+<p>The following components are deployed during this procedure:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Component</th><th>Function</th></tr>
+<tr><td><a href="/kb/en/mariadb-server-releases-mariadb-enterprise-server-10-5/">MariaDB Enterprise Server 10.5</a></td><td>Modern SQL RDBMS with high availability, pluggable storage engines, hot online backups, and audit logging.</td></tr>
+<tr><td><a href="/kb/en/mariadb-maxscale-22-08/">MariaDB MaxScale 22.08</a></td><td>Database proxy that extends the availability, scalability, and security of MariaDB Enterprise Servers</td></tr>
+</table>
+</div><h1 class="anchored_heading" id="mariadb-enterprise-server-components">MariaDB Enterprise Server Components</h1>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Component</th><th>Description</th></tr>
+<tr><td><a href="/kb/en/mariadb-columnstore/">MariaDB Enterprise ColumnStore</a></td><td>• Columnar storage engine <br> • Highly available <br> • Optimized for Online Analytical Processing (OLAP) workloads <br> • Scalable query execution <br> • Cluster Management API (CMAPI) provides a REST API for multi-node administration.</td></tr>
+</table>
+</div><h1 class="anchored_heading" id="mariadb-maxscale-components">MariaDB MaxScale Components</h1>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Component</th><th>Description</th></tr>
+<tr><td>Listener</td><td>Listens for client connections to MaxScale then passes them to the router service</td></tr>
+<tr><td>MariaDB Monitor</td><td>Tracks changes in the state of MariaDB Enterprise Servers.</td></tr>
+<tr><td>Read Connection Router</td><td>Routes connections from the listener to any available Enterprise ColumnStore node</td></tr>
+<tr><td>Read/Write Split Router</td><td>Routes read operations from the listener to any available Enterprise ColumnStore node, and routes write operations from the listener to a specific server that MaxScale uses as the primary server</td></tr>
+<tr><td>Server Module</td><td>Connection configuration in MaxScale to an Enterprise ColumnStore node</td></tr>
+</table>
+</div><h1 class="anchored_heading" id="topology">Topology</h1>
+<p><img src="/kb/en/deploy-columnstore-shared-local-storage-topology/+image/es-columnstore-topology-nfs" alt="es-columnstore-topology-nfs" title="es-columnstore-topology-nfs"></p>
+<p>The MariaDB Enterprise ColumnStore topology with Object Storage delivers production analytics with high availability, fault tolerance, and limitless data storage by leveraging S3-compatible storage.</p>
+<p>The topology consists of:</p>
+<ul start="1"><li>One or more MaxScale nodes
+</li><li>An odd number of ColumnStore nodes (minimum of 3) running ES, Enterprise ColumnStore, and CMAPI
+</li></ul>
+<p>The MaxScale nodes:</p>
+<ul start="1"><li>Monitor the health and availability of each ColumnStore node using the MariaDB Monitor (mariadbmon)
+</li><li>Accept client and application connections
+</li><li>Route queries to ColumnStore nodes using the Read/Write Split Router (readwritesplit)
+</li></ul>
+<p>The ColumnStore nodes:</p>
+<ul start="1"><li>Receive queries from MaxScale
+</li><li>Execute queries
+<ul start="1"><li>Use <a href="mariadb-enterprise-columnstore-storage-architecture/#shared-local-storage">shared local storage</a> for the <a href="mariadb-enterprise-columnstore-storage-architecture/#storage-manager-directory">Storage Manager directory</a>
+</li></ul>
+</li></ul>
+<h1 class="anchored_heading" id="requirements">Requirements</h1>
+<p>These requirements are for the ColumnStore Object Storage topology when deployed with MariaDB Enterprise Server 10.5, MariaDB Enterprise ColumnStore 5, and MariaDB MaxScale 2.5.</p>
+<ul start="1"><li><a href="/kb/en/deploy-columnstore-object-storage-topology/#node-count">Node Count</a>
+</li><li><a href="/kb/en/deploy-columnstore-object-storage-topology/#operating-system">Operating System</a>
+</li><li><a href="/kb/en/deploy-columnstore-object-storage-topology/#minimum-hardware-requirements">Minimum Hardware Requirements</a>
+</li><li><a href="/kb/en/deploy-columnstore-object-storage-topology/#recommended-hardware-requirements">Recommended Hardware Requirements</a>
+</li><li><a href="/kb/en/deploy-columnstore-object-storage-topology/#storage-requirements">Storage Requirements</a>
+</li><li><a href="/kb/en/deploy-columnstore-object-storage-topology/#s3-compatible-object-storage-requirements">S3-Compatible Object Storage Requirements</a>
+</li><li><a href="/kb/en/deploy-columnstore-object-storage-topology/#preferred-object-storage-providers-cloud">Preferred Object Storage Providers: Cloud</a>
+</li><li><a href="/kb/en/deploy-columnstore-object-storage-topology/#preferred-object-storage-providers-hardware">Preferred Object Storage Providers: Hardware</a>
+</li><li><a href="/kb/en/deploy-columnstore-object-storage-topology/#shared-local-storage-directories">Shared Local Storage Directories</a>
+</li><li><a href="/kb/en/deploy-columnstore-object-storage-topology/#shared-local-storage-options">Shared Local Storage Options</a>
+</li><li><a href="/kb/en/deploy-columnstore-object-storage-topology/#recommended-storage-options">Recommended Storage Options</a>
+</li></ul>
+<h1 class="anchored_heading" id="node-count">Node Count</h1>
+<ul start="1"><li>MaxScale nodes, 1 or more are required.
+</li><li>Enterprise ColumnStore nodes, 3 or more are required for high availability. You should always have an odd number of nodes in a multi-node ColumnStore deployment to avoid split brain scenarios.
+</li></ul>
+<h1 class="anchored_heading" id="operating-system">Operating System</h1>
+<p>In alignment to the enterprise lifecycle, the ColumnStore Object Storage topology with MariaDB Enterprise Server 10.5, MariaDB Enterprise ColumnStore 5, and MariaDB MaxScale 2.5 is provided for:</p>
+<ul start="1"><li>CentOS Linux 7 (x86_64)
+</li><li>Debian 10 (x86_64)
+</li><li>Red Hat Enterprise Linux 7 (x86_64)
+</li><li>Red Hat Enterprise Linux 8 (x86_64)
+</li><li>Ubuntu 18.04 LTS (x86_64)
+</li><li>Ubuntu 20.04 LTS (x86_64)
+</li></ul>
+<h1 class="anchored_heading" id="minimum-hardware-requirements">Minimum Hardware Requirements</h1>
+<p>MariaDB Enterprise ColumnStore's minimum hardware requirements are not intended for production environments, but the minimum hardware requirements can be appropriate for development and test environments. For production environments, see the <a href="/kb/en/deploy-columnstore-object-storage-topology-with-mariadb-server/#recommended-hardware-requirements">recommended hardware requirements</a> instead.</p>
+<p>The minimum hardware requirements are:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Component</th><th>CPU</th><th>Memory</th></tr>
+<tr><td>MaxScale node</td><td>4+ cores</td><td>4+ GB</td></tr>
+<tr><td>Enterprise ColumnStore node</td><td>4+ cores</td><td>4+ GB</td></tr>
+</table>
+</div><p>MariaDB Enterprise ColumnStore will refuse to start if the system has less than 3 GB of memory.</p>
+<p>If Enterprise ColumnStore is started on a system with less memory, the following error message will be written to the ColumnStore system log called crit.log:</p>
+<pre class="fixed">
+Apr 30 21:54:35 a1ebc96a2519 PrimProc[1004]: 35.668435 |0|0|0| C 28 CAL0000: Error total memory available is less than 3GB.
+</pre><p>And the following error message will be raised to the client:</p>
+<pre class="fixed">ERROR 1815 (HY000): Internal error: System is not ready yet. Please try again.
+</pre><h1 class="anchored_heading" id="recommended-hardware-requirements">Recommended Hardware Requirements</h1>
+<p>MariaDB Enterprise ColumnStore's recommended hardware requirements are intended for production analytics.</p>
+<p>The recommended hardware requirements are:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Component</th><th>CPU</th><th>Memory</th></tr>
+<tr><td>MaxScale node</td><td>8+ cores</td><td>16+ GB</td></tr>
+<tr><td>Enterprise ColumnStore node</td><td>64+ cores</td><td>128+ GB</td></tr>
+</table>
+</div><h1 class="anchored_heading" id="storage-requirements">Storage Requirements</h1>
+<p>The ColumnStore Object Storage topology requires the following storage types:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Storage Type</th><th>Description</th></tr>
+<tr><td><a href="mariadb-enterprise-columnstore-storage-architecture/#shared-local-storage">Shared Local Storage</a></td><td>The ColumnStore Object Storage topology uses shared local storage for the <a href="mariadb-enterprise-columnstore-storage-architecture/#storage-manager-directory">Storage Manager directory</a> to store metadata.</td></tr>
+</table>
+</div><h1 class="anchored_heading" id="shared-local-storage-directories">Shared Local Storage Directories</h1>
+<p>The ColumnStore Object Storage topology uses shared local storage for the Storage Manager directory to store metadata.</p>
+<p>The Storage Manager directory is located at the following path by default:</p>
+<ul start="1"><li><code>/var/lib/columnstore/storagemanager</code>
+</li></ul>
+<h1 class="anchored_heading" id="shared-local-storage-options">Shared Local Storage Options</h1>
+<p>The most common shared local storage options for the ColumnStore Object Storage topology are:</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Shared Local Storage</th><th>Common Usage</th><th>Description</th></tr>
+<tr><td>EBS (Elastic Block Store) Multi-Attach</td><td>AWS</td><td>• EBS is a high-performance block-storage service for AWS (Amazon Web Services). <br> • EBS Multi-Attach allows an EBS volume to be attached to multiple instances in AWS. Only clustered file systems, such as GFS2, are supported. <br> • For deployments in AWS, EBS Multi-Attach is a recommended option for the Storage Manager directory, and Amazon S3 storage is the recommended option for data.</td></tr>
+<tr><td>EFS (Elastic File System)</td><td>AWS</td><td>• EFS is a scalable, elastic, cloud-native NFS file system for AWS (Amazon Web Services). <br> • For deployments in AWS, EFS is a recommended option for the Storage Manager directory, and Amazon S3 storage is the recommended option for data. EFS is a scalable, elastic, cloud-native NFS file system for AWS (Amazon Web Services).</td></tr>
+<tr><td>Filestore</td><td>GCP</td><td>• Filestore is high-performance, fully managed storage for GCP (Google Cloud Platform). <br> • For deployments in GCP, Filestore is the recommended option for the Storage Manager directory, and Google Object Storage (S3-compatible) is the recommended option for data.</td></tr>
+<tr><td>GlusterFS</td><td>On-premises</td><td>• GlusterFS is a distributed file system. <br> • GlusterFS supports replication and failover.</td></tr>
+<tr><td>NFS (Network File System)</td><td>On-premises</td><td>• NFS is a distributed file system. <br> • If NFS is used, the storage should be mounted with the sync option to ensure that each node flushes its changes immediately. <br> • For on-premises deployments, NFS is the recommended option for the Storage Manager directory, and any S3-compatible storage is the recommended option for data.</td></tr>
+</table>
+</div><h1 class="anchored_heading" id="enterprise-columnstore-management-with-cmapi">Enterprise ColumnStore Management with CMAPI</h1>
+<p>Enterprise ColumnStore's CMAPI (Cluster Management API) is a REST API that can be used to manage a multi-node Enterprise ColumnStore cluster.</p>
+<p>Many tools are capable of interacting with REST APIs. For example, the curl utility could be used to make REST API calls from the command-line.</p>
+<p>Many programming languages also have libraries for interacting with REST APIs.</p>
+<p>The examples below show how to use the CMAPI with curl.</p>
+<h2 class="anchored_heading" id="url-endpoint-format-for-rest-api"><strong>URL Endpoint Format for REST API</strong></h2>
+<pre class="fixed">https://{server}:{port}/cmapi/{version}/{route}/{command}
+</pre><p>For example:</p>
+<ul start="1"><li><a href="https://mcs1:8640/cmapi/0.4.0/cluster/shutdown">https://mcs1:8640/cmapi/0.4.0/cluster/shutdown</a>
+</li><li><a href="https://mcs1:8640/cmapi/0.4.0/cluster/start">https://mcs1:8640/cmapi/0.4.0/cluster/start</a>
+</li><li><a href="https://mcs1:8640/cmapi/0.4.0/cluster/status">https://mcs1:8640/cmapi/0.4.0/cluster/status</a>
+</li></ul>
+<h2 class="anchored_heading" id="required-request-headers"><strong>Required Request Headers</strong></h2>
+<ul start="1"><li><code>'x-api-key'</code>: '93816fa66cc2d8c224e62275bd4f248234dd4947b68d4af2b29671dd7d5532dd'
+</li><li><code>'Content-Type'</code>: 'application/json'
+</li></ul>
+<p>x-api-key can be set to any value of your choice during the first call to the server. Subsequent connections will require this same key.</p>
+<h2 class="anchored_heading" id="get-status"><strong>Get Status</strong></h2>
+<pre class="fixed">$ curl -k -s https://mcs1:8640/cmapi/0.4.0/cluster/status \
+      --header 'Content-Type:application/json' \
+      --header 'x-api-key:93816fa66cc2d8c224e62275bd4f248234dd4947b68d4af2b29671dd7d5532dd' \
+      | jq .
+</pre><h2 class="anchored_heading" id="start-cluster"><strong>Start Cluster</strong></h2>
+<pre class="fixed">$ curl -k -s -X PUT https://mcs1:8640/cmapi/0.4.0/cluster/start \
+      --header 'Content-Type:application/json' \
+      --header 'x-api-key:93816fa66cc2d8c224e62275bd4f248234dd4947b68d4af2b29671dd7d5532dd' \
+      --data '{&#34;timeout&#34;:20}' \
+      | jq .
+</pre><h2 class="anchored_heading" id="stop-cluster"><strong>Stop Cluster</strong></h2>
+<pre class="fixed">$ curl -k -s -X PUT https://mcs1:8640/cmapi/0.4.0/cluster/shutdown \
+      --header 'Content-Type:application/json' \
+      --header 'x-api-key:93816fa66cc2d8c224e62275bd4f248234dd4947b68d4af2b29671dd7d5532dd' \
+      --data '{&#34;timeout&#34;:20}' \
+      | jq .
+</pre><h2 class="anchored_heading" id="add-node"><strong>Add Node</strong></h2>
+<pre class="fixed">
+$ curl -k -s -X PUT https://mcs1:8640/cmapi/0.4.0/cluster/node \
+      --header 'Content-Type:application/json' \
+      --header 'x-api-key:93816fa66cc2d8c224e62275bd4f248234dd4947b68d4af2b29671dd7d5532dd' \
+      --data '{&#34;timeout&#34;:20, &#34;node&#34;: &#34;192.0.2.2&#34;}' \
+      | jq .
+</pre><h2 class="anchored_heading" id="remove-node"><strong>Remove Node</strong></h2>
+<pre class="fixed">$ curl -k -s -X DELETE https://mcs1:8640/cmapi/0.4.0/cluster/node \
+      --header 'Content-Type:application/json' \
+      --header 'x-api-key:93816fa66cc2d8c224e62275bd4f248234dd4947b68d4af2b29671dd7d5532dd' \
+      --data '{&#34;timeout&#34;:20, &#34;node&#34;: &#34;192.0.2.2&#34;}' \
+      | jq .
+</pre><h1 class="anchored_heading" id="quick-reference">Quick Reference</h1>
+<h2 class="anchored_heading" id="mariadb-enterprise-server-configuration-management">MariaDB Enterprise Server Configuration Management</h2>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Method</th><th>Description</th></tr>
+<tr><td>Configuration File</td><td>Configuration files (such as /etc/my.cnf) can be used to set system-variables and options. The server must be restarted to apply changes made to configuration files.</td></tr>
+<tr><td>Command-line</td><td>The server can be started with command-line options that set system-variables and options.</td></tr>
+<tr><td>SQL</td><td>Users can set system-variables that support dynamic changes on-the-fly using the SET statement.</td></tr>
+</table>
+</div><p>MariaDB Enterprise Server packages are configured to read configuration files from different paths, depending on the operating system. Making custom changes to Enterprise Server default configuration files is not recommended because custom changes may be overwritten by other default configuration files that are loaded later.</p>
+<p>To ensure that your custom changes will be read last, create a custom configuration file with the z- prefix in one of the include directories.</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Distribution</th><th>Example Configuration File Path</th></tr>
+<tr><td>• CentOS <br> • Red Hat Enterprise Linux (RHEL)</td><td>/etc/my.cnf.d/z-custom-mariadb.cnf</td></tr>
+<tr><td>• Debian <br>  • Ubuntu</td><td>/etc/mysql/mariadb.conf.d/z-custom-mariadb.cnf</td></tr>
+</table>
+</div><h1 class="anchored_heading" id="mariadb-enterprise-server-service-management">MariaDB Enterprise Server Service Management</h1>
+<p>The systemctl command is used to start and stop the MariaDB Enterprise Server service.</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Operation</th><th>Command</th></tr>
+<tr><td>Start</td><td>sudo systemctl start mariadb</td></tr>
+<tr><td>Stop</td><td>sudo systemctl stop mariadb</td></tr>
+<tr><td>Restart</td><td>sudo systemctl restart mariadb</td></tr>
+<tr><td>Enable during startup</td><td>sudo systemctl enable mariadb</td></tr>
+<tr><td>Disable during startup</td><td>sudo systemctl disable mariadb</td></tr>
+<tr><td>Status</td><td>sudo systemctl status mariadb</td></tr>
+</table>
+</div><p>For additional information, see "Start and Stop Services".</p>
+<h1 class="anchored_heading" id="mariadb-enterprise-server-logs">MariaDB Enterprise Server Logs</h1>
+<p>MariaDB Enterprise Server produces log data that can be helpful in problem diagnosis.</p>
+<p>Log filenames and locations may be overridden in the server configuration. The default location of logs is the data directory. The data directory is specified by the <a href="/kb/en/server-system-variables/#datadir">datadir</a> system variable.</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Log</th><th>System Variable/Option</th><th>Default Filename</th></tr>
+<tr><td>MariaDB Error Log</td><td><a href="/kb/en/server-system-variables/#log_error">log_error</a></td><td>&lt;hostname&gt;.err</td></tr>
+<tr><td>MariaDB Enterprise Audit Log</td><td><a href="/kb/en/mariadb-audit-plugin-options-and-system-variables/#server_audit_file_path">server_audit_file_path</a></td><td>server_audit.log</td></tr>
+<tr><td>Slow Query Log</td><td><a href="/kb/en/server-system-variables/#slow_query_log_file">slow_query_log_file</a></td><td>&lt;hostname&gt;-slow.log</td></tr>
+<tr><td>General Query Log</td><td><a href="/kb/en/server-system-variables/#general_log_file">general_log_file</a></td><td>&lt;hostname&gt;.log</td></tr>
+<tr><td>Binary Log</td><td><a href="/kb/en/replication-and-binary-log-system-variables/#log_bin">log_bin</a></td><td>&lt;hostname&gt;-bin</td></tr>
+</table>
+</div><h1 class="anchored_heading" id="enterprise-columnstore-service-management">Enterprise ColumnStore Service Management</h1>
+<p>The systemctl command is used to start and stop the ColumnStore service.</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Operation</th><th>Command</th></tr>
+<tr><td>Start</td><td>sudo systemctl start mariadb-columnstore</td></tr>
+<tr><td>Stop</td><td>sudo systemctl stop mariadb-columnstore</td></tr>
+<tr><td>Restart</td><td>sudo systemctl restart mariadb-columnstore</td></tr>
+<tr><td>Enable during startup</td><td>sudo systemctl enable mariadb-columnstore</td></tr>
+<tr><td>Disable during startup</td><td>sudo systemctl disable mariadb-columnstore</td></tr>
+<tr><td>Status</td><td>sudo systemctl status mariadb-columnstore</td></tr>
+</table>
+</div><p>In the ColumnStore Object Storage topology, the mariadb-columnstore service should not be enabled. The CMAPI service restarts Enterprise ColumnStore as needed, so it does not need to start automatically upon reboot.</p>
+<h1 class="anchored_heading" id="enterprise-columnstore-cmapi-service-management">Enterprise ColumnStore CMAPI Service Management</h1>
+<p>The systemctl command is used to start and stop the CMAPI service.</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Operation</th><th>Command</th></tr>
+<tr><td>Start</td><td>sudo systemctl start mariadb-columnstore-cmapi</td></tr>
+<tr><td>Stop</td><td>sudo systemctl stop mariadb-columnstore-cmapi</td></tr>
+<tr><td>Restart</td><td>sudo systemctl restart mariadb-columnstore-cmapi</td></tr>
+<tr><td>Enable during startup</td><td>sudo systemctl enable mariadb-columnstore-cmapi</td></tr>
+<tr><td>Disable during startup</td><td>sudo systemctl disable mariadb-columnstore-cmapi</td></tr>
+<tr><td>Status</td><td>sudo systemctl status mariadb-columnstore-cmapi</td></tr>
+</table>
+</div><p>For additional information on endpoints, see "CMAPI".</p>
+<h1 class="anchored_heading" id="maxscale-configuration-management">MaxScale Configuration Management</h1>
+<p>MaxScale can be configured using several methods. These methods make use of MaxScale's <a href="/kb/en/administrative-tools-for-mariadb-maxscale-rest-api/">REST API</a>.</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Method</th><th>Benefits</th></tr>
+<tr><td><a href="/kb/en/administrative-tools-for-mariadb-maxscale-maxctrl/">MaxCtrl</a></td><td>Command-line utility to perform administrative tasks through the REST API. See MaxCtrl Commands.</td></tr>
+<tr><td><a href="/kb/en/maxgui/">MaxGUI</a></td><td>MaxGUI is a graphical utility that can perform administrative tasks through the REST API.</td></tr>
+<tr><td><a href="/kb/en/administrative-tools-for-mariadb-maxscale-rest-api/">REST API</a></td><td>The REST API can be used directly. For example, the curl utility could be used to make REST API calls from the command-line. Many programming languages also have libraries to interact with REST APIs.</td></tr>
+</table>
+</div><p>The procedure on these pages configures MaxScale using MaxCtrl.</p>
+<h1 class="anchored_heading" id="maxscale-service-management">MaxScale Service Management</h1>
+<p>The systemctl command is used to start and stop the MaxScale service.&gt;</p>
+<div class="cstm-style darkheader-nospace-borders left"><table><tr><th>Operation</th><th>Command</th></tr>
+<tr><td>Start</td><td>sudo systemctl start maxscale</td></tr>
+<tr><td>Stop</td><td>sudo systemctl stop maxscale</td></tr>
+<tr><td>Restart</td><td>sudo systemctl restart maxscale</td></tr>
+<tr><td>Enable during startup</td><td>sudo systemctl enable maxscale</td></tr>
+<tr><td>Disable during startup</td><td>sudo systemctl disable maxscale</td></tr>
+<tr><td>Status</td><td>sudo systemctl status maxscale</td></tr>
+</table>
+</div><p>For additional information, see "Start and Stop Services".</p>
+<h1 class="anchored_heading" id="next-step">Next Step</h1>
+<p>Navigation in the procedure <a href="/kb/en/deploy-columnstore-shared-local-storage-topology/">Shared Local Storage topology</a> </p>
+<p>Next: <a href="/kb/en/deploy-columnstore-shared-local-storage-topology-with-mariadb-server-step-1/">Step 1: Prepare ColumnStore Nodes</a>.</p>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/deploy-columnstore-shared-local-storage-topology/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/deploy-columnstore-shared-local-storage-topology/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                
+                    <li><a href="/kb/en/columnstore-shared-local-storage/">
+                        ↑ ColumnStore Shared Local Storage ↑
+                    </a>
+                    </li>
+                
+                
+                    <li class="pull-right"><a href="/kb/en/columnstore-shared-local-storage-step-1-prepare-columnstore-nodes/">
+                        Step 1: Prepare ColumnStore Nodes →
+                    </a>
+                    </li>
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="16085" data-comments-url="/kb/en/deploy-columnstore-shared-local-storage-topology/+comments"
+         data-reply-url="/kb/en/deploy-columnstore-shared-local-storage-topology/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/columnstore-shared-local-storage/">
+                    ↑ ColumnStore Shared Local Storage ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li class="active">
+                        <span>Deploy ColumnStore Shared Local Storage Topology</span>
+                        
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-shared-local-storage-step-1-prepare-columnstore-nodes/">
+                            
+                            Step 1: Prepare ColumnStore Nodes
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-shared-local-storage-step-2-configure-shared-local-storage/">
+                            
+                            Step 2: Configure Shared Local Storage
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-shared-local-storage-step-3-install-mariadb-enterprise-server/">
+                            
+                            Step 3: Install MariaDB Enterprise Server
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-shared-local-storage-step-4-start-and-configure-mariadb-enterpr/">
+                            
+                            Step 4: Start and Configure MariaDB Enterprise Server
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-shared-local-storage-step-5-test-mariadb-enterprise-server/">
+                            
+                            Step 5: Test MariaDB Enterprise Server
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-shared-local-storage-step-6-install-mariadb-maxscale/">
+                            
+                            Step 6: Install MariaDB MaxScale
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-shared-local-storage-step-7-start-and-configure-mariadb-maxscal/">
+                            
+                            Step 7: Start and Configure MariaDB MaxScale
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-shared-local-storage-step-8-test-mariadb-maxscale/">
+                            
+                            Step 8: Test MariaDB MaxScale
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/columnstore-shared-local-storage-step-9-import-data/">
+                            
+                            Step 9: Import Data
+                        </a>
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    <ul class="list-inline text-center footer-nav">
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/products" title="Products">Products</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/solutions" title="Solutions">Solutions</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/resources" title="Resources">Resources</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/about-us" title="About MariaDB">Company</a></h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/pricing" title="Pricing">Pricing</a>
+                            </h5>
+                        </li>
+                        
+                        
+                        <li>
+                            <h5><a href="https://mariadb.com/downloads" title="Download">Download MariaDB</a></h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row row-10">
+                
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div class="footer-copyright">
+                        <div class="text-center">
+                            <ul class="list-inline no-margin">
+                                <li>
+                                    <a href="/legal" title="Legal">Legal</a>
+                                </li>
+                                <li>
+                                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                            <p>Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
+
+</html>

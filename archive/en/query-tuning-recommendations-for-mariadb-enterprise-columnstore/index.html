@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html>
+<head data-cookie-domain=""
+      data-cookie-path="/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/kb/static/images/favicons/apple-touch-icon.159e713979be.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/kb/static/images/favicons/favicon-32x32.bc0ac1d5d11e.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/kb/static/images/favicons/favicon-16x16.5801f8f0f34e.png">
+    <link rel="shortcut icon" href="/kb/static/images/favicons/favicon.d122d305dee4.ico" type="image/x-icon" />
+
+    <title>Query Tuning Recommendations for MariaDB Enterprise ColumnStore - MariaDB Knowledge Base</title>
+
+    <link href="/kb/static/css/main.f7633538c846.css" rel="stylesheet" type="text/css" />
+
+    
+
+    
+
+    <!-- FB Open Graph tags -->
+    <meta property="og:title" content="Query Tuning Recommendations for MariaDB Enterprise ColumnStore" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://mariadb.com/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/" />
+    <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
+    <meta property="og:site_name" content="MariaDB KnowledgeBase" />
+    <meta property="fb:admins" content="514852603" />
+    <meta property="og:description" content="
+When tuning queries for MariaDB Enterprise ColumnStore, there are some important details to consider.
+Avoid Selecting Unnecessary Columns
+Enterprise ColumnStore only reads th..." />
+
+    <meta name="description" content="
+When tuning queries for MariaDB Enterprise ColumnStore, there are some important details to consider.
+Avoid Selecting Unnecessary Columns
+Enterprise ColumnStore only reads th..." />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
+    
+</head>
+<body class="mpkb nodes products nodes_view jqui" id="nodes_view">
+
+
+
+
+
+<div id="menu-mobile" class="visible-sm visible-xs">
+
+    <div>
+        <div id="mobile-close-menu" class="text-right">
+            <a href="javascript:void(0)" title="Close Menu" id="back-main" class="toggle-menu">X<span></span></a>
+        </div>
+    </div>
+    <div class="mainmenu-mobile">
+        <ul class="ls-none ul-menu">
+            <li data-sub="submenu5"><a class="open-form-search" href="/kb/search/" title="Search">Search </a></li>
+            <li data-sub="submenu0"><a href="/products" title="Products">Products</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu1"><a href="/services" title="Services">Services</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu2"><a href="/resources" title="Resources">Resources</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu3"><a href="/about-us" title="About">About</a><span class="arrow-main"></span></li>
+            <li data-sub="submenu4"><a href="/contact" title="Contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <div class="nav-top-mobile">
+        <div class="select-box form">
+
+            <ul class="inline-block-md mb-none top-nav">
+                <li>
+
+                </li>
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/"> Login</a>
+                    </li>
+                
+            </ul>
+
+
+
+        </div>
+        <p class="text-center copyright">Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+    </div>
+</div>
+<div class="violator-wrap d-none" id="top_violator">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <div class="violator-outer">
+                    <div class="violator-inner">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-lg-7 col-lg-offset-2" id="top_violator_content">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="content-link" target="_blank" rel="nofollow noreferrer">
+                                    <span>The Ultimate Guide to High Availability with MariaDB</span>
+                                </a>
+                            </div>
+                            <div class="col-xs-12 col-sm-3" id="top_violator_cta">
+                                <a href="https://go.mariadb.com/high-availability-guide-MariaDB-whitepaper.html" class="btn btn-mariadb" target="_blank" rel="nofollow noreferrer">Download Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" width="15px" height="15px"><path d="M 4.9902344 3.9902344 A 1.0001 1.0001 0 0 0 4.2929688 5.7070312 L 10.585938 12 L 4.2929688 18.292969 A 1.0001 1.0001 0 1 0 5.7070312 19.707031 L 12 13.414062 L 18.292969 19.707031 A 1.0001 1.0001 0 1 0 19.707031 18.292969 L 13.414062 12 L 19.707031 5.7070312 A 1.0001 1.0001 0 0 0 18.980469 3.9902344 A 1.0001 1.0001 0 0 0 18.292969 4.2929688 L 12 10.585938 L 5.7070312 4.2929688 A 1.0001 1.0001 0 0 0 4.9902344 3.9902344 z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="wrapper">
+<div id="top-nav">
+    <div class="container">
+        <ul class="hidden-sm hidden-xs" >
+            <li><a href="https://mariadb.com/kb/">Knowledge Base</a></li>
+            <li><a href="https://mariadb.com/contact/">Contact</a></li>
+            
+                
+                    <li>
+                        <a href="/kb/user/login?next=/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/" rel="nofollow">Login</a>
+                    </li>
+                
+            
+            
+            <li id="search-form">
+                <form action="/kb/en/+search/" method="get" id="search-block-form" accept-charset="UTF-8">
+                    <input id="search" title="Enter the terms you wish to search for."
+                           placeholder="Search . . ." type="text"
+                           name="q" value="" size="15" maxlength="128" class="form-text"
+                           data-autocomplete-url="/kb/en/+search/autocomplete/">
+                    <input type="hidden" name="quick" value="1" />
+                    <input type="hidden" name="source" value="kb" />
+                </form>
+            </li>
+            <li><a id="search-toggler" href="/kb/search/">Search</a></li>
+            
+        </ul>
+    </div>
+</div>
+<div id="navbar-bottom" class="navbar">
+    <div class="container">
+        
+        
+        
+        
+        <div class="row">
+            <div class="col-md-3 col-sm-9 col-xs-9">
+                <a class="brand" href="/" title="MariaDB">
+                    <img src="/kb/static/images/logo-2018-black.95f5978ae14d.png">
+                </a>
+            </div>
+            <div class="col-md-9 hidden-sm hidden-xs">
+                <div class="main-menu">
+                    <ul id="main-menu" class="nav navbar-nav inline-block-sm">
+    <li class="has-sub full-menu">
+        <a href="/products" title="Products">Products</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/solutions" title="Solutions">Solutions</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/resources" title="Resources">Resources</a>
+    </li>
+    <li class="has-sub full-menu">
+        <a href="/about-us" title="Company">Company</a>
+    </li>
+    <li class="has-sub full-menu active">
+        <a href="/pricing" title="Pricing">Pricing</a>
+    </li>
+    
+    <li class="">
+        <a class="button electric-eel small top-bar-right-download" href="/downloads/">Download</a>
+    </li>
+</ul>
+                </div>
+            </div>
+            <div class="col-md-3 visible-sm visible-xs col-sm-3 col-xs-3 ps-rv">
+                <div class="navbar-header text-right pull-right">
+                    <button type="button" class="menu-control toggle-menu" id="open-menu">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="container">
+        
+
+        <div id="subheader1" class="clearfix">
+            <div class="pull-left">
+                
+                <div id="breadcrumbs" class="breadcrumb">
+                    <a href="/kb/en/">Knowledge Base</a>
+                    
+
+
+    
+    » <a class="crumb" href="/kb/en/documentation/">MariaDB Server Documentation</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/columns-storage-engines-and-plugins/">Columns, Storage Engines, and Plugins</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/storage-engines/">Storage Engines</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/columnstore-performance-tuning/">ColumnStore Performance Tuning</a>
+    
+
+    
+    » <a class="crumb" href="/kb/en/columnstore-query-tuning/">ColumnStore Query Tuning</a>
+    
+
+
+    » <a class="node_link crumb" href="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/">Query Tuning Recommendations for MariaDB Enterprise ColumnStore</a>
+
+
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="container" id="container-main">
+        <div class="row">
+            
+            
+                
+                <aside id="sidebar-first" class="sidebar col-md-2 hidden-xs hidden-sm hidden-print">
+                    
+                        
+                        <ul id="category_menu" class="nav nav-pills nav-stacked">
+                            <li><a href="/kb/en/">Home</a></li>
+                            
+                                
+                                    <li><a href="/kb/en/+questions/">Open Questions</a></li>
+                                
+                                <li><a href="/kb/en/documentation/">MariaDB Server</a></li>
+                                <li><a href="/kb/en/maxscale/">MariaDB MaxScale</a></li>
+                                <li><a href="/kb/en/mariadb-columnstore/">MariaDB ColumnStore</a></li>
+                                <li><a href="/kb/en/connectors/">Connectors</a></li>
+                            
+
+                        </ul>
+                    
+
+                    
+<div>
+
+
+
+<div class="well well-small box actions"><div>
+
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/+history" rel="nofollow">History</a>
+        
+        
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/+source/">Source</a>
+        
+        <a class="btn btn-block btn-blue btn-sm flag" href="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/+flag"
+                data-flag-url="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/+flag" rel="nofollow">
+                Flag as Spam / Inappropriate</a>
+        
+        <a class="btn btn-block btn-blue btn-sm" href="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/+translate/">
+                Translate</a>
+        
+
+</div>
+</div>
+
+
+
+
+
+<div class="well well-small box node_info"><div>
+
+    <dl>
+        <dt>Created</dt>
+        <dd>
+
+<span class="datetime" title="2025-02-07 05:39">2 months, 3 weeks ago</span></dd>
+
+        <dt>Modified</dt>
+        <dd>
+
+<span class="datetime" title="2025-04-30 08:48">15 hours, 16 minutes ago</span></dd>
+
+        <dt>Type</dt>
+        <dd>article</dd>
+
+        <dt>Status</dt>
+        <dd>active</dd>
+
+        <dt>License</dt>
+        <dd>
+            
+                <a href="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/+license/">CC BY-SA / Gnu FDL</a>
+            
+        </dd>
+
+        
+    </dl>
+
+    
+    <ul class="rss_feeds">
+        <li><a href="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/+history/feed/">
+            History</a>
+        </li>
+        <li><a href="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/+comments/feed/">
+            Comments</a>
+        </li>
+    </ul>
+    
+
+</div>
+</div>
+
+
+
+
+
+    
+    
+    
+
+<div class="well well-small box attachments"><div><div class="edit_link pull-right"><a href="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/+edit/attachments/">Edit</a></div><h5>Attachments</h5></div><div>
+
+        
+            <div class="no_data">No attachments exist</div>
+        
+    
+</div>
+</div>
+
+    
+
+
+
+    
+    
+
+
+
+
+
+
+</div>
+
+
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                </aside>
+            
+            
+            
+                
+            
+            
+                
+            
+            <section id="content" class="limited_width col-md-8 clearfix">
+                
+                    <h1>Query Tuning Recommendations for MariaDB Enterprise ColumnStore</h1>
+                
+
+                
+
+
+
+                <div>
+                    
+    
+
+    
+    
+    
+
+    <div class="node creole">
+        
+        
+        
+
+
+    
+    <div class="answer formatted">
+        <div class="table_of_contents well well-small">
+<h3>Contents</h3>
+ <ol class="toc">
+
+    <li class=""><a href="#avoid-selecting-unnecessary-columns" title="Avoid Selecting Unnecessary Columns">Avoid Selecting Unnecessary Columns</a></li>
+
+    <li class=""><a href="#avoid-large-sorts" title="Avoid Large Sorts">Avoid Large Sorts</a></li>
+
+    <li class=""><a href="#avoid-excessive-aggregations" title="Avoid Excessive Aggregations">Avoid Excessive Aggregations</a></li>
+
+    <li class=""><a href="#avoid-non-distributed-functions" title="Avoid Non-Distributed Functions">Avoid Non-Distributed Functions</a></li>
+
+    <li class=""><a href="#optimize-large-joins" title="Optimize Large Joins">Optimize Large Joins</a></li>
+
+    <li class=""><a href="#load-ordered-data-in-proper-order" title="Load Ordered Data in Proper Order">Load Ordered Data in Proper Order</a></li>
+
+    <li class=""><a href="#enable-decimal-overflow-checks" title="Enable Decimal Overflow Checks">Enable Decimal Overflow Checks</a></li>
+
+    <li class=""><a href="#user-defined-aggregate-function-udaf-c-api" title="User-Defined Aggregate Function (UDAF) C++ API">User-Defined Aggregate Function (UDAF) C++ API</a> </ol>
+</li>
+</div>
+<p>When tuning queries for MariaDB Enterprise ColumnStore, there are some important details to consider.</p>
+<h2 class="anchored_heading" id="avoid-selecting-unnecessary-columns">Avoid Selecting Unnecessary Columns</h2>
+<p>Enterprise ColumnStore only reads the columns that are necessary to resolve a query.</p>
+<p>For example, the following query selects every column in the table:</p>
+<pre class="fixed">
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">tab</span><span class="p">;</span>
+
+</pre><p>Whereas the following query only selects two columns in the table, so it requires less I/O:</p>
+<pre class="fixed">
+<span class="k">SELECT</span> <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span> <span class="k">FROM</span> <span class="n">tab</span><span class="p">;</span>
+
+</pre><p>For best performance, only select the columns that are necessary to resolve a query.</p>
+<h2 class="anchored_heading" id="avoid-large-sorts">Avoid Large Sorts</h2>
+<p>When Enterprise ColumnStore performs <code>ORDER BY</code> and <code>LIMIT</code> operations, the operations are performed in a single-threaded manner after the rest of the query processing has been completed, and the full unsorted result-set has been retrieved. For large data sets, the performance overhead can be significant.</p>
+<h2 class="anchored_heading" id="avoid-excessive-aggregations">Avoid Excessive Aggregations</h2>
+<p>When Enterprise ColumnStore 5 performs aggregations (i.e., <code>DISTINCT, GROUP BY, COUNT(*)</code>, etc.), all of the aggregation work happens in-memory by default. As a consequence, more complex aggregation operations require more memory in that version.</p>
+<p>For example, the following query could require a lot of memory in Enterprise ColumnStore 5, since it has to calculate many distinct values in memory:</p>
+<pre class="fixed">
+<span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="n">col1</span> <span class="k">FROM</span> <span class="n">tab</span> <span class="k">LIMIT</span> <span class="mi">10000</span><span class="p">;</span>
+
+</pre><p>Whereas the following query could require much less memory in Enterprise ColumnStore 5, since it has to calculate fewer distinct values:</p>
+<pre class="fixed">
+<span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="n">col1</span> <span class="k">FROM</span> <span class="n">tab</span> <span class="k">LIMIT</span> <span class="mi">100</span><span class="p">;</span>
+
+</pre><p>In Enterprise ColumnStore 6, disk-based aggregations can be enabled.</p>
+<p>For best performance, avoid excessive aggregations or enable disk-based aggregations.</p>
+<p>For additional information, see "<a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/#configure-disk-based-aggregations">Configure Disk-Based Aggregations</a>".</p>
+<h2 class="anchored_heading" id="avoid-non-distributed-functions">Avoid Non-Distributed Functions</h2>
+<p>When Enterprise ColumnStore evaluates built-in functions and aggregate functions, it can often evaluate the function in a distributed manner. Distributed evaluation of functions can significantly improve performance.</p>
+<p>Enterprise ColumnStore supports distributed evaluation for some built-in functions. For other built-in functions, the function must be evaluated serially on the final result set.</p>
+<p>Enterprise ColumnStore also supports distributed evaluation for user-defined functions developed with <a href="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/#user-defined-aggregate-function-udaf-c-api">ColumnStore's User-Defined Aggregate Function (UDAF) C++ API</a>. For functions developed with Enterprise Server's standard User-Defined Function (UDF) API, the function must be evaluated serially on the final result set.</p>
+<p>For best performance, avoid non-distributed functions.</p>
+<h2 class="anchored_heading" id="optimize-large-joins">Optimize Large Joins</h2>
+<p>By default, Enterprise ColumnStore performs all joins as in-memory hash joins.</p>
+<p>If the joined tables are very large, the in-memory hash join can require too much memory for the default configuration. There are a couple options to work around this:</p>
+<ul start="1"><li>Enterprise ColumnStore can be configured to use more memory for in-memory hash joins.
+</li><li>Enterprise ColumnStore can be configured to use disk-based joins.
+</li><li>Enterprise ColumnStore can use optimizer statistics to better optimize the join order.
+</li></ul>
+<p>For additional information, see "<a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/#configure-in-memory-joins">Configure In-Memory Joins</a>", "<a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/#configure-disk-based-joins">Configure Disk-Based Joins</a>", and "<a href="/kb/en/collect-statistics-with-analyze-table-for-mariadb-enterprise-columnstore/">Optimizer Statistics</a>".</p>
+<h2 class="anchored_heading" id="load-ordered-data-in-proper-order">Load Ordered Data in Proper Order</h2>
+<p>Enterprise ColumnStore uses extent elimination to optimize queries. <a href="/kb/en/mariadb-enterprise-columnstore-query-evaluation/#extent-elimination">Extent elimination</a> uses the minimum and maximum values in the <a href="mariadb-enterprise-columnstore-storage-architecture/#extent-map">extent map</a> to determine which extents can be skipped for a query.</p>
+<p>When data is loaded into Enterprise ColumnStore, it appends the data to the latest extent. When an extent reaches the maximum number of column values, Enterprise ColumnStore creates a new extent. As a consequence, if ordered data is loaded in its proper order, then similar values will be clustered together in the same extent. This can improve query performance, because extent elimination performs best when similar values are clustered together.</p>
+<p>For example, if you expect to query a table with a filter on a timestamp column, you should sort the data using the timestamp column before loading it into Enterprise ColumnStore. Later, when the table is queried with a filter on the timestamp column, Enterprise ColumnStore would be able to skip many extents using extent elimination.</p>
+<p>For best performance, load ordered data in proper order.</p>
+<h2 class="anchored_heading" id="enable-decimal-overflow-checks">Enable Decimal Overflow Checks</h2>
+<p>When Enterprise ColumnStore performs mathematical operations with very big values using the <a href="data-types-decimal">DECIMAL</a>, <a href="/kb/en/numeric/">NUMERIC</a>, and <a href="/kb/en/fixed/">FIXED</a> data types, the operation can sometimes overflow ColumnStore's maximum precision or scale. The maximum precision and scale depends on the version of Enterprise ColumnStore:</p>
+<ul start="1"><li>In Enterprise ColumnStore 6, the maximum precision (M) is 38, and the maximum scale (D) is 38.
+</li><li>In Enterprise ColumnStore 5, the maximum precision (M) is 18, and the maximum scale (D) is 18.
+</li></ul>
+<p>In Enterprise ColumnStore 6, applications can configure Enterprise ColumnStore to check for decimal overflows by setting the columnstore_decimal_overflow_check system variable, but only when the column has a decimal precision that is 18 or more:</p>
+<pre class="fixed">
+<span class="k">SET</span> <span class="k">SESSION</span> <span class="n">columnstore_decimal_overflow_check</span><span class="o">=</span><span class="k">ON</span><span class="p">;</span>
+
+<span class="k">SELECT</span> <span class="p">(</span><span class="n">big_decimal1</span> <span class="o">*</span> <span class="n">big_decimal2</span><span class="p">)</span> <span class="k">AS</span> <span class="n">product</span>
+<span class="k">FROM</span> <span class="n">columnstore_tab</span><span class="p">;</span>
+</pre><p>When decimal overflow checks are enabled, math operations have extra overhead.</p>
+<p>When the decimal overflow check fails, MariaDB Enterprise ColumnStore raises an error with the <a href="/kb/en/e1815/">ER_INTERNAL_ERROR</a> error sql, and it writes detailed information about the overflow check failure to the ColumnStore system logs.</p>
+<h2 class="anchored_heading" id="user-defined-aggregate-function-udaf-c-api">User-Defined Aggregate Function (UDAF) C++ API</h2>
+<p>MariaDB Enterprise ColumnStore supports Enterprise Server's standard User-Defined Function (UDF) API. However, UDFs developed using that API cannot be executed in a distributed manner.</p>
+<p>To support distributed execution of custom sql, MariaDB Enterprise ColumnStore supports a Distributed User Defined Aggregate Functions (UDAF) C++ API:</p>
+<ul start="1"><li>The Distributed User Defined Aggregate Functions (UDAF) C++ API allows anyone to create aggregate functions of arbitrary complexity for distributed execution in the ColumnStore storage engine.
+</li><li>These functions can also be used as Analytic (Window) functions just like any built-in aggregate function.</li></ul>
+
+    </div>
+
+
+        
+            <div id="subscribe" class="well well-small hide hidden-print"
+                 data-subscribe-url="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/+subscriptions/add"
+                 data-unsubscribe-url="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/+subscriptions/remove">
+            </div>
+        
+
+        
+        
+    
+        <div class="simple_section_nav">
+            <ul class="nav nav-pills">
+                
+                    <li><a href="/kb/en/query-plans-and-optimizer-trace/">
+                        ← Query Plans and Optimizer Trace
+                    </a>
+                    </li>
+                
+                
+                    <li><a href="/kb/en/columnstore-query-tuning/">
+                        ↑ ColumnStore Query Tuning ↑
+                    </a>
+                    </li>
+                
+                
+            </ul>
+        </div>
+    
+
+        
+
+        
+        <h2>Comments</h2>
+        
+    
+    <div id="comments" data-node-id="15647" data-comments-url="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/+comments"
+         data-reply-url="/kb/en/query-tuning-recommendations-for-mariadb-enterprise-columnstore/comments/post/">
+        Comments loading...
+    </div>
+
+        
+
+    </div>
+
+
+                    <div id="content_disclaimer" class="graybox">
+                        Content reproduced on this site is the property of its respective owners,
+                        and this content is not reviewed in advance by MariaDB. The views, information and opinions
+                        expressed by this content do not necessarily represent those of MariaDB or any other party.
+                    </div>
+                </div>
+            </section>
+
+            
+                <div id="right_bar" class="col-md-2">
+                    
+    
+        
+        <ul class="section_navigation well well-small hidden-xs hidden-sm">
+            
+                <li class="parent"><a href="/kb/en/columnstore-query-tuning/">
+                    ↑ ColumnStore Query Tuning ↑
+                </a>
+                </li>
+            
+            
+                
+                    <li>
+                        <a href="/kb/en/collect-statistics-with-analyze-table-for-mariadb-enterprise-columnstore/">
+                            
+                            Collect Statistics with ANALYZE TABLE for MariaDB Enterprise ColumnStore
+                        </a>
+                    </li>
+                
+            
+                
+                    <li>
+                        <a href="/kb/en/query-plans-and-optimizer-trace/">
+                            
+                            Query Plans and Optimizer Trace
+                        </a>
+                    </li>
+                
+            
+                
+                    <li class="active">
+                        <span>Query Tuning Recommendations for MariaDB Enterprise ColumnStore</span>
+                        
+                    </li>
+                
+            
+        </ul>
+    
+    
+
+                </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer">
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12">
+                    <ul class="list-inline text-center footer-nav">
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/products" title="Products">Products</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/solutions" title="Solutions">Solutions</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/resources" title="Resources">Resources</a>
+                            </h5>
+                        </li>
+                        <li>
+                            <h5><a href="https://mariadb.com/about-us" title="About MariaDB">Company</a></h5>
+                        </li>
+                        <li>
+                            <h5>
+                                <a href="https://mariadb.com/pricing" title="Pricing">Pricing</a>
+                            </h5>
+                        </li>
+                        
+                        
+                        <li>
+                            <h5><a href="https://mariadb.com/downloads" title="Download">Download MariaDB</a></h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row row-10">
+                
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div id="block-footerformcontact" class="block block-block-content block-block-contentd754ee1b-3cc9-40e7-9ef4-f504f1197fb1">
+                        
+                            <h5 style="font-weight: 400;">Subscribe to our newsletter!</h5>
+                            <script src="//app-sj15.marketo.com/js/forms2/js/forms2.min.js"></script><form id="mktoForm_1498"></form>
+                            <script>
+                                <!--//--><![CDATA[// ><!--
+                                MktoForms2.loadForm("//app-sj15.marketo.com", "573-PXI-984", 1498);
+                                //--><!]]]]><![CDATA[>
+                                //--><!]]>
+                            </script>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-xs-12 item col-md-offset-4">
+                    <div class="footer-copyright">
+                        <div class="text-center">
+                            <ul class="list-inline no-margin">
+                                <li>
+                                    <a href="/legal" title="Legal">Legal</a>
+                                </li>
+                                <li>
+                                    <a href="/privacy-policy" title="Privacy Policy">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="/cookie-policy/" title="Cookies">Cookie Policy</a>
+                                </li>
+                            </ul>
+                            <p>Copyright &copy; 2025 MariaDB. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</footer>
+</div>
+
+<div id="ajax_loading">
+    <img src="/kb/static/images/ajax-loader.a51c5608d01a.gif" />
+</div>
+
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-MK2847"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MK2847');</script>
+    <!-- End Google Tag Manager -->
+
+</body>
+
+<script type="text/javascript" src="/kb/static/js/main.1587e3a666fc.js" charset="utf-8"></script>
+
+</html>
