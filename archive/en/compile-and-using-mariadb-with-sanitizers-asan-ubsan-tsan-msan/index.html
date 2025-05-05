@@ -275,12 +275,12 @@
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2018-09-06 10:06">6 years, 7 months ago</span></dd>
+<span class="datetime" title="2018-09-06 10:06">6 years, 8 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-12-04 10:01">4 months, 3 weeks ago</span></dd>
+<span class="datetime" title="2025-05-05 03:29">11 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -458,49 +458,63 @@
 </li><li>Initialization order bugs
 </li><li>Memory leaks
 </li></ul>
-<p>To use ASAN you need a gcc version that supports ASAN.  gcc 4.8.5 and up are known to work.</p>
+<p>At the moment the clang based sanitizers are more comprehensive than gcc.</p>
 <p>In addition to ASAN there are sanitizers for Undefined Behaviour, Thread and Memory related errors.</p>
 <p><a href="https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html">UndefinedBehaviourSanitizer (aka UBSAN)</a> </p>
 <p><a href="https://clang.llvm.org/docs/ThreadSanitizer.html">ThreadSanitizer (aka TSAN)</a></p>
 <p><a href="https://clang.llvm.org/docs/MemorySanitizer.html">MemorySanitizer (aka MSAN)</a></p>
 <h2 class="anchored_heading" id="how-to-compile-mariadb-with-sanitizers">How to Compile MariaDB with Sanitizers</h2>
 <p>Before using ASAN locally, please ensure that it is installed on the system:</p>
-<pre class="fixed">yum install -y /usr/lib64/libasan.so.6.0.0
-</pre><p>ASAN is supported in <a href="/kb/en/what-is-mariadb-101/">MariaDB 10.1</a> and up.</p>
 <p>You can use one of the two following build commands:</p>
-<pre class="fixed">cmake . -DWITH_ASAN=ON
-</pre><p>or from <a href="/kb/en/what-is-mariadb-102/">MariaDB 10.2</a> and up:</p>
-<pre class="fixed">./BUILD/compile-pentium64-asan-max
+<pre class="fixed">cmake  -DWITH_ASAN=ON /source
 </pre><p>Additionally, UBSAN, TSAN, and MSAN can be enabled in a similar way:</p>
 <p>UBSAN:</p>
-<pre class="fixed">yum install -y /usr/lib64/libubsan.so.1.0.0
-cmake . -DWITH_UBSAN=ON
+<pre class="fixed">cmake -DWITH_UBSAN=ON /source
 </pre><p>TSAN:</p>
-<pre class="fixed">yum install -y /usr/lib64/libtsan.so.0.0.0
-cmake . -DWITH_TSAN=ON
+<pre class="fixed">cmake -DWITH_TSAN=ON /source
 </pre><p>MSAN:</p>
 <p>Note: keep in mind that only clang supports MSAN, g++ or other compilers will not work.</p>
-<pre class="fixed">cmake . -DWITH_MSAN=ON
+<pre class="fixed">cmake -DWITH_MSAN=ON /source
 </pre><h2 class="anchored_heading" id="running-an-msan-build">Running an MSAN Build</h2>
 <p>The time consuming aspect of building with MSAN is having instrumented system libraries. As MariaDB Foundation have built the MSAN container already for buildbot, this is how you re-use this for building locally.</p>
 <p>First, run the container where your current directory is the source directory:</p>
-<pre class="fixed">podman run -v $PWD:/source:z -ti --user buildbot --entrypoint bash --shm-size 5G --env MSAN_SYMBOLIZER_PATH=/msan-libs/bin/llvm-symbolizer-msan --env  MSAN_OPTIONS=abort_on_error=1:poison_in_dtor=0 quay.io/mariadb-foundation/bb-worker:debian11-msan
+<pre class="fixed">podman run -v $PWD:/source:z \
+  -ti \
+  --user buildbot \
+  --entrypoint bash \
+  --mount=type=tmpfs,tmpfs-size=10G,dst=/build --shm-size=10g \
+  --workdir /build \
+   quay.io/mariadb-foundation/bb-worker:debian12-msan-clang-20
 </pre><p>Note: docker can be used instead of the lighter weight podman if you so desire.</p>
-<p>The shm-size is for the MTR tests which exceed the 64k default shm-size.</p>
-<p>All the following instructions are executed within the container. Now run the configure stage of cmake:</p>
-<pre class="fixed">cmake /source -DCMAKE_C_COMPILER=clang-15 -DCMAKE_CXX_COMPILER=clang++-15 '-DCMAKE_C_FLAGS=-O2 -Wno-unused-command-line-argument -fdebug-macro' '-DCMAKE_CXX_FLAGS=-stdlib=libc++ -O2 -Wno-unused-command-line-argument -fdebug-macro' -DWITH_EMBEDDED_SERVER=OFF -DWITH_UNIT_TESTS=OFF -DCMAKE_BUILD_TYPE=Debug -DWITH_INNODB_BZIP2=OFF -DWITH_INNODB_LZ4=OFF -DWITH_INNODB_LZMA=OFF -DWITH_INNODB_LZO=OFF -DWITH_INNODB_SNAPPY=OFF -DPLUGIN_ARCHIVE=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_MROONGA=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_CONNECT=NO -DPLUGIN_SPIDER=NO -DWITH_SAFEMALLOC=OFF -DWITH_ZLIB=bundled -DWITH_SSL=bundled -DWITH_PCRE=bundled -DHAVE_LIBAIO_H=0 -DCMAKE_DISABLE_FIND_PACKAGE_URING=1 -DCMAKE_DISABLE_FIND_PACKAGE_LIBAIO=1 -DWITH_MSAN=ON -DWITH_DBUG_TRACE=OFF
+<p>If you which to record with rr within the container --privileged is requires as an option.</p>
+<p>Here the build directory is tmpfs so no need to specify a /dev/shm which has a 64k default shm-size (increased with --shm-size 5G).</p>
+<p>All the following instructions are executed within the container - there is a document in /etc/motd that contains the latest information. Now run the configure stage of cmake:</p>
+<pre class="fixed">cmake -DWITH_EMBEDDED_SERVER=OFF \
+      -DWITH_INNODB_{BZIP2,LZ4,LZMA,LZO,SNAPPY}=OFF \
+      -DPLUGIN_{MROONGA,ROCKSDB,OQGRAPH}=NO  \
+      -DWITH_ZLIB=bundled  \
+      -DHAVE_LIBAIO_H=0    \
+      -DCMAKE_DISABLE_FIND_PACKAGE_{URING,LIBAIO}=1  \
+      -DWITH_NUMA=NO  \
+      -DWITH_SYSTEMD=no \
+      -DWITH_MSAN=ON  \
+      -DHAVE_CXX_NEW=1  \
+      -DCMAKE_{EXE,MODULE}_LINKER_FLAGS=&#34;-L${MSAN_LIBDIR} -Wl,-rpath=${MSAN_LIBDIR}&#34; \
+      -DWITH_DBUG_TRACE=OFF \
+      /source
 </pre><p>Run the build stage:</p>
-<pre class="fixed">cmake --build . --parallel 
+<pre class="fixed">cmake --build . 
 ...
 [100%] Built target mariadbd
 [100%] Linking CXX executable mariadb-backup
 Creating mariabackup link
 [100%] Built target mariadb-backup
-</pre><p>As the important MTR step needs to use the instrumented libraries MTR is run using the LD_LIBRARY_PATH to use those.</p>
-<pre class="fixed">LD_LIBRARY_PATH=/msan-libs mysql-test/mtr  --mem --big-test --force --retry=0 --skip-test=.*compression.*  --parallel=auto
+</pre><p>As the MSAN has rpath defined in its compile option there is no need for LD_LIBRARY_PATH manipulation.</p>
+<p>To run tests:</p>
+<pre class="fixed">mysql-test/mtr   (usual mtr options)
 </pre><p>As newer versions occur and improvements happen these instructions may change. Look at the execution on the <a href="https://buildbot.mariadb.org/#/builders/amd64-debian-11-msan">buildbot builder</a> to see if any changes have been made.</p>
 <h2 class="anchored_heading" id="running-an-asan-build">Running an ASAN Build</h2>
-<p>To run mariadbd with instrumentation you have to set the <code>ASAN_OPTIONS</code> environment variable before starting <code>mariadbd</code>. Either in your shell or in your <a href="/kb/en/mariadbd_safe/">mariadbd_safe</a> script.</p>
+<p>To run mariadbd with instrumentation you have to set the <code>ASAN_OPTIONS</code> environment variable before starting <code>mariadbd</code> including starting <code>mariadbd</code> when running mtr.</p>
 <pre class="fixed">export ASAN_OPTIONS=abort_on_error=1
 </pre><p>The above command will abort any instrumented executable if any errors are found, which is good for debugging.  If you set abort_on_error=0 all server errors are logged to your error log file (mysqld.err).</p>
 <p>To catch errors for other processes than the server, you can set more options, like this:</p>
