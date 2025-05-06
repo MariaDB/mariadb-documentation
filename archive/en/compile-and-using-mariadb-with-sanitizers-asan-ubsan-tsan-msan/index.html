@@ -280,7 +280,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-05-05 03:29">11 minutes ago</span></dd>
+<span class="datetime" title="2025-05-05 23:37">24 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -438,6 +438,8 @@
 
     <li class=""><a href="#running-an-msan-build" title="Running an MSAN Build">Running an MSAN Build</a></li>
 
+    <li class=""><a href="#dockerpodman-command-table" title="Docker/Podman Command Table ==">Docker/Podman Command Table ==</a></li>
+
     <li class=""><a href="#running-an-asan-build" title="Running an ASAN Build">Running an ASAN Build</a>    <ol class="toc">
 
         <li class=""><a href="#using-valgrind" title="Using Valgrind">Using Valgrind</a>    </ol>
@@ -476,33 +478,64 @@
 <p>Note: keep in mind that only clang supports MSAN, g++ or other compilers will not work.</p>
 <pre class="fixed">cmake -DWITH_MSAN=ON /source
 </pre><h2 class="anchored_heading" id="running-an-msan-build">Running an MSAN Build</h2>
-<p>The time consuming aspect of building with MSAN is having instrumented system libraries. As MariaDB Foundation have built the MSAN container already for buildbot, this is how you re-use this for building locally.</p>
+<p>The time consuming aspect of building with MSAN is having <a href="instrumented_system_libraries">https:<em>github.com/MariaDB/buildbot/blob/main/ci_build_images/msan.instrumentedlibs.sh</em></a>. As MariaDB Foundation have built the MSAN container already for buildbot, this is how you re-use this for building locally.</p>
 <p>First, run the container where your current directory is the source directory:</p>
 <pre class="fixed">podman run -v $PWD:/source:z \
+  --rm \
   -ti \
-  --user buildbot \
   --entrypoint bash \
-  --mount=type=tmpfs,tmpfs-size=10G,dst=/build --shm-size=10g \
+  --mount=type=tmpfs,tmpfs-size=10G,dst=/build \
   --workdir /build \
    quay.io/mariadb-foundation/bb-worker:debian12-msan-clang-20
-</pre><p>Note: docker can be used instead of the lighter weight podman if you so desire.</p>
-<p>If you which to record with rr within the container --privileged is requires as an option.</p>
-<p>Here the build directory is tmpfs so no need to specify a /dev/shm which has a 64k default shm-size (increased with --shm-size 5G).</p>
+</pre><h2 class="anchored_heading" id="dockerpodman-command-table">Docker/Podman Command Table</h2>
+<table><tr><td><strong>Command Component</strong></td><td><strong>Purpose</strong></td><td><strong>Notes</strong></td></tr>
+<tr><td>podman run</td><td>run a container</td><td>other implementations use docker syntax (or at at least close)</td></tr>
+<tr><td>--rm</td><td>remove container on termination</td><td></td></tr>
+<tr><td>-ti</td><td>a tty and a stdin are connected</td><td>for interactive container use</td></tr>
+<tr><td>-v "$PWD":/source:z</td><td>mount current directory as /source inside the container - :z - read selinux label</td><td></td></tr>
+<tr><td>--mount=type=tmpfs,tmpfs-size=10G,dst=/build</td><td>a 10G build directory and mtr</td><td>keeps as transient, big enough for some mtr tests</td></tr>
+<tr><td>--workdir /build</td><td>default directory</td><td></td></tr>
+<tr><td>--entrypoint bash</td><td>Ensure the cmd of buildbot start isn't executed</td><td></td></tr>
+<tr><td>--cap-add=SYS_PTRACE</td><td>capability for tracing used by gdb</td><td>for debugging</td></tr>
+<tr><td><strong>Extra options</strong></td><td></td><td></td><td></td></tr>
+<tr><td>--name containername</td><td>useful if running multiple to keep track</td><td>Used as a name for a new session in the container (podman exec -ti containername bash)</td></tr>
+<tr><td>--shm-size=10g</td><td>Size of /dev/shm as alternate for mtr tests</td><td>Default is unsable 64k, This is large enough for most --big-tests with some parallelism</td></tr>
+<tr><td>--privileged</td><td>Allow rr recording</td><td>Note security impacting, don't run untrusted code as root</td></tr>
+<tr><td>-v $DATADIR:/var/lib/mysql:Z</td><td>Mount an existing datadir</td><td>For testing against some prepared data</td></tr>
+</table>
+<p>Notes:</p>
+<ul start="1"><li>docker can be used instead of the lighter weight podman if you so desired.
+</li><li>/dev/shm is mounted no-exec so it rr recording here cannot be replayed while in that location
+</li><li>optionally can make /build a filesystem mount to preserve the build.
+</li></ul>
 <p>All the following instructions are executed within the container - there is a document in /etc/motd that contains the latest information. Now run the configure stage of cmake:</p>
-<pre class="fixed">cmake -DWITH_EMBEDDED_SERVER=OFF \
+<pre class="fixed">cmake \
+      -DWITH_MSAN=ON  \
+      -DCMAKE_{EXE,MODULE}_LINKER_FLAGS=&#34;-L${MSAN_LIBDIR} -Wl,-rpath=${MSAN_LIBDIR}&#34; \
+      -DHAVE_CXX_NEW=1  \
       -DWITH_INNODB_{BZIP2,LZ4,LZMA,LZO,SNAPPY}=OFF \
-      -DPLUGIN_{MROONGA,ROCKSDB,OQGRAPH}=NO  \
       -DWITH_ZLIB=bundled  \
-      -DHAVE_LIBAIO_H=0    \
-      -DCMAKE_DISABLE_FIND_PACKAGE_{URING,LIBAIO}=1  \
       -DWITH_NUMA=NO  \
       -DWITH_SYSTEMD=no \
-      -DWITH_MSAN=ON  \
-      -DHAVE_CXX_NEW=1  \
-      -DCMAKE_{EXE,MODULE}_LINKER_FLAGS=&#34;-L${MSAN_LIBDIR} -Wl,-rpath=${MSAN_LIBDIR}&#34; \
-      -DWITH_DBUG_TRACE=OFF \
+      -DHAVE_LIBAIO_H=0    \
+      -DCMAKE_DISABLE_FIND_PACKAGE_{URING,LIBAIO}=1  \
+      -DPLUGIN_{MROONGA,ROCKSDB,OQGRAPH}=NO  \
+      -DWITH_EMBEDDED_SERVER=OFF \
       /source
-</pre><p>Run the build stage:</p>
+</pre><table><tr><td><strong>CMake Options</strong></td><td><strong>Why</strong></td></tr>
+<tr><td><code>WITH_MSAN=ON</code></td><td>Enables MSAN build in compile options</td></tr>
+<tr><td><code>CMAKE_{EXE,MODULE}_LINKER_FLAGS</code></td><td>links executables and shared libraries against the instrumented libraries with a rpath so a LD_LIBRARY_PATH env isn't required</td></tr>
+<tr><td><code>WITH_INNODB_{BZIP2,LZ4,LZMA,LZO,SNAPPY}=OFF</code></td><td>system libraries for these haven't been MSAN instrumented currently</td></tr>
+<tr><td><code>HAVE_CXX_NEW</code></td><td>Works around a ODR violation</td></tr>
+<tr><td><code>WITH_ZLIB=bundled</code></td><td>This hasn't been MSAN instrumented currently</td></tr>
+<tr><td><code>WITH_NUMA</code> / <code>WITH_SYSTEMD</code></td><td>both uninstrumented</td></tr>
+<tr><td><code>HAVE_LIBAIO_H=0 / CMAKE_DISABLE_FIND_PACKAGE_LIBAIO</code></td><td>AIO currently not MSAN instrumented</td></tr>
+<tr><td><code>CMAKE_DISABLE_FIND_PACKAGE_URING=NO</code></td><td>Uninstrumented <a href="https://jira.mariadb.org/browse/MDEV-36482">MDEV-36482</a>, and required seccomp adjustment or --privileged to work</td></tr>
+<tr><td><code> PLUGIN_OQGRAPH</code> (and <code>PLUGIN_COLUMNSTORE</code>)</td><td>Dependency on boost libraries are instrumented</td></tr>
+<tr><td><code>WITH_EMBEDDED_SERVER=OFF</code></td><td>reduce build time</td></tr>
+<tr><td><code>WITH_DBUG_TRACE=OFF</code></td><td>reduce runtime overhead if <code>CMAKE_BUILD_TYPE=Debug</code> chosen</td></tr>
+</table>
+<p>Run the build stage:</p>
 <pre class="fixed">cmake --build . 
 ...
 [100%] Built target mariadbd
