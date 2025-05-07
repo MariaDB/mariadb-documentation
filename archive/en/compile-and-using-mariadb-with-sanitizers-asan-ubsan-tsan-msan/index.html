@@ -25,9 +25,9 @@
     <meta property="og:image" content="http://mariadb.comaskmonty-logo.png" />
     <meta property="og:site_name" content="MariaDB KnowledgeBase" />
     <meta property="fb:admins" content="514852603" />
-    <meta property="og:description" content="How to compile and use MariaDB with AddressSanitizer (ASAN)." />
+    <meta property="og:description" content="How to compile and use MariaDB with AddressSanitizer (ASAN), MemorySanitizer (MSAN), UndefinedBehaviorSantiizer (UBSAN), or ThreadSantizer (TSAN)" />
 
-    <meta name="description" content="How to compile and use MariaDB with AddressSanitizer (ASAN)." />
+    <meta name="description" content="How to compile and use MariaDB with AddressSanitizer (ASAN), MemorySanitizer (MSAN), UndefinedBehaviorSantiizer (UBSAN), or ThreadSantizer (TSAN)" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet"/>
@@ -280,7 +280,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-05-05 23:37">24 minutes ago</span></dd>
+<span class="datetime" title="2025-05-06 23:44">18 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -436,11 +436,24 @@
 
     <li class=""><a href="#how-to-compile-mariadb-with-sanitizers" title="How to Compile MariaDB with Sanitizers">How to Compile MariaDB with Sanitizers</a></li>
 
-    <li class=""><a href="#running-an-msan-build" title="Running an MSAN Build">Running an MSAN Build</a></li>
+    <li class=""><a href="#buildbots-msan-container" title="Buildbot&#39;s MSAN container">Buildbot&#39;s MSAN container</a>    <ol class="toc">
 
-    <li class=""><a href="#dockerpodman-command-table" title="Docker/Podman Command Table ==">Docker/Podman Command Table ==</a></li>
+        <li class=""><a href="#running-the-msan-container" title="Running the MSAN container">Running the MSAN container</a></li>
 
-    <li class=""><a href="#running-an-asan-build" title="Running an ASAN Build">Running an ASAN Build</a>    <ol class="toc">
+        <li class=""><a href="#running-an-msan-build" title="Running an MSAN Build">Running an MSAN Build</a>        <ol class="toc">
+
+            <li class=""><a href="#bug-reporting" title="Bug Reporting">Bug Reporting</a>        </ol>
+</li>
+
+        <li class=""><a href="#running-an-combined-asan-and-ubsan-build" title="Running an combined ASAN and UBSAN Build">Running an combined ASAN and UBSAN Build</a>        <ol class="toc">
+
+            <li class=""><a href="#bug-reporting" title="Bug Reporting">Bug Reporting</a>        </ol>
+</li>
+
+        <li class=""><a href="#using-rr" title="Using RR">Using RR</a>    </ol>
+</li>
+
+    <li class=""><a href="#asan-options" title="ASAN Options">ASAN Options</a>    <ol class="toc">
 
         <li class=""><a href="#using-valgrind" title="Using Valgrind">Using Valgrind</a>    </ol>
 </li>
@@ -450,21 +463,13 @@
 </div>
 <h2 class="anchored_heading" id="what-are-sanitizers">What are Sanitizers?</h2>
 <p>Sanitizers are open source runtime error detectors developed by Google that are enabled during the compile step. These sanitizers add extra code during compilation that will throw exceptions when certain errors are detected.</p>
-<p><a href="https://github.com/google/sanitizers/wiki/AddressSanitizer">AddressSanitizer (aka ASAN)</a> is a memory error detector for C/C++. It finds a lot of the same things as <a href="/kb/en/compiling-mariadb-for-debugging/">valgrind</a>, but with a lot less overhead.</p>
-<ul start="1"><li>Use after free (dangling pointer dereference)
-</li><li>Heap buffer overflow
-</li><li>Stack buffer overflow
-</li><li>Global buffer overflow
-</li><li>Use after return
-</li><li>Use after scope
-</li><li>Initialization order bugs
-</li><li>Memory leaks
+<p>Sanitizers find server bugs bug instrumenting the runtime MariaDB during compile time, and performing runtime checks on the executed test. Sanitizers detect a variety of implementation defects:</p>
+<p>The sanitizers for clang are:</p>
+<ul start="1"><li><a href="https://clang.llvm.org/docs/AddressSanitizer.html">AddressSanitizer (aka ASAN)</a>
+</li><li><a href="https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html">UndefinedBehaviourSanitizer (aka UBSAN)</a> 
+</li><li><a href="https://clang.llvm.org/docs/ThreadSanitizer.html">ThreadSanitizer (aka TSAN)</a>
+</li><li><a href="https://clang.llvm.org/docs/MemorySanitizer.html">MemorySanitizer (aka MSAN)</a>
 </li></ul>
-<p>At the moment the clang based sanitizers are more comprehensive than gcc.</p>
-<p>In addition to ASAN there are sanitizers for Undefined Behaviour, Thread and Memory related errors.</p>
-<p><a href="https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html">UndefinedBehaviourSanitizer (aka UBSAN)</a> </p>
-<p><a href="https://clang.llvm.org/docs/ThreadSanitizer.html">ThreadSanitizer (aka TSAN)</a></p>
-<p><a href="https://clang.llvm.org/docs/MemorySanitizer.html">MemorySanitizer (aka MSAN)</a></p>
 <h2 class="anchored_heading" id="how-to-compile-mariadb-with-sanitizers">How to Compile MariaDB with Sanitizers</h2>
 <p>Before using ASAN locally, please ensure that it is installed on the system:</p>
 <p>You can use one of the two following build commands:</p>
@@ -475,10 +480,23 @@
 </pre><p>TSAN:</p>
 <pre class="fixed">cmake -DWITH_TSAN=ON /source
 </pre><p>MSAN:</p>
-<p>Note: keep in mind that only clang supports MSAN, g++ or other compilers will not work.</p>
 <pre class="fixed">cmake -DWITH_MSAN=ON /source
-</pre><h2 class="anchored_heading" id="running-an-msan-build">Running an MSAN Build</h2>
-<p>The time consuming aspect of building with MSAN is having <a href="instrumented_system_libraries">https:<em>github.com/MariaDB/buildbot/blob/main/ci_build_images/msan.instrumentedlibs.sh</em></a>. As MariaDB Foundation have built the MSAN container already for buildbot, this is how you re-use this for building locally.</p>
+</pre><p>Important to note MSAN requires instrumented c++ and system libraries to have a functioning build per container guide below. </p>
+<h2 class="anchored_heading" id="buildbots-msan-container">Buildbot's MSAN container</h2>
+<p>The time consuming aspect of building with MSAN is having <a href="https://github.com/MariaDB/buildbot/blob/main/ci_build_images/msan.instrumentedlibs.sh">instrumented system libraries</a>. To help with this MariaDB Foundation has built the MSAN container for buildbot, but this is reusable locally.</p>
+<p>The MariaDB Buildbot MSAN container,  <code>quay.io/mariadb-foundation/bb-worker/debian12-msan-clang-20</code>  a container with:</p>
+<ul start="1"><li>the instrumented libraries required for MSAN
+</li><li>a very modern clang version
+</li><li>the latest stable Debian as a base image
+</li><li>a compiled <a href="https://rr-project.org/">rr</a> for debugging
+</li></ul>
+<p>The build of this container isn't hard coded to MSAN so it can be used for:</p>
+<ul start="1"><li>A general Debian build container
+</li><li>Using the gcc/g++ of Debian (by removing the CC and CXX environment variables
+</li><li>Compiling with a latest clang
+</li><li>Compiling with the ASAN/UBSAN feature available in the latest clang
+</li></ul>
+<h3 class="anchored_heading" id="running-the-msan-container">Running the MSAN container</h3>
 <p>First, run the container where your current directory is the source directory:</p>
 <pre class="fixed">podman run -v $PWD:/source:z \
   --rm \
@@ -487,8 +505,8 @@
   --mount=type=tmpfs,tmpfs-size=10G,dst=/build \
   --workdir /build \
    quay.io/mariadb-foundation/bb-worker:debian12-msan-clang-20
-</pre><h2 class="anchored_heading" id="dockerpodman-command-table">Docker/Podman Command Table</h2>
-<table><tr><td><strong>Command Component</strong></td><td><strong>Purpose</strong></td><td><strong>Notes</strong></td></tr>
+</pre><p>The purposes of these, and other options include:</p>
+<div class="cstm-style darkheader-nospace-borders"><table><tr><th>Command Component</th><th>Purpose</th><th>Notes</th></tr>
 <tr><td>podman run</td><td>run a container</td><td>other implementations use docker syntax (or at at least close)</td></tr>
 <tr><td>--rm</td><td>remove container on termination</td><td></td></tr>
 <tr><td>-ti</td><td>a tty and a stdin are connected</td><td>for interactive container use</td></tr>
@@ -497,34 +515,53 @@
 <tr><td>--workdir /build</td><td>default directory</td><td></td></tr>
 <tr><td>--entrypoint bash</td><td>Ensure the cmd of buildbot start isn't executed</td><td></td></tr>
 <tr><td>--cap-add=SYS_PTRACE</td><td>capability for tracing used by gdb</td><td>for debugging</td></tr>
-<tr><td><strong>Extra options</strong></td><td></td><td></td><td></td></tr>
+<tr><td><strong>Extra options</strong></td><td></td></tr>
 <tr><td>--name containername</td><td>useful if running multiple to keep track</td><td>Used as a name for a new session in the container (podman exec -ti containername bash)</td></tr>
 <tr><td>--shm-size=10g</td><td>Size of /dev/shm as alternate for mtr tests</td><td>Default is unsable 64k, This is large enough for most --big-tests with some parallelism</td></tr>
 <tr><td>--privileged</td><td>Allow rr recording</td><td>Note security impacting, don't run untrusted code as root</td></tr>
 <tr><td>-v $DATADIR:/var/lib/mysql:Z</td><td>Mount an existing datadir</td><td>For testing against some prepared data</td></tr>
 </table>
-<p>Notes:</p>
+</div><p>Notes:</p>
 <ul start="1"><li>docker can be used instead of the lighter weight podman if you so desired.
 </li><li>/dev/shm is mounted no-exec so it rr recording here cannot be replayed while in that location
 </li><li>optionally can make /build a filesystem mount to preserve the build.
 </li></ul>
-<p>All the following instructions are executed within the container - there is a document in /etc/motd that contains the latest information. Now run the configure stage of cmake:</p>
+<p>There are environment variables that affect the cmake configure options and mtr are:</p>
+<pre class="fixed">CXX=clang++
+CC=clang
+MSAN_LIBDIR=/msan-libs
+CMAKE_GENERATOR=Ninja
+MSAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-20
+WSREP_PROVIDER=/usr/lib/galera/libgalera_smm.so
+MTR_PARALLEL=auto
+ASAN_OPTIONS=quarantine_size_mb=512:atexit=0:detect_invalid_pointer_pairs=3:dump_instruction_bytes=1:allocator_may_return_null=1
+UBSAN_OPTIONS=print_stacktrace=1:report_error_type=1
+MSAN_OPTIONS=abort_on_error=1:poison_in_dtor=0
+</pre><p>Note: galera WSREP_PROVIDER isn't instrumented with any sanitizer</p>
+<p>Check the latest version of these running <code>env</code>.</p>
+<h3 class="anchored_heading" id="running-an-msan-build">Running an MSAN Build</h3>
+<p>Once you have started the MSAN container this is how you perform a MSAN build.</p>
+<p>The time consuming aspect of building with MSAN is having <a href="https://github.com/MariaDB/buildbot/blob/main/ci_build_images/msan.instrumentedlibs.sh">instrumented system libraries</a>.</p>
+<p>All the following instructions are executed within the container - there is a document in /etc/motd that contains the latest information. Start by running the configure stage of <code>cmake</code>:</p>
 <pre class="fixed">cmake \
+      -DUPDATE_SUBMODULES=OFF \
       -DWITH_MSAN=ON  \
       -DCMAKE_{EXE,MODULE}_LINKER_FLAGS=&#34;-L${MSAN_LIBDIR} -Wl,-rpath=${MSAN_LIBDIR}&#34; \
       -DHAVE_CXX_NEW=1  \
       -DWITH_INNODB_{BZIP2,LZ4,LZMA,LZO,SNAPPY}=OFF \
       -DWITH_ZLIB=bundled  \
       -DWITH_NUMA=NO  \
-      -DWITH_SYSTEMD=no \
+      -DWITH_SYSTEMD=NO \
       -DHAVE_LIBAIO_H=0    \
       -DCMAKE_DISABLE_FIND_PACKAGE_{URING,LIBAIO}=1  \
       -DPLUGIN_{MROONGA,ROCKSDB,OQGRAPH}=NO  \
       -DWITH_EMBEDDED_SERVER=OFF \
       /source
-</pre><table><tr><td><strong>CMake Options</strong></td><td><strong>Why</strong></td></tr>
+</pre><p> MSAN is a clang only compile options and other compilers will not work.</p>
+<div class="cstm-style darkheader-nospace-borders"><table><tr><th>CMake Options</th><th>Why</th></tr>
+<tr><td><code>UPDATE_SUBMODULES=OFF</code></td><td>The source directory is read-only so cannot be updated from within the container</td></tr>
 <tr><td><code>WITH_MSAN=ON</code></td><td>Enables MSAN build in compile options</td></tr>
-<tr><td><code>CMAKE_{EXE,MODULE}_LINKER_FLAGS</code></td><td>links executables and shared libraries against the instrumented libraries with a rpath so a LD_LIBRARY_PATH env isn't required</td></tr>
+<tr><td><code>CMAKE_{EXE,MODULE}_LINKER_FLAGS</code></td><td>links executables and shared libraries against the instrumented libraries with a rpath so a LD_LIBRARY_PATH environment variable isn't required</td></tr>
 <tr><td><code>WITH_INNODB_{BZIP2,LZ4,LZMA,LZO,SNAPPY}=OFF</code></td><td>system libraries for these haven't been MSAN instrumented currently</td></tr>
 <tr><td><code>HAVE_CXX_NEW</code></td><td>Works around a ODR violation</td></tr>
 <tr><td><code>WITH_ZLIB=bundled</code></td><td>This hasn't been MSAN instrumented currently</td></tr>
@@ -534,8 +571,9 @@
 <tr><td><code> PLUGIN_OQGRAPH</code> (and <code>PLUGIN_COLUMNSTORE</code>)</td><td>Dependency on boost libraries are instrumented</td></tr>
 <tr><td><code>WITH_EMBEDDED_SERVER=OFF</code></td><td>reduce build time</td></tr>
 <tr><td><code>WITH_DBUG_TRACE=OFF</code></td><td>reduce runtime overhead if <code>CMAKE_BUILD_TYPE=Debug</code> chosen</td></tr>
+<tr><td><code>CMAKE_CXX_FLAGS=-O2</code></td><td>Required with <code>CMAKE_BUILD_TYPE=Debug</code> to avoid <a href="https://jira.mariadb.org/browse/MDEV-36316">MDEV-36316</a>. Plan to incorporate into the basic build</td></tr>
 </table>
-<p>Run the build stage:</p>
+</div><p>Run the build stage:</p>
 <pre class="fixed">cmake --build . 
 ...
 [100%] Built target mariadbd
@@ -546,8 +584,43 @@ Creating mariabackup link
 <p>To run tests:</p>
 <pre class="fixed">mysql-test/mtr   (usual mtr options)
 </pre><p>As newer versions occur and improvements happen these instructions may change. Look at the execution on the <a href="https://buildbot.mariadb.org/#/builders/amd64-debian-11-msan">buildbot builder</a> to see if any changes have been made.</p>
-<h2 class="anchored_heading" id="running-an-asan-build">Running an ASAN Build</h2>
-<p>To run mariadbd with instrumentation you have to set the <code>ASAN_OPTIONS</code> environment variable before starting <code>mariadbd</code> including starting <code>mariadbd</code> when running mtr.</p>
+<h4 class="anchored_heading" id="bug-reporting">Bug Reporting</h4>
+<p>Use the MSAN in the label when reporting bugs.</p>
+<p>Current outstanding MSAN bugs can be found on <a href="https://jira.mariadb.org/issues/?jql=labels%20%3D%20MSAN%20and%20status%20!%3D%20Closed">JIRA by searching for this label</a>.</p>
+<h3 class="anchored_heading" id="running-an-combined-asan-and-ubsan-build">Running an combined ASAN and UBSAN Build</h3>
+<p>The clang implemented instrumentation of the MemoryStanitizer (MSAN) conflicts with the AddressSanitizer (ASAN) and UndefinedBehaviour (UBSAN) mechanisms, however ASAN and UBSAN can be combined into the same build.</p>
+<p>After starting the MSAN container the following will configure a combined ASAN and UBSAN build:</p>
+<pre class="fixed">cmake \
+      -DUPDATE_SUBMODULES=OFF \
+      -DWITH_ASAN=ON  \
+      -DWITH_ASAN_SCOPED=ON \
+      -DWITH_UBSAN=ON  \
+      -DWITH_UNIT_TESTS=OFF \
+     /source
+</pre><div class="cstm-style darkheader-nospace-borders"><table><tr><th>CMake Options</th><th>Why</th></tr>
+<tr><td><code>UPDATE_SUBMODULES=OFF</code></td><td>The source directory is read-only so cannot be updated from within the container</td></tr>
+<tr><td><code>WITH_ASAN=ON</code></td><td>Enables ASAN build in compile options</td></tr>
+<tr><td><code>WITH_ASAN_SCOPED=ON</code></td><td>Enables <a href="https://github.com/google/sanitizers/wiki/AddressSanitizerUseAfterScope">Address Sanitizer User after Scope checking</a></td></tr>
+<tr><td><code>WITH_UBSAN=ON</code></td><td>Enables UBSAN build in compile options</td></tr>
+<tr><td><code>WITH_UNIT_TESTS=OFF</code> or <code>PLUGIN_PERFSCHEMA=OFF</code></td><td>clang is incompatible with performance schema unit tests, at least one must be disabled (ref: <a href="https://jira.mariadb.org/browse/MDEV-22940">MDEV-22940</a>)</td></tr>
+</table>
+</div><p>Build and test run are standard.</p>
+<p>Note: list of unfixed <a href="https://github.com/mariadb-corporation/mariadb-qa/blob/master/UBSAN.filter">UBSAN issues by MariaDB Corporation Testing</a>.</p>
+<h4 class="anchored_heading" id="bug-reporting">Bug Reporting</h4>
+<p>UBSAN bugs are labelled with <code>UBSAN</code> and also the short form of the undefined behaviour.</p>
+<p>For example in the following output, the <code>insufficient-object-size</code> would be used as the additional short form of the label.</p>
+<pre class="fixed">SUMMARY: UndefinedBehaviorSanitizer: insufficient-object-size /source/sql/item_strfunc.cc:5256:44 
+ /source/sql/item_strfunc.cc:5256:44 
+</pre><p>Likewise for ASAN, should use <code>ASAN</code> as the label with the short form of the ASAN type from the output.</p>
+<h3 class="anchored_heading" id="using-rr">Using RR</h3>
+<p>In the MSAN container there is a build version of the latest rr at the time of the container build.</p>
+<p>A recording of the execution can be make with the <a href="%5Bmariadb-test-run-pl-options/#options-for-debugging-the-product">mariadb-test-run.pl option --rr</a>. Or alternately you can execute:</p>
+<pre class="fixed">$ rr record sql/mariadbd ......
+</pre><p>To replay a recording adjust per the test worker and instance used in the test:</p>
+<pre class="fixed">$ rr replay mysql-test/var/log/mysqld.1.rr/mariadbd-0/
+</pre><p>Using curl in the container its possible to save up this directory for another user or developer to use with the same container. This can also be shared with our <a href="/kb/en/mariadb-public-ftp-server/">public ftp server</a> for assistance diagnosing validating a bug report.</p>
+<h2 class="anchored_heading" id="asan-options">ASAN Options</h2>
+<p>To run <code>mariadbd</code> with instrumentation you have to set the <code>ASAN_OPTIONS</code> environment variable before starting <code>mariadbd</code> including starting <code>mariadbd</code> when running mtr.</p>
 <pre class="fixed">export ASAN_OPTIONS=abort_on_error=1
 </pre><p>The above command will abort any instrumented executable if any errors are found, which is good for debugging.  If you set abort_on_error=0 all server errors are logged to your error log file (mysqld.err).</p>
 <p>To catch errors for other processes than the server, you can set more options, like this:</p>
