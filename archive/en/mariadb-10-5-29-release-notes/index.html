@@ -276,7 +276,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-05-06 19:03">4 hours, 59 minutes ago</span></dd>
+<span class="datetime" title="2025-05-07 17:25">6 hours, 36 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -422,12 +422,16 @@
 <h2 class="anchored_heading" id="notable-items">Notable Items</h2>
 <h3 class="anchored_heading" id="storage-engines">Storage Engines</h3>
 <h4 class="anchored_heading" id="innodb">InnoDB</h4>
-<ul start="1"><li>Incorrect undo logging for indexes on virtual columns whose index ID does not fit in 32 bits (<a href="https://jira.mariadb.org/browse/MDEV-36613">MDEV-36613</a>)
+<ul start="1"><li>Incorrect undo logging for indexes on virtual columns whose index ID does not fit in 32 bits (<a href="https://jira.mariadb.org/browse/MDEV-36613">MDEV-36613</a>) 
 </li></ul>
-<h4 class="anchored_heading" id="spider">Spider</h4>
-<ul start="1"><li>The untested ha_spider::index_first_internal constructs broken queries (<a href="https://jira.mariadb.org/browse/MDEV-36324">MDEV-36324</a>) 
+<h3 class="anchored_heading" id="spider">Spider</h3>
+<ul start="1"><li><a href="https://jira.mariadb.org/browse/MDEV-32157">MDEV-32157</a> intended to fix spider wrapper so that it is case insensitive, among other things. However that fix was incomplete, as the udf spider_direct_sql may still require case sensitivity. <a href="https://jira.mariadb.org/browse/MDEV-35807">MDEV-35807</a> fixes this. (<a href="https://jira.mariadb.org/browse/MDEV-35807">MDEV-35807</a>) 
+</li><li>The untested ha_spider::index_first_internal constructs broken queries (<a href="https://jira.mariadb.org/browse/MDEV-36324">MDEV-36324</a>) 
 </li><li>Unexpected error 1264 'Out of Range Value for Column' when inserting into ... select ... from a spider table (<a href="https://jira.mariadb.org/browse/MDEV-35874">MDEV-35874</a>) 
 </li><li>Tests calling the udf spider_copy_tables fail with --view-protocol (<a href="https://jira.mariadb.org/browse/MDEV-36335">MDEV-36335</a>) 
+</li></ul>
+<h3 class="anchored_heading" id="versioned-tables">Versioned Tables</h3>
+<ul start="1"><li>Assertion InnoDB searching row in wrong partition for multiple system versioned DELETE with same timestamp and same multistatement transaction (<a href="https://jira.mariadb.org/browse/MDEV-36115">MDEV-36115</a>) 
 </li></ul>
 <h3 class="anchored_heading" id="data-definition-alter-table">Data Definition - Alter Table</h3>
 <ul start="1"><li>ALTER TABLE…SEQUENCE does not work correctly with InnoDB (<a href="https://jira.mariadb.org/browse/MDEV-36038">MDEV-36038</a>) 
@@ -447,13 +451,16 @@
 </li><li>With wsrep_ignore_apply_errors = 0, the node crashes due to assertion thd-&gt;is_error() failed in Sql_cmd_dml::prepare(), shown in the logs (<a href="https://jira.mariadb.org/browse/MDEV-35946">MDEV-35946</a>) 
 </li><li>In some cases, if there are MDL locks (for example, when LOCK TABLE is executed), a node could get stuck in the system thread due to incorrect handling of metadata locks (MDL) in server code when a transaction was BF aborted. (<a href="https://jira.mariadb.org/browse/MDEV-35941">MDEV-35941</a>) 
 </li><li>Regression after the fix for <a href="https://jira.mariadb.org/browse/MDEV-31413">MDEV-31413</a> - sometimes the server crashes with an assertion in wsrep::transaction::before_rollback(), for example when using OPTIMIZE TABLE on an ARIA table with wsrep_osu_method=RSU. (<a href="https://jira.mariadb.org/browse/MDEV-32631">MDEV-32631</a>) 
+</li><li>SST failure occurs when gtid_strict_mode is enabled under high load, such as OLTP load is active on the primary node. A typical symptom of this error is the presence of the diagnostic  "[ERROR] mariadbd: Error writing file 'binlog'", in the debug version it is also possible to crash on assertion in the wsrep::transaction::before_rollback() function with the message "Assertion `state() == s_executing || state() == s_preparing || state() == s_prepared || state() == s_must_abort || state() == s_aborting || state() == s_cert_failed || state() == s_must_replay' failed".  (<a href="https://jira.mariadb.org/browse/MDEV-34891">MDEV-34891</a>) 
 </li><li>In Galera, creating sequence with a small cache leads to signal 6 error: [ERROR] WSREP: FSM: no such a transition REPLICATING -&gt; COMMITTED.  (<a href="https://jira.mariadb.org/browse/MDEV-33850">MDEV-33850</a>) 
+</li><li>Under high load wsrep internal thread may terminate due to memory pressure conditions, but this is not a crash, however in debug version user may encounter assertion in wsrep_to_isolation_begin() function with following message: "int wsrep_to_isolation_begin(THD*, const char*, const char*, const TABLE_LIST*, const Alter_info*, const key_array*, const HA_CREATE_INFO*): Assertion `(0)' failed." (<a href="https://jira.mariadb.org/browse/MDEV-36116">MDEV-36116</a>) 
 </li><li>Assertion `commit_trx' failed in innobase_commit() (ha_innodb.cc). An INSERT with sql_log_bin=0 is still replicated in Galera (per <a href="https://jira.mariadb.org/browse/MDEV-7205">MDEV-7205</a>), despite binary logging being disabled. This results in a partial binlog bypass, requiring a two-phase commit (2PC). During 2PC, the INSERT is first prepared (entering the PREPARED state in InnoDB), and on commit, the new assertion from <a href="https://jira.mariadb.org/browse/MDEV-24035">MDEV-24035</a> fails, causing a crash with "Assertion 'commit_trx' failed" in logs. (<a href="https://jira.mariadb.org/browse/MDEV-35658">MDEV-35658</a>) 
 </li><li>When a sequence is used and inserts run in parallel on multiple Galera nodes, a transaction may be aborted after passing certification. If it then attempts to roll back, the binlog statement cache—which includes reserved sequence values—may be written prematurely. This causes a crash with the diagnostic "WSREP: FSM: no such a transition REPLICATING -&gt; COMMITTED" in the logs, as the transaction is supposed to replay and only write to the binlog during the final commit. (<a href="https://jira.mariadb.org/browse/MDEV-33589">MDEV-33589</a>) 
 </li><li>After a corrupted table on one node triggers the cluster to vote to evict a node that failed a transaction, the current master can't commit any more and hangs. To avoid this crash in the future, the user should also update the galera library to version 26.4.21+. (<a href="https://jira.mariadb.org/browse/MDEV-34998">MDEV-34998</a>) 
 </li><li>Creating partitioned tables is disallowed when wsrep_osu_method=TOI and wsrep_strict_ddl=ON, preventing alteration or deletion of partitioned tables. (<a href="https://jira.mariadb.org/browse/MDEV-27861">MDEV-27861</a>) 
 </li><li>Attempting to create a CONNECT engine table results in "non-InnoDB sequences in Galera cluster" error message in logs due to an incorrect engine check. (<a href="https://jira.mariadb.org/browse/MDEV-35748">MDEV-35748</a>) 
-</li><li>Build fails with cmake 4.0.0 due to wsrep  (<a href="https://jira.mariadb.org/browse/MDEV-36422">MDEV-36422</a>)
+</li><li>Build fails with cmake 4.0.0 due to wsrep  (<a href="https://jira.mariadb.org/browse/MDEV-36422">MDEV-36422</a>) 
+</li><li>Upgrade MariaDB from 10.11 to 11.4 may cause Galera cluster to fail to start due to an issue with the socket.ssl_cipher setting in wsrep_provider_options. To avoid this bug, we advise using version 11.4 with galera library 26.4.21 or later. (<a href="https://jira.mariadb.org/browse/MDEV-34738">MDEV-34738</a>) 
 </li></ul>
 <h3 class="anchored_heading" id="partitioning">Partitioning</h3>
 <ul start="1"><li>corruption when query cache cannot allocate block (<a href="https://jira.mariadb.org/browse/MDEV-34075">MDEV-34075</a>) 
@@ -469,6 +476,22 @@
 </li></ul>
 <h3 class="anchored_heading" id="plugin-audit">Plugin - Audit</h3>
 <ul start="1"><li>Long server_audit_file_path causes buffer overflow (<a href="https://jira.mariadb.org/browse/MDEV-36245">MDEV-36245</a>) 
+</li></ul>
+<h3 class="anchored_heading" id="locking">Locking</h3>
+<ul start="1"><li>Segfault on concurrent ALTER and SELECT for partitioned table (<a href="https://jira.mariadb.org/browse/MDEV-31122">MDEV-31122</a>) 
+</li></ul>
+<h3 class="anchored_heading" id="data-types">Data types</h3>
+<ul start="1"><li>ST_PointFromWKB ignores SRID argument and always creates the POINT with 0 for it's SRID (<a href="https://jira.mariadb.org/browse/MDEV-32619">MDEV-32619</a>) 
+</li></ul>
+<h3 class="anchored_heading" id="scripts-clients">Scripts &amp; Clients</h3>
+<ul start="1"><li>mariadb-dump used wrong quoting character (<a href="https://jira.mariadb.org/browse/MDEV-36268">MDEV-36268</a>) 
+</li></ul>
+<h3 class="anchored_heading" id="authentication-and-privilege-system">Authentication and Privilege System</h3>
+<ul start="1"><li>User without any privileges to a sequence can read from it and modify it via column default (<a href="https://jira.mariadb.org/browse/MDEV-36413">MDEV-36413</a>) 
+</li><li>User has unauthorized access to a sequence through a view with security invoker (<a href="https://jira.mariadb.org/browse/MDEV-36380">MDEV-36380</a>) 
+</li></ul>
+<h3 class="anchored_heading" id="configuration">Configuration</h3>
+<ul start="1"><li>my_getopt compares option names case sensitively (<a href="https://jira.mariadb.org/browse/MDEV-27126">MDEV-27126</a>) 
 </li></ul>
 <h3 class="anchored_heading" id="optimizer">Optimizer</h3>
 <ul start="1"><li>group by handler missing constant fields when selecting from a view (<a href="https://jira.mariadb.org/browse/MDEV-36307">MDEV-36307</a>) 
