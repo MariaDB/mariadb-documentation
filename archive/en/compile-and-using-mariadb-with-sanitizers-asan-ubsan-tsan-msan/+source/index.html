@@ -316,7 +316,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/compile-and-using-mariadb-with-sanitizers-asan-ubsan-tsan-msan/+r/151919/">151919</a></dd>
+            <dd><a href="/kb/en/compile-and-using-mariadb-with-sanitizers-asan-ubsan-tsan-msan/+r/151927/">151927</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-7">
@@ -325,7 +325,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-05-08 00:46">2025-05-08 00:46</span></dd>
+<span class="datetime" title="2025-05-12 00:22">2025-05-12 00:22</span></dd>
         </dl>
     </div>
     
@@ -600,9 +600,40 @@ To see all the options (or to check if an executable is instrumented), you may t
 ASAN_OPTIONS=help=1 extra/perror 0
 &lt;&lt;/code&gt;&gt;
 
-=== Using Valgrind
+== Using Valgrind
 
-The [[mysqltest|MariaDB test system]] can use [[http://www.valgrind.org|Valgrind]] for finding memory leaks and wrong memory accesses. Valgrind is an instrumentation framework for building dynamic analysis tools.  If Valgrind is installed on your system, you can simply use [[mysql-test-runpl-options/#options-for-valgrind|mysql-test-run --valgrind]] to run the test under Valgrind.
+The [[mysqltest|MariaDB test system]] can use [[http://www.valgrind.org|Valgrind]] for finding memory leaks and wrong memory accesses. Valgrind is an instrumentation framework for building dynamic analysis tools.  If Valgrind is installed on your system, you can use [[mysql-test-runpl-options/#options-for-valgrind|mysql-test-run --valgrind]] to run the test under Valgrind. Note there is an optional cmake ##WITH_VALGRIND=ON## option which may hide and/or expose different bugs.
+
+Note: MSAN + ASAN ≩ Valgrind memcheck
+
+Valgrind is a binary-to-binary translator. Its default tool memcheck is two in one:
+* A (“addressable”): Which bytes are addressable? Analogy: AddressSanitizer
+* V (“valid”): Like MemorySanitizer shadow bytes: Which bits are initialized?
+Compile-time instrumentation (-fsanitize=…) can do more:
+* Catch stack-buffer-overrun within a single frame (between local variables)
+* Catch stack-use-after-scope (Valgrind does not have this information)
+* Provide accurate diagnostics (including names of local variables)
+* V bit calculation is buggy; MemorySanitizer works (except for assembler code)
+* MemorySanitizer checks more things at function boundaries than Valgrind
+* Threads work normally; Valgrind runs in a single thread (slow, hides races)
+
+
+== Problems and resolutions
+
+=== Compile failed under MSAN
+
+Sample error:
+&lt;&lt;code&gt;&gt;
+[ 21%] Generating libmysqlclient_r.so
+FATAL: Code 0x61c5d0d44f10 is out of application range. Non-PIE build?
+FATAL: MemorySanitizer can not mmap the shadow memory.
+FATAL: Make sure to compile with -fPIE and to link with -pie.
+FATAL: Disabling ASLR is known to cause this error.
+FATAL: If running under GDB, try &#39;set disable-randomization off&#39;.
+[ 21%] Built target SYM_libmysqlclient_r.a
+&lt;&lt;/code&gt;&gt;
+
+Key message here is ASLR. A sysctl or ##vm.mmap_rnd_bits=32## was known to have exhibited this, however dropping this to 28 resolved the build error.
 
 == See Also
 * [[compiling-mariadb-for-debugging|Compiling MariaDB for debugging]]</textarea>

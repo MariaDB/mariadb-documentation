@@ -312,7 +312,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-10-5-29-release-notes/+r/151193/">151193</a></dd>
+            <dd><a href="/kb/en/mariadb-10-5-29-release-notes/+r/151912/">151912</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -321,7 +321,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-04-30 15:39">2025-04-30 15:39</span></dd>
+<span class="datetime" title="2025-05-07 17:25">2025-05-07 17:25</span></dd>
         </dl>
     </div>
     
@@ -331,17 +331,14 @@
 
     
         
-        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;include slug=&#34;unreleased-105&#34;&gt;&gt;
-&lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
-&lt;&lt;button target=&#34;https://mariadb.com/downloads/&#34; class=&#34;btn-primary&#34;&gt;&gt;Download&lt;&lt;/button&gt;&gt;
+        <textarea id="answer_source" class="creole_source autogrow">&lt;&lt;button target=&#34;https://mariadb.com/downloads/&#34; class=&#34;btn-primary&#34;&gt;&gt;Download&lt;&lt;/button&gt;&gt;
 &lt;&lt;button target=&#34;mariadb-10-5-29-release-notes&#34; class=&#34;btn-info disabled&#34;&gt;&gt;Release Notes&lt;&lt;/button&gt;&gt;
 &lt;&lt;button target=&#34;mariadb-10-5-29-changelog&#34; class=&#34;btn-info&#34;&gt;&gt;Changelog&lt;&lt;/button&gt;&gt;
 &lt;&lt;button target=&#34;what-is-mariadb-105&#34; class=&#34;btn-info&#34;&gt;&gt;Overview of 10.5&lt;&lt;/button&gt;&gt;
 
 ^^//[[https://downloads.mariadb.org/mariadb/10.5.29/|Alternate download from mariadb.org]]//^^
 
-**Release date:** ?
-&lt;&lt;/style&gt;&gt;
+**Release date:** 6 May 2025
 
 MariaDB 10.5 is a previous //stable// series of MariaDB, [[https://mariadb.org/about/#maintenance-policy|maintained until]] June 2025. It is an evolution of MariaDB 10.4 with several entirely new features not found anywhere else and with backported and reimplemented features from MySQL.
 
@@ -360,13 +357,18 @@ Thanks, and enjoy MariaDB!
 
 ==== InnoDB
 
-* Incorrect undo logging for indexes on virtual columns whose index ID does not fit in 32 bits (MDEV-36613)
+* Incorrect undo logging for indexes on virtual columns whose index ID does not fit in 32 bits (MDEV-36613) 
 
-==== Spider
+=== Spider
 
+* MDEV-32157 intended to fix spider wrapper so that it is case insensitive, among other things. However that fix was incomplete, as the udf spider_direct_sql may still require case sensitivity. MDEV-35807 fixes this. (MDEV-35807) 
 * The untested ha_spider::index_first_internal constructs broken queries (MDEV-36324) 
 * Unexpected error 1264 &#39;Out of Range Value for Column&#39; when inserting into ... select ... from a spider table (MDEV-35874) 
 * Tests calling the udf spider_copy_tables fail with --view-protocol (MDEV-36335) 
+
+=== Versioned Tables
+
+* Assertion InnoDB searching row in wrong partition for multiple system versioned DELETE with same timestamp and same multistatement transaction (MDEV-36115) 
 
 === Data Definition - Alter Table
 
@@ -387,16 +389,20 @@ Thanks, and enjoy MariaDB!
 
 === Galera
 
+* [[galera-cluster|Galera]] updated to 26.4.22
 * With wsrep_ignore_apply_errors = 0, the node crashes due to assertion thd-&gt;is_error() failed in Sql_cmd_dml::prepare(), shown in the logs (MDEV-35946) 
 * In some cases, if there are MDL locks (for example, when LOCK TABLE is executed), a node could get stuck in the system thread due to incorrect handling of metadata locks (MDL) in server code when a transaction was BF aborted. (MDEV-35941) 
 * Regression after the fix for MDEV-31413 - sometimes the server crashes with an assertion in wsrep::transaction::before_rollback(), for example when using OPTIMIZE TABLE on an ARIA table with wsrep_osu_method=RSU. (MDEV-32631) 
+* SST failure occurs when gtid_strict_mode is enabled under high load, such as OLTP load is active on the primary node. A typical symptom of this error is the presence of the diagnostic  &#34;[ERROR] mariadbd: Error writing file &#39;binlog&#39;&#34;, in the debug version it is also possible to crash on assertion in the wsrep::transaction::before_rollback() function with the message &#34;Assertion `state() == s_executing || state() == s_preparing || state() == s_prepared || state() == s_must_abort || state() == s_aborting || state() == s_cert_failed || state() == s_must_replay&#39; failed&#34;.  (MDEV-34891) 
 * In Galera, creating sequence with a small cache leads to signal 6 error: [ERROR] WSREP: FSM: no such a transition REPLICATING -&gt; COMMITTED.  (MDEV-33850) 
+* Under high load wsrep internal thread may terminate due to memory pressure conditions, but this is not a crash, however in debug version user may encounter assertion in wsrep_to_isolation_begin() function with following message: &#34;int wsrep_to_isolation_begin(THD*, const char*, const char*, const TABLE_LIST*, const Alter_info*, const key_array*, const HA_CREATE_INFO*): Assertion `(0)&#39; failed.&#34; (MDEV-36116) 
 * Assertion `commit_trx&#39; failed in innobase_commit() (ha_innodb.cc). An INSERT with sql_log_bin=0 is still replicated in Galera (per MDEV-7205), despite binary logging being disabled. This results in a partial binlog bypass, requiring a two-phase commit (2PC). During 2PC, the INSERT is first prepared (entering the PREPARED state in InnoDB), and on commit, the new assertion from MDEV-24035 fails, causing a crash with &#34;Assertion &#39;commit_trx&#39; failed&#34; in logs. (MDEV-35658) 
 * When a sequence is used and inserts run in parallel on multiple Galera nodes, a transaction may be aborted after passing certification. If it then attempts to roll back, the binlog statement cache—which includes reserved sequence values—may be written prematurely. This causes a crash with the diagnostic &#34;WSREP: FSM: no such a transition REPLICATING -&gt; COMMITTED&#34; in the logs, as the transaction is supposed to replay and only write to the binlog during the final commit. (MDEV-33589) 
 * After a corrupted table on one node triggers the cluster to vote to evict a node that failed a transaction, the current master can&#39;t commit any more and hangs. To avoid this crash in the future, the user should also update the galera library to version 26.4.21+. (MDEV-34998) 
 * Creating partitioned tables is disallowed when wsrep_osu_method=TOI and wsrep_strict_ddl=ON, preventing alteration or deletion of partitioned tables. (MDEV-27861) 
 * Attempting to create a CONNECT engine table results in &#34;non-InnoDB sequences in Galera cluster&#34; error message in logs due to an incorrect engine check. (MDEV-35748) 
-* Build fails with cmake 4.0.0 due to wsrep  (MDEV-36422)
+* Build fails with cmake 4.0.0 due to wsrep  (MDEV-36422) 
+* Upgrade MariaDB from 10.11 to 11.4 may cause Galera cluster to fail to start due to an issue with the socket.ssl_cipher setting in wsrep_provider_options. To avoid this bug, we advise using version 11.4 with galera library 26.4.21 or later. (MDEV-34738) 
 
 === Partitioning
 
@@ -417,16 +423,38 @@ Thanks, and enjoy MariaDB!
 
 * Long server_audit_file_path causes buffer overflow (MDEV-36245) 
 
+=== Locking
+
+* Segfault on concurrent ALTER and SELECT for partitioned table (MDEV-31122) 
+
+=== Data types
+
+* ST_PointFromWKB ignores SRID argument and always creates the POINT with 0 for it&#39;s SRID (MDEV-32619) 
+
+=== Scripts &amp; Clients
+
+* mariadb-dump used wrong quoting character (MDEV-36268) 
+
+=== Authentication and Privilege System
+
+* User without any privileges to a sequence can read from it and modify it via column default (MDEV-36413) 
+* User has unauthorized access to a sequence through a view with security invoker (MDEV-36380) 
+
+=== Configuration
+
+* my_getopt compares option names case sensitively (MDEV-27126) 
+
 === Optimizer
 
 * group by handler missing constant fields when selecting from a view (MDEV-36307) 
 
 
-&lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 === Security
 * Fixes for the following [[cve|security vulnerabilities]]:
-** CVE-####-#####
-&lt;&lt;/style&gt;&gt;
+** CVE-2025-30722
+** CVE-2025-30693
+** CVE-2023-52970
+** CVE-2023-52969
 
 == Changelog
 For a complete list of changes made in MariaDB 10.5.29, with links to detailed

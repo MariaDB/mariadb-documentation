@@ -280,7 +280,7 @@
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2025-05-08 00:46">2 days, 23 hours ago</span></dd>
+<span class="datetime" title="2025-05-12 00:22">3 hours, 13 minutes ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -453,9 +453,13 @@
         <li class=""><a href="#using-rr" title="Using RR">Using RR</a>    </ol>
 </li>
 
-    <li class=""><a href="#asan-options" title="ASAN Options">ASAN Options</a>    <ol class="toc">
+    <li class=""><a href="#asan-options" title="ASAN Options">ASAN Options</a></li>
 
-        <li class=""><a href="#using-valgrind" title="Using Valgrind">Using Valgrind</a>    </ol>
+    <li class=""><a href="#using-valgrind" title="Using Valgrind">Using Valgrind</a></li>
+
+    <li class=""><a href="#problems-and-resolutions" title="Problems and resolutions">Problems and resolutions</a>    <ol class="toc">
+
+        <li class=""><a href="#compile-failed-under-msan" title="Compile failed under MSAN">Compile failed under MSAN</a>    </ol>
 </li>
 
     <li class=""><a href="#see-also" title="See Also">See Also</a> </ol>
@@ -631,8 +635,31 @@ Creating mariabackup link
 <pre class="fixed">export ASAN_OPTIONS=abort_on_error=1:disable_coredump=0
 </pre><p>To see all the options (or to check if an executable is instrumented), you may try the following:</p>
 <pre class="fixed">ASAN_OPTIONS=help=1 extra/perror 0
-</pre><h3 class="anchored_heading" id="using-valgrind">Using Valgrind</h3>
-<p>The <a href="/kb/en/mysqltest/">MariaDB test system</a> can use <a href="http://www.valgrind.org">Valgrind</a> for finding memory leaks and wrong memory accesses. Valgrind is an instrumentation framework for building dynamic analysis tools.  If Valgrind is installed on your system, you can simply use <a href="/kb/en/mysql-test-runpl-options/#options-for-valgrind">mysql-test-run --valgrind</a> to run the test under Valgrind.</p>
+</pre><h2 class="anchored_heading" id="using-valgrind">Using Valgrind</h2>
+<p>The <a href="/kb/en/mysqltest/">MariaDB test system</a> can use <a href="http://www.valgrind.org">Valgrind</a> for finding memory leaks and wrong memory accesses. Valgrind is an instrumentation framework for building dynamic analysis tools.  If Valgrind is installed on your system, you can use <a href="/kb/en/mysql-test-runpl-options/#options-for-valgrind">mysql-test-run --valgrind</a> to run the test under Valgrind. Note there is an optional cmake <code>WITH_VALGRIND=ON</code> option which may hide and/or expose different bugs.</p>
+<p>Note: MSAN + ASAN ≩ Valgrind memcheck</p>
+<p>Valgrind is a binary-to-binary translator. Its default tool memcheck is two in one:</p>
+<ul start="1"><li>A (“addressable”): Which bytes are addressable? Analogy: AddressSanitizer
+</li><li>V (“valid”): Like MemorySanitizer shadow bytes: Which bits are initialized?
+Compile-time instrumentation (-fsanitize=…) can do more:
+</li><li>Catch stack-buffer-overrun within a single frame (between local variables)
+</li><li>Catch stack-use-after-scope (Valgrind does not have this information)
+</li><li>Provide accurate diagnostics (including names of local variables)
+</li><li>V bit calculation is buggy; MemorySanitizer works (except for assembler code)
+</li><li>MemorySanitizer checks more things at function boundaries than Valgrind
+</li><li>Threads work normally; Valgrind runs in a single thread (slow, hides races)
+</li></ul>
+<h2 class="anchored_heading" id="problems-and-resolutions">Problems and resolutions</h2>
+<h3 class="anchored_heading" id="compile-failed-under-msan">Compile failed under MSAN</h3>
+<p>Sample error:</p>
+<pre class="fixed">[ 21%] Generating libmysqlclient_r.so
+FATAL: Code 0x61c5d0d44f10 is out of application range. Non-PIE build?
+FATAL: MemorySanitizer can not mmap the shadow memory.
+FATAL: Make sure to compile with -fPIE and to link with -pie.
+FATAL: Disabling ASLR is known to cause this error.
+FATAL: If running under GDB, try 'set disable-randomization off'.
+[ 21%] Built target SYM_libmysqlclient_r.a
+</pre><p>Key message here is ASLR. A sysctl or <code>vm.mmap_rnd_bits=32</code> was known to have exhibited this, however dropping this to 28 resolved the build error.</p>
 <h2 class="anchored_heading" id="see-also">See Also</h2>
 <ul start="1"><li><a href="/kb/en/compiling-mariadb-for-debugging/">Compiling MariaDB for debugging</a></li></ul>
 
