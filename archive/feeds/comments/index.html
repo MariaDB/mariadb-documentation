@@ -1,5 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments</title><link>https://mariadb.com/kb/feeds/comments/</link><description></description><atom:link href="https://mariadb.com/kb/feeds/comments/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Mon, 12 May 2025 08:13:42 +0000</lastBuildDate><item><title>Re: Initialise database using sql script with environment variables</title><link>https://mariadb.com/kb/en/initialise-database-using-sql-script-with-environment-variables/+comments/7074</link><description>&lt;p&gt;I think you mean &lt;code&gt;/docker-entrypoint-initdb.d&lt;/code&gt;.&lt;/p&gt;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MariaDB Knowledge Base Comments</title><link>https://mariadb.com/kb/feeds/comments/</link><description></description><atom:link href="https://mariadb.com/kb/feeds/comments/" rel="self"></atom:link><language>en-us</language><lastBuildDate>Mon, 19 May 2025 08:30:17 +0000</lastBuildDate><item><title>Re: error using dbListTables function</title><link>https://mariadb.com/kb/en/error-using-dblisttables-function/+comments/7076</link><description>&lt;p&gt;after adding some tables t and ts it gets:&lt;/p&gt;
+&lt;pre class="fixed"&gt;$ Rscript c.r 
+[1] &amp;#34;ts&amp;#34; &amp;#34;t&amp;#34; 
+&lt;/pre&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/error-using-dblisttables-function/+comments/7076</guid></item><item><title>Re: error using dbListTables function</title><link>https://mariadb.com/kb/en/error-using-dblisttables-function/+comments/7075</link><description>&lt;p&gt;The dbListTables with a MariaDB connection is per 
+&lt;a href="https://github.com/r-dbi/RMariaDB/blob/main/R/dbListTables_MariaDBConnection.R"&gt;https://github.com/r-dbi/RMariaDB/blob/main/R/dbListTables_MariaDBConnection.R&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;The types returned by the server are:&lt;/p&gt;
+&lt;pre class="fixed"&gt;$ podman exec -t ma11.4 mariadb --column-type-info -e 'SELECT table_name FROM INFORMATION_SCHEMA.tables WHERE table_schema = DATABASE()' -pd mysql 
+Field   1:  `table_name`
+Org_field:  `TABLE_NAME`
+Catalog:    `def`
+Database:   `information_schema`
+Table:      `tables`
+Org_table:  `TABLES`
+Type:       VAR_STRING
+Collation:  utf8mb3_general_ci (33)
+Length:     192
+Max_length: 25
+Decimals:   0
+Flags:      NOT_NULL NO_DEFAULT_VALUE 
+&lt;/pre&gt;&lt;p&gt;I tested the following without error:&lt;/p&gt;
+&lt;pre class="fixed"&gt;$ cat c.r 
+# Load the necessary libraries
+library(DBI)
+library(RMariaDB)
+
+# Connect to the database
+con &amp;lt;- dbConnect(
+  RMariaDB::MariaDB(),
+  dbname = &amp;#34;test&amp;#34;,
+  user = &amp;#34;dan&amp;#34;,
+  password = &amp;#34;&amp;#34;,
+  unix.socket = &amp;#34;/tmp/build-mariadb-server-11.4.sock&amp;#34;
+)
+
+# List tables
+tables &amp;lt;- dbListTables(con)
+print(tables)
+
+# Disconnect
+dbDisconnect(con)
+
+$ Rscript c.r 
+character(0)
+&lt;/pre&gt;&lt;p&gt;with&lt;/p&gt;
+&lt;ul start="1"&gt;&lt;li&gt;R-RMariaDB-0:1.2.2-8.fc41 (as fedora package)
+&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;Hope this helps even if I couldn't reproduce your error.&lt;/p&gt;
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Daniel Black</dc:creator><guid>https://mariadb.com/kb/en/error-using-dblisttables-function/+comments/7075</guid></item><item><title>Re: Initialise database using sql script with environment variables</title><link>https://mariadb.com/kb/en/initialise-database-using-sql-script-with-environment-variables/+comments/7074</link><description>&lt;p&gt;I think you mean &lt;code&gt;/docker-entrypoint-initdb.d&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;On &lt;a href="https://hub.docker.com/_/mariadb"&gt;https://hub.docker.com/_/mariadb&lt;/a&gt; under 'Initializing the database contents' you can have a script.&lt;/p&gt;
 &lt;p&gt;Have a &lt;code&gt;create_virt_domain.sh&lt;/code&gt; file without any execute permissions with the contents:&lt;/p&gt;
 &lt;pre class="fixed"&gt;docker_process_sql &amp;lt;&amp;lt;&amp;lt;'INSERT INTO virtual_domains (name) VALUES ('$MYDOMAIN');'
@@ -234,9 +281,4 @@ recover_binlog_info = 0
 Because even if modifying the innodb_max_dirty_pages_pct_lwm parameter works, it would probably require adjusting the sleep duration, which is not ideal.&lt;/p&gt;
 &lt;p&gt;Thanks again for this valuable information.&lt;/p&gt;
 </description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Mourad S</dc:creator><guid>https://mariadb.com/kb/en/mariabackup-why-does-to_lsn-not-change-in-an-incremental-backup/+comments/7012</guid></item><item><title>Re: Mariabackup: Why does to_lsn not change in an incremental backup?</title><link>https://mariadb.com/kb/en/mariabackup-why-does-to_lsn-not-change-in-an-incremental-backup/+comments/7010</link><description>&lt;p&gt;I have answered this question in &lt;a href="https://jira.mariadb.org/browse/MDEV-31687"&gt;MDEV-31687&lt;/a&gt;.&lt;/p&gt;
-</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Marko Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/mariabackup-why-does-to_lsn-not-change-in-an-incremental-backup/+comments/7010</guid></item><item><title>Re: NoSQL Protocol is unusable</title><link>https://mariadb.com/kb/en/nosql-protocol-is-unusable/+comments/7009</link><description>&lt;p&gt;As Markus wrote, initial support for the 'aggregate' command has been added in 25.01.&lt;/p&gt;
-&lt;p&gt;Yes, the lack of indexes (but for the implicit on _id) is a very known weakness. However, without support for &lt;em&gt;indexes on expressions&lt;/em&gt;, it would be quite complex to implemenent. &lt;a href="https://jira.mariadb.org/browse/MDEV-6017"&gt;MDEV-6017&lt;/a&gt; adds basic support for indexes on expressions to MariaDB Server 11.8 and the plan is to support the indexing of fields in MaxScale 25.08.&lt;/p&gt;
-&lt;p&gt;If there are particular commands that you find essential, please create a feature request. There is obviously a lot of territory to cover, so feedback that helps in deciding the direction to take is appreciated.&lt;/p&gt;
-&lt;p&gt;In general, if a document database is the only thing you want, then NoSQL Protocol may not be the right choice for you. But, if you primarily use regular SQL and in addition have some needs for a document database, then it might be, as you in that case will manage with just one backend setup. With the added benefit of being able to access the document data also from the SQL side. Provided, of course, that the current limitations in the functionality are not showstoppers for you. Everyone does not need e.g. geospatial queries.&lt;/p&gt;
-</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Johan Wikman</dc:creator><guid>https://mariadb.com/kb/en/nosql-protocol-is-unusable/+comments/7009</guid></item><item><title>sys.sys_config table uses Aria</title><link>https://mariadb.com/kb/en/mariadb-galera-cluster-known-limitations/+comments/7008</link><description>&lt;p&gt;The sys.sys_config table (MariaDB &amp;gt;= 10.6) now uses the Aria storage engine (since &lt;a href="/kb/en/what-is-mariadb-107/"&gt;MariaDB 10.7&lt;/a&gt; I believe).  Is this potentially an issue when it comes to Galera cluster replication (since it's not InnoDB) or can it be safely ignored?&lt;/p&gt;
-</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Philip Mott</dc:creator><guid>https://mariadb.com/kb/en/mariadb-galera-cluster-known-limitations/+comments/7008</guid></item></channel></rss>
+</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Marko Mäkelä</dc:creator><guid>https://mariadb.com/kb/en/mariabackup-why-does-to_lsn-not-change-in-an-incremental-backup/+comments/7010</guid></item></channel></rss>
