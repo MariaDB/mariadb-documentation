@@ -308,7 +308,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/what-is-mariadb-118/+r/147582/">147582</a></dd>
+            <dd><a href="/kb/en/what-is-mariadb-118/+r/152674/">152674</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-1368">
@@ -317,7 +317,7 @@
             <dt>Date</dt>
             <dd>
 
-<span class="datetime" title="2025-03-18 01:33">2025-03-18 01:33</span></dd>
+<span class="datetime" title="2025-06-10 08:13">2025-06-10 08:13</span></dd>
         </dl>
     </div>
     
@@ -331,89 +331,87 @@
 
 &lt;&lt;toc&gt;&gt;
 
-MariaDB 11.8 will be a long-term release, and is currently in development.
+MariaDB 11.8 is a long-term release series, maintained until Jun 2028.
 
-This list includes all features since the previous long-term release, MariaDB 11.4 (those introduced in the MariaDB 11.5, MariaDB 11.6 and MariaDB 11.7 rolling releases).
+This list includes all features since the previous long-term release, MariaDB 11.4 (those introduced in the MariaDB 11.5, MariaDB 11.6 and MariaDB 11.7 rolling releases and in MariaDB 11.8).
 
-&lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
+
 == Upgrading
+&lt;&lt;style class=&#34;hidden&#34;&gt;&gt;
 * See [[upgrading-between-major-mariadb-versions|Upgrading Between Major MariaDB Versions]] and [[upgrading-from-mariadb-10-11-to-mariadb-11-0|Upgrading from MariaDB 10.11 to MariaDB 11.0]].
 &lt;&lt;/style&gt;&gt;
+* Note that if you are using system versioned tables, all rows and indexes has to be updated in these to use the extended timestamp range (&#39;2106-02-07 06:28:15 UTC&#39;). Upgrading to 11.8 can take a **long time** if you have many rows in your system versioned tables!
+* If you are not using system versioned tables and you are upgrading from 10.0 and up, the upgrade should just take a few seconds.
+
+== Downgrading
+* If you have system versioned tables, downgrading is not trivial. In other cases see [[downgrading-between-major-versions-of-mariadb|downgrading between major versions]].
 
 == New Features
 
 === Vectors
-* New function [[vector-functions-vec_distance|VEC_DISTANCE]] for calculating either a Euclidean or Cosine distance between two vectors, depending on the underlying index type (MDEV-35450)
-* aarch64 SIMD instructions now supported (MDEV-34699)
+* [[vector|Vector datatype and vector indexing]]
+* Functions [[vec_fromtext|VEC_FromText]] and [[vec_totext|VEC_ToText]],
+* Functions [[vec_distance_cosine|VEC_DISTANCE_COSINE]], [[vec_distance_euclidean|VEC_DISTANCE_EUCLIDEAN]], [[vector-functions-vec_distance|VEC_DISTANCE]] for calculating either a Euclidean or Cosine distance between two vectors. The last one automatically uses Euclidean or Cosine, depending on the underlying index type (MDEV-35450).
+* Vector indexes can use x86_64 (AVX2 and AVX512), aarch64 neon (MDEV-34699) and Powerpc64 AltiVec (MDEV-36184) SIMD instructions.
 
 === Character Sets
 * The default [[character-sets|character set]] has been changed from ##latin1## to ##utf8mb4## (MDEV-19123, MariaDB 11.6)
-* Change [[supported-character-sets-and-collations|default Unicode collation]] to uca1400_ai_ci, a modern Unicode collation with proper support for SMP characters (including emoji)(MDEV-25829, MariaDB 11.5)
+* Change [[supported-character-sets-and-collations|default Unicode collation]] to uca1400_ai_ci, a modern Unicode collation with proper support for SMP characters, including emoji (MDEV-25829, MariaDB 11.5)
 
 === Optimizer
+* Optimization improvement for single-table UPDATE/DELETE: make cost-based choice between subquery strategies (MDEV-25008)
+* The [[charset-narrowing-optimization/|Charset Narrowing Optimization]] is now on by default (MDEV-34380)
 * Optimizer can now take advantage of queries of the format [[substring|SUBSTR(col, 1, n) = const_str]] (MDEV-34911) 
 * Add basic optimizer support for [[generated-columns|virtual columns]] - see [[virtual-column-support-in-the-optimizer/|Virtual Column Support in the Optimizer]] (MDEV-35616)
-* Improve selectivity computations for multi-part keys (MDEV-33697, MariaDB 11.6)
 * [[index-condition-pushdown|Index condition pushdown]] is now supported for partitioned tables (MDEV-12404, MariaDB 11.5)
 * ANALYZE for statement should show selectivity of pushed index condition (MDEV-18478, MariaDB 11.5)
 
+=== System-Versioned Tables
+* Allow a [[system-versioned-tables|system-versioned table]] to be converted from implicit to explicit row_start/row_end columns (MDEV-27293)
+
 === Temporary files and tables
 * [[limiting-size-of-created-disk-temporary-files-and-tables-overview/|Limit size of created disk temporary files and tables]] (MDEV-9101, MariaDB 11.5)
-* There are two system variables used for controlling this feature (MariaDB 11.5):
-** [[max_tmp_session_space_usage-system-variable|max_tmp_session_space_usage]]: Limits the the temporary space allowance per user
-** [[max_tmp_total_space_usage-system-variable|max_tmp_total_space_usage]]: Limits the temporary space allowance for all users.
+** There are two system variables used for controlling this feature (MariaDB 11.5):
+*** [[max_tmp_session_space_usage-system-variable|max_tmp_session_space_usage]]: Limits the the temporary space allowance per user
+*** [[max_tmp_total_space_usage-system-variable|max_tmp_total_space_usage]]: Limits the temporary space allowance for all users.
 
 === Data Types
-* The [[timestamp|TIMESTAMP]] range of values was extended. The maximal allowed value for timestamps was &#39;2038-01-19 03:14:07 UTC&#39;, and is now &#39;2106-02-07 06:28:15 UTC&#39;. This does not change the storage format, and new tables can be read by old MariaDB servers as long as timestamp values are within the old timestamp range. At the moment this is only supported on 64-bit platforms (MDEV-32188, MariaDB 11.5)
+* The [[timestamp|TIMESTAMP]] range of values was extended. The maximal allowed value for timestamps was &#39;2038-01-19 03:14:07 UTC&#39;, and is now &#39;2106-02-07 06:28:15 UTC&#39;. This does not change the storage format, and new tables can be read by old MariaDB servers as long as timestamp values are within the old timestamp range. At the moment this is only supported on 64-bit platforms (MDEV-32188, MariaDB 11.5). Note that if you are using system versioned tables, all rows has to be updated in these to use the new end range. This can take a **long time** if you have many rows in your system versioned tables!
 
 === Authentication
-* [[authentication-plugin-parsec|New authentication plugin]] (MDEV-32618, MariaDB 11.6)
+* [[authentication-plugin-parsec|New PARSEC authentication plugin]] (MDEV-32618, MariaDB 11.6)
 * Extend [[authentication-plugin-unix-socket|Unix socket authentication]] to support authentication_string (MDEV-33479, MariaDB 11.6)
 
 === InnoDB
 * Fix [[innodb-system-variables/#innodb_adaptive_hash_index|innodb-adaptive-hash-index]] scalability with multiple threads (MDEV-35049)
 
 === Backup and Restore
-* Added the ##--dir## option to [[mariadb-import]], allowing one to restore all tables from a backup directory created using [[mariadb-dump|mariadb-dump --dir]] (MDEV-33627, MariaDB 11.6)
+* Parallel dump of multiple databases via [[mariadb-dump]] with the ##--dir## option (MDEV-33625, MariaDB 11.5)
+* Parallel import of multiple databases via [[mariadb-import]] with the ##--dir## option (MDEV-33627, MariaDB 11.6)
 ** Added the related ##--database##, ##--ignore-database##, ##--table## and ##--ignore-table## options.
 ** Refactor [[mariadb-import]] threading
-* Automatic SST user account management (MDEV-31809, MariaDB 11.6)
 * The [[mariadb-dump]] ##--no-autocommit## option is now set by default to allow faster data loading by InnoDB, writing only one undo log for the whole operation (MDEV-32250)
 * [[mariadb-import]] has a new option, ##--innodb-optimize-keys## to delay creation of secondary indexes until after data load, resulting in faster loads. On by default. (MDEV-34740)
-* Parallel dump of multiple databases via [[mariadb-dump]] with the ##--dir## option (MDEV-33625, MariaDB 11.5)
 
 === Replication
 * When [[binary-log|binlogging]] is enabled, committing a large transaction no longer freezes all other transactions until completed (MDEV-32014, MariaDB 11.7)
 * [[replication-and-binary-log-system-variables/#binlog_optimize_thread_scheduling|binlog_optimize_thread_scheduling]] has been deprecated (MDEV-33756, MariaDB 11.7)
-* Async rollback prepared transactions during binlog crash recovery (MDEV-33853, MariaDB 11.7)
+* Asynchronous rollback of prepared transactions during binlog crash recovery (MDEV-33853, MariaDB 11.7)
 * New variable, [[replication-and-binary-log-system-variables/#slave_abort_blocking_timeout|slave_abort_blocking_timeout]], for aborting long-running queries on a replica (MDEV-34857, MariaDB 11.7)
-* New variable, [[replication-and-binary-log-system-variables/#binlog_large_commit_threshold|binlog_large_commit_threshold]], for increasing transaction concurrency for large transactions (MDEV-32014, MariaDB 11.7)
 * [[replication-and-binary-log-system-variables/#binlog_optimize_thread_scheduling|binlog_optimize_thread_scheduling]] deprecated (MDEV-33756, MariaDB 11.7)
 * New definition for Seconds_Behind_Master (MDEV-33856, MariaDB 11.6)
 ** Added three variables to [[show-replica-status|SHOW ALL REPLICAS STATUS]]
 ** New [[information-schema-slave_status-table|Information Schema SLAVE_STATUS Table]]
 
+=== Galera
+* Automatic SST user account management (MDEV-31809, MariaDB 11.6)
+
 === UUID
 * New function for generating version 4 UUIDs [[uuid_v4|UUID_v4]] (MDEV-11339, MariaDB 11.7)
 * New function for generating version 7 UUIDs [[uuid_v7|UUID_v7]] (MDEV-32637, MariaDB 11.7)
 
-===GIS
-New GIS functions. These functions improve compatibility with MySQL 8. 
-* [[st_validate|ST_Validate]] (MDEV-34137)
-* [[mbrcoveredby|MBRCoveredBy]] (MDEV-34138)
-* [[st_simplify|ST_Simplify]] (MDEV-34141)
-* [[st_geohash|ST_GeoHash]] (MDEV-34158)
-* [[st_latfromgeohash|ST_LatFromGeoHash]] (MDEV-34159)
-* [[st_longfromgeohash|ST_LongFromGeoHash]] (MDEV-34160)
-* [[st_pointfromgeohash|ST_PointFromGeoHash]] (MDEV-34277)
-* [[st_isvalid|ST_IsValid]] (MDEV-34276)
-* [[st_collect|ST_Collect]] (MDEV-34278)
-
 === Other Functions
 * New [[miscellaneous-functions-format_bytes|FORMAT_BYTES]] function. Given a byte count, returns a string consisting of a value and the units in a human-readable format (MDEV-31736)
-
-=== Referential Integrity
-* [[check-table|CHECK TABLE ... EXTENDED]] now also checks for referential integrity (MDEV-34309)
 
 === Protocol
 * Permit bulk implementation to return ALL individual results (MDEV-30366, MariaDB 11.5)
@@ -425,7 +423,6 @@ New GIS functions. These functions improve compatibility with MySQL 8.
 * Add QUERIES column to Information Schema  [[information-schema-index_statistics-table|INDEX_STATISTICS]] table (MDEV-33152, MariaDB 11.5)
 * Add [[flush/#flush-status|FLUSH GLOBAL STATUS]] (MDEV-33145, MariaDB 11.5)
 * Provide InnoDB async IO statistics (MDEV-32841, MariaDB 11.5)
-* Show variable deprecation for [[mariadbd-options/#-help|mariadbd --help]] output (MDEV-28671, MariaDB 11.5)
 * Extend [[query-response-time-plugin|Query Response Time plugin]] to be compatible with Percona server (MDEV-33501, MariaDB 11.5)
 
 ===[[sequences|Sequences]]
@@ -465,10 +462,10 @@ New GIS functions. These functions improve compatibility with MySQL 8.
 * Single-table [[delete|DELETEs]] now support table aliases (MDEV-33988, MariaDB 11.6)
 * Set thread names for MariaDB Server threads (MDEV-32537, MariaDB 11.6)
 * [[repair-table|REPAIR TABLE ... FORCE]] (MDEV-33449, MariaDB 11.5)
-* Deprecate and ignore the [[server-system-variables/#alter_algorithm|alter_algorithm]] system variable (MDEV-33655, MariaDB 11.5)
 
 === Variables
-* For a list of all new variables, see [[system-variables-added-in-mariadb-11-8|System Variables Added in MariaDB 11.8]] and [[status-variables-added-in-mariadb-11-8|Status Variables Added in MariaDB 11.8]].
+* Deprecate and ignore the [[server-system-variables/#alter_algorithm|alter_algorithm]] system variable (MDEV-33655, MariaDB 11.5)
+* For a list of all new variables, see [[system-variables-added-in-mariadb-11-8|System Variables Added in MariaDB 11.8]] 
 
 ==Removed Features
 The following deprecated features have been removed:
@@ -491,7 +488,8 @@ Add listcve macro here - removed for performance reasons
 == List of All MariaDB 11.8 Releases
 &lt;&lt;style class=&#34;underheader graybox centered&#34;&gt;&gt;
 |= Date |= Release |= Status |= Release Notes |= Changelog
-| 13 Feb 2024 | **MariaDB 11.8.1** | RC       | [[mariadb-11-8-1-release-notes|Release Notes]] | [[mariadb-11-7-1-changelog/|Changelog]] |
+| 4 Jun 2025 | **MariaDB 11.8.2** | Stable (GA)       | [[mariadb-11-8-2-release-notes|Release Notes]] | [[mariadb-11-8-2-changelog/|Changelog]] |
+| 13 Feb 2025 | **MariaDB 11.8.1** | RC       | [[mariadb-11-8-1-release-notes|Release Notes]] | [[mariadb-11-8-1-changelog/|Changelog]] |
 | 18 Dec 2024 | **MariaDB 11.8.0** | Alpha       | [[mariadb-11-8-0-release-notes|Release Notes]] | |
 &lt;&lt;/style&gt;&gt;</textarea>
     

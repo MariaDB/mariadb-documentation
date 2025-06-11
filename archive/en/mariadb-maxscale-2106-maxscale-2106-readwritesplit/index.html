@@ -277,12 +277,12 @@ param..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-06-03 02:20">11 months, 3 weeks ago</span></dd>
+<span class="datetime" title="2024-06-03 02:20">1 year ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-06-03 02:20">11 months, 3 weeks ago</span></dd>
+<span class="datetime" title="2024-06-03 02:20">1 year ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -299,7 +299,7 @@ param..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/21.06.19/Documentation/Routers/ReadWriteSplit.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/21.06.20/Documentation/Routers/ReadWriteSplit.md">GitHub</a></dd>
         
     </dl>
 
@@ -512,7 +512,9 @@ is included and use examples are provided.</p>
 capability of a cluster while maintaining consistency. This is achieved by
 splitting the query load into read and write queries. Read queries, which do not
 modify data, are spread across multiple nodes while all write queries will be
-sent to a single node.</p>
+sent to a single node. For more details on how the load balancing works, refer
+to <a href="#slave_selection_criteria">slave_selection_criteria</a> and
+<a href="#master_accept_reads">master_accept_reads</a>.</p>
 <p>The router is designed to be used with a traditional Master-Slave replication
 cluster. It automatically detects changes in the master server and will use the
 current master server of the cluster. With a Galera cluster, one can achieve a
@@ -720,6 +722,14 @@ without any risk to the consistency of the database.</p>
 connects to and how the load balancing is done. The default behavior is to route
 read queries to the slave server with the lowest amount of ongoing queries i.e.
 <code>LEAST_CURRENT_OPERATIONS</code>.</p>
+<p>All of the load balancing methods use MaxScale's own accounting. Connections and
+queries done directly on the database and not through MaxScale are not taken
+into account by readwritesplit. For example, if server A has 100 queries running
+all of which are routed through MaxScale and server B has 115 queries but only
+95 of those were routed through MaxScale, server B is considered a better
+candidate even if the absolute number of active queries on it is higher. This is
+because MaxScale only tracks the connections and queries routed through the same
+process.</p>
 <p>The option syntax:</p>
 <div><pre><span></span>slave_selection_criteria=&lt;criteria&gt;
 </pre></div>
@@ -736,14 +746,18 @@ read queries to the slave server with the lowest amount of ongoing queries i.e.
 <p><code>LEAST_CURRENT_OPERATIONS</code> uses the current number of active operations
 (i.e. SQL queries) as the load balancing metric and it optimizes for maximal
 query throughput. Each query gets routed to the server with the least active
-operations which results in faster servers processing more traffic.</p>
+operations which results in faster servers processing more traffic. If two
+servers have an equal number of active operations, the one that was least
+recently used is chosen.</p>
 <p><code>ADAPTIVE_ROUTING</code> uses the server response time and current estimated server
 load as the load balancing metric. The server that is estimated to finish an
 additional query first is chosen. A modified average response time for each
 server is continuously updated to allow slow servers at least some traffic and
-quickly react to changes in server load conditions. This selection criteria is
-designed for heterogeneous clusters: servers of differing hardware, differing
-network distances, or when other loads are running on the servers (including a
+quickly react to changes in server load conditions. If a server has not received
+any traffic, the network lag to the server as measured by the monitor is used as
+the proxy of the true response time. This selection criteria is designed for
+heterogeneous clusters: servers of differing hardware, differing network
+distances, or when other loads are running on the servers (including a
 backup). If the servers are queried by other clients than MaxScale, the load
 caused by them is indirectly taken into account.</p>
 <p><code>LEAST_BEHIND_MASTER</code> uses the measured replication lag as the load balancing

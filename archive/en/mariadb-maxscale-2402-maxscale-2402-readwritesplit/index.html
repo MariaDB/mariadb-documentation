@@ -277,12 +277,12 @@ param..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2024-03-01 19:51">1 year, 2 months ago</span></dd>
+<span class="datetime" title="2024-03-01 19:51">1 year, 3 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2024-03-01 19:51">1 year, 2 months ago</span></dd>
+<span class="datetime" title="2024-03-01 19:51">1 year, 3 months ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -299,7 +299,7 @@ param..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/24.02.5/Documentation/Routers/ReadWriteSplit.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/24.02.6/Documentation/Routers/ReadWriteSplit.md">GitHub</a></dd>
         
     </dl>
 
@@ -510,7 +510,9 @@ is included and use examples are provided.</p>
 capability of a cluster while maintaining consistency. This is achieved by
 splitting the query load into read and write queries. Read queries, which do not
 modify data, are spread across multiple nodes while all write queries will be
-sent to a single node.</p>
+sent to a single node. For more details on how the load balancing works, refer
+to <a href="#slave_selection_criteria">slave_selection_criteria</a> and
+<a href="#master_accept_reads">master_accept_reads</a>.</p>
 <p>The router is designed to be used with a traditional Primary-Replica replication
 cluster. It automatically detects changes in the primary server and will use the
 current primary server of the cluster. With a Galera cluster, one can achieve a
@@ -737,6 +739,14 @@ without any risk to the consistency of the database.</p>
 connects to and how the load balancing is done. The default behavior is to route
 read queries to the replica server with the lowest amount of ongoing queries i.e.
 <code>least_current_operations</code>.</p>
+<p>All of the load balancing methods use MaxScale's own accounting. Connections and
+queries done directly on the database and not through MaxScale are not taken
+into account by readwritesplit. For example, if server A has 100 queries running
+all of which are routed through MaxScale and server B has 115 queries but only
+95 of those were routed through MaxScale, server B is considered a better
+candidate even if the absolute number of active queries on it is higher. This is
+because MaxScale only tracks the connections and queries routed through the same
+process.</p>
 <p>The option syntax:</p>
 <div><pre><span></span>slave_selection_criteria=&lt;criteria&gt;
 </pre></div>
@@ -753,14 +763,18 @@ read queries to the replica server with the lowest amount of ongoing queries i.e
 <p><code>least_current_operations</code> uses the current number of active operations
 (i.e. SQL queries) as the load balancing metric and it optimizes for maximal
 query throughput. Each query gets routed to the server with the least active
-operations which results in faster servers processing more traffic.</p>
+operations which results in faster servers processing more traffic. If two
+servers have an equal number of active operations, the one that was least
+recently used is chosen.</p>
 <p><code>adaptive_routing</code> uses the server response time and current estimated server
 load as the load balancing metric. The server that is estimated to finish an
 additional query first is chosen. A modified average response time for each
 server is continuously updated to allow slow servers at least some traffic and
-quickly react to changes in server load conditions. This selection criteria is
-designed for heterogeneous clusters: servers of differing hardware, differing
-network distances, or when other loads are running on the servers (including a
+quickly react to changes in server load conditions. If a server has not received
+any traffic, the network lag to the server as measured by the monitor is used as
+the proxy of the true response time. This selection criteria is designed for
+heterogeneous clusters: servers of differing hardware, differing network
+distances, or when other loads are running on the servers (including a
 backup). If the servers are queried by other clients than MaxScale, the load
 caused by them is indirectly taken into account.</p>
 <p><code>least_behind_master</code> uses the measured replication lag as the load balancing
@@ -1307,10 +1321,14 @@ improved version of the functionality that the
 <li>
 <p>The universal mode guarantees that all SELECT statements always see the
     latest observable transaction state on a database cluster. The basis of this
-    is the <code>@@gtid_current_pos</code> variable which is read from the current primary
+    is the <code>@@gtid_binlog_pos</code> variable which is read from the current primary
     server before each read. This guarantees that if a transaction was visible
     at the time the read is received by readwritesplit, the transaction is
-    guaranteed to be complete on the replica server where the read is done.</p>
+    guaranteed to be complete on the replica server where the read is
+    done. Versions 22.08.16, 23.02.13, 23.08.9, 24.02.5 and older used
+    <code>@@gtid_current_pos</code> as the GTID value
+    (<a href="https://jira.mariadb.org/browse/MXS-5588">MXS-5588</a>) but this caused
+    problems with Galera clusters.</p>
 <p>This mode is the most consistent of all the modes. It provides consistency
 regardless of where a write originated from but it comes at the cost of
 increased latency. For every read, a round trip to the current primary server

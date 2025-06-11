@@ -277,12 +277,12 @@ configuration parameters w..." />
         <dt>Created</dt>
         <dd>
 
-<span class="datetime" title="2023-02-27 21:22">2 years, 2 months ago</span></dd>
+<span class="datetime" title="2023-02-27 21:22">2 years, 3 months ago</span></dd>
 
         <dt>Modified</dt>
         <dd>
 
-<span class="datetime" title="2023-02-27 21:22">2 years, 2 months ago</span></dd>
+<span class="datetime" title="2023-02-27 21:22">2 years, 3 months ago</span></dd>
 
         <dt>Type</dt>
         <dd>article</dd>
@@ -299,7 +299,7 @@ configuration parameters w..." />
 
         
         <dt>Source</dt>
-        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.13/Documentation/Routers/ReadConnRoute.md">GitHub</a></dd>
+        <dd><a href="https://github.com/mariadb-corporation/MaxScale/blob/23.02.14/Documentation/Routers/ReadConnRoute.md">GitHub</a></dd>
         
     </dl>
 
@@ -439,16 +439,18 @@ configuration parameters with their descriptions.</p>
 </ul>
 </div>
 <h2 id="overview">Overview</h2>
-<p>The readconnroute router provides simple and lightweight load balancing
-across a set of servers. The router can also be configured to balance
-connections based on a weighting parameter defined in the server's section.</p>
-<p>Note that *<em>readconnroute</em> balances <em>connections</em> and not <em>statements</em>.
-When a client connects, the router selects a server based upon the router
-configuration and current server load, but the single created connection
-is fixed and will not be changed for the duration of the session. If the
-connection between MaxScale and the server breaks, the connection can not
-be re-established and the session will be closed. The fact that the server
+<p>The readconnroute router provides simple and lightweight load balancing across a
+set of servers.</p>
+<p>Note that *<em>readconnroute</em> balances <em>connections</em> and not <em>statements</em>.  When a
+client connects, the router selects the server that matches the value of
+<code>router_options</code> and has the least number of connections. Once the connection is
+opened, it will not be changed for the duration of the session. If the
+connection between MaxScale and the server breaks, the connection can not be
+re-established and the client session will be closed. The fact that the server
 is fixed when the client connects also means that routing hints are ignored.</p>
+<p>Connections from other MaxScale instances or connections done directly on a
+database are not taken into account. Only connections done through the same
+Maxscale instance are taken into account.</p>
 <p><strong>Warning:</strong> <code>readconnroute</code> will not prevent writes from being done even if you
   define <code>router_options=slave</code>. The client application is responsible for
   making sure that it only performs read-only queries in such
@@ -458,10 +460,10 @@ is fixed when the client connects also means that routing hints are ignored.</p>
   choice.</p>
 <h2 id="configuration">Configuration</h2>
 <p>For more details about the standard service parameters, refer to the
-<a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/">Configuration Guide</a>.</p>
+<a href="/kb/en/maxscale-2302-getting-started-mariadb-maxscale-configuration-guide/">Configuration Guide</a>.</p>
 <h3 id="router_options"><code>router_options</code></h3>
 <ul>
-<li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#enumerations">enum_mask</a></li>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-2302-getting-started-mariadb-maxscale-configuration-guide/#enumerations">enum_mask</a></li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
 <li><strong>Values</strong>: <code>master</code>, <code>slave</code>, <code>synced</code>, <code>running</code></li>
@@ -507,13 +509,19 @@ router_options=master,slave
 the router will use the default value of <code>running</code>. This means that it will
 load balance connections across all running servers defined in the <code>servers</code>
 parameter of the service.</p>
-<p>When a connection is being created and the candidate server is being chosen,
-the list of servers is processed in from first entry to last. This means
-that if two servers with equal weight and status are found, the one that's
+<p>When a connection is being created and the candidate server is being chosen, the
+list of servers is processed in from first entry to last. This means that if two
+servers with equal rank and number of connections are found, the one that's
 listed first in the <em>servers</em> parameter for the service is chosen.</p>
+<p>When using <code>router_options=slave</code>, only servers with the <code>Slave</code> status are
+used. If there are no servers with the <code>Slave</code> status but there is a <code>Master</code>
+status, it will be used as the fallback server. Note that the use of
+<code>router_options=slave</code> does not prevent writes from being done and the client
+application is responsible for making sure that no writes are done on a <code>Slave</code>
+server.</p>
 <h3 id="master_accept_reads"><code>master_accept_reads</code></h3>
 <ul>
-<li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#booleans">boolean</a></li>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-2302-getting-started-mariadb-maxscale-configuration-guide/#booleans">boolean</a></li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
 <li><strong>Default</strong>: true</li>
@@ -526,13 +534,13 @@ from server selection (and thus from receiving reads).</p>
 <p>By default <code>master_accept_reads=true</code>.</p>
 <h3 id="max_replication_lag"><code>max_replication_lag</code></h3>
 <ul>
-<li><strong>Type</strong>: <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#durations">duration</a></li>
+<li><strong>Type</strong>: <a href="/kb/en/maxscale-2302-getting-started-mariadb-maxscale-configuration-guide/#durations">duration</a></li>
 <li><strong>Mandatory</strong>: No</li>
 <li><strong>Dynamic</strong>: Yes</li>
 <li><strong>Default</strong>: 0s</li>
 </ul>
 <p>The maximum acceptable replication lag. The value is in seconds and is specified
-as documented <a href="/kb/en/mariadb-maxscale-2302-mariadb-maxscale-configuration-guide/#durations">here</a>. The
+as documented <a href="/kb/en/maxscale-2302-getting-started-mariadb-maxscale-configuration-guide/#durations">here</a>. The
 default value is <code>0s</code>, which means that the lag is ignored.</p>
 <p>The replication lag of a server must be less than the configured value in order
 for it to be used for routing. To configure the router to not allow any lag, use
