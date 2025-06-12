@@ -60,12 +60,16 @@ def read_csv(num_rows: int, port: int) -> list[CsvItem]:
 
 def apply_depth(kb_urls: list[CsvItem]) -> list[CsvItem]:
     depths = []
-    for row in kb_urls:
+    for line, row in enumerate(kb_urls):
         if row.depth >= len(depths):
             depths.extend([0] * (row.depth-len(depths)))
         elif row.depth < len(depths):
             for _ in range(len(depths)-row.depth):
                 depths.pop()
+        if len(depths) == 0:
+            print("error: invalid depth on line: ", line + 1)
+            exit(0)
+             
         depths[row.depth-1] += 1
         row.depth_str = '.'.join([str(num) for num in depths])
         while row.depth_str.startswith("0."):
