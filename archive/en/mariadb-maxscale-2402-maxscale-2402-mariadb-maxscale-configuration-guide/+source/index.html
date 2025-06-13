@@ -312,7 +312,7 @@
     <div class="revision_info">
         <dl class="table">
             <dt>Revision</dt>
-            <dd><a href="/kb/en/mariadb-maxscale-2402-maxscale-2402-mariadb-maxscale-configuration-guide/+r/149825/">149825</a></dd>
+            <dd><a href="/kb/en/mariadb-maxscale-2402-maxscale-2402-mariadb-maxscale-configuration-guide/+r/152767/">152767</a></dd>
             <dt>User</dt>
             <dd>
 <span class="user" id="user-5571">
@@ -795,8 +795,8 @@ The current auto tunable parameters are:
 
 |MaxScale Parameter|Server Variable Dependency|
 |------------------|--------------------------|
-|[connection_keepalive](#connection_keepalive)|80% of the smallest [`wait_timeout`]server-system-variables/#wait_timeout) value of the servers used by the service|
-|[wait_timeout](server-system-variables/#wait_timeout)|The smallest [`wait_timeout`](server-system-variables/#wait_timeout) value of the servers used by the service|
+|[connection_keepalive](#connection_keepalive)|80% of the smallest [`wait_timeout`](https://mariadb.com/docs/reference/mdb/system-variables/wait_timeout/) value of the servers used by the service|
+|[wait_timeout](#wait_timeout)|The smallest [`wait_timeout`](https://mariadb.com/docs/reference/mdb/system-variables/wait_timeout/) value of the servers used by the service|
 
 The values of the server variables are collected by monitors, which means that
 if the servers of a service are not monitored by a monitor, then the parameters
@@ -1871,6 +1871,10 @@ The path to the TLS private key in PEM format for the admin interface.
 If the `admin_ssl_key` and `admin_ssl_cert` options are all defined, the admin
 interface will use encrypted HTTPS instead of plain HTTP.
 
+The REST-API only supports PKCS#8 PEM private keys and using a PKCS#1 PEM
+private key will result in an error. If your private key is in PKCS#1 PEM
+format, convert it to PKCS#8 PEM format first before starting up MaxScale.
+
 ### `admin_ssl_cert`
 
 - **Type**: path
@@ -2068,7 +2072,7 @@ documentation](node:maxscale-24-02-rest-api).
 If a symmetric algorithm is used (i.e. `HS256`, `HS384` or `HS512`), MaxScale
 will generate a random encryption key on startup and use that to sign the
 messages. The symmetric key can also be retrieved from an [Encryption Key
-Manager]() if the `admin_jwt_key` parameter is defined.
+Manager](#encryption-key-managers) if the `admin_jwt_key` parameter is defined.
 
 If an asymmetric algorithm (i.e. public key authentication) is used, both the
 `admin_ssl_cert` and `admin_ssl_key` parameters must be defined and they must
@@ -2162,7 +2166,7 @@ from the `/sql` endpoint.
 
 - **Type**: string
 - **Mandatory**: No
-- **Dynamic**: No
+- **Dynamic**: Yes
 - **Default**: `&#34;&#34;`
 
 The URL to a OpenID Connect server that is used for JWT validation.
@@ -2176,8 +2180,13 @@ REST-API. This means that all users must be first created with `maxctrl create
 user` before the tokens are accepted if the OIDC provider is not able to add the
 `&#34;account&#34;` claim.
 
-If this URL is changed at runtime, the new certificates will not be
-fetched until a `maxctrl reload tls` command is executed.
+Modifying `admin_oidc_url` will cause the certificates to be fetched
+again. They are also fetched when the `maxctrl reload tls` command is
+executed or when the `admin_ssl_cert` and `admin_ssl_key` settings are
+modified.
+
+MaxScale versions 22.08.16 and earlier only fetched the new certificates when
+the `maxctrl reload tls` command was executed.
 
 ### `admin_verify_url`
 
@@ -4558,7 +4567,7 @@ API. **Only do this if you know what you are doing.**
 
 ## Filter Modules
 
-![Processing pipeline with two filters](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/24.02.5/Documentation/Getting-Started/images/filter_example.png)
+![Processing pipeline with two filters](https://raw.githubusercontent.com/mariadb-corporation/MaxScale/24.02.6/Documentation/Getting-Started/images/filter_example.png)
 
 Filters provide a means to manipulate or process requests as they pass through
 MariaDB MaxScale between the client side protocol and the query router. A full
@@ -5302,7 +5311,8 @@ It is not recommended to use a watchdog timeout less than 30 seconds. When
 enabled MaxScale will check that all threads are running and notify systemd
 with a &#34;keep-alive ping&#34;.
 
-Systemd reference: https://www.freedesktop.org/software/systemd/man/systemd.service.html</textarea>
+Systemd reference: https://www.freedesktop.org/software/systemd/man/systemd.service.html
+</textarea>
     
 
 
